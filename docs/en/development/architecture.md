@@ -140,7 +140,7 @@ The durable dependency boundaries are:
 | `crates/volicord-types` | `crates/volicord-types/src/methods.rs`, `crates/volicord-types/src/schema.rs`, `crates/volicord-types/src/values.rs`, `crates/volicord-types/src/ids.rs`, `crates/volicord-types/src/canonical.rs` | `methods.rs` carries typed public request/result models and method-to-access mapping. `schema.rs` carries shared schema-shaped Rust data, response branches, Core state shapes, artifact and judgment structures, and persisted helper shapes. `values.rs` carries controlled Rust enums and constants for documented value names. `ids.rs` carries opaque identifier wrappers and durable ID generation helpers. `canonical.rs` carries deterministic canonical JSON serialization and request hashing. |
 | `crates/volicord-store` | `crates/volicord-store/src/runtime_home.rs`, `crates/volicord-store/src/bootstrap.rs`, `crates/volicord-store/src/sqlite.rs`, `crates/volicord-store/src/migrations.rs`, `crates/volicord-store/src/core_pipeline.rs`, `crates/volicord-store/src/artifacts.rs`, `crates/volicord-store/src/inspection.rs`, `crates/volicord-store/src/error.rs` | `runtime_home.rs` resolves Runtime Home paths. `bootstrap.rs` initializes Runtime Home metadata and registers projects, Agent Connections, Connection Projects, and the User Channel. `sqlite.rs` opens and validates registry/project SQLite databases. `migrations.rs` applies baseline migrations. `core_pipeline.rs` exposes `CoreProjectStore`, read helpers, replay rows, storage mutation types, and the atomic Core mutation commit boundary. `artifacts.rs` handles transient staging and persistent artifact body verification. `inspection.rs` supports read-only setup inspection. `error.rs` classifies storage failures for higher layers. |
 | `crates/volicord-core` | `crates/volicord-core/src/pipeline.rs`, `crates/volicord-core/src/methods/`, `crates/volicord-core/src/policy/` | `pipeline.rs` owns common request preflight, validated request context preparation, effect-path selection, response construction, replay handling, and Core commit orchestration. `methods/` owns method-specific validation, planning, storage mutation lists, event payloads, dry-run summaries, and result fields. `policy/` owns reusable Core policy helpers for operation-category checks, replay context, Product Repository path normalization, Write Check compatibility, evidence status, judgment relevance, and close-readiness calculations. |
-| `crates/volicord-cli` | `crates/volicord-cli/src/main.rs`, `crates/volicord-cli/src/agent_command.rs`, `crates/volicord-cli/src/user_command.rs`, `crates/volicord-cli/src/host_integration/`, `crates/volicord-cli/src/repository_guidance.rs`, `crates/volicord-cli/src/guidance_template.rs`, `crates/volicord-cli/src/registration.rs` | `main.rs` dispatches administrative commands and binary exit behavior. `agent_command.rs` parses and orchestrates `volicord agent` install, project membership, status, verification, uninstall, and guidance commands. `user_command.rs` parses and orchestrates `volicord user` setup, status, and judgment commands. `host_integration/` owns Codex, Claude Code, and generic host plans and managed host configuration. `repository_guidance.rs` and `guidance_template.rs` manage optional Product Repository guidance. `registration.rs` builds Agent Connection, Connection Projects, and User Channel metadata. |
+| `crates/volicord-cli` | `crates/volicord-cli/src/main.rs`, `crates/volicord-cli/src/agent_command.rs`, `crates/volicord-cli/src/user_command.rs`, `crates/volicord-cli/src/host_integration/`, `crates/volicord-cli/src/registration.rs` | `main.rs` dispatches administrative commands and binary exit behavior. `agent_command.rs` parses and orchestrates `volicord agent` connection, project membership, status, verification, and uninstall commands. `user_command.rs` parses and orchestrates local User Channel status and judgment commands. `host_integration/` owns Codex, Claude Code, and generic host plans and managed host configuration. `registration.rs` builds Agent Connection, Connection Projects, and User Channel metadata. |
 | `crates/volicord-mcp` | `crates/volicord-mcp/src/main.rs`, `crates/volicord-mcp/src/lib.rs` | `main.rs` handles command modes such as stdio, `--check`, help, and version. `lib.rs` owns MCP tool metadata, Agent Connection startup inspection, request-time project routing, the adapter-owned `volicord.list_projects` utility, typed public `tools/call` decoding, `operation_category` and `actor_source` derivation, initialization instructions, JSON-RPC stdio framing, and response wrapping. |
 | `crates/volicord-test-support` | `crates/volicord-test-support/src/lib.rs` | Provides disposable Runtime Home helpers, fixture setup for Core and Store tests, shared request builders, and fixture-only helpers used by conformance and integration tests. |
 
@@ -223,30 +223,29 @@ This flow is an implementation map. Exact public method contracts, error precede
 
 ## Administrative agent setup flow
 
-`volicord agent install` is implemented as local administrative orchestration, not as a public Core method. The implementation lives under `crates/volicord-cli/src/agent_command.rs` and the host adapters in `crates/volicord-cli/src/host_integration/`; exact command, Agent Connection, MCP transport, and runtime-boundary contracts stay with [Administrative CLI](../reference/admin-cli.md), [MCP Transport](../reference/mcp-transport.md), [Runtime Boundaries](../reference/runtime-boundaries.md), and [Security](../reference/security.md).
+`volicord agent connect` is implemented as local administrative orchestration, not as a public Core method. The implementation lives under `crates/volicord-cli/src/agent_command.rs` and the host adapters in `crates/volicord-cli/src/host_integration/`; exact command, Agent Connection, MCP transport, and runtime-boundary contracts stay with [Administrative CLI](../reference/admin-cli.md), [MCP Transport](../reference/mcp-transport.md), [Runtime Boundaries](../reference/runtime-boundaries.md), and [Security](../reference/security.md).
 
 ```mermaid
 flowchart TD
   parse["Parse and validate inputs"]
-  plan["Inspect registry and host state; derive IDs; build project, connection, host, and guidance plans; reject conflicts"]
+  plan["Inspect registry and host state; derive IDs; build project, connection, and host plans; reject conflicts"]
   dry{"--dry-run?"}
-  dryout["Return plan only; no Runtime Home or SQLite writes, MCP preflight, host apply, guidance, initialization, or tool discovery"]
+  dryout["Return plan only; no Runtime Home or SQLite writes, MCP preflight, host apply, initialization, or tool discovery"]
   runtime["Initialize or reuse Runtime Home and project state"]
   connection["Create or reuse Agent Connection, Connection Projects, and default-project routing"]
   preflight["Run volicord-mcp --check --connection with the resolved Runtime Home"]
   host["Read host target snapshot and apply the planned host configuration"]
-  inventory["Register or update Host Installation inventory before final verification"]
-  guidance["Apply optional repository guidance when selected and explicitly authorized"]
+  inventory["Register or update Agent Connection inventory before final verification"]
   readiness["Verify host readiness"]
   gate{"Host gate permits MCP handshake?"}
   handshake["Initialize MCP stdio and discover tools"]
   hostonly["Use the host verification result"]
-  final["Derive setup result and update Host Installation verification state"]
+  final["Derive connection result and update Agent Connection verification state"]
   fail["After durable effects begin, compensate journaled owned effects and report residuals"]
 
   parse --> plan --> dry
   dry -- yes --> dryout
-  dry -- no --> runtime --> connection --> preflight --> host --> inventory --> guidance --> readiness --> gate
+  dry -- no --> runtime --> connection --> preflight --> host --> inventory --> readiness --> gate
   gate -- yes --> handshake --> final
   gate -- no --> hostonly --> final
   runtime -. failure after this point .-> fail
@@ -254,23 +253,22 @@ flowchart TD
   preflight -. failure .-> fail
   host -. failure .-> fail
   inventory -. failure .-> fail
-  guidance -. failure .-> fail
   readiness -. failure .-> fail
   handshake -. failure .-> fail
   final -. failure .-> fail
 ```
 
-The setup sequence has a read-only planning phase before persistent setup. The command parses and validates host, scope, repository-write, guidance, Runtime Home, repository, connection, and executable inputs; inspects existing registry and host state; derives stable identifiers; builds the project, connection, host, and optional guidance plans; and rejects host conflicts before creating Runtime Home state or changing registry rows. Host planning therefore happens before Store-facing setup.
+The connection sequence has a read-only planning phase before persistent setup. The command parses and validates host, scope, repository-write, Runtime Home, repository, connection, and executable inputs; inspects existing registry and host state; derives stable identifiers; builds the project, connection, and host plans; and rejects host conflicts before creating Runtime Home state or changing registry rows. Host planning therefore happens before Store-facing setup.
 
-When `--dry-run` is selected, the command returns the plan from that planning phase. It does not create Runtime Home directories or SQLite state, run `volicord-mcp --check`, apply host configuration, apply repository guidance, initialize MCP stdio, or perform tool discovery.
+When `--dry-run` is selected, the command returns the plan from that planning phase. It does not create Runtime Home directories or SQLite state, run `volicord-mcp --check`, apply host configuration, initialize MCP stdio, or perform tool discovery.
 
 Non-dry-run execution then initializes or reuses Runtime Home and project state, creates or reuses the Agent Connection, Connection Projects allowlist, and default-project routing, and only then runs `volicord-mcp --check --connection <connection_id>` with the resolved Runtime Home. That MCP startup preflight happens before host configuration is applied.
 
-Host configuration application follows the previously constructed host plan and is guarded by the target snapshot, stale-plan checks, ownership markers, and fingerprint checks. Host Installation inventory is registered or updated only after host configuration application, initially before the final verification state has been recorded. Optional repository guidance is applied after inventory registration and only when selected and explicitly authorized for repository writes.
+Host configuration application follows the previously constructed host plan and is guarded by the target snapshot, stale-plan checks, ownership markers, and fingerprint checks. Agent Connection inventory is registered or updated only after host configuration application, initially before the final verification state has been recorded. Product Repository guidance and generated host instructions are advisory context only and are not an authority-bearing setup effect.
 
 Final verification first checks host readiness. Direct MCP stdio initialization and tool discovery run only when the host gate permits that handshake, so host readiness and direct MCP handshake are separate checks. A result can still be `action_required` when host-owned trust, approval, reload, restart, OAuth, or a comparable user-controlled action remains.
 
-Failure handling is journal-based compensation across Runtime Home, registry, host configuration, and Product Repository guidance boundaries. It attempts to reverse newly applied managed effects only when ownership and safety checks allow that reversal, and it reports residual effects that remain. This compensation is not one atomic Store transaction and does not claim universal rollback across all persistence and host boundaries.
+Failure handling is journal-based compensation across Runtime Home, registry, and host configuration boundaries. It attempts to reverse newly applied managed effects only when ownership and safety checks allow that reversal, and it reports residual effects that remain. This compensation is not one atomic Store transaction and does not claim universal rollback across all persistence and host boundaries.
 
 ## Decision Routes
 

@@ -42,7 +42,7 @@ This method is the supported path that turns shaping into a first safe Change Un
 - Optional `change_unit.effect_contract` when creating or replacing the current Change Unit. When present, the object uses `ChangeUnitEffectContract`; when absent, the Change Unit has no extra effect contract.
 - `related_scope_decision_refs` when the update applies a resolved `judgment_kind=scope_decision`.
 
-When a scope update applies a `scope_decision`, each referenced judgment must have `judgment_kind=scope_decision`, `status=resolved`, `machine_action=accept`, `resolution_outcome=accepted`, `basis.compatibility_status=current`, `required_for` that includes scope update, verified actor provenance for `user_interaction`, and a basis compatible with the current Task, Change Unit, `scope_revision`, and affected refs. Rejected, deferred, stale, superseded, expired, invalid-basis, resolution-incomplete, or agent-recorded scope decisions do not authorize a scope transition.
+When a scope update applies a `scope_decision`, each referenced judgment must have `judgment_kind=scope_decision`, `status=resolved`, `machine_action=accept`, `resolution_outcome=accepted`, `resolved_by_actor_source=local_user`, compatible User Channel provenance, `basis.compatibility_status=current`, `required_for` that includes scope update, and a basis compatible with the current Task, Change Unit, `scope_revision`, and affected refs. Rejected, deferred, stale, superseded, expired, invalid-basis, resolution-incomplete, or agent-recorded scope decisions do not authorize a scope transition.
 
 ## Request schema
 
@@ -184,8 +184,6 @@ params:
   envelope:
     project_id: proj_filter_001
     task_id: task_filter_001
-    actor_kind: agent
-    surface_id: surface_scope
     request_id: req_scope_filter_001
     idempotency_key: idem_scope_filter_001
     expected_state_version: 18

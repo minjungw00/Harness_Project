@@ -65,7 +65,7 @@ Meaning:
 
 Does not imply:
 - It does not override narrower method-specific request rules.
-- It does not carry invocation access class, invocation `surface_instance_id`, capability profile, verification basis, or `VerifiedSurfaceContext`.
+- It does not carry `actor_source`, `operation_category`, capability profile, verification basis, or other invocation provenance.
 
 Owner links:
 - Method-specific request rules: method owner documents routed from [API Methods](methods.md).
@@ -74,8 +74,6 @@ Owner links:
 ToolEnvelope:
   project_id: string
   task_id: string | null
-  actor_kind: string
-  surface_id: string
   request_id: string
   idempotency_key: string | null
   expected_state_version: integer | null
@@ -85,19 +83,18 @@ ToolEnvelope:
 
 Meaning:
 - `task_id` is a nullable request-level Task selector; the field is present and the value may be null.
-- `actor_kind` is a controlled value string for request attribution. It is not proof of human identity and does not by itself satisfy user authority; authority-bearing judgment resolution uses the internal `VerifiedActorContext` defined by [Agent Integration](../agent-integration.md).
 - `expected_state_version` is the request-level field for a project-wide state clock value.
 - `idempotency_key` is a nullable opaque identifier; method owners define when a non-null value is required.
 - `expected_state_version` is nullable; method and storage owners define when a non-null value is required.
-- `project_id`, `task_id`, `surface_id`, `request_id`, and `idempotency_key` are opaque identifiers when non-null.
+- `project_id`, `task_id`, `request_id`, and `idempotency_key` are opaque identifiers when non-null.
 - `locale` is a nullable locale tag string, not a Volicord-controlled value set.
-- `surface_id` is a registered surface selector. The current invocation `surface_instance_id` and requested access class are derived by adapter/Core logic described by [Agent Integration](../agent-integration.md), not by public request fields.
+- Actor provenance and operation category are derived by adapter/Core logic described by [Agent Integration](../agent-integration.md), not by public request fields.
 
 Does not imply:
 - This field list does not define conflict behavior, storage versioning, or method-specific selector precedence.
 
 Owner links:
-- `actor_kind` values: [actor values](schema-value-sets.md#actor-values)
+- actor-source values: [actor source values](schema-value-sets.md#actor-source-values)
 - method-specific request behavior: method owner documents routed from [API Methods](methods.md)
 - conflict behavior: [state version conflict](error-precedence.md#state-conflict-behavior)
 - storage version behavior: [Storage Versioning](../storage-versioning.md)

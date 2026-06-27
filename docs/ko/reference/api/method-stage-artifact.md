@@ -153,8 +153,6 @@ params:
   envelope:
     project_id: proj_trace_001
     task_id: task_trace_001
-    actor_kind: agent
-    surface_id: surface_artifact
     request_id: req_stage_trace_001
     idempotency_key: null
     expected_state_version: null

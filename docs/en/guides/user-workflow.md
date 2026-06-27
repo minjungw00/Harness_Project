@@ -77,17 +77,12 @@ The agent should not mix inspected facts with user-owned judgment, ask you to re
 ## Record a Core user judgment
 
 When a choice must become authority-bearing Core state, use a supported
-`user_interaction` surface. The stable local CLI path is `volicord user`. Exact
-command behavior belongs to [Administrative CLI](../reference/admin-cli.md#user-interaction-commands);
-authority meaning belongs to [Core Model](../reference/core-model.md) and
-surface-role boundaries belong to
-[Agent Integration Reference](../reference/agent-integration.md#current-surface-context).
-
-Set up the local user surface once for the project:
-
-```sh
-volicord user setup --project-id acme-api
-```
+`User Channel`. The stable local CLI path is `volicord user`; it does not
+require user setup, adapter registration, or local access grants. Exact command
+behavior belongs to [Administrative CLI](../reference/admin-cli.md#user-channel-commands);
+authority meaning belongs to [Core Model](../reference/core-model.md), and
+Agent Connection boundaries belong to
+[Agent Integration Reference](../reference/agent-integration.md).
 
 Then use this sequence when a task has a pending judgment:
 
@@ -110,11 +105,12 @@ pending authority outcome, and an explanatory `--note` does not change the
 selected Core option.
 
 An agent may help route you to this path, show the pending question, and explain
-the options. An agent-role integration must not record your authority-bearing
-decision for you or try to become a user by submitting `actor_kind=user`.
-Generated Markdown, status summaries, chat text, and rendered projections can
-help you read state, but they are not Core authority; for projection boundaries,
-see [Projection and template display boundaries](../reference/projection-and-templates.md).
+the options. An Agent Connection must not record your authority-bearing decision
+for you, call `volicord.record_user_judgment`, or convert a chat reply into
+authority-bearing Core state. Generated Markdown, status summaries, chat text,
+Product Repository guidance, and rendered projections can help you read state,
+but they are not Core authority; for projection boundaries, see
+[Projection and template display boundaries](../reference/projection-and-templates.md).
 
 ## Approve writes and sensitive actions
 
@@ -208,7 +204,7 @@ Use guide pages for workflow. Use owner reference docs for exact contracts:
 | Core authority, user-owned judgment, close readiness meaning | [Core Model](../reference/core-model.md) |
 | Security wording and guarantee levels | [Security](../reference/security.md) |
 | API methods and schemas | [Reference Index](../reference/README.md) |
-| Surface and connector behavior | [Agent Integration Reference](../reference/agent-integration.md) |
+| Agent Connection and User Channel behavior | [Agent Integration Reference](../reference/agent-integration.md) |
 
 Do not treat this guide as the API contract. Do not copy detailed contract rules back into the user-facing path.
 

@@ -239,8 +239,6 @@ params:
   envelope:
     project_id: proj_runprobe_001
     task_id: task_runprobe_001
-    actor_kind: agent
-    surface_id: surface_run_probe
     request_id: req_runprobe_001
     idempotency_key: idem_runprobe_001
     expected_state_version: 31

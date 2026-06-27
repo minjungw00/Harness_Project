@@ -140,7 +140,7 @@ flowchart TD
 | `crates/volicord-types` | `crates/volicord-types/src/methods.rs`, `crates/volicord-types/src/schema.rs`, `crates/volicord-types/src/values.rs`, `crates/volicord-types/src/ids.rs`, `crates/volicord-types/src/canonical.rs` | `methods.rs`는 타입 지정 공개 요청과 결과 모델, 메서드와 작업 범주 매핑을 담습니다. `schema.rs`는 공유 스키마 형태 Rust 데이터, 응답 분기, Core 상태 형태, 아티팩트와 판단 구조, 지속 보조 형태를 담습니다. `values.rs`는 문서화된 값 이름에 대응하는 제어 Rust enum과 상수를 담습니다. `ids.rs`는 불투명 식별자 래퍼와 오래 유지되는 ID 생성 도우미를 담습니다. `canonical.rs`는 결정적 정규 JSON 직렬화와 요청 해시를 담습니다. |
 | `crates/volicord-store` | `crates/volicord-store/src/runtime_home.rs`, `crates/volicord-store/src/bootstrap.rs`, `crates/volicord-store/src/sqlite.rs`, `crates/volicord-store/src/migrations.rs`, `crates/volicord-store/src/core_pipeline.rs`, `crates/volicord-store/src/artifacts.rs`, `crates/volicord-store/src/inspection.rs`, `crates/volicord-store/src/error.rs` | `runtime_home.rs`는 Runtime Home 경로를 해석합니다. `bootstrap.rs`는 Runtime Home 메타데이터를 초기화하고 프로젝트, Agent Connection, Connection Projects, User Channel을 등록합니다. `sqlite.rs`는 registry/project SQLite 데이터베이스를 열고 검증합니다. `migrations.rs`는 기준 마이그레이션을 적용합니다. `core_pipeline.rs`는 `CoreProjectStore`, 읽기 도우미, 재실행 기록 행, 저장소 변이 타입, 원자적 Core 변이 커밋 경계를 제공합니다. `artifacts.rs`는 일시적 스테이징과 영구 아티팩트 본문 검증을 처리합니다. `inspection.rs`는 읽기 전용 설정 검사를 지원합니다. `error.rs`는 상위 계층에서 사용할 저장소 실패 분류를 제공합니다. |
 | `crates/volicord-core` | `crates/volicord-core/src/pipeline.rs`, `crates/volicord-core/src/methods/`, `crates/volicord-core/src/policy/` | `pipeline.rs`는 공통 요청 사전 점검, 검증된 요청 맥락 준비, 효과 경로 선택, 응답 구성, 재실행 처리, Core 커밋 조율을 담당합니다. `methods/`는 메서드별 검증, 계획, 저장소 변이 목록, 이벤트 페이로드, dry-run 요약, 결과 필드를 담당합니다. `policy/`는 작업 범주 점검, 재실행 맥락, Product Repository 경로 정규화, Write Check 호환성, 증거 상태, 판단 관련성, 닫기 준비 상태 계산에 쓰는 재사용 Core 정책 도우미를 담당합니다. |
-| `crates/volicord-cli` | `crates/volicord-cli/src/main.rs`, `crates/volicord-cli/src/agent_command.rs`, `crates/volicord-cli/src/user_command.rs`, `crates/volicord-cli/src/host_integration/`, `crates/volicord-cli/src/repository_guidance.rs`, `crates/volicord-cli/src/guidance_template.rs`, `crates/volicord-cli/src/registration.rs` | `main.rs`는 관리 명령과 바이너리 종료 동작을 디스패치합니다. `agent_command.rs`는 `volicord agent` install, project membership, status, verification, uninstall, `guidance` 명령을 파싱하고 오케스트레이션합니다. `user_command.rs`는 `volicord user` setup, status, judgment 명령을 파싱하고 오케스트레이션합니다. `host_integration/`은 Codex, Claude Code, generic 호스트 계획과 관리되는 호스트 설정을 맡습니다. `repository_guidance.rs`와 `guidance_template.rs`는 선택적 Product Repository 지침을 관리합니다. `registration.rs`는 Agent Connection, Connection Projects, User Channel 메타데이터를 만듭니다. |
+| `crates/volicord-cli` | `crates/volicord-cli/src/main.rs`, `crates/volicord-cli/src/agent_command.rs`, `crates/volicord-cli/src/user_command.rs`, `crates/volicord-cli/src/host_integration/`, `crates/volicord-cli/src/registration.rs` | `main.rs`는 관리 명령과 바이너리 종료 동작을 디스패치합니다. `agent_command.rs`는 `volicord agent` 연결, project membership, status, verification, uninstall 명령을 파싱하고 오케스트레이션합니다. `user_command.rs`는 로컬 User Channel status와 judgment 명령을 파싱하고 오케스트레이션합니다. `host_integration/`은 Codex, Claude Code, generic 호스트 계획과 관리되는 호스트 설정을 맡습니다. `registration.rs`는 Agent Connection, Connection Projects, User Channel 메타데이터를 만듭니다. |
 | `crates/volicord-mcp` | `crates/volicord-mcp/src/main.rs`, `crates/volicord-mcp/src/lib.rs` | `main.rs`는 stdio, `--check`, help, version 같은 명령 모드를 처리합니다. `lib.rs`는 MCP 도구 메타데이터, Agent Connection 시작 검사, 요청 시점 프로젝트 라우팅, 어댑터 소유 `volicord.list_projects` 유틸리티, 타입 지정 공개 `tools/call` 디코딩, `operation_category`와 `actor_source` 파생, 초기화 instructions, JSON-RPC stdio 프레이밍, 응답 래핑을 담당합니다. |
 | `crates/volicord-test-support` | `crates/volicord-test-support/src/lib.rs` | 테스트 패키지와 크레이트 테스트가 쓰는 폐기 가능한 Runtime Home 도우미, Core와 Store용 픽스처 설정, 공유 요청 빌더, 픽스처 전용 도우미를 제공합니다. |
 
@@ -223,30 +223,29 @@ sequenceDiagram
 
 ## 관리 에이전트 설정 흐름
 
-`volicord agent install`은 공개 Core 메서드가 아니라 로컬 관리 오케스트레이션으로 구현됩니다. 구현은 `crates/volicord-cli/src/agent_command.rs`와 `crates/volicord-cli/src/host_integration/`의 호스트 어댑터에 있습니다. 정확한 명령, Agent Connection, MCP 전송, 런타임 경계 계약은 [관리 CLI](../reference/admin-cli.md), [MCP 전송](../reference/mcp-transport.md), [런타임 경계](../reference/runtime-boundaries.md), [보안](../reference/security.md)이 담당합니다.
+`volicord agent connect`는 공개 Core 메서드가 아니라 로컬 관리 오케스트레이션으로 구현됩니다. 구현은 `crates/volicord-cli/src/agent_command.rs`와 `crates/volicord-cli/src/host_integration/`의 호스트 어댑터에 있습니다. 정확한 명령, Agent Connection, MCP 전송, 런타임 경계 계약은 [관리 CLI](../reference/admin-cli.md), [MCP 전송](../reference/mcp-transport.md), [런타임 경계](../reference/runtime-boundaries.md), [보안](../reference/security.md)이 담당합니다.
 
 ```mermaid
 flowchart TD
   parse["입력 파싱과 검증"]
-  plan["registry와 호스트 상태 검사, ID 도출, 프로젝트/연결/호스트/지침 계획 작성, 충돌 거부"]
+  plan["registry와 호스트 상태 검사, ID 도출, 프로젝트/연결/호스트 계획 작성, 충돌 거부"]
   dry{"--dry-run?"}
-  dryout["계획만 반환, Runtime Home이나 SQLite 쓰기, MCP 사전 점검, 호스트 적용, 지침, 초기화, 도구 발견 없음"]
+  dryout["계획만 반환, Runtime Home이나 SQLite 쓰기, MCP 사전 점검, 호스트 적용, 초기화, 도구 발견 없음"]
   runtime["Runtime Home과 프로젝트 상태 초기화 또는 재사용"]
   connection["Agent Connection, Connection Projects, 기본 프로젝트 라우팅 생성 또는 재사용"]
   preflight["해석된 Runtime Home으로 volicord-mcp --check --connection 실행"]
   host["호스트 대상 스냅샷을 읽고 계획된 호스트 설정 적용"]
-  inventory["최종 검증 전 Host Installation 인벤토리 등록 또는 갱신"]
-  guidance["선택되고 명시적으로 승인된 경우 저장소 지침 적용"]
+  inventory["최종 검증 전 Agent Connection 인벤토리 등록 또는 갱신"]
   readiness["호스트 준비 상태 검증"]
   gate{"호스트 게이트가 MCP handshake를 허용?"}
   handshake["MCP stdio 초기화와 도구 발견"]
   hostonly["호스트 검증 결과 사용"]
-  final["설정 결과 도출과 Host Installation 검증 상태 갱신"]
+  final["연결 결과 도출과 Agent Connection 검증 상태 갱신"]
   fail["지속 효과가 시작된 뒤 실패하면 journal의 소유된 효과를 보상하고 잔여 효과 보고"]
 
   parse --> plan --> dry
   dry -- yes --> dryout
-  dry -- no --> runtime --> connection --> preflight --> host --> inventory --> guidance --> readiness --> gate
+  dry -- no --> runtime --> connection --> preflight --> host --> inventory --> readiness --> gate
   gate -- yes --> handshake --> final
   gate -- no --> hostonly --> final
   runtime -. 이후 실패 .-> fail
@@ -254,23 +253,22 @@ flowchart TD
   preflight -. 실패 .-> fail
   host -. 실패 .-> fail
   inventory -. 실패 .-> fail
-  guidance -. 실패 .-> fail
   readiness -. 실패 .-> fail
   handshake -. 실패 .-> fail
   final -. 실패 .-> fail
 ```
 
-설정 순서는 지속 설정 전에 읽기 전용 계획 단계를 둡니다. 명령은 호스트, 범위, 저장소 쓰기, 지침, Runtime Home, 저장소, 연결, 실행 파일 입력을 파싱하고 검증합니다. 그런 다음 기존 registry와 호스트 상태를 검사하고, 안정적인 식별자를 도출하고, 프로젝트, 연결, 호스트, 선택적 지침 계획을 만들며, Runtime Home 상태를 만들거나 registry 행을 바꾸기 전에 호스트 충돌을 거부합니다. 따라서 호스트 계획은 Store 쪽 설정보다 먼저 일어납니다.
+연결 순서는 지속 설정 전에 읽기 전용 계획 단계를 둡니다. 명령은 호스트, 범위, 저장소 쓰기, Runtime Home, 저장소, 연결, 실행 파일 입력을 파싱하고 검증합니다. 그런 다음 기존 registry와 호스트 상태를 검사하고, 안정적인 식별자를 도출하고, 프로젝트, 연결, 호스트 계획을 만들며, Runtime Home 상태를 만들거나 registry 행을 바꾸기 전에 호스트 충돌을 거부합니다. 따라서 호스트 계획은 Store 쪽 설정보다 먼저 일어납니다.
 
-`--dry-run`이 선택되면 명령은 그 계획 단계의 결과만 반환합니다. Runtime Home 디렉터리나 SQLite 상태를 만들지 않고, `volicord-mcp --check`를 실행하지 않으며, 호스트 설정이나 저장소 지침을 적용하지 않고, MCP stdio 초기화나 도구 발견도 수행하지 않습니다.
+`--dry-run`이 선택되면 명령은 그 계획 단계의 결과만 반환합니다. Runtime Home 디렉터리나 SQLite 상태를 만들지 않고, `volicord-mcp --check`를 실행하지 않으며, 호스트 설정을 적용하지 않고, MCP stdio 초기화나 도구 발견도 수행하지 않습니다.
 
 dry-run이 아닌 실행은 Runtime Home과 프로젝트 상태를 초기화하거나 재사용한 뒤, Agent Connection, Connection Projects 허용 목록, 기본 프로젝트 라우팅을 만들거나 재사용합니다. 그 다음에만 해석된 Runtime Home으로 `volicord-mcp --check --connection <connection_id>`를 실행합니다. 이 MCP 시작 사전 점검은 호스트 설정 적용보다 먼저 일어납니다.
 
-호스트 설정 적용은 앞서 만든 호스트 계획을 따르며 대상 스냅샷, stale-plan 점검, 소유 마커, 지문 점검으로 보호됩니다. Host Installation 인벤토리는 호스트 설정 적용 뒤에만 등록하거나 갱신하며, 처음에는 최종 검증 상태가 기록되기 전 상태입니다. 선택적 저장소 지침은 인벤토리 등록 뒤에 적용되고, 선택되어 있으며 저장소 쓰기가 명시적으로 승인된 경우에만 적용됩니다.
+호스트 설정 적용은 앞서 만든 호스트 계획을 따르며 대상 스냅샷, stale-plan 점검, 소유 마커, 지문 점검으로 보호됩니다. Agent Connection 인벤토리는 호스트 설정 적용 뒤에만 등록하거나 갱신하며, 처음에는 최종 검증 상태가 기록되기 전 상태입니다. Product Repository 지침과 생성된 호스트 instructions는 참고 맥락일 뿐이며 권한을 지니는 설정 효과가 아닙니다.
 
 최종 검증은 먼저 호스트 준비 상태를 확인합니다. 직접 MCP stdio 초기화와 도구 발견은 호스트 게이트가 그 handshake를 허용할 때만 실행되므로, 호스트 준비 상태와 직접 MCP handshake는 별도 점검입니다. 호스트가 소유한 신뢰, 승인, 재로드, 재시작, OAuth, 또는 비슷한 사용자 제어 행동이 남아 있으면 결과는 여전히 `action_required`일 수 있습니다.
 
-실패 처리는 Runtime Home, registry, 호스트 설정, Product Repository 지침 경계를 가로지르는 journal 기반 보상입니다. 새로 적용한 관리 효과는 소유권과 안전 점검이 허용할 때만 되돌리려고 시도하며, 남는 잔여 효과는 보고합니다. 이 보상은 하나의 원자적 Store 트랜잭션이 아니고, 모든 지속 경계와 호스트 경계에 대한 보편적 롤백을 주장하지 않습니다.
+실패 처리는 Runtime Home, registry, 호스트 설정 경계를 가로지르는 journal 기반 보상입니다. 새로 적용한 관리 효과는 소유권과 안전 점검이 허용할 때만 되돌리려고 시도하며, 남는 잔여 효과는 보고합니다. 이 보상은 하나의 원자적 Store 트랜잭션이 아니고, 모든 지속 경계와 호스트 경계에 대한 보편적 롤백을 주장하지 않습니다.
 
 ## 결정 경로
 

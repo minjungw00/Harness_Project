@@ -8,11 +8,24 @@ use std::{
 };
 
 use serde_json::Value;
+use volicord_core::{CoreService, InvocationContext};
 use volicord_store::agent_connections::{
     agent_connection_record, list_connection_projects, CONNECTION_MODE_READ_ONLY,
     CONNECTION_MODE_WORKFLOW,
 };
+use volicord_store::{
+    bootstrap::{
+        initialize_runtime_home, register_project, ProjectRegistration, ACTIVE_PROJECT_STATUS,
+    },
+    core_pipeline::CoreProjectStore,
+};
 use volicord_test_support::TempRuntimeHome;
+use volicord_types::{
+    ActorSource, IdempotencyKey, InitialScope, JudgmentKind, JudgmentPresentation,
+    JudgmentRequiredFor, OperationCategory, ProjectId, RequestId, RequestedMode, RequiredNullable,
+    ResumePolicy, StateRecordKind, StateRecordRef, TaskId, ToolEnvelope, UserJudgmentContext,
+    UserJudgmentOptionId, UserJudgmentOptionInput, VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
+};
 
 #[test]
 fn binary_help_uses_agent_connection_model() -> Result<(), Box<dyn Error>> {
@@ -22,6 +35,8 @@ fn binary_help_uses_agent_connection_model() -> Result<(), Box<dyn Error>> {
 
     assert!(text.contains("volicord agent connect"));
     assert!(text.contains("--connection-id ID"));
+    assert!(text.contains("volicord user judgment record --project-id ID"));
+    assert!(!text.contains("volicord user setup"));
     let removed_command = ["sur", "face"].concat();
     assert!(!text.contains(&format!("volicord {removed_command}")));
     assert!(!text.contains(&format!("--{}-id", "integration")));
@@ -35,6 +50,10 @@ fn binary_help_uses_agent_connection_model() -> Result<(), Box<dyn Error>> {
     ])?;
     assert_eq!(removed.status.code(), Some(2));
     assert!(stderr(&removed).contains(&format!("unknown command: {removed_command}")));
+
+    let user_setup = run_without_home(["user", "setup", "--project-id", "project_a"])?;
+    assert_eq!(user_setup.status.code(), Some(2));
+    assert!(stderr(&user_setup).contains("unknown user command: setup"));
     Ok(())
 }
 
@@ -278,6 +297,102 @@ fn connection_project_enable_disable_and_uninstall_flow() -> Result<(), Box<dyn 
     Ok(())
 }
 
+#[test]
+fn user_channel_records_pending_judgment_without_setup() -> Result<(), Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new("cli-bin-user-channel")?;
+    let repo_root = runtime_home.create_product_repo("product-repo")?;
+    initialize_runtime_home(runtime_home.path(), "runtime_home_user_channel", "{}")?;
+    register_project(
+        runtime_home.path(),
+        ProjectRegistration {
+            project_id: "project_user_channel".to_owned(),
+            repo_root,
+            project_home: None,
+            status: ACTIVE_PROJECT_STATUS.to_owned(),
+            metadata_json: "{}".to_owned(),
+        },
+    )?;
+    let service = CoreService::new(runtime_home.path());
+    let intake = service.intake(
+        intake_request("req_cli_user_intake", "idem_cli_user_intake", Some(0)),
+        core_invocation(OperationCategory::AgentWorkflow),
+    )?;
+    let task_id = record_id(&intake.response_value["task_ref"])?;
+    let judgment = service.request_user_judgment(
+        request_user_judgment_request(
+            "req_cli_user_judgment",
+            "idem_cli_user_judgment",
+            Some(1),
+            &task_id,
+        ),
+        core_invocation(OperationCategory::AgentWorkflow),
+    )?;
+    let judgment_id = record_id(&judgment.response_value["user_judgment_ref"])?;
+
+    let show = run_with_home_env(
+        runtime_home.path(),
+        [
+            "user",
+            "judgment",
+            "show",
+            "--project-id",
+            "project_user_channel",
+            "--judgment-id",
+            judgment_id.as_str(),
+        ],
+        &[],
+    )?;
+    assert_success(&show);
+    assert!(stdout(&show).contains("UserJudgment"));
+    assert!(stdout(&show).contains("- accept: Accept focused choice"));
+
+    let record = run_with_home_env(
+        runtime_home.path(),
+        [
+            "user",
+            "judgment",
+            "record",
+            "--project-id",
+            "project_user_channel",
+            "--judgment-id",
+            judgment_id.as_str(),
+            "--option-id",
+            "accept",
+            "--expected-state-version",
+            "2",
+            "--request-id",
+            "req_cli_user_record",
+            "--idempotency-key",
+            "idem_cli_user_record",
+        ],
+        &[],
+    )?;
+    assert_success(&record);
+    let text = stdout(&record);
+    assert!(text.contains("resolved_by_actor_source: local_user"));
+    assert!(text.contains("operation_category: user_only"));
+
+    let store =
+        CoreProjectStore::open(runtime_home.path(), &ProjectId::new("project_user_channel"))?;
+    let persisted = store
+        .user_judgment_record(&judgment_id)?
+        .expect("recorded judgment should be stored");
+    assert_eq!(persisted.status, "resolved");
+    assert_eq!(
+        persisted.resolved_by_actor_source.as_deref(),
+        Some("local_user")
+    );
+    assert_eq!(
+        persisted.resolved_verification_basis.as_deref(),
+        Some("cli_direct_user_channel")
+    );
+    assert_eq!(
+        persisted.resolved_assurance_level.as_deref(),
+        Some("local_user_channel")
+    );
+    Ok(())
+}
+
 fn run_without_home<const N: usize>(args: [&str; N]) -> Result<Output, Box<dyn Error>> {
     Ok(Command::new(volicord_bin()).args(args).output()?)
 }
@@ -397,4 +512,113 @@ fn make_executable(path: &Path) -> Result<(), Box<dyn Error>> {
     permissions.set_mode(0o755);
     fs::set_permissions(path, permissions)?;
     Ok(())
+}
+
+fn intake_request(
+    request_id: &str,
+    idempotency_key: &str,
+    expected_state_version: Option<u64>,
+) -> volicord_types::IntakeRequest {
+    volicord_types::IntakeRequest {
+        envelope: envelope(
+            request_id,
+            Some(idempotency_key),
+            expected_state_version,
+            None,
+        ),
+        plain_language_request: "Create a focused CLI user-channel test task.".to_owned(),
+        requested_mode: RequestedMode::Work,
+        resume_policy: ResumePolicy::CreateNew,
+        initial_scope: InitialScope {
+            boundary: "Exercise the local User Channel.".to_owned(),
+            non_goals: vec!["Changing unrelated CLI behavior.".to_owned()],
+            acceptance_criteria: vec!["The pending judgment can be recorded locally.".to_owned()],
+        },
+        initial_context_refs: Vec::new(),
+    }
+}
+
+fn request_user_judgment_request(
+    request_id: &str,
+    idempotency_key: &str,
+    expected_state_version: Option<u64>,
+    task_id: &str,
+) -> volicord_types::RequestUserJudgmentRequest {
+    volicord_types::RequestUserJudgmentRequest {
+        envelope: envelope(
+            request_id,
+            Some(idempotency_key),
+            expected_state_version,
+            Some(task_id),
+        ),
+        task_id: TaskId::new(task_id),
+        change_unit_id: RequiredNullable::null(),
+        sensitive_action_scope: RequiredNullable::null(),
+        judgment_kind: JudgmentKind::ProductDecision,
+        presentation: JudgmentPresentation::Short,
+        question: "Should the focused CLI user-channel choice be accepted?".to_owned(),
+        options: Some(vec![UserJudgmentOptionInput {
+            option_id: UserJudgmentOptionId::new("accept"),
+            label: "Accept focused choice".to_owned(),
+            description: "Record the focused user-owned choice.".to_owned(),
+            consequence: "Only this judgment is resolved.".to_owned(),
+            is_default: true,
+        }])
+        .into(),
+        context: UserJudgmentContext {
+            summary: "The CLI needs a pending judgment to record.".to_owned(),
+            related_refs: Vec::new(),
+            artifact_refs: Vec::new(),
+            visible_risks: Vec::new(),
+            constraints: vec!["This choice does not imply broader acceptance.".to_owned()],
+        },
+        affected_refs: vec![StateRecordRef {
+            record_kind: StateRecordKind::Task,
+            record_id: volicord_types::RecordId::new(task_id),
+            project_id: ProjectId::new("project_user_channel"),
+            task_id: Some(TaskId::new(task_id)).into(),
+            state_version: expected_state_version.into(),
+        }],
+        required_for: vec![JudgmentRequiredFor::Informational],
+        expires_at: RequiredNullable::null(),
+    }
+}
+
+fn envelope(
+    request_id: &str,
+    idempotency_key: Option<&str>,
+    expected_state_version: Option<u64>,
+    task_id: Option<&str>,
+) -> ToolEnvelope {
+    ToolEnvelope {
+        project_id: ProjectId::new("project_user_channel"),
+        task_id: task_id.map(TaskId::new).into(),
+        request_id: RequestId::new(request_id),
+        idempotency_key: idempotency_key.map(IdempotencyKey::new).into(),
+        expected_state_version: expected_state_version.into(),
+        dry_run: false,
+        locale: None.into(),
+    }
+}
+
+fn core_invocation(operation_category: OperationCategory) -> InvocationContext {
+    let actor_source = match operation_category {
+        OperationCategory::Read | OperationCategory::AgentWorkflow => {
+            ActorSource::agent_connection("connection_cli_user_channel")
+        }
+        OperationCategory::UserOnly | OperationCategory::AdminLocal => ActorSource::LocalUser,
+    };
+    InvocationContext::new(
+        ProjectId::new("project_user_channel"),
+        actor_source,
+        operation_category,
+        VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
+    )
+}
+
+fn record_id(value: &Value) -> Result<String, Box<dyn Error>> {
+    value["record_id"]
+        .as_str()
+        .map(str::to_owned)
+        .ok_or_else(|| "record_id should be present".into())
 }

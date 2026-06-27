@@ -165,8 +165,6 @@ params:
   envelope:
     project_id: proj_export_001
     task_id: task_export_001
-    actor_kind: agent
-    surface_id: surface_status
     request_id: req_status_export_001
     idempotency_key: null
     expected_state_version: null

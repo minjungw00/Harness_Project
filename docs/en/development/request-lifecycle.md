@@ -315,10 +315,9 @@ Primary source path:
 3. [`crates/volicord-core/src/methods/prepare_write.rs`](../../../crates/volicord-core/src/methods/prepare_write.rs)
    implements `CoreService::prepare_write`, `prepare_write_policy`, and
    `plan_prepare_write`.
-4. [`crates/volicord-core/src/policy/write_authorization.rs`](../../../crates/volicord-core/src/policy/write_authorization.rs)
+4. [`crates/volicord-core/src/policy/write_check.rs`](../../../crates/volicord-core/src/policy/write_check.rs)
    supplies `prepare_write_decision`, `prepare_write_dry_run_summary`,
-   `surface_supports_prepare_write`, `write_authorization_expires_at`,
-   `write_authorization_is_expired`, and `write_decision_reason`.
+   Write Check compatibility helpers, and `write_decision_reason`.
 5. [`crates/volicord-core/src/policy/path.rs`](../../../crates/volicord-core/src/policy/path.rs)
    supplies Product Repository path normalization helpers.
 6. [`crates/volicord-core/src/policy/judgment_relevance.rs`](../../../crates/volicord-core/src/policy/judgment_relevance.rs)

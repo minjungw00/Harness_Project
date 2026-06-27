@@ -42,7 +42,7 @@
 - 현재 적용 Change Unit을 만들거나 교체할 때 선택적으로 쓰는 `change_unit.effect_contract`. 값이 있으면 `ChangeUnitEffectContract`를 사용합니다. 생략하면 그 Change Unit에는 추가 효과 계약이 없습니다.
 - 해결된 `judgment_kind=scope_decision`을 적용한다면 `related_scope_decision_refs`.
 
-범위 갱신이 `scope_decision`을 적용할 때, 각 참조 판단은 `judgment_kind=scope_decision`, `status=resolved`, `machine_action=accept`, `resolution_outcome=accepted`, `basis.compatibility_status=current`, scope update를 포함하는 `required_for`, `user_interaction`에 대한 확인된 행위자 출처, 현재 Task, Change Unit, `scope_revision`, 영향받는 참조와 호환되는 근거가 필요합니다. 거절, 연기, 오래됨, 대체됨, 만료됨, 유효하지 않은 근거, 해결 권한 정보 누락, 에이전트가 기록한 범위 결정은 범위 전이를 허가하지 않습니다.
+범위 갱신이 `scope_decision`을 적용할 때, 각 참조 판단은 `judgment_kind=scope_decision`, `status=resolved`, `machine_action=accept`, `resolution_outcome=accepted`, `resolved_by_actor_source=local_user`, 호환 User Channel 출처, `basis.compatibility_status=current`, scope update를 포함하는 `required_for`, 현재 Task, Change Unit, `scope_revision`, 영향받는 참조와 호환되는 근거가 필요합니다. 거절, 연기, 오래됨, 대체됨, 만료됨, 유효하지 않은 근거, 해결 권한 정보 누락, 에이전트가 기록한 범위 결정은 범위 전이를 허가하지 않습니다.
 
 ## 요청 스키마
 
@@ -184,8 +184,6 @@ params:
   envelope:
     project_id: proj_filter_001
     task_id: task_filter_001
-    actor_kind: agent
-    surface_id: surface_scope
     request_id: req_scope_filter_001
     idempotency_key: idem_scope_filter_001
     expected_state_version: 18

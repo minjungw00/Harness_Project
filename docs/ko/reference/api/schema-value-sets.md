@@ -59,17 +59,19 @@ volicord.close_task
 
 메서드 동작은 [API 메서드](methods.md)가 안내하는 메서드 담당 문서가 담당합니다. 메서드 이름은 `Task` 생명주기 값이 아닙니다.
 
+<a id="actor-source-values"></a>
 <a id="actor-values"></a>
-## 행위자 값
+## 행위자 출처 값
 
-`ToolEnvelope.actor_kind`와 `UserJudgmentResolution.resolved_by_actor_kind`는 같은 제어 값 집합을 사용합니다.
+`UserJudgmentResolution.resolved_by_actor_source` 같은 행위자 출처 필드는 `ActorSource` 값 집합을 사용합니다.
 
 | 값 | 사용하는 곳 | 담당 문서 경로 |
 |---|---|---|
-| `agent` | 요청 래퍼와 판단 해결 형태. | 형태 담당 문서: [API 코어 스키마](schema-core.md#tool-envelope). 해결 형태 담당 문서: [API 판단 스키마](schema-judgment.md). |
-| `user` | 요청 래퍼와 판단 해결 형태. | 형태 담당 문서: [API 코어 스키마](schema-core.md#tool-envelope). 해결 형태 담당 문서: [API 판단 스키마](schema-judgment.md). |
+| `local_user` | User Channel 호출 출처와 권한을 지니는 사용자 판단 해결. | 호출 의미: [에이전트 통합](../agent-integration.md). 해결 형태 담당 문서: [API 판단 스키마](schema-judgment.md). |
+| `agent_connection:<connection_id>` | Agent Connection 호출 출처와 에이전트가 만들거나 관찰한 상태. | 호출 의미: [에이전트 통합](../agent-integration.md). 중첩 형태 담당 문서가 값이 나타나는 위치를 정의합니다. |
+| `system` | 담당 문서가 명시적으로 허용하는 내부 시스템 출처. | 메서드와 저장소 담당 문서가 값이 나타나는 위치를 정의합니다. |
 
-이 값들은 요청이나 해결 형태가 이름 붙이는 API 행위자를 분류합니다. 이 값만으로 사용자 소유 판단, 승인, 범위 결정 권한, 최종 수락, 잔여 위험 수락, `Write Authorization`이 생기지는 않습니다. `actor_kind=user`는 귀속이지 증명이 아닙니다. 권한을 지니는 해결은 [에이전트 통합](../agent-integration.md)의 호환되는 내부 `VerifiedActorContext` 출처도 요구합니다.
+이 값들은 파생된 호출 출처 또는 지속 행위자 출처를 분류합니다. 이 값만으로 사용자 소유 판단, 승인, 범위 결정 권한, 최종 수락, 잔여 위험 수락, `Write Authorization`이 생기지는 않습니다. 권한을 지니는 사용자 판단 해결은 [에이전트 통합](../agent-integration.md)과 메서드 담당 문서가 정의하는 호환 User Channel 출처와 함께 `resolved_by_actor_source=local_user`를 요구합니다.
 
 <a id="next-action-values"></a>
 ## 다음 행동 값
@@ -125,7 +127,7 @@ no_effect
 <a id="access-class-values"></a>
 ## 접근 등급 값
 
-`VerifiedSurfaceContext.access_class`는 공개 API 요청 하나마다 요청 수준 값 하나만 사용합니다.
+메서드 담당 API 호환성 점검은 공개 API 요청 하나마다 요청 수준 접근 등급 하나를 사용합니다.
 
 | 값 | 어휘 설명 |
 |---|---|
@@ -136,7 +138,7 @@ no_effect
 | `artifact_registration` | `volicord.stage_artifact`와 연결되는 접근 등급 값. |
 | `artifact_read` | 아티팩트 읽기 접근 등급 값입니다. 아티팩트 본문 읽기 지원은 [아티팩트 저장소](../storage-artifacts.md)가 담당합니다. |
 
-접근 등급은 Volicord API 호환성 분류이지 OS 권한 분류가 아닙니다. 메서드별 접근 요구사항은 [API 메서드](methods.md)가 안내하는 메서드 담당 문서가 담당하고, 로컬 접점 확인 동작은 [에이전트 통합](../agent-integration.md)과 [보안](../security.md)이 담당합니다.
+접근 등급은 Volicord API 호환성 분류이지 OS 권한 분류가 아닙니다. 메서드별 접근 요구사항은 [API 메서드](methods.md)가 안내하는 메서드 담당 문서가 담당하고, Agent Connection 호출 검증 동작은 [에이전트 통합](../agent-integration.md)과 [보안](../security.md)이 담당합니다.
 
 <a id="record-and-reference-values"></a>
 ## 기록과 참조 값

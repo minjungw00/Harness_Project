@@ -314,16 +314,14 @@ Integration Profile 설치, 호스트별 MCP 설정, 선택적 저장소 지침,
   프로세스 디스패치, `run_cli`, `command_init`, `command_project`,
   `command_surface`.
 - [`crates/volicord-cli/src/agent_command.rs`](../../../crates/volicord-cli/src/agent_command.rs):
-  `volicord agent` install, project membership, status, verification,
-  uninstall, `guidance` 명령 오케스트레이션.
+  `volicord agent` 연결, project membership, status, verification, uninstall
+  명령 오케스트레이션.
 - [`crates/volicord-cli/src/host_integration/`](../../../crates/volicord-cli/src/host_integration/):
   Codex, Claude Code, generic 호스트 통합 어댑터.
-- [`crates/volicord-cli/src/repository_guidance.rs`](../../../crates/volicord-cli/src/repository_guidance.rs):
-  관리되는 Product Repository 지침 검색, apply, status, removal.
-- [`crates/volicord-cli/src/guidance_template.rs`](../../../crates/volicord-cli/src/guidance_template.rs):
-  Codex와 Claude Code 지침 본문.
 - [`crates/volicord-cli/src/registration.rs`](../../../crates/volicord-cli/src/registration.rs):
-  `capability_profile_json`, `local_access_json`, 접근 등급 도우미.
+  Agent Connection, Connection Project, User Channel 레지스트리 도우미.
+- [`crates/volicord-cli/src/user_command.rs`](../../../crates/volicord-cli/src/user_command.rs):
+  로컬 User Channel 상태와 판단 명령.
 
 중요한 현재 심볼:
 

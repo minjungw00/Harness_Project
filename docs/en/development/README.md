@@ -89,9 +89,9 @@ then
 [`crates/volicord-cli/src/agent_command.rs`](../../../crates/volicord-cli/src/agent_command.rs),
 [`crates/volicord-cli/src/host_integration/`](../../../crates/volicord-cli/src/host_integration/),
 and
-[`crates/volicord-cli/src/repository_guidance.rs`](../../../crates/volicord-cli/src/repository_guidance.rs).
-For registered surface capability and local-access metadata, continue with
 [`crates/volicord-cli/src/registration.rs`](../../../crates/volicord-cli/src/registration.rs).
+For local User Channel behavior, continue with
+[`crates/volicord-cli/src/user_command.rs`](../../../crates/volicord-cli/src/user_command.rs).
 
 ## Boundary reminders
 

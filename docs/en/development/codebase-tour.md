@@ -323,16 +323,14 @@ Important modules:
   for process dispatch, `run_cli`, `command_init`, `command_project`, and
   `command_surface`.
 - [`crates/volicord-cli/src/agent_command.rs`](../../../crates/volicord-cli/src/agent_command.rs)
-  for `volicord agent` install, project membership, status, verification,
-  uninstall, and guidance command orchestration.
+  for `volicord agent` connection, project membership, status, verification,
+  and uninstall command orchestration.
 - [`crates/volicord-cli/src/host_integration/`](../../../crates/volicord-cli/src/host_integration/)
   for Codex, Claude Code, and generic host integration adapters.
-- [`crates/volicord-cli/src/repository_guidance.rs`](../../../crates/volicord-cli/src/repository_guidance.rs)
-  for managed Product Repository guidance discovery, apply, status, and removal.
-- [`crates/volicord-cli/src/guidance_template.rs`](../../../crates/volicord-cli/src/guidance_template.rs)
-  for the Codex and Claude Code guidance body.
 - [`crates/volicord-cli/src/registration.rs`](../../../crates/volicord-cli/src/registration.rs)
-  for `capability_profile_json`, `local_access_json`, and access-class helpers.
+  for Agent Connection, Connection Project, and User Channel registry helpers.
+- [`crates/volicord-cli/src/user_command.rs`](../../../crates/volicord-cli/src/user_command.rs)
+  for local User Channel status and judgment commands.
 
 Important current symbols:
 

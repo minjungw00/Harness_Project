@@ -362,6 +362,7 @@ impl From<UserCommandError> for CliError {
     fn from(error: UserCommandError) -> Self {
         match error {
             UserCommandError::Usage(message) => Self::Usage(message),
+            UserCommandError::Runtime(message) => Self::Runtime(message),
         }
     }
 }

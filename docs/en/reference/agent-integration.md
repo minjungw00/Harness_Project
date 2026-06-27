@@ -1,6 +1,6 @@
 # Agent integration reference
 
-This document owns how agent-facing surfaces are registered, selected for current surface context, and described by capability declarations. It also defines the boundary for carrying owner-result Volicord context into an agent surface.
+This document owns how Agent Connections are registered, selected for current invocation context, and described by capability declarations. It also defines the boundary for carrying owner-result Volicord context into an Agent Connection.
 
 It does not define API schemas, method behavior, storage effects, security guarantee meanings, projection/display authority boundaries, or rendered template wording.
 
@@ -8,87 +8,89 @@ It does not define API schemas, method behavior, storage effects, security guara
 
 This document owns:
 
-- Agent Integration Profile meaning and integration project membership rules
-- Host Installation inventory meaning and host trust boundary
-- surface registration inputs and selector meaning for agent integration
-- current surface and actor context boundaries, including `surface_id`, `surface_instance_id`, request-level `VerifiedSurfaceContext`, and authority-resolution `VerifiedActorContext`
-- `user_interaction` versus `agent` surface-role boundaries for authority-bearing judgment resolution
-- capability declaration boundaries for `capability_profile`
+- Agent Connection meaning and Connection Project membership rules
+- host configuration inventory meaning and host trust boundary
+- current invocation and actor context boundaries, including `actor_source`, `operation_category`, verification basis, and assurance level
+- User Channel versus Agent Connection boundaries for authority-bearing judgment resolution
+- capability declaration boundaries
 - MCP project selection and per-project execution validation boundaries
-- agent context transfer rules between owner results and a surface
-- fallback display when the selected surface or current surface context is unavailable, mismatched, stale, or capability-limited
+- agent context transfer rules between owner results and an Agent Connection
+- fallback display when the selected Agent Connection or current invocation context is unavailable, mismatched, stale, or capability-limited
 - one-language-per-`doc_id` retrieval guidance for agent context
 
 This document does not own:
 
-- surface-specific workflows; see [Surface Recipes](../guides/surface-recipes.md)
-- API request envelopes, response branches, schema shapes, method access requirements, or access-class value names; see [API Schema Core](api/schema-core.md), [API Methods](api/methods.md), method owners, and [API Value Sets](api/schema-value-sets.md)
+- interface-specific workflows; see [Surface Recipes](../guides/surface-recipes.md)
+- API request envelopes, response branches, schema shapes, method access requirements, or operation-category value names; see [API Schema Core](api/schema-core.md), [API Methods](api/methods.md), method owners, and [API Value Sets](api/schema-value-sets.md)
 - `volicord-mcp` executable startup, process environment, stdio framing, startup validation, response wrapping, or shutdown; see [MCP Transport](mcp-transport.md)
 - storage layout, artifact lifecycle, or staged-handle validation; see storage and artifact owners through [Reference Index](README.md)
 - security guarantee meanings or access-boundary wording; see [Security](security.md)
 - authority versus projected display rules; see [Projection and template display boundaries](projection-and-templates.md)
 - rendered body wording, public display labels, or template phrasing; see [Template Bodies](template-bodies.md)
 
-## Agent Integration Profile
+## Agent Connection
 
-An Agent Integration Profile is the durable registry record for one coding-agent integration. One `volicord-mcp` process is bound to one integration, not to one fixed `Product Repository`.
+An Agent Connection is the durable registry record for one coding-agent connection. One `volicord-mcp` process is bound to one Agent Connection, not to one fixed `Product Repository`.
 
-Stored profile fields:
+Stored connection fields:
 
-- `integration_id`
-- `interaction_role`
-- `surface_id`
-- `surface_instance_id`
-- optional `default_project_id`
+- `connection_id`
+- `host_kind`
+- `host_scope`
+- `mode`
+- `server_name`
+- `config_target`
 - `enabled`
+- `managed_fingerprint`
+- `last_verified_status`
 - creation and update timestamps
 
 Rules:
 
-- The coding-agent integration role is `agent`.
-- The profile supplies the surface and surface-instance binding for MCP calls.
-- A profile can be enabled or disabled without editing host configuration.
-- Registering a profile does not automatically grant access to every project in the `Volicord Runtime Home`.
-- An integration has access only to projects that are explicitly present in its project membership records.
+- An Agent Connection is agent-facing and cannot act as the local `User Channel`.
+- A connection can be enabled or disabled without editing host configuration.
+- Registering a connection does not automatically grant access to every project in the `Volicord Runtime Home`.
+- A connection has access only to projects that are explicitly present in its Connection Project records.
+- A connection mode controls exposed tool sets; `read_only` is not a workflow-write capability.
 
 Storage record families and DDL belong to [Storage Records](storage-records.md) and [Storage DDL](storage-ddl.md). Administrative creation, update, verification, and removal commands belong to [Administrative CLI](admin-cli.md).
 
-## Integration project membership
+## Connection Project membership
 
-Integration project membership is an explicit many-to-many registry relationship between an Agent Integration Profile and registered projects.
+Connection Project membership is an explicit registry relationship between an Agent Connection and registered projects.
 
 Membership fields:
 
-- `integration_id`
+- `connection_id`
 - `project_id`
 - creation timestamp
-- a composite primary key over `integration_id` and `project_id`
+- a composite primary key over `connection_id` and `project_id`
 
 Rules:
 
-- A default project must also be an allowed project.
-- Removing a project that is still the integration default must fail until the default is cleared or changed.
-- Project membership does not bypass project status, path separation, storage executability, surface registration, or local access grants.
-- Invalid current project registrations must be rejected by integration project listing and access resolution instead of returned as allowed project records.
+- Project membership does not bypass project status, path separation, storage executability, Agent Connection mode, or method-owned invocation requirements.
+- Invalid current project registrations must be rejected by Connection Project listing and access resolution instead of returned as connected project records.
 - Inactive or otherwise execution-ineligible valid projects remain unavailable at execution time even if a stale membership row exists.
-- Revoking membership or disabling the integration must take effect without requiring host configuration to be rewritten.
-- An Agent Integration Profile with no allowed projects may remain stored, and Host Installation inventory or host configuration may also remain on disk. That stored state does not mean a new `volicord-mcp` process can start successfully.
-- New MCP stdio startup and `volicord-mcp --check` fail startup validation when the integration has zero allowed projects. Administrative verification that depends on that same startup path cannot succeed in that state.
-- A `volicord-mcp` process that already started while at least one project was allowed can observe later membership changes without host configuration being rewritten. After the last membership is removed, `volicord.list_projects` may return an empty project list, but project-routed public tools cannot proceed normally because no allowed project remains.
-- The integration is executable again only after an allowed project is added and the startup or per-call project checks can validate the required project state.
+- Removing a Connection Project or disabling the Agent Connection must take effect without requiring host configuration to be rewritten.
+- An Agent Connection with no connected projects may remain stored, and host configuration may also remain on disk. That stored state does not mean a new `volicord-mcp` process can start successfully.
+- New MCP stdio startup and `volicord-mcp --check --connection <connection_id>` fail startup validation when the Agent Connection has zero connected projects. Administrative verification that depends on that same startup path cannot succeed in that state.
+- A `volicord-mcp` process that already started while at least one project was connected can observe later membership changes without host configuration being rewritten. After the last membership is removed, `volicord.list_projects` may return an empty project list, but project-routed public tools cannot proceed normally because no connected project remains.
+- The Agent Connection is executable again only after a project is connected and the startup or per-call project checks can validate the required project state.
 
-## Host Installation
+<a id="host-installation"></a>
+## Host configuration inventory
 
-A Host Installation is a registry inventory record for Volicord-managed host configuration and verification state. The host configuration file remains the operational source of truth for the host. The registry record is management inventory and last-known verification state, not a substitute for the host configuration.
+A stored Agent Connection is management inventory for Volicord-managed host configuration and verification state. The host configuration file remains the operational source of truth for the host. The registry record is management inventory and last-known verification state, not a substitute for the host configuration.
 
-Stored installation fields:
+Stored connection fields:
 
-- `installation_id`
-- `integration_id`
+- `connection_id`
 - `host_kind`
 - `host_scope`
+- `mode`
 - `server_name`
 - `config_target`
+- `enabled`
 - `managed_fingerprint`
 - `last_verified_status`
 - creation and update timestamps
@@ -106,28 +108,27 @@ Rules:
 - Project and local scopes permit exactly the associated `Product Repository`.
 - User scope may permit multiple explicitly added `Product Repository` registrations.
 - Host trust, project trust, project MCP approval, OAuth, or any comparable host-controlled approval cannot be bypassed by Volicord.
-- A host installation can be successful as a file operation while the result state remains `action_required` because the host has not yet trusted, approved, loaded, initialized, or exposed the server.
-- `last_verified_status=complete` may be stored only for an administrative verification result that satisfied the operational gates owned by [Administrative CLI](admin-cli.md#agent-setup-result-states). A direct Volicord-spawned MCP handshake is not enough by itself.
+- A host configuration write can be successful as a file operation while the result state remains `action_required` because the host has not yet trusted, approved, loaded, initialized, or exposed the server.
+- `last_verified_status=complete` may be stored only for an administrative verification result that satisfied the operational gates owned by [Administrative CLI](admin-cli.md#agent-connection-result-states). A direct Volicord-spawned MCP handshake is not enough by itself.
 - `last_verified_status=action_required` is the expected state when Volicord can manage or export configuration but a host-owned trust, approval, OAuth, reload, or restart action remains.
-- `generic` export Host Installations remain user-managed configuration inventory. They do not prove external host loading and must not become `complete` unless a host-specific owner later defines an observable loadability gate.
-- Rejected, missing, changed, unavailable, and unknown host states are not `complete` Host Installation states.
-- Agent guidance can improve tool selection, but it is not an enforcement mechanism and cannot guarantee that a model will choose Volicord tools.
+- `generic` export remains user-managed configuration inventory. It does not prove external host loading and must not become `complete` unless a host-specific owner later defines an observable loadability gate.
+- Rejected, missing, changed, unavailable, and unknown host states are not `complete` Agent Connection states.
+- Product Repository guidance, generated host instructions, and MCP server instructions can improve tool selection, but they are not enforcement mechanisms and cannot guarantee that a model will choose Volicord tools.
 
-## Integration boundary
+## Agent Connection boundary
 
-Agent-facing surfaces carry context between Volicord owner results and an agent. They do not create Volicord authority.
+Agent Connections carry context between Volicord owner results and an agent. They do not create Volicord authority.
 
 Condition:
-- An agent may rely on a surface only through owner-returned state or a compatible current surface context.
-- Display text, chat messages, generated files, surface descriptions, `Product Repository` files, projections, and agent memory are support context only.
+- An agent may rely on a connection only through owner-returned state or a compatible current invocation context.
+- Display text, chat messages, generated files, connection descriptions, `Product Repository` files, projections, and agent memory are support context only.
 
 Agent may:
-- include a registered surface selector when the method owner requires it
 - show owner-result state and display labels
 - pass compact owner-result context to the agent
 
 Agent must not:
-- treat surface prose, copied identifiers, rendered displays, or agent memory as authority
+- treat connection prose, copied identifiers, rendered displays, or agent memory as authority
 - create Core state, `Write Authorization`, evidence sufficiency, user-owned judgment, close readiness, acceptance, residual-risk acceptance, artifact authority, or security guarantees from display text
 
 Owner links:
@@ -135,31 +136,30 @@ Owner links:
 - [Runtime Boundaries](runtime-boundaries.md) owns `Product Repository`, Volicord source repository/installation, executable-process, `Volicord Runtime Home`, and external MCP host configuration separation.
 - [Projection and template display boundaries](projection-and-templates.md) owns authority versus projected display rules.
 
-## User interaction and agent surfaces
+## User Channel and Agent Connections
 
-Agent integrations are `agent` role integrations. They are not user approval
-surfaces, even when the model is relaying a user's words.
+Agent Connections are agent-facing connections. They are not the `User Channel`,
+even when the model is relaying a user's words.
 
 Condition:
-- `interaction_role=agent` identifies an agent-facing surface for routing,
-  context transfer, and supported agent operations.
-- `interaction_role=user_interaction` identifies a registered surface that
-  method owners may use for authority-bearing user-judgment resolution.
 - The supported local CLI path for a human user to inspect pending judgments and
   record a selected Core-generated option is the `volicord user` command group
-  owned by [Administrative CLI](admin-cli.md#user-interaction-commands).
-- `ToolEnvelope.actor_kind=user` is attribution only. It cannot turn an
-  `agent` role surface into `user_interaction` provenance.
+  owned by [Administrative CLI](admin-cli.md#user-channel-commands).
+- Authority-bearing user-judgment resolution requires
+  `actor_source=local_user`, `operation_category=user_only`, and compatible
+  User Channel provenance.
+- `actor_source=agent_connection:<connection_id>` cannot become
+  `local_user` provenance by relaying text from a user.
 
 Agent may:
 - request a missing user-owned judgment when a method owner supports that path
 - display pending judgment state and Core-generated options returned by owners
-- route the human user to a supported `user_interaction` surface
+- route the human user to the supported `User Channel`
 
 Agent must not:
-- record an authority-bearing user decision from an `agent` role surface
+- record an authority-bearing user decision from an Agent Connection
 - treat a natural-language approval, chat reply, generated Markdown status, or
-  rendered projection as `user_interaction` provenance
+  rendered projection as User Channel provenance
 - broaden one selected option into final acceptance, residual-risk acceptance,
   sensitive-action approval, scope acceptance, or another judgment kind
 - create evidence sufficiency, acceptance, residual-risk acceptance, close
@@ -263,48 +263,41 @@ VerifiedSurfaceContext:
   verification_basis: string
 ```
 
-`VerifiedActorContext` is the internal, derived actor-provenance context used when a method resolves authority-bearing user judgments. It is derived from the bound surface instance, registration role, adapter invocation context, and the public `ToolEnvelope.actor_kind` attribution. It is not a public request payload.
+`InvocationContext` is the internal, derived actor-provenance and operation context used when a method executes. It is derived from the local adapter or Core caller, not from public request payload text.
 
 Internal actor shape, not a public API schema:
 
 ```yaml
-VerifiedActorContext:
-  role: agent | user_interaction
-  surface_id: string
-  surface_instance_id: string
+InvocationContext:
+  actor_source: local_user | system | agent_connection:<connection_id>
+  operation_category: read | agent_workflow | user_only | admin_local
   verification_basis: string
   assurance_level: string
 ```
 
-Baseline `assurance_level` means cooperative registered-surface provenance, not cryptographic human identity. Authority-bearing resolution requires a `VerifiedActorContext.role=user_interaction`, a matching bound `surface_id` and `surface_instance_id`, and public `actor_kind=user`. `ToolEnvelope.actor_kind` is attribution only; an agent-role surface cannot gain user authority by submitting `actor_kind=user`.
+Baseline `assurance_level` means cooperative local provenance, not cryptographic human identity. Authority-bearing user-judgment resolution requires `actor_source=local_user`, `operation_category=user_only`, a compatible User Channel `verification_basis`, and `assurance_level=local_user_channel`. An Agent Connection cannot gain user authority by submitting copied user text or generated guidance.
 
 Condition:
-- A public API request has exactly one request-level `VerifiedSurfaceContext.access_class`.
-- A public API request has at most one authority-relevant `VerifiedActorContext`, and only authority-resolution method owners consume it.
-- Public `ToolEnvelope.project_id`, when present, is a deterministic project selector constrained by the integration project membership. It is not caller authority and cannot grant access to an unlisted, inactive, or invalid project.
-- `ToolEnvelope.surface_id` remains part of the shared Volicord request envelope where schema owners define it for the common request model.
-- The MCP-visible tool input schema does not expose `envelope.surface_id`. MCP callers must not submit surface identity; if raw arguments include `envelope.surface_id`, the adapter rejects the call before Core execution. After MCP-visible input validation, the adapter injects the selected integration's `surface_id` into the internal typed request and must not let caller text override the integration's `surface_id` or `surface_instance_id`.
-- `surface_instance_id` remains adapter-derived invocation context. `ToolEnvelope` does not gain `surface_instance_id`; the shared request envelope stays with [API Schema Core](api/schema-core.md#tool-envelope).
-- Nested payloads such as `ArtifactInput` or `StagedArtifactHandle` do not add a second request-level access class.
-- Staged artifact provenance fields such as `created_by_surface_id` and `created_by_surface_instance_id` come from the derived `VerifiedSurfaceContext` at staging time, not caller text or nested artifact input.
-- Authority-provenance fields for resolved authority-bearing judgments come from `VerifiedActorContext.surface_id` and `VerifiedActorContext.surface_instance_id`, not caller text, labels, answer payloads, or copied refs.
-- Protected reads, mutations, and artifact operations can rely on a surface only when the method owner accepts the derived verified context.
-- `capability_profile` can describe support, but it cannot grant or elevate `VerifiedSurfaceContext.access_class`.
+- A public API request has exactly one derived `InvocationContext`.
+- Public `ToolEnvelope.project_id`, when present, is a deterministic project selector constrained by the Agent Connection's connected projects. It is not caller authority and cannot grant access to an unlisted, inactive, or invalid project.
+- `ToolEnvelope` does not expose `actor_source` or `operation_category`. If raw MCP arguments include those fields, the adapter rejects the call before Core execution.
+- Nested payloads such as `ArtifactInput` or `StagedArtifactHandle` do not add a second invocation context.
+- Authority-provenance fields for resolved authority-bearing judgments come from the derived `InvocationContext`, not caller text, labels, answer payloads, copied refs, generated Markdown, or Product Repository guidance.
+- Protected reads, mutations, and artifact operations can rely on an invocation only when the method owner accepts the derived context.
+- Capability declarations can describe support, but they cannot grant or elevate `actor_source` or `operation_category`.
 
 Agent may:
-- preserve request-level `VerifiedSurfaceContext.access_class` when displaying or passing context
-- expose absent or incompatible context as unavailable, mismatched, stale, or insufficient surface state
+- preserve derived invocation context when displaying or passing context
+- expose absent or incompatible context as unavailable, mismatched, stale, or insufficient Agent Connection state
 
 Agent must not:
-- submit `VerifiedSurfaceContext` as a request payload
-- submit `VerifiedActorContext` as a request payload
+- submit `InvocationContext` as a request payload
 - assert `verified=true`
-- submit `surface_instance_id` as verification authority
-- submit `actor_kind=user` from an `agent` role surface to satisfy user authority
-- submit access class, capability profile, or verification basis as public request authority
+- submit `actor_source=local_user` or `operation_category=user_only` from an Agent Connection to satisfy user authority
+- submit capability profile or verification basis as public request authority
 - fabricate staged artifact provenance
 - use copied identifiers, generated Markdown, chat text, projection text, or agent memory as substitutes for verified context
-- use `capability_profile` or requested invocation access as a substitute for the registered grant
+- use capability declarations or requested invocation access as a substitute for the derived invocation context
 
 Owner links:
 - Exact request envelopes and response shapes belong to [API Schema Core](api/schema-core.md), [API Methods](api/methods.md), and method owners.

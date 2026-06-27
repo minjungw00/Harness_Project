@@ -161,7 +161,7 @@ UserJudgmentResolution:
   rationale: JudgmentRationale
   note: string | null
   accepted_risks: AcceptedRiskInput[]
-  resolved_by_actor_kind: string
+  resolved_by_actor_source: string
 
 RecordUserJudgmentPayload:
   product_decision: object | null
@@ -193,12 +193,12 @@ JudgmentRationale:
 
 Rationale text cannot grant authority, create write authorization, satisfy evidence requirements, establish final acceptance, accept residual risk, make stale judgments current, or change which option was selected.
 
-`resolved_by_actor_kind` uses the same controlled value set as `ToolEnvelope.actor_kind`; see [actor values](schema-value-sets.md#actor-values). It is attribution, not proof of user authority. Authority-bearing resolution additionally requires compatible internal `VerifiedActorContext` provenance from a bound `user_interaction` surface.
+`resolved_by_actor_source` uses the `ActorSource` value set; see [actor source values](schema-value-sets.md#actor-source-values). It records derived provenance, not free-form caller attribution. Authority-bearing user-judgment resolution requires `resolved_by_actor_source=local_user` with compatible User Channel provenance.
 
 Authority-bearing resolution rule:
-- `judgment_kind=scope_decision`, `final_acceptance`, `residual_risk_acceptance`, `sensitive_approval`, or `cancellation` requires a selected Core-created authority option, `machine_action=accept`, `resolution_outcome=accepted`, `resolved_by_actor_kind=user`, compatible internal `VerifiedActorContext.role=user_interaction`, and a compatible current basis before it can satisfy an authority requirement.
+- `judgment_kind=scope_decision`, `final_acceptance`, `residual_risk_acceptance`, `sensitive_approval`, or `cancellation` requires a selected Core-created authority option, `machine_action=accept`, `resolution_outcome=accepted`, `resolved_by_actor_source=local_user`, compatible User Channel provenance, and a compatible current basis before it can satisfy an authority requirement.
 - `resolution_outcome=rejected` or `deferred` remains a durable user decision but does not approve, accept, authorize, waive, or close anything. `blocked` is not a judgment resolution outcome and cannot satisfy an authority requirement.
-- A resolved judgment without machine-readable action/outcome or required verified actor provenance is invalid owner state and cannot satisfy current authority requirements.
+- A resolved judgment without machine-readable action/outcome or required User Channel provenance is invalid owner state and cannot satisfy current authority requirements.
 
 Shape rule:
 - Exactly one decision-specific payload branch is populated for the selected `judgment_kind`.

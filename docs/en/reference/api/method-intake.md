@@ -157,8 +157,6 @@ params:
   envelope:
     project_id: proj_onboard_001
     task_id: null
-    actor_kind: agent
-    surface_id: surface_onboard
     request_id: req_intake_onboard_001
     idempotency_key: idem_intake_onboard_001
     expected_state_version: 17

@@ -59,17 +59,19 @@ volicord.close_task
 
 Method behavior is owned by method owner documents routed from [API Methods](methods.md). Method names are not Task lifecycle values.
 
+<a id="actor-source-values"></a>
 <a id="actor-values"></a>
-## Actor values
+## Actor source values
 
-`ToolEnvelope.actor_kind` and `UserJudgmentResolution.resolved_by_actor_kind` use the same controlled value set:
+Actor provenance fields such as `UserJudgmentResolution.resolved_by_actor_source` use the `ActorSource` value set:
 
 | Value | Used by | Owner route |
 |---|---|---|
-| `agent` | Request envelopes and judgment resolution shapes. | Shape owner: [API Schema Core](schema-core.md#tool-envelope); resolution shape owner: [API Judgment Schemas](schema-judgment.md). |
-| `user` | Request envelopes and judgment resolution shapes. | Shape owner: [API Schema Core](schema-core.md#tool-envelope); resolution shape owner: [API Judgment Schemas](schema-judgment.md). |
+| `local_user` | User Channel invocation provenance and authority-bearing user-judgment resolution. | Invocation meaning: [Agent Integration](../agent-integration.md); resolution shape owner: [API Judgment Schemas](schema-judgment.md). |
+| `agent_connection:<connection_id>` | Agent Connection invocation provenance and agent-created or agent-observed state. | Invocation meaning: [Agent Integration](../agent-integration.md); nested shape owners define where the value appears. |
+| `system` | Internal system provenance where an owner explicitly allows it. | Method and storage owners define where the value appears. |
 
-These values classify the API actor named by the request or resolution shape. They do not by themselves create user-owned judgment, approval, scope-decision authority, final acceptance, residual-risk acceptance, or `Write Authorization`. `actor_kind=user` is attribution, not proof; authority-bearing resolution also requires compatible internal `VerifiedActorContext` provenance from [Agent Integration](../agent-integration.md).
+These values classify derived invocation or persisted actor provenance. They do not by themselves create user-owned judgment, approval, scope-decision authority, final acceptance, residual-risk acceptance, or `Write Authorization`. Authority-bearing user-judgment resolution requires `resolved_by_actor_source=local_user` with compatible User Channel provenance as defined by [Agent Integration](../agent-integration.md) and the method owner.
 
 <a id="next-action-values"></a>
 ## Next-action values
@@ -125,7 +127,7 @@ Public `ErrorCode` values are separate and are owned by [API error codes](error-
 <a id="access-class-values"></a>
 ## Access class values
 
-`VerifiedSurfaceContext.access_class` uses exactly one request-level value per public API request:
+Method-owned API compatibility checks use exactly one request-level access class per public API request:
 
 | Value | Vocabulary note |
 |---|---|
@@ -136,7 +138,7 @@ Public `ErrorCode` values are separate and are owned by [API error codes](error-
 | `artifact_registration` | Access-class value associated with `volicord.stage_artifact`. |
 | `artifact_read` | Artifact-read access-class value; artifact body-read support is owned by [Artifact Storage](../storage-artifacts.md). |
 
-Access classes are Volicord API compatibility classes, not OS permission classes. Method access requirements stay with method owner documents routed from [API Methods](methods.md); local surface verification behavior stays with [Agent Integration](../agent-integration.md) and [Security](../security.md).
+Access classes are Volicord API compatibility classes, not OS permission classes. Method access requirements stay with method owner documents routed from [API Methods](methods.md); Agent Connection invocation verification behavior stays with [Agent Integration](../agent-integration.md) and [Security](../security.md).
 
 <a id="record-and-reference-values"></a>
 ## Record and reference values

@@ -162,7 +162,7 @@ UserJudgmentResolution:
   rationale: JudgmentRationale
   note: string | null
   accepted_risks: AcceptedRiskInput[]
-  resolved_by_actor_kind: string
+  resolved_by_actor_source: string
 
 RecordUserJudgmentPayload:
   product_decision: object | null
@@ -194,12 +194,12 @@ JudgmentRationale:
 
 판단 이유 텍스트는 권한을 부여하거나, `Write Authorization`을 만들거나, 증거 요구사항을 만족하거나, 최종 수락을 성립시키거나, 잔여 위험을 수락하거나, 오래된 판단을 현재 것으로 만들거나, 어떤 선택지가 선택되었는지를 바꿀 수 없습니다.
 
-`resolved_by_actor_kind`는 `ToolEnvelope.actor_kind`와 같은 제어 값 집합을 사용합니다. [행위자 값](schema-value-sets.md#actor-values)을 보세요. 이는 귀속이지 사용자 권한의 증명이 아닙니다. 권한을 지니는 해결은 묶인 `user_interaction` 접점에서 온 호환되는 내부 `VerifiedActorContext` 출처도 요구합니다.
+`resolved_by_actor_source`는 `ActorSource` 값 집합을 사용합니다. [행위자 출처 값](schema-value-sets.md#actor-source-values)을 보세요. 이는 자유 형식 호출자 귀속이 아니라 파생된 출처를 기록합니다. 권한을 지니는 사용자 판단 해결에는 호환 User Channel 출처와 함께 `resolved_by_actor_source=local_user`가 필요합니다.
 
 권한을 지니는 해결 규칙:
-- `judgment_kind=scope_decision`, `final_acceptance`, `residual_risk_acceptance`, `sensitive_approval`, `cancellation`은 현재 권한 요구사항을 만족하려면 선택된 Core 생성 권한 선택지, `machine_action=accept`, `resolution_outcome=accepted`, `resolved_by_actor_kind=user`, 호환되는 내부 `VerifiedActorContext.role=user_interaction`, 호환되는 현재 근거가 필요합니다.
+- `judgment_kind=scope_decision`, `final_acceptance`, `residual_risk_acceptance`, `sensitive_approval`, `cancellation`은 현재 권한 요구사항을 만족하려면 선택된 Core 생성 권한 선택지, `machine_action=accept`, `resolution_outcome=accepted`, `resolved_by_actor_source=local_user`, 호환 User Channel 출처, 호환되는 현재 근거가 필요합니다.
 - `resolution_outcome=rejected` 또는 `deferred`는 지속되는 사용자 결정이지만 어떤 것도 승인, 수락, 권한 부여, 면제, 닫기를 만들지 않습니다. `blocked`는 판단 해결 결과가 아니며 권한 요구사항을 만족할 수 없습니다.
-- 기계 판독 가능한 동작/결과나 필요한 확인된 행위자 출처가 없는 해결 판단은 유효하지 않은 소유자 상태이며 현재 권한 요구사항을 만족할 수 없습니다.
+- 기계 판독 가능한 동작/결과나 필요한 User Channel 출처가 없는 해결 판단은 유효하지 않은 소유자 상태이며 현재 권한 요구사항을 만족할 수 없습니다.
 
 형태 규칙:
 - 선택된 `judgment_kind`에 맞는 판단별 요청 본문 분기 하나만 채웁니다.

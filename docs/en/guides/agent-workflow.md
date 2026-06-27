@@ -15,7 +15,7 @@ Owner links:
 
 - Exact connector behavior: [Agent Integration Reference](../reference/agent-integration.md)
 - Host setup and multi-repository operation: [Agent Host Setup](agent-host-setup.md) and [Multi-Repository Agent Setup](multi-repository-agent-setup.md)
-- Surface-specific presentation: [Surface Recipes](surface-recipes.md)
+- Interface-specific presentation: [Surface Recipes](surface-recipes.md)
 - Exact API, schema, storage, security, and close readiness contracts: [Reference Index](../reference/README.md)
 
 <a id="operating-loop"></a>
@@ -62,7 +62,7 @@ Escalate from small change to tracked work when you find scope drift, a new publ
 <a id="project-selection"></a>
 ## Select the Volicord project deliberately
 
-In the current MCP path, the `volicord-mcp` process is bound to one Agent Integration Profile, not to one fixed `Product Repository`. A user-scope integration may allow multiple projects, while project and local scopes remain single-repository scopes.
+In the current MCP path, the `volicord-mcp` process is bound to one Agent Connection, not to one fixed `Product Repository`. A user-scope Agent Connection may connect multiple projects, while project and local scopes remain single-repository scopes.
 
 For public Volicord tool calls:
 
@@ -71,21 +71,21 @@ For public Volicord tool calls:
 - If a valid default project exists, omitted `project_id` may route to that default, but explicit selection is clearer for multi-repository work.
 - Never guess a project from folder names, current working directory, MCP roots, host labels, or memory.
 
-`volicord.list_projects` is a read-only MCP adapter utility. It lists only projects explicitly allowed for the bound integration and is not a public Core API method.
+`volicord.list_projects` is a read-only MCP adapter utility. It lists only projects explicitly connected to the bound Agent Connection and is not a public Core API method.
 
 When multiple projects are available and no explicit project or valid default is supplied, the adapter rejects the call before Core execution and tells the agent to call `volicord.list_projects`. Treat that as an agent-resolvable routing issue: list projects, select the intended project, and retry with `envelope.project_id`.
 
 <a id="instructions-and-guidance"></a>
 ## Treat instructions and guidance as advisory
 
-Volicord provides two guidance layers for agents:
+Volicord guidance can reach agents through:
 
 - MCP server instructions returned during MCP initialization.
-- Optional `Product Repository` guidance, such as a managed `AGENTS.md` block for Codex or `.claude/rules/volicord.md` for Claude Code.
+- `Product Repository` guidance files or host-specific instructions, when present.
 
-These instructions can help tool selection, project routing, and workflow consistency. They are not access control, security enforcement, user-owned judgment, `Write Authorization`, evidence, acceptance, close readiness, or proof that a model will choose Volicord tools.
+These instructions can help tool selection, project routing, and workflow consistency. They are not access control, security enforcement, User Channel authority, user-owned judgment, `Write Check`, evidence, acceptance, close readiness, or proof that a model will choose Volicord tools.
 
-Core authority and external filesystem permission remain distinct. A Volicord record or `Write Authorization` does not independently grant the host permission to edit product files, and host filesystem permission does not create Volicord authority.
+Core authority and external filesystem permission remain distinct. A Volicord record or passed `Write Check` does not independently grant the host permission to edit product files, and host filesystem permission does not create Volicord authority.
 
 <a id="keep-context-small"></a>
 ## Keep context small
@@ -94,7 +94,7 @@ Always-on context should fit the next action. Carry summaries and refs, then loa
 
 Include only what is currently useful:
 
-- verified surface status and capability limits
+- Agent Connection mode and capability limits
 - current `Task` or work boundary
 - current scope, non-goals, and relevant paths or operation class
 - current Change Unit effect contract when it affects the next action
@@ -103,7 +103,7 @@ Include only what is currently useful:
 - artifact and evidence summaries when they support a claim
 - current blockers and stale-state warnings
 - evidence gaps, residual-risk status, and close blockers when relevant
-- guarantee level supported by the current surface context and [Security](../reference/security.md)
+- guarantee level supported by the current Agent Connection context and [Security](../reference/security.md)
 - source freshness
 - one next safe action
 
@@ -129,7 +129,7 @@ A focused clarification should show:
 - why close is already blocked, if relevant
 - next safe action
 
-Unknowns block progress only when they affect the first safe work item or the next safe action. If the blocker is agent-resolvable or surface-owned, name the next action instead of asking the user.
+Unknowns block progress only when they affect the first safe work item or the next safe action. If the blocker is agent-resolvable or connection-owned, name the next action instead of asking the user.
 
 <a id="preserve-user-judgment"></a>
 ## Preserve user-owned judgment
@@ -172,7 +172,7 @@ Do not treat "yes", "approved", "looks good", "go ahead", or "continue" as a bun
 Keep product judgment, technical judgment, scope judgment, sensitive-action approval, final acceptance, residual-risk acceptance, and cancellation separate. No judgment substitutes for another.
 
 <a id="route-user-interaction"></a>
-### Route authority-bearing answers to `user_interaction`
+### Route authority-bearing answers to the User Channel
 
 When Core needs a user-owned judgment, the agent may request or present the
 focused judgment need and show the owner-returned options. Core-generated
@@ -180,19 +180,17 @@ options define what the user can accept, reject, defer, or otherwise select for
 that judgment. Do not add extra authority outcomes in prose.
 
 If the user's answer must become authority-bearing Core state, route the user to
-a supported `user_interaction` surface. The stable local CLI route is:
+the local `User Channel`. The stable local CLI route is:
 
 ```sh
 volicord user judgment show --project-id PROJECT_ID --judgment-id JUDGMENT_ID
 volicord user judgment record --project-id PROJECT_ID --judgment-id JUDGMENT_ID --option-id OPTION_ID
 ```
 
-An `agent` role integration must not call `volicord.record_user_judgment` as if
-it were the user, submit `actor_kind=user` to satisfy user authority, or convert
-a chat reply into authority-bearing acceptance without compatible
-`user_interaction` provenance. If the current surface cannot record the answer,
-name the needed user action and continue only with work that does not depend on
-that judgment.
+An Agent Connection must not call `volicord.record_user_judgment`, supply User
+Channel provenance, or convert a chat reply into authority-bearing acceptance.
+If the answer has not been recorded through the User Channel, name the needed
+user action and continue only with work that does not depend on that judgment.
 
 Status summaries, generated Markdown, rendered projections, and chat text can
 display a pending judgment or option list. They are support context only; they
@@ -202,7 +200,7 @@ user-owned judgment.
 <a id="check-before-writes"></a>
 ## Check before writes
 
-Before product, code, or file writes in Volicord-connected work, use the owner write path only after the intended operation is specific enough to evaluate. Exact prepare-write behavior belongs to [Prepare-write Method](../reference/api/method-prepare-write.md).
+Before product, code, or file writes in Volicord-connected work, run a `Write Check` through the owner write path only after the intended operation is specific enough to evaluate. Exact prepare-write behavior belongs to [Prepare-write Method](../reference/api/method-prepare-write.md).
 
 Do not claim write compatibility from a plan, stale chat context, broad enthusiasm, stale status, generated summary, or rendered view.
 
@@ -214,9 +212,9 @@ Show the user:
 - pending user judgments or sensitive approvals
 - stale state or unavailable authority
 - what Volicord can verify, or the capability limit
-- next action that would unblock the write check
+- next action that would unblock the `Write Check`
 
-If scope changes, update the current scope before asking for a new write check. Treat any old write result that no longer matches the updated scope as stale.
+If scope changes, update the current scope before asking for a new `Write Check`. Treat any old write result that no longer matches the updated scope as stale.
 
 When current state includes a Change Unit effect contract, include whether the intended product-file effect and paths fit it. Treat that as Core authority context for authorization, not sandboxing, security enforcement, user-owned judgment, sensitive-action approval, or evidence that a write occurred.
 
@@ -244,7 +242,7 @@ Status output should lead with:
 
 - the primary blocker
 - the next action that would unblock it
-- whether the blocker is user-owned, agent-resolvable, or surface/system-owned
+- whether the blocker is user-owned, agent-resolvable, or connection/system-owned
 
 The agent should not ask the user to solve something it can safely inspect, refresh, retry, narrow, or record.
 
@@ -293,7 +291,7 @@ Do not make these appear required for ordinary baseline work:
 - operations control programs
 - other out-of-scope capabilities
 
-Quality concerns should route to the applicable owner when one applies, such as scope, user-owned judgment, evidence, residual-risk visibility, surface capability, or another applicable blocker. Do not invent a separate quality gate or waiver path in the use guide.
+Quality concerns should route to the applicable owner when one applies, such as scope, user-owned judgment, evidence, residual-risk visibility, Agent Connection capability, or another applicable blocker. Do not invent a separate quality gate or waiver path in the use guide.
 
 Use compact user-facing shapes first: status, focused judgment request, what was checked, and close result. Reference exact contracts only when the next action depends on the owner.
 
@@ -316,6 +314,6 @@ Agent authors and operators should use this path:
 Then use:
 
 - [Surface Recipes](surface-recipes.md) for CLI, IDE/editor, chat, and local MCP presentation choices
-- [Agent Host Setup](agent-host-setup.md) for installing, verifying, guiding, and removing Codex or Claude Code integrations
-- [Multi-Repository Agent Setup](multi-repository-agent-setup.md) for user-scope integrations that allow more than one `Product Repository`
+- [Agent Host Setup](agent-host-setup.md) for connecting, verifying, and removing Codex or Claude Code Agent Connections
+- [Multi-Repository Agent Setup](multi-repository-agent-setup.md) for user-scope Agent Connections that allow more than one `Product Repository`
 - [Reference Index](../reference/README.md) only when the next action needs an exact owner contract

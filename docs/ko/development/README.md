@@ -81,9 +81,9 @@ Core는 Volicord 상태를 위한 로컬 기준 기록입니다.
 시작한 뒤
 [`crates/volicord-cli/src/agent_command.rs`](../../../crates/volicord-cli/src/agent_command.rs),
 [`crates/volicord-cli/src/host_integration/`](../../../crates/volicord-cli/src/host_integration/),
-[`crates/volicord-cli/src/repository_guidance.rs`](../../../crates/volicord-cli/src/repository_guidance.rs)를
-읽습니다. 등록된 접점의 역량과 로컬 접근 메타데이터는 이어서
 [`crates/volicord-cli/src/registration.rs`](../../../crates/volicord-cli/src/registration.rs)를
+읽습니다. 로컬 User Channel 동작은 이어서
+[`crates/volicord-cli/src/user_command.rs`](../../../crates/volicord-cli/src/user_command.rs)를
 읽습니다.
 
 ## 경계 기억하기

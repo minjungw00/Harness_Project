@@ -65,7 +65,7 @@
 
 의미하지 않는 것:
 - 더 좁은 메서드별 요청 규칙을 덮어쓰지 않습니다.
-- 호출 접근 등급, 호출 `surface_instance_id`, 역량 프로필, 검증 근거, `VerifiedSurfaceContext`를 담지 않습니다.
+- `actor_source`, `operation_category`, 역량 프로필, 검증 근거, 그 밖의 호출 출처를 담지 않습니다.
 
 담당 문서 링크:
 - 메서드별 요청 규칙: [API 메서드](methods.md)가 안내하는 메서드 담당 문서.
@@ -74,8 +74,6 @@
 ToolEnvelope:
   project_id: string
   task_id: string | null
-  actor_kind: string
-  surface_id: string
   request_id: string
   idempotency_key: string | null
   expected_state_version: integer | null
@@ -85,19 +83,18 @@ ToolEnvelope:
 
 의미:
 - `task_id`는 null 허용 요청 수준 `Task` 선택자입니다. 필드는 존재하며 값은 null일 수 있습니다.
-- `actor_kind`는 요청 귀속을 위한 제어 값 문자열입니다. 인간 신원 증명이 아니며 그 자체로 사용자 권한을 만족하지 않습니다. 권한을 지니는 판단 해결은 [에이전트 통합](../agent-integration.md)이 정의하는 내부 `VerifiedActorContext`를 사용합니다.
 - `expected_state_version`은 프로젝트 전체 상태 시계 값을 담는 요청 수준 필드입니다.
 - `idempotency_key`는 null 허용 불투명 식별자입니다. 메서드 담당 문서가 null이 아닌 값이 필요한 때를 정의합니다.
 - `expected_state_version`은 null 허용입니다. 메서드와 저장소 담당 문서가 null이 아닌 값이 필요한 때를 정의합니다.
-- `project_id`, `task_id`, `surface_id`, `request_id`, `idempotency_key`는 null이 아닐 때 불투명 식별자입니다.
+- `project_id`, `task_id`, `request_id`, `idempotency_key`는 null이 아닐 때 불투명 식별자입니다.
 - `locale`은 null 허용 로캘 태그 문자열이며 Volicord가 제어하는 값 집합이 아닙니다.
-- `surface_id`는 등록된 접점 선택자입니다. 현재 호출 `surface_instance_id`와 요청 접근 등급은 공개 요청 필드가 아니라 [에이전트 통합](../agent-integration.md)이 설명하는 어댑터/Core 로직에서 파생됩니다.
+- 행위자 출처와 동작 범주는 공개 요청 필드가 아니라 [에이전트 통합](../agent-integration.md)이 설명하는 어댑터/Core 로직에서 파생됩니다.
 
 의미하지 않는 것:
 - 이 필드 목록은 충돌 동작, 저장소 버전 관리, 메서드별 선택자 우선순위를 정의하지 않습니다.
 
 담당 문서 링크:
-- `actor_kind` 값: [행위자 값](schema-value-sets.md#actor-values)
+- actor-source 값: [행위자 출처 값](schema-value-sets.md#actor-source-values)
 - 메서드별 요청 동작: [API 메서드](methods.md)가 안내하는 메서드 담당 문서
 - 충돌 동작: [상태 버전 충돌](error-precedence.md#state-conflict-behavior)
 - 저장소 버전 동작: [저장소 버전 관리](../storage-versioning.md)

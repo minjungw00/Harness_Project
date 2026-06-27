@@ -74,12 +74,13 @@ Nested owner links:
 
 The method requires:
 
-- server-derived `VerifiedSurfaceContext` with `access_class=core_mutation`
+- server-derived invocation context with `actor_source=local_user`
+- server-derived invocation context with `operation_category=user_only`
 - an addressed pending judgment that belongs to the same project and compatible Task selected by the request
 
-Local access failures, unreadable judgment identity, and insufficient local capability reject before commit.
+Local User Channel failures, unreadable judgment identity, and insufficient invocation provenance reject before commit.
 
-Authority-bearing resolution additionally requires a derived `VerifiedActorContext.role=user_interaction` for the bound surface instance and `envelope.actor_kind=user`. A surface registered with `interaction_role=agent` cannot satisfy user authority by submitting `actor_kind=user`.
+Authority-bearing resolution additionally requires `verification_basis=cli_direct_user_channel` or another owner-defined compatible User Channel basis. An Agent Connection invocation, generated guidance file, generated Markdown, status summary, or projection cannot satisfy user authority by claiming or relaying a user answer.
 
 ## State version behavior
 
@@ -101,8 +102,8 @@ Compatibility requirements:
 - Final acceptance must match the current Task, Change Unit, `scope_revision`, `close_basis_revision`, baseline, and result refs captured in the judgment basis.
 - Residual-risk acceptance must include exact current `risk_id` values in `AcceptedRiskInput` and must match the current `close_basis_revision`.
 - Sensitive approval must match current `scope_revision`, Change Unit, operation, normalized paths, sensitive categories, and baseline.
-- Scope decision authority for a later scope update requires `judgment_kind=scope_decision`, `status=resolved`, `machine_action=accept`, `resolution_outcome=accepted`, current basis, `required_for` that includes scope update, verified `user_interaction` actor provenance, and compatible Task, Change Unit, `scope_revision`, and affected refs.
-- Authority-bearing judgments require `resolved_by_actor_kind=user`, compatible verified actor provenance, `machine_action=accept`, and `resolution_outcome=accepted` to satisfy the authority requirement.
+- Scope decision authority for a later scope update requires `judgment_kind=scope_decision`, `status=resolved`, `machine_action=accept`, `resolution_outcome=accepted`, current basis, `required_for` that includes scope update, `resolved_by_actor_source=local_user`, compatible User Channel provenance, and compatible Task, Change Unit, `scope_revision`, and affected refs.
+- Authority-bearing judgments require `resolved_by_actor_source=local_user`, compatible User Channel provenance, `machine_action=accept`, and `resolution_outcome=accepted` to satisfy the authority requirement.
 - Rejected or deferred authority-bearing judgments remain decision records but cannot authorize a current transition. Stale, superseded, expired, invalid-basis, provenance-missing, resolution-incomplete, or agent-recorded authority-bearing judgments cannot authorize a current transition.
 - Scope or Run changes do not delete historical judgments; they make incompatible judgments ineligible for current close, write, scope-decision, or sensitive-approval requirements.
 
@@ -184,8 +185,6 @@ params:
   envelope:
     project_id: proj_empty_001
     task_id: task_empty_001
-    actor_kind: user
-    surface_id: surface_empty
     request_id: req_empty_answer_001
     idempotency_key: idem_empty_answer_001
     expected_state_version: 62
@@ -327,7 +326,9 @@ user_judgment:
       artifact_refs: []
     note: null
     accepted_risks: []
-    resolved_by_actor_kind: user
+    resolved_by_actor_source: local_user
+    resolved_verification_basis: cli_direct_user_channel
+    resolved_assurance_level: local_user_channel
   expires_at: null
   created_at: "<example-created-at>"
   resolved_at: "<example-resolved-at>"

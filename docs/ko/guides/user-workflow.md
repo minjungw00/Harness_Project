@@ -76,18 +76,12 @@ Volicord는 사용자가 평소 말로 일하면서도 판단 경계를 볼 수 
 <a id="record-a-core-user-judgment"></a>
 ## Core 사용자 판단 기록하기
 
-어떤 선택이 권한을 지니는 Core 상태가 되어야 한다면 지원되는 `user_interaction`
-접점을 사용합니다. 안정적인 로컬 CLI 경로는 `volicord user`입니다. 정확한 명령
-동작은 [관리 CLI](../reference/admin-cli.md#user-interaction-commands)가 담당하고,
-권한 의미는 [Core 모델](../reference/core-model.md)이 담당하며, 접점 역할 경계는
-[에이전트 통합 참조](../reference/agent-integration.md#current-surface-context)가
-담당합니다.
-
-프로젝트에 로컬 사용자 접점을 한 번 설정합니다.
-
-```sh
-volicord user setup --project-id acme-api
-```
+어떤 선택이 권한을 지니는 Core 상태가 되어야 한다면 지원되는 `User Channel`을
+사용합니다. 안정적인 로컬 CLI 경로는 `volicord user`이며, 사용자 설정, 어댑터 등록,
+로컬 접근 부여를 요구하지 않습니다. 정확한 명령 동작은
+[관리 CLI](../reference/admin-cli.md#user-channel-commands)가 담당하고, 권한 의미는
+[Core 모델](../reference/core-model.md)이 담당하며, Agent Connection 경계는
+[에이전트 통합 참조](../reference/agent-integration.md)가 담당합니다.
 
 작업에 대기 중인 판단이 있으면 아래 순서로 진행합니다.
 
@@ -109,10 +103,11 @@ volicord user judgment record --project-id acme-api --judgment-id JUDGMENT_ID --
 `--note`도 선택된 Core 선택지를 바꾸지 않습니다.
 
 에이전트는 사용자를 이 경로로 안내하고, 대기 중인 질문을 보여 주고, 선택지를
-설명할 수 있습니다. 하지만 `agent` 역할 통합은 사용자의 권한 판단을 대신
-기록하거나 `actor_kind=user`를 제출해 사용자처럼 동작하려 하면 안 됩니다. 생성된
-Markdown, 상태 요약, 채팅 문장, 렌더링된 상태 보기는 상태를 읽는 데 도움을 줄 수
-있지만 Core 권한은 아닙니다. 상태 보기 경계는
+설명할 수 있습니다. 하지만 Agent Connection은 사용자의 권한 판단을 대신
+기록하거나, `volicord.record_user_judgment`를 호출하거나, 채팅 답변을 권한을
+지니는 Core 상태로 바꾸면 안 됩니다. 생성된 Markdown, 상태 요약, 채팅 문장,
+Product Repository 지침, 렌더링된 상태 보기는 상태를 읽는 데 도움을 줄 수 있지만
+Core 권한은 아닙니다. 상태 보기 경계는
 [상태 보기와 템플릿 표시 경계](../reference/projection-and-templates.md)를 봅니다.
 
 ## 쓰기와 민감 동작 승인하기
@@ -207,7 +202,7 @@ Markdown, 상태 요약, 채팅 문장, 렌더링된 상태 보기는 상태를 
 | Core 권한, 사용자 소유 판단, 닫기 준비 상태 의미 | [Core 모델](../reference/core-model.md) |
 | 보안 표현과 보장 수준 | [보안](../reference/security.md) |
 | API 메서드와 스키마 | [참조 색인](../reference/README.md) |
-| 접점과 커넥터 동작 | [에이전트 통합 참조](../reference/agent-integration.md) |
+| Agent Connection과 User Channel 동작 | [에이전트 통합 참조](../reference/agent-integration.md) |
 
 이 가이드를 API 계약처럼 다루거나 자세한 계약 규칙을 사용자 경로에 다시 복사하지 않습니다.
 

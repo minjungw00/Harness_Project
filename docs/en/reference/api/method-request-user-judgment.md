@@ -168,8 +168,6 @@ params:
   envelope:
     project_id: proj_banner_001
     task_id: task_banner_001
-    actor_kind: agent
-    surface_id: surface_banner
     request_id: req_banner_request_001
     idempotency_key: idem_banner_request_001
     expected_state_version: 51
@@ -219,8 +217,6 @@ params:
   envelope:
     project_id: proj_scope_001
     task_id: task_scope_001
-    actor_kind: agent
-    surface_id: surface_scope
     request_id: req_scope_decision_001
     idempotency_key: idem_scope_decision_001
     expected_state_version: 17
@@ -262,8 +258,6 @@ params:
   envelope:
     project_id: proj_export_001
     task_id: task_export_001
-    actor_kind: agent
-    surface_id: surface_export
     request_id: req_sensitive_export_001
     idempotency_key: idem_sensitive_export_001
     expected_state_version: 28

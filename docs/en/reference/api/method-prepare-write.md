@@ -78,7 +78,7 @@ Requires:
 - any separate accepted sensitive-action approval (`sensitive_approval`)
 - local surface capability needed for the intended product-file write check
 
-A separate sensitive-action approval satisfies this method only when the judgment is current, resolved by `actor_kind=user`, selected an option with `resolution_outcome=accepted`, and its `JudgmentBasis` remains compatible with the current `scope_revision`, current Change Unit, intended operation, normalized `intended_paths`, sensitive categories, and `baseline_ref`. A judgment cannot satisfy sensitive-action approval if it has invalid basis state or is stale, superseded, expired, rejected, deferred, missing required resolution authority, or incompatible. Callers do not submit revision fields to make an approval compatible.
+A separate sensitive-action approval satisfies this method only when the judgment is current, resolved with `resolved_by_actor_source=local_user` and compatible User Channel provenance, selected an option with `resolution_outcome=accepted`, and its `JudgmentBasis` remains compatible with the current `scope_revision`, current Change Unit, intended operation, normalized `intended_paths`, sensitive categories, and `baseline_ref`. A judgment cannot satisfy sensitive-action approval if it has invalid basis state or is stale, superseded, expired, rejected, deferred, missing required resolution authority, or incompatible. Callers do not submit revision fields to make an approval compatible.
 
 ## State version behavior
 
@@ -222,8 +222,6 @@ params:
   envelope:
     project_id: proj_pref_001
     task_id: task_pref_001
-    actor_kind: agent
-    surface_id: surface_write
     request_id: req_prepare_pref_001
     idempotency_key: idem_prepare_pref_001
     expected_state_version: 19
