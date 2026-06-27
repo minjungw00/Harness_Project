@@ -357,11 +357,11 @@ pub(crate) fn accepted_current_user_authority(
     resolution.machine_action == UserJudgmentOptionAction::Accept
         && resolution.resolution_outcome == JudgmentResolutionOutcome::Accepted
         && resolution.resolved_by_actor_source == ActorSource::LocalUser
-        && verified_user_interaction_provenance(judgment)
+        && verified_user_channel_provenance(judgment)
         && resolution_answer_matches_kind(required_kind, &resolution.answer)
 }
 
-pub(crate) fn verified_user_interaction_provenance(judgment: &JudgmentAuthority) -> bool {
+pub(crate) fn verified_user_channel_provenance(judgment: &JudgmentAuthority) -> bool {
     judgment.resolved_by_actor_source == Some(ActorSource::LocalUser)
         && judgment
             .resolved_verification_basis

@@ -65,7 +65,7 @@ use crate::policy::{
         current_residual_risk_acceptance_coverage, final_acceptance_basis_matches_current,
         final_acceptance_requirement, is_terminal_lifecycle, judgment_has_current_basis,
         residual_risk_basis_matches_current, run_record_matches_close_basis_context,
-        verified_user_interaction_provenance, CancellationAuthorityRequirement, JudgmentAuthority,
+        verified_user_channel_provenance, CancellationAuthorityRequirement, JudgmentAuthority,
         ScopeDecisionAuthorityRequirement,
     },
     continuity::{decision_title_prefix, judgment_continuity_kind},

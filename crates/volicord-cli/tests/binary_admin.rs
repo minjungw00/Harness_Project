@@ -35,12 +35,13 @@ fn binary_help_uses_agent_connection_model() -> Result<(), Box<dyn Error>> {
 
     assert!(text.contains("volicord agent connect"));
     assert!(text.contains("--connection-id ID"));
+    assert!(text.contains("--mode read_only|workflow"));
     assert!(text.contains("volicord user judgment record --project-id ID"));
+    assert!(text.contains("User Channel"));
     assert!(!text.contains("volicord user setup"));
     let removed_command = ["sur", "face"].concat();
     assert!(!text.contains(&format!("volicord {removed_command}")));
     assert!(!text.contains(&format!("--{}-id", "integration")));
-    assert!(!text.contains("Agent Integration"));
 
     let removed = run_without_home([
         removed_command.as_str(),

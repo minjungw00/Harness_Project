@@ -291,7 +291,7 @@ fn display_path(path: &Path) -> String {
 
 fn usage() -> String {
     format!(
-        "Usage:\n  volicord --help\n  volicord --version\n  volicord init [--runtime-home-id ID]\n  {}\n  {}\n  {}\n\nEnvironment:\n  VOLICORD_HOME  Override Runtime Home path (default: $HOME/.volicord)\n\nThese are local administrative commands, not public Volicord API methods.\n",
+        "Usage:\n  volicord --help\n  volicord --version\n  volicord init [--runtime-home-id ID]\n  {}\n  {}\n  {}\n\nEnvironment:\n  VOLICORD_HOME  Override Runtime Home path (default: $HOME/.volicord)\n\nAgent Connection commands manage local MCP host connections. User Channel commands record local user judgments.\nThese are local administrative commands, not public Volicord API methods.\n",
         agent_usage().trim_end(),
         user_usage().trim_end(),
         project_usage().trim_end()

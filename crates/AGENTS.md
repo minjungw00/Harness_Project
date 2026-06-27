@@ -70,7 +70,7 @@ decisions.
   examples, tests, fixtures, or CLI behavior touch authority-bearing user
   judgments. Do not use an Agent Connection to record or impersonate a user
   judgment; route exact behavior to the Core Model, Administrative CLI, Agent
-  Integration, and method owners.
+  Connection, and method owners.
 - Do not collapse evidence collection, verification criteria, QA, acceptance,
   waivers, close readiness, or residual-risk decisions into one broad approval
   path.

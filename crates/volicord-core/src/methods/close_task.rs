@@ -1085,7 +1085,7 @@ fn cancellation_authority_blocker(
             && authority.resolution.as_ref().is_some_and(|resolution| {
                 resolution.resolved_by_actor_source == ActorSource::LocalUser
             })
-            && verified_user_interaction_provenance(authority)
+            && verified_user_channel_provenance(authority)
         {
             rejected_refs.push(judgment_ref);
         }
