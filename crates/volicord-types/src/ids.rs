@@ -57,21 +57,14 @@ macro_rules! opaque_string_type {
 
 opaque_string_type!(ProjectId, "Opaque project identifier.");
 opaque_string_type!(TaskId, "Opaque Task identifier.");
-opaque_string_type!(SurfaceId, "Opaque local surface identifier.");
-opaque_string_type!(
-    SurfaceInstanceId,
-    "Opaque local surface-instance identifier."
-);
+opaque_string_type!(AgentConnectionId, "Opaque Agent Connection identifier.");
 opaque_string_type!(RequestId, "Opaque request identifier.");
 opaque_string_type!(IdempotencyKey, "Opaque idempotency-key identifier.");
 opaque_string_type!(EventId, "Opaque event identifier.");
 opaque_string_type!(RecordId, "Opaque state-record identifier.");
 opaque_string_type!(BaselineRef, "Opaque baseline identifier.");
 opaque_string_type!(ChangeUnitId, "Opaque Change Unit identifier.");
-opaque_string_type!(
-    WriteAuthorizationId,
-    "Opaque Write Authorization identifier."
-);
+opaque_string_type!(WriteCheckId, "Opaque Write Check identifier.");
 opaque_string_type!(RunId, "Opaque Run identifier.");
 opaque_string_type!(
     EvidenceObservationId,
@@ -111,8 +104,8 @@ pub enum DurableIdKind {
     ChangeUnit,
     /// Core-generated user-owned judgment ids.
     UserJudgment,
-    /// Core-generated Write Authorization ids.
-    WriteAuthorization,
+    /// Core-generated Write Check ids.
+    WriteCheck,
     /// Core-generated Run ids when the request does not supply one.
     Run,
     /// Core-generated committed event ids.
@@ -138,7 +131,7 @@ impl DurableIdKind {
             Self::Task => "task_",
             Self::ChangeUnit => "cu_",
             Self::UserJudgment => "uj_",
-            Self::WriteAuthorization => "wa_",
+            Self::WriteCheck => "wc_",
             Self::Run => "run_",
             Self::Event => "evt_",
             Self::StagedArtifact => "staged_",
@@ -157,7 +150,7 @@ impl fmt::Display for DurableIdKind {
             Self::Task => "task",
             Self::ChangeUnit => "change_unit",
             Self::UserJudgment => "user_judgment",
-            Self::WriteAuthorization => "write_authorization",
+            Self::WriteCheck => "write_check",
             Self::Run => "run",
             Self::Event => "event",
             Self::StagedArtifact => "staged_artifact",

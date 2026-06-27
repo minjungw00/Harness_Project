@@ -7,20 +7,19 @@ use serde_json::{Map, Value};
 use crate::ids::{
     ArtifactId, ArtifactInputId, BaselineRef, ChangeUnitId, EventId, EvidenceObservationId,
     IdempotencyKey, ProjectContinuityRecordId, ProjectId, RecordId, RequestId, RiskId, RunId,
-    StagedArtifactHandleId, StorageRef, SurfaceId, SurfaceInstanceId, TaskId, UserJudgmentId,
-    UserJudgmentOptionId,
+    StagedArtifactHandleId, StorageRef, TaskId, UserJudgmentId, UserJudgmentOptionId,
 };
 use crate::values::{
-    ActorKind, ArtifactAvailability, ArtifactInputSourceKind, ArtifactIntegrityStatus,
+    ActorSource, ArtifactAvailability, ArtifactInputSourceKind, ArtifactIntegrityStatus,
     ChangeUnitEffectKind, CloseReadinessBlockerCategory, CloseReason, CloseState, EffectKind,
     EnabledEnforcementMechanism, ErrorCode, EvidenceAssuranceLevel, EvidenceCoverageState,
     EvidenceSourceKind, EvidenceStatus, GuaranteeLevel, JudgmentBasisCompatibilityStatus,
     JudgmentKind, JudgmentPresentation, JudgmentRequiredFor, JudgmentResolutionOutcome, MethodName,
     NextActionKind, PlannedBlockerSourceKind, ProjectContinuityKind, ProjectContinuityStatus,
     ProjectEnforcementProfileSource, ProjectEnforcementProfileStatus, RedactionState, ResponseKind,
-    RunKind, StateRecordKind, SurfaceInteractionRole, TaskLifecyclePhase, TaskMode, TaskResult,
-    UserJudgmentOptionAction, UserJudgmentStatus, UtcTimestamp, ValidatorSeverity, ValidatorStatus,
-    WriteAuthorizationStatus, WriteDecisionCategory,
+    RunKind, StateRecordKind, TaskLifecyclePhase, TaskMode, TaskResult, UserJudgmentOptionAction,
+    UserJudgmentStatus, UtcTimestamp, ValidatorSeverity, ValidatorStatus, WriteCheckStatus,
+    WriteDecisionCategory,
 };
 
 /// JSON object used where an owner document defines a field as `object`.
@@ -186,8 +185,6 @@ where
 pub struct ToolEnvelope {
     pub project_id: ProjectId,
     pub task_id: RequiredNullable<TaskId>,
-    pub actor_kind: ActorKind,
-    pub surface_id: SurfaceId,
     pub request_id: RequestId,
     pub idempotency_key: RequiredNullable<IdempotencyKey>,
     pub expected_state_version: RequiredNullable<u64>,
@@ -373,7 +370,7 @@ pub struct StateSummary {
     pub shaping_readiness: Option<ShapingReadiness>,
     pub pending_user_judgment_refs: Vec<StateRecordRef>,
     pub blocker_refs: Vec<StateRecordRef>,
-    pub write_authority_summary: Option<WriteAuthoritySummary>,
+    pub write_check_summary: Option<WriteCheckStateSummary>,
     pub evidence_summary: Option<EvidenceSummary>,
     pub close_state: Option<CloseState>,
     pub close_blockers: Vec<CloseReadinessBlocker>,
@@ -443,11 +440,11 @@ pub struct NextActionSummary {
     pub required_refs: Vec<StateRecordRef>,
 }
 
-/// Current write-authority display summary.
+/// Current Write Check display summary.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
-pub struct WriteAuthoritySummary {
-    pub status: WriteAuthorizationStatus,
-    pub write_authorization_ref: Option<StateRecordRef>,
+pub struct WriteCheckStateSummary {
+    pub status: WriteCheckStatus,
+    pub write_check_ref: Option<StateRecordRef>,
     pub basis_state_version: Option<u64>,
     pub intended_paths: Vec<String>,
     pub consumed_by_run_ref: Option<StateRecordRef>,
@@ -455,19 +452,19 @@ pub struct WriteAuthoritySummary {
     pub guarantee_display: Option<GuaranteeDisplay>,
 }
 
-/// Write Authorization summary returned by prepare-write.
+/// Write Check summary returned by prepare-write.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
-pub struct WriteAuthorizationSummary {
-    pub write_authorization_ref: StateRecordRef,
-    pub status: WriteAuthorizationStatus,
-    pub authorized_attempt_scope: AuthorizedAttemptScope,
+pub struct WriteCheckSummary {
+    pub write_check_ref: StateRecordRef,
+    pub status: WriteCheckStatus,
+    pub attempt_scope: WriteCheckAttemptScope,
     pub basis_state_version: u64,
     pub expires_at: Option<UtcTimestamp>,
 }
 
-/// One-attempt boundary captured by a Write Authorization.
+/// One-attempt boundary captured by a Write Check.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
-pub struct AuthorizedAttemptScope {
+pub struct WriteCheckAttemptScope {
     pub task_id: TaskId,
     pub change_unit_id: ChangeUnitId,
     pub intended_operation: String,
@@ -544,10 +541,7 @@ pub struct EvidenceObservation {
     pub claim: String,
     pub source_kind: EvidenceSourceKind,
     pub assurance_level: EvidenceAssuranceLevel,
-    pub observed_by_actor_kind: RequiredNullable<ActorKind>,
-    pub observed_actor_role: RequiredNullable<SurfaceInteractionRole>,
-    pub observed_by_surface_id: RequiredNullable<SurfaceId>,
-    pub observed_by_surface_instance_id: RequiredNullable<SurfaceInstanceId>,
+    pub observed_by_actor_source: RequiredNullable<ActorSource>,
     pub tool_name: RequiredNullable<String>,
     pub tool_invocation_id: RequiredNullable<String>,
     pub tool_metadata: JsonObject,
@@ -565,10 +559,7 @@ pub struct EvidenceObservationInput {
     pub claim: String,
     pub source_kind: EvidenceSourceKind,
     pub assurance_level: EvidenceAssuranceLevel,
-    pub observed_by_actor_kind: RequiredNullable<ActorKind>,
-    pub observed_actor_role: RequiredNullable<SurfaceInteractionRole>,
-    pub observed_by_surface_id: RequiredNullable<SurfaceId>,
-    pub observed_by_surface_instance_id: RequiredNullable<SurfaceInstanceId>,
+    pub observed_by_actor_source: RequiredNullable<ActorSource>,
     pub tool_name: RequiredNullable<String>,
     pub tool_invocation_id: RequiredNullable<String>,
     pub tool_metadata: JsonObject,
@@ -656,7 +647,7 @@ pub struct SensitiveActionRequirement {
     pub baseline_ref: RequiredNullable<BaselineRef>,
     pub change_unit_id: ChangeUnitId,
     pub source_run_ref: StateRecordRef,
-    pub source_write_authorization_ref: StateRecordRef,
+    pub source_write_check_ref: StateRecordRef,
 }
 
 /// Named visible residual risk in a current close basis.
@@ -723,8 +714,7 @@ pub struct ArtifactRef {
     pub redaction_state: RedactionState,
     pub availability: ArtifactAvailability,
     pub created_by_run_ref: RequiredNullable<StateRecordRef>,
-    pub created_by_surface_id: RequiredNullable<SurfaceId>,
-    pub created_by_surface_instance_id: RequiredNullable<SurfaceInstanceId>,
+    pub created_by_actor_source: RequiredNullable<ActorSource>,
     pub storage_ref: RequiredNullable<StorageRef>,
 }
 
@@ -736,8 +726,7 @@ pub struct PersistedArtifactProducer {
     pub display_name: Option<String>,
     #[serde(default)]
     pub content_type: Option<String>,
-    pub created_by_surface_id: SurfaceId,
-    pub created_by_surface_instance_id: SurfaceInstanceId,
+    pub created_by_actor_source: ActorSource,
     pub artifact_input_id: ArtifactInputId,
     #[serde(default)]
     pub relation_hint: RequiredNullable<String>,
@@ -768,8 +757,7 @@ pub struct StagedArtifactHandle {
     pub handle_id: StagedArtifactHandleId,
     pub project_id: ProjectId,
     pub task_id: TaskId,
-    pub created_by_surface_id: SurfaceId,
-    pub created_by_surface_instance_id: SurfaceInstanceId,
+    pub created_by_actor_source: ActorSource,
     pub content_type: String,
     pub sha256: String,
     pub size_bytes: u64,
@@ -1025,7 +1013,7 @@ pub struct UserJudgmentResolution {
     pub rationale: JudgmentRationale,
     pub note: RequiredNullable<String>,
     pub accepted_risks: Vec<AcceptedRiskInput>,
-    pub resolved_by_actor_kind: ActorKind,
+    pub resolved_by_actor_source: ActorSource,
 }
 
 /// Stored shape for `user_judgments.resolution_json`.
@@ -1037,7 +1025,7 @@ pub struct PersistedUserJudgmentResolution {
     pub answer: RecordUserJudgmentPayload,
     pub note: Option<String>,
     pub accepted_risks: Vec<AcceptedRiskInput>,
-    pub resolved_by_actor_kind: ActorKind,
+    pub resolved_by_actor_source: ActorSource,
 }
 
 impl PersistedUserJudgmentResolution {
@@ -1050,7 +1038,7 @@ impl PersistedUserJudgmentResolution {
             answer: resolution.answer,
             note: resolution.note.into_option(),
             accepted_risks: resolution.accepted_risks,
-            resolved_by_actor_kind: resolution.resolved_by_actor_kind,
+            resolved_by_actor_source: resolution.resolved_by_actor_source,
         }
     }
 
@@ -1074,7 +1062,7 @@ impl PersistedUserJudgmentResolution {
             rationale,
             note: self.note.into(),
             accepted_risks: self.accepted_risks,
-            resolved_by_actor_kind: self.resolved_by_actor_kind,
+            resolved_by_actor_source: self.resolved_by_actor_source,
         })
     }
 }
@@ -1093,7 +1081,7 @@ impl<'de> Deserialize<'de> for PersistedUserJudgmentResolution {
             answer: RecordUserJudgmentPayload,
             note: Option<String>,
             accepted_risks: Vec<AcceptedRiskInput>,
-            resolved_by_actor_kind: ActorKind,
+            resolved_by_actor_source: ActorSource,
         }
 
         let wire = Wire::deserialize(deserializer)?;
@@ -1109,7 +1097,7 @@ impl<'de> Deserialize<'de> for PersistedUserJudgmentResolution {
             answer: wire.answer,
             note: wire.note,
             accepted_risks: wire.accepted_risks,
-            resolved_by_actor_kind: wire.resolved_by_actor_kind,
+            resolved_by_actor_source: wire.resolved_by_actor_source,
         })
     }
 }

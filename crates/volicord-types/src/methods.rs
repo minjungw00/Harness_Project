@@ -3,8 +3,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::ids::{
-    BaselineRef, ChangeUnitId, RunId, TaskId, UserJudgmentId, UserJudgmentOptionId,
-    WriteAuthorizationId,
+    BaselineRef, ChangeUnitId, RunId, TaskId, UserJudgmentId, UserJudgmentOptionId, WriteCheckId,
 };
 use crate::schema::{
     AcceptedRiskInput, ArtifactInput, ArtifactRef, ChangeUnitEffectContract, CloseAssessmentInput,
@@ -14,21 +13,21 @@ use crate::schema::{
     RequiredNullable, RiskAcceptanceCoverage, RunSummary, SensitiveActionScope,
     StagedArtifactHandle, StateRecordRef, StateSummary, ToolEnvelope, ToolResponse, ToolResultBase,
     UserJudgment, UserJudgmentCandidate, UserJudgmentContext, UserJudgmentOptionInput,
-    WriteAuthoritySummary, WriteAuthorizationSummary, WriteDecisionReason,
+    WriteCheckStateSummary, WriteCheckSummary, WriteDecisionReason,
 };
 use crate::values::{
-    AccessClass, AuthorizationEffect, ChangeUnitOperation, CloseIntent, CloseReason, CloseState,
-    JudgmentKind, JudgmentPresentation, JudgmentRequiredFor, MethodName, PrepareWriteDecision,
-    RedactionState, RequestedMode, ResumePolicy, RunKind, StatusCloseState, UtcTimestamp,
+    ChangeUnitOperation, CloseIntent, CloseReason, CloseState, JudgmentKind, JudgmentPresentation,
+    JudgmentRequiredFor, MethodName, OperationCategory, PrepareWriteDecision, RedactionState,
+    RequestedMode, ResumePolicy, RunKind, StatusCloseState, UtcTimestamp, WriteCheckEffect,
 };
 
-/// Shared typed mapping from a public request to its request-level access class.
-pub trait MethodAccessClass {
+/// Shared typed mapping from a public request to its operation category.
+pub trait MethodOperationCategory {
     /// Returns the public method name for this typed request.
     fn method_name(&self) -> MethodName;
 
-    /// Returns the access class requested by this typed request.
-    fn requested_access_class(&self) -> AccessClass;
+    /// Returns the operation category for this typed request.
+    fn operation_category(&self) -> OperationCategory;
 }
 
 /// Response branch type for `volicord.intake`.
@@ -70,13 +69,13 @@ pub struct IntakeRequest {
     pub initial_context_refs: Vec<StateRecordRef>,
 }
 
-impl MethodAccessClass for IntakeRequest {
+impl MethodOperationCategory for IntakeRequest {
     fn method_name(&self) -> MethodName {
         MethodName::Intake
     }
 
-    fn requested_access_class(&self) -> AccessClass {
-        AccessClass::CoreMutation
+    fn operation_category(&self) -> OperationCategory {
+        OperationCategory::AgentWorkflow
     }
 }
 
@@ -116,13 +115,13 @@ pub struct UpdateScopeRequest {
     pub related_scope_decision_refs: Vec<StateRecordRef>,
 }
 
-impl MethodAccessClass for UpdateScopeRequest {
+impl MethodOperationCategory for UpdateScopeRequest {
     fn method_name(&self) -> MethodName {
         MethodName::UpdateScope
     }
 
-    fn requested_access_class(&self) -> AccessClass {
-        AccessClass::CoreMutation
+    fn operation_category(&self) -> OperationCategory {
+        OperationCategory::AgentWorkflow
     }
 }
 
@@ -151,7 +150,7 @@ pub struct UpdateScopeResult {
     pub task_ref: StateRecordRef,
     pub change_unit_ref: Option<StateRecordRef>,
     pub linked_scope_decision_refs: Vec<StateRecordRef>,
-    pub stale_write_authorization_refs: Vec<StateRecordRef>,
+    pub stale_write_check_refs: Vec<StateRecordRef>,
     pub blocker_refs: Vec<StateRecordRef>,
     pub state: StateSummary,
     pub next_actions: Vec<NextActionSummary>,
@@ -165,13 +164,13 @@ pub struct StatusRequest {
     pub include: StatusInclude,
 }
 
-impl MethodAccessClass for StatusRequest {
+impl MethodOperationCategory for StatusRequest {
     fn method_name(&self) -> MethodName {
         MethodName::Status
     }
 
-    fn requested_access_class(&self) -> AccessClass {
-        AccessClass::ReadStatus
+    fn operation_category(&self) -> OperationCategory {
+        OperationCategory::Read
     }
 }
 
@@ -181,7 +180,7 @@ impl MethodAccessClass for StatusRequest {
 pub struct StatusInclude {
     pub task: bool,
     pub pending_user_judgments: bool,
-    pub write_authority: bool,
+    pub write_check: bool,
     pub evidence: bool,
     pub close: bool,
     pub guarantees: bool,
@@ -197,7 +196,7 @@ pub struct StatusResult {
     pub next_actions: Vec<NextActionSummary>,
     pub pending_user_judgments: Vec<StateRecordRef>,
     pub blocker_refs: Vec<StateRecordRef>,
-    pub write_authority_summary: Option<WriteAuthoritySummary>,
+    pub write_check_summary: Option<WriteCheckStateSummary>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub evidence_summary: Option<RequiredNullable<EvidenceSummary>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -228,13 +227,13 @@ pub struct PrepareWriteRequest {
     pub baseline_ref: BaselineRef,
 }
 
-impl MethodAccessClass for PrepareWriteRequest {
+impl MethodOperationCategory for PrepareWriteRequest {
     fn method_name(&self) -> MethodName {
         MethodName::PrepareWrite
     }
 
-    fn requested_access_class(&self) -> AccessClass {
-        AccessClass::WriteAuthorization
+    fn operation_category(&self) -> OperationCategory {
+        OperationCategory::AgentWorkflow
     }
 }
 
@@ -244,9 +243,9 @@ pub struct PrepareWriteResult {
     pub base: ToolResultBase,
     pub decision: PrepareWriteDecision,
     pub state: Option<StateSummary>,
-    pub write_authorization_ref: Option<StateRecordRef>,
-    pub write_authorization: Option<WriteAuthorizationSummary>,
-    pub authorization_effect: AuthorizationEffect,
+    pub write_check_ref: Option<StateRecordRef>,
+    pub write_check: Option<WriteCheckSummary>,
+    pub write_check_effect: WriteCheckEffect,
     pub active_user_judgment_refs: Vec<StateRecordRef>,
     pub write_decision_reasons: Vec<WriteDecisionReason>,
     pub user_judgment_candidate: Option<UserJudgmentCandidate>,
@@ -268,13 +267,13 @@ pub struct StageArtifactRequest {
     pub relation_hint: RequiredNullable<String>,
 }
 
-impl MethodAccessClass for StageArtifactRequest {
+impl MethodOperationCategory for StageArtifactRequest {
     fn method_name(&self) -> MethodName {
         MethodName::StageArtifact
     }
 
-    fn requested_access_class(&self) -> AccessClass {
-        AccessClass::ArtifactRegistration
+    fn operation_category(&self) -> OperationCategory {
+        OperationCategory::AgentWorkflow
     }
 }
 
@@ -296,7 +295,7 @@ pub struct RecordRunRequest {
     pub kind: RunKind,
     pub run_id: RequiredNullable<RunId>,
     pub baseline_ref: BaselineRef,
-    pub write_authorization_id: RequiredNullable<WriteAuthorizationId>,
+    pub write_check_id: RequiredNullable<WriteCheckId>,
     pub summary: String,
     pub observed_changes: ObservedChanges,
     pub artifact_inputs: Vec<ArtifactInput>,
@@ -305,13 +304,13 @@ pub struct RecordRunRequest {
     pub close_assessment: RequiredNullable<CloseAssessmentInput>,
 }
 
-impl MethodAccessClass for RecordRunRequest {
+impl MethodOperationCategory for RecordRunRequest {
     fn method_name(&self) -> MethodName {
         MethodName::RecordRun
     }
 
-    fn requested_access_class(&self) -> AccessClass {
-        AccessClass::RunRecording
+    fn operation_category(&self) -> OperationCategory {
+        OperationCategory::AgentWorkflow
     }
 }
 
@@ -348,13 +347,13 @@ pub struct RequestUserJudgmentRequest {
     pub expires_at: RequiredNullable<UtcTimestamp>,
 }
 
-impl MethodAccessClass for RequestUserJudgmentRequest {
+impl MethodOperationCategory for RequestUserJudgmentRequest {
     fn method_name(&self) -> MethodName {
         MethodName::RequestUserJudgment
     }
 
-    fn requested_access_class(&self) -> AccessClass {
-        AccessClass::CoreMutation
+    fn operation_category(&self) -> OperationCategory {
+        OperationCategory::AgentWorkflow
     }
 }
 
@@ -382,13 +381,13 @@ pub struct RecordUserJudgmentRequest {
     pub accepted_risks: Vec<AcceptedRiskInput>,
 }
 
-impl MethodAccessClass for RecordUserJudgmentRequest {
+impl MethodOperationCategory for RecordUserJudgmentRequest {
     fn method_name(&self) -> MethodName {
         MethodName::RecordUserJudgment
     }
 
-    fn requested_access_class(&self) -> AccessClass {
-        AccessClass::CoreMutation
+    fn operation_category(&self) -> OperationCategory {
+        OperationCategory::UserOnly
     }
 }
 
@@ -415,16 +414,16 @@ pub struct CloseTaskRequest {
     pub user_note: RequiredNullable<String>,
 }
 
-impl MethodAccessClass for CloseTaskRequest {
+impl MethodOperationCategory for CloseTaskRequest {
     fn method_name(&self) -> MethodName {
         MethodName::CloseTask
     }
 
-    fn requested_access_class(&self) -> AccessClass {
+    fn operation_category(&self) -> OperationCategory {
         match self.intent {
-            CloseIntent::Check => AccessClass::ReadStatus,
+            CloseIntent::Check => OperationCategory::Read,
             CloseIntent::Complete | CloseIntent::Cancel | CloseIntent::Supersede => {
-                AccessClass::CoreMutation
+                OperationCategory::AgentWorkflow
             }
         }
     }

@@ -61,8 +61,6 @@ mod tests {
         let envelope: ToolEnvelope = serde_json::from_value(json!({
             "project_id": "proj_onboard_001",
             "task_id": null,
-            "actor_kind": "agent",
-            "surface_id": "surface_onboard",
             "request_id": "req_intake_onboard_001",
             "idempotency_key": "idem_intake_onboard_001",
             "expected_state_version": 17,
@@ -72,7 +70,6 @@ mod tests {
         .expect("documented envelope example should deserialize");
 
         assert_eq!(envelope.project_id.as_str(), "proj_onboard_001");
-        assert_eq!(envelope.actor_kind, ActorKind::Agent);
         assert_eq!(
             envelope
                 .idempotency_key
@@ -83,23 +80,21 @@ mod tests {
 
         let encoded = serde_json::to_value(&envelope).expect("envelope should serialize");
         assert_eq!(encoded["project_id"], "proj_onboard_001");
-        assert_eq!(encoded["actor_kind"], "agent");
         assert_eq!(encoded["task_id"], Value::Null);
     }
 
     #[test]
     fn authority_looking_request_fields_are_rejected() {
-        let mut envelope_value = envelope_json("agent");
+        let mut envelope_value = envelope_json();
         envelope_value["verified"] = json!(true);
         assert_unknown::<ToolEnvelope>(envelope_value, "verified");
 
-        let mut envelope_value = envelope_json("agent");
-        envelope_value["surface_instance_id"] = json!("surface_instance_forged");
-        assert_unknown::<ToolEnvelope>(envelope_value, "surface_instance_id");
+        let mut envelope_value = envelope_json();
+        envelope_value["actor_source"] = json!("agent_connection:conn_forged");
+        assert_unknown::<ToolEnvelope>(envelope_value, "actor_source");
 
         for field in [
-            "verified_surface_context",
-            "access_class",
+            "operation_category",
             "capability_profile",
             "verification_basis",
         ] {
@@ -122,41 +117,47 @@ mod tests {
     }
 
     #[test]
-    fn typed_requests_derive_documented_access_classes() {
+    fn typed_requests_derive_documented_operation_categories() {
         assert_eq!(
             serde_json::from_value::<StatusRequest>(status_request_json())
                 .expect("status request")
-                .requested_access_class(),
-            AccessClass::ReadStatus
+                .operation_category(),
+            OperationCategory::Read
         );
         assert_eq!(
             serde_json::from_value::<IntakeRequest>(intake_request_json())
                 .expect("intake request")
-                .requested_access_class(),
-            AccessClass::CoreMutation
+                .operation_category(),
+            OperationCategory::AgentWorkflow
         );
         assert_eq!(
             serde_json::from_value::<PrepareWriteRequest>(prepare_write_request_json())
                 .expect("prepare request")
-                .requested_access_class(),
-            AccessClass::WriteAuthorization
+                .operation_category(),
+            OperationCategory::AgentWorkflow
         );
         assert_eq!(
             serde_json::from_value::<StageArtifactRequest>(stage_artifact_request_json())
                 .expect("stage request")
-                .requested_access_class(),
-            AccessClass::ArtifactRegistration
+                .operation_category(),
+            OperationCategory::AgentWorkflow
         );
         assert_eq!(
             serde_json::from_value::<RecordRunRequest>(record_run_request_json())
                 .expect("record run request")
-                .requested_access_class(),
-            AccessClass::RunRecording
+                .operation_category(),
+            OperationCategory::AgentWorkflow
+        );
+        assert_eq!(
+            serde_json::from_value::<RecordUserJudgmentRequest>(record_user_judgment_request_json())
+                .expect("record judgment request")
+                .operation_category(),
+            OperationCategory::UserOnly
         );
 
         let check = serde_json::from_value::<CloseTaskRequest>(close_task_request_json())
             .expect("close check request");
-        assert_eq!(check.requested_access_class(), AccessClass::ReadStatus);
+        assert_eq!(check.operation_category(), OperationCategory::Read);
 
         for intent in ["complete", "cancel", "supersede"] {
             let mut request = close_task_request_json();
@@ -172,7 +173,10 @@ mod tests {
             }
             let request = serde_json::from_value::<CloseTaskRequest>(request)
                 .expect("mutating close request should decode");
-            assert_eq!(request.requested_access_class(), AccessClass::CoreMutation);
+            assert_eq!(
+                request.operation_category(),
+                OperationCategory::AgentWorkflow
+            );
         }
     }
 
@@ -218,8 +222,7 @@ mod tests {
                 handle_id: StagedArtifactHandleId::new("staged_trace_log_001"),
                 project_id: ProjectId::new("proj_trace_001"),
                 task_id: TaskId::new("task_trace_001"),
-                created_by_surface_id: SurfaceId::new("surface_artifact"),
-                created_by_surface_instance_id: SurfaceInstanceId::new("surface_instance_trace_01"),
+                created_by_actor_source: ActorSource::agent_connection("conn_artifact"),
                 content_type: "text/plain".to_owned(),
                 sha256: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
                     .to_owned(),
@@ -237,8 +240,8 @@ mod tests {
         assert_eq!(encoded["base"]["effect_kind"], "staging_created");
         assert_eq!(encoded["staged_artifact_handle"]["redaction_state"], "none");
         assert_eq!(
-            encoded["staged_artifact_handle"]["created_by_surface_instance_id"],
-            "surface_instance_trace_01"
+            encoded["staged_artifact_handle"]["created_by_actor_source"],
+            "agent_connection:conn_artifact"
         );
 
         let decoded: StageArtifactResult =
@@ -250,7 +253,7 @@ mod tests {
     #[test]
     fn record_user_judgment_request_keeps_payload_branches_as_objects() {
         let request: RecordUserJudgmentRequest = serde_json::from_value(json!({
-            "envelope": envelope_json("user"),
+            "envelope": envelope_json(),
             "user_judgment_id": "uj_empty_001",
             "judgment_kind": "product_decision",
             "selected_option_id": "keep",
@@ -320,9 +323,9 @@ mod tests {
                     "baseline_ref": "baseline_close_basis",
                     "change_unit_id": "cu_close_basis_001",
                     "source_run_ref": state_ref_json("run", "run_close_basis_001", "task_close_basis_001"),
-                    "source_write_authorization_ref": state_ref_json(
-                        "write_authorization",
-                        "wa_close_basis_001",
+                    "source_write_check_ref": state_ref_json(
+                        "write_check",
+                        "wc_close_basis_001",
                         "task_close_basis_001"
                     )
                 }
@@ -454,9 +457,9 @@ mod tests {
     fn authority_looking_fields_are_rejected_for_every_public_request() {
         for (method_name, valid) in public_request_json_samples() {
             for (field, value) in [
-                ("verified_surface_context", json!({ "verified": true })),
-                ("access_class", json!("core_mutation")),
-                ("capability_profile", json!({ "write_authorization": true })),
+                ("operation_category", json!("agent_workflow")),
+                ("actor_source", json!("agent_connection:conn_forged")),
+                ("capability_profile", json!({ "write_check": true })),
                 ("verification_basis", json!("caller_supplied_basis")),
             ] {
                 let mut forged = valid.clone();
@@ -466,7 +469,7 @@ mod tests {
 
             for (field, value) in [
                 ("verified", json!(true)),
-                ("surface_instance_id", json!("surface_instance_forged")),
+                ("actor_source", json!("agent_connection:conn_forged")),
             ] {
                 let mut forged = valid.clone();
                 forged["envelope"][field] = value;
@@ -645,8 +648,6 @@ mod tests {
             &[
                 "project_id",
                 "task_id",
-                "actor_kind",
-                "surface_id",
                 "request_id",
                 "idempotency_key",
                 "expected_state_version",
@@ -811,7 +812,7 @@ mod tests {
             "StateRecordKind",
             &record_kinds,
             &[
-                "write_authorization",
+                "write_check",
                 "user_judgment",
                 "evidence_summary",
                 "evidence_observation",
@@ -936,7 +937,7 @@ mod tests {
                 "rationale",
                 "note",
                 "accepted_risks",
-                "resolved_by_actor_kind",
+                "resolved_by_actor_source",
             ],
             "UserJudgmentResolution",
         );
@@ -993,8 +994,7 @@ mod tests {
                 "redaction_state",
                 "availability",
                 "created_by_run_ref",
-                "created_by_surface_id",
-                "created_by_surface_instance_id",
+                "created_by_actor_source",
                 "storage_ref",
             ],
             "ArtifactRef",
@@ -1167,8 +1167,6 @@ mod tests {
                 "expected_state_version": 62,
                 "idempotency_key": "idem_empty_answer_001",
                 "request_id": "req_empty_answer_001",
-                "surface_id": "surface_empty",
-                "actor_kind": "agent",
                 "task_id": "task_empty_001",
                 "project_id": "proj_empty_001"
             }
@@ -1212,19 +1210,17 @@ mod tests {
 
         let null_hash = typed_request_hash("volicord.record_run", record_run_request_json());
         let mut changed = record_run_request_json();
-        changed["write_authorization_id"] = json!("wa_hash_change");
+        changed["write_check_id"] = json!("wc_hash_change");
         assert_ne!(
             null_hash,
             typed_request_hash("volicord.record_run", changed)
         );
     }
 
-    fn envelope_json(actor_kind: &str) -> Value {
+    fn envelope_json() -> Value {
         json!({
             "project_id": "proj_empty_001",
             "task_id": "task_empty_001",
-            "actor_kind": actor_kind,
-            "surface_id": "surface_empty",
             "request_id": "req_empty_answer_001",
             "idempotency_key": "idem_empty_answer_001",
             "expected_state_version": 62,
@@ -1510,7 +1506,7 @@ mod tests {
             ("volicord.stage_artifact", &["expected_sha256"]),
             ("volicord.stage_artifact", &["relation_hint"]),
             ("volicord.record_run", &["run_id"]),
-            ("volicord.record_run", &["write_authorization_id"]),
+            ("volicord.record_run", &["write_check_id"]),
             ("volicord.record_run", &["observed_changes", "baseline_ref"]),
             ("volicord.record_run", &["close_assessment"]),
             ("volicord.request_user_judgment", &["change_unit_id"]),
@@ -1663,7 +1659,7 @@ mod tests {
                 "kind",
                 "run_id",
                 "baseline_ref",
-                "write_authorization_id",
+                "write_check_id",
                 "summary",
                 "observed_changes",
                 "artifact_inputs",
@@ -1746,7 +1742,7 @@ mod tests {
 
     fn intake_request_json() -> Value {
         json!({
-            "envelope": envelope_json("agent"),
+            "envelope": envelope_json(),
             "plain_language_request": "Create a first-run checklist.",
             "requested_mode": "work",
             "resume_policy": "create_new",
@@ -1761,7 +1757,7 @@ mod tests {
 
     fn update_scope_request_json() -> Value {
         json!({
-            "envelope": envelope_json("agent"),
+            "envelope": envelope_json(),
             "task_id": "task_empty_001",
             "goal_summary": "Limit saved search filters.",
             "scope_update": {
@@ -1784,11 +1780,11 @@ mod tests {
 
     fn status_request_json() -> Value {
         json!({
-            "envelope": envelope_json("agent"),
+            "envelope": envelope_json(),
             "include": {
                 "task": true,
                 "pending_user_judgments": true,
-                "write_authority": false,
+                "write_check": false,
                 "evidence": false,
                 "close": true,
                 "guarantees": true,
@@ -1799,7 +1795,7 @@ mod tests {
 
     fn prepare_write_request_json() -> Value {
         json!({
-            "envelope": envelope_json("agent"),
+            "envelope": envelope_json(),
             "task_id": "task_empty_001",
             "change_unit_id": "cu_empty_001",
             "intended_operation": "update profile preference save flow",
@@ -1812,7 +1808,7 @@ mod tests {
 
     fn stage_artifact_request_json() -> Value {
         json!({
-            "envelope": envelope_json("agent"),
+            "envelope": envelope_json(),
             "task_id": "task_empty_001",
             "display_name": "diagnostic_trace.log",
             "content_type": "text/plain",
@@ -1826,13 +1822,13 @@ mod tests {
 
     fn record_run_request_json() -> Value {
         json!({
-            "envelope": envelope_json("agent"),
+            "envelope": envelope_json(),
             "task_id": "task_empty_001",
             "change_unit_id": "cu_empty_001",
             "kind": "implementation",
             "run_id": null,
             "baseline_ref": "baseline_empty_001",
-            "write_authorization_id": null,
+            "write_check_id": null,
             "summary": "Search-result count validation passed.",
             "observed_changes": {
                 "changed_paths": [],
@@ -1852,10 +1848,7 @@ mod tests {
             "claim": "Search result count was verified.",
             "source_kind": "external_tool",
             "assurance_level": "external_tool_result",
-            "observed_by_actor_kind": "agent",
-            "observed_actor_role": "agent",
-            "observed_by_surface_id": "surface_empty",
-            "observed_by_surface_instance_id": "surface_instance_empty",
+            "observed_by_actor_source": "agent_connection:conn_empty",
             "tool_name": "local-test-runner",
             "tool_invocation_id": "tool_invocation_001",
             "tool_metadata": {
@@ -1901,8 +1894,7 @@ mod tests {
                 "handle_id": "staged_trace_001",
                 "project_id": "proj_empty_001",
                 "task_id": "task_empty_001",
-                "created_by_surface_id": "surface_empty",
-                "created_by_surface_instance_id": "surface_instance_empty",
+                "created_by_actor_source": "agent_connection:conn_empty",
                 "content_type": "text/plain",
                 "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
                 "size_bytes": 18,
@@ -1951,8 +1943,7 @@ mod tests {
             "redaction_state": "none",
             "availability": "available",
             "created_by_run_ref": state_ref_json("run", "run_trace_001", "task_empty_001"),
-            "created_by_surface_id": "surface_empty",
-            "created_by_surface_instance_id": "surface_instance_empty",
+            "created_by_actor_source": "agent_connection:conn_empty",
             "storage_ref": "volicord-artifact://proj_empty_001/artifact_trace_001"
         })
     }
@@ -1991,13 +1982,13 @@ mod tests {
             "rationale": judgment_rationale_json(),
             "note": null,
             "accepted_risks": [],
-            "resolved_by_actor_kind": "user"
+            "resolved_by_actor_source": "local_user"
         })
     }
 
     fn request_user_judgment_request_json() -> Value {
         json!({
-            "envelope": envelope_json("agent"),
+            "envelope": envelope_json(),
             "task_id": "task_empty_001",
             "change_unit_id": "cu_empty_001",
             "judgment_kind": "product_decision",
@@ -2041,7 +2032,7 @@ mod tests {
 
     fn record_user_judgment_request_json() -> Value {
         json!({
-            "envelope": envelope_json("user"),
+            "envelope": envelope_json(),
             "user_judgment_id": "uj_empty_001",
             "judgment_kind": "product_decision",
             "selected_option_id": "keep",
@@ -2082,7 +2073,7 @@ mod tests {
 
     fn close_task_request_json() -> Value {
         json!({
-            "envelope": envelope_json("agent"),
+            "envelope": envelope_json(),
             "task_id": "task_empty_001",
             "intent": "check",
             "close_reason": null,

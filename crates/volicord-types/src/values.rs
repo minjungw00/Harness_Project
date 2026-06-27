@@ -8,6 +8,8 @@ use schemars::{
 };
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 
+use crate::ids::AgentConnectionId;
+
 /// Parsed RFC 3339 timestamp normalized to a UTC instant.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct UtcTimestamp(DateTime<Utc>);
@@ -146,31 +148,111 @@ impl MethodName {
     }
 }
 
-/// Controlled API actor kind.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "snake_case")]
-pub enum ActorKind {
-    Agent,
-    User,
+/// Durable actor provenance used after adapter-boundary derivation.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum ActorSource {
+    AgentConnection(AgentConnectionId),
+    LocalUser,
+    System,
 }
 
-/// Controlled registered surface role for actor-provenance derivation.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "snake_case")]
-pub enum SurfaceInteractionRole {
-    Agent,
-    UserInteraction,
-}
+impl ActorSource {
+    /// Creates actor provenance for a bound Agent Connection.
+    pub fn agent_connection(connection_id: impl Into<AgentConnectionId>) -> Self {
+        Self::AgentConnection(connection_id.into())
+    }
 
-impl SurfaceInteractionRole {
-    /// Returns the stable storage value name for this interaction role.
-    pub const fn as_str(self) -> &'static str {
+    /// Returns the stable string representation.
+    pub fn to_canonical_string(&self) -> String {
         match self {
-            Self::Agent => "agent",
-            Self::UserInteraction => "user_interaction",
+            Self::AgentConnection(connection_id) => {
+                format!("agent_connection:{}", connection_id.as_str())
+            }
+            Self::LocalUser => "local_user".to_owned(),
+            Self::System => "system".to_owned(),
+        }
+    }
+
+    /// Returns the bound Agent Connection id when this source names one.
+    pub fn agent_connection_id(&self) -> Option<&AgentConnectionId> {
+        match self {
+            Self::AgentConnection(connection_id) => Some(connection_id),
+            Self::LocalUser | Self::System => None,
         }
     }
 }
+
+impl fmt::Display for ActorSource {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(&self.to_canonical_string())
+    }
+}
+
+impl FromStr for ActorSource {
+    type Err = ActorSourceParseError;
+
+    fn from_str(raw: &str) -> Result<Self, Self::Err> {
+        if raw == "local_user" {
+            return Ok(Self::LocalUser);
+        }
+        if raw == "system" {
+            return Ok(Self::System);
+        }
+        let Some(connection_id) = raw.strip_prefix("agent_connection:") else {
+            return Err(ActorSourceParseError);
+        };
+        if connection_id.is_empty() {
+            return Err(ActorSourceParseError);
+        }
+        Ok(Self::AgentConnection(AgentConnectionId::new(connection_id)))
+    }
+}
+
+impl Serialize for ActorSource {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&self.to_canonical_string())
+    }
+}
+
+impl<'de> Deserialize<'de> for ActorSource {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let raw = String::deserialize(deserializer)?;
+        Self::from_str(&raw).map_err(de::Error::custom)
+    }
+}
+
+impl JsonSchema for ActorSource {
+    fn schema_name() -> String {
+        "ActorSource".to_owned()
+    }
+
+    fn json_schema(_generator: &mut SchemaGenerator) -> Schema {
+        Schema::Object(SchemaObject {
+            instance_type: Some(SingleOrVec::Single(Box::new(InstanceType::String))),
+            ..Default::default()
+        })
+    }
+}
+
+/// Error returned when an `actor_source` value is not supported.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ActorSourceParseError;
+
+impl fmt::Display for ActorSourceParseError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(
+            "actor_source must be local_user, system, or agent_connection:<connection_id>",
+        )
+    }
+}
+
+impl Error for ActorSourceParseError {}
 
 /// Controlled next-action category.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
@@ -204,55 +286,80 @@ pub enum EffectKind {
     NoEffect,
 }
 
-/// Request-level API compatibility access class.
+/// Internal API operation category.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
-pub enum AccessClass {
-    ReadStatus,
-    CoreMutation,
-    WriteAuthorization,
-    RunRecording,
-    ArtifactRegistration,
-    ArtifactRead,
+pub enum OperationCategory {
+    Read,
+    AgentWorkflow,
+    UserOnly,
+    AdminLocal,
 }
 
-impl AccessClass {
-    /// Returns the stable public value name for this access class.
+impl OperationCategory {
+    /// Returns the stable value name for this operation category.
     pub const fn as_str(self) -> &'static str {
         match self {
-            Self::ReadStatus => "read_status",
-            Self::CoreMutation => "core_mutation",
-            Self::WriteAuthorization => "write_authorization",
-            Self::RunRecording => "run_recording",
-            Self::ArtifactRegistration => "artifact_registration",
-            Self::ArtifactRead => "artifact_read",
+            Self::Read => "read",
+            Self::AgentWorkflow => "agent_workflow",
+            Self::UserOnly => "user_only",
+            Self::AdminLocal => "admin_local",
         }
     }
 }
 
-/// Explicit grants expanded by the local baseline-workflow registration profile.
-pub const BASELINE_WORKFLOW_ACCESS_CLASSES: [AccessClass; 5] = [
-    AccessClass::ReadStatus,
-    AccessClass::CoreMutation,
-    AccessClass::WriteAuthorization,
-    AccessClass::ArtifactRegistration,
-    AccessClass::RunRecording,
-];
+/// Agent Connection mode.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum AgentConnectionMode {
+    ReadOnly,
+    Workflow,
+}
+
+impl AgentConnectionMode {
+    /// Returns the stable value name for this Agent Connection mode.
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::ReadOnly => "read_only",
+            Self::Workflow => "workflow",
+        }
+    }
+
+    /// Returns true when this mode can dispatch the supplied category.
+    pub fn allows_operation_category(self, category: OperationCategory) -> bool {
+        self.operation_categories().contains(&category)
+    }
+
+    /// Returns operation categories available to this mode through an Agent Connection.
+    pub const fn operation_categories(self) -> &'static [OperationCategory] {
+        match self {
+            Self::ReadOnly => &READ_ONLY_OPERATION_CATEGORIES,
+            Self::Workflow => &WORKFLOW_OPERATION_CATEGORIES,
+        }
+    }
+}
+
+/// Operation categories available to a read-only Agent Connection.
+pub const READ_ONLY_OPERATION_CATEGORIES: [OperationCategory; 1] = [OperationCategory::Read];
+
+/// Operation categories available to a workflow Agent Connection.
+pub const WORKFLOW_OPERATION_CATEGORIES: [OperationCategory; 2] =
+    [OperationCategory::Read, OperationCategory::AgentWorkflow];
 
 /// Controlled registration-basis value for local administrative registration.
 pub const VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION: &str = "local_admin_registration";
 
 /// Controlled adapter-binding basis value for MCP stdio sessions.
-pub const VERIFICATION_BASIS_MCP_STDIO_SURFACE_BINDING: &str = "mcp_stdio_surface_binding";
+pub const VERIFICATION_BASIS_MCP_STDIO_CONNECTION_BINDING: &str = "mcp_stdio_connection_binding";
 
 /// Controlled adapter-binding basis value for direct CLI invocation.
-pub const VERIFICATION_BASIS_CLI_DIRECT_SURFACE_BINDING: &str = "cli_direct_surface_binding";
+pub const VERIFICATION_BASIS_CLI_DIRECT_USER_CHANNEL: &str = "cli_direct_user_channel";
 
 /// Controlled binding basis value for repository tests and fixtures.
 pub const VERIFICATION_BASIS_TEST_FIXTURE_BINDING: &str = "test_fixture_binding";
 
-/// Baseline actor assurance level for cooperative registered-surface provenance.
-pub const ACTOR_ASSURANCE_REGISTERED_SURFACE_COOPERATIVE: &str = "registered_surface_cooperative";
+/// Baseline actor assurance level for cooperative Agent Connection provenance.
+pub const ACTOR_ASSURANCE_AGENT_CONNECTION_COOPERATIVE: &str = "agent_connection_cooperative";
 
 /// State reference discriminator values.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
@@ -261,7 +368,7 @@ pub enum StateRecordKind {
     ProjectState,
     Task,
     ChangeUnit,
-    WriteAuthorization,
+    WriteCheck,
     UserJudgment,
     Run,
     EvidenceSummary,
@@ -269,7 +376,7 @@ pub enum StateRecordKind {
     Artifact,
     Blocker,
     TaskEvent,
-    LocalSurfaceRegistration,
+    AgentConnection,
     ProjectContinuityRecord,
 }
 
@@ -424,19 +531,19 @@ pub enum PrepareWriteDecision {
     DecisionRequired,
 }
 
-/// Prepare-write authorization-effect values.
+/// Prepare-write Write Check effect values.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
-pub enum AuthorizationEffect {
+pub enum WriteCheckEffect {
     None,
     WouldCreate,
     Created,
 }
 
-/// Write Authorization status values.
+/// Write Check status values.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
-pub enum WriteAuthorizationStatus {
+pub enum WriteCheckStatus {
     Active,
     Consumed,
     Expired,
@@ -471,7 +578,7 @@ pub enum WriteDecisionCategory {
     WriteCompatibility,
     Baseline,
     EffectContract,
-    SurfaceCapability,
+    ConnectionCapability,
 }
 
 /// Close-readiness blocker category values.
@@ -486,7 +593,7 @@ pub enum CloseReadinessBlockerCategory {
     SensitiveApproval,
     WriteCompatibility,
     Baseline,
-    SurfaceCapability,
+    ConnectionCapability,
     Evidence,
     EvidenceClaim,
     EvidenceProvenance,
@@ -524,7 +631,7 @@ pub enum EvidenceCoverageState {
 #[serde(rename_all = "snake_case")]
 pub enum EvidenceSourceKind {
     AgentReport,
-    SurfaceObservation,
+    ConnectionObservation,
     ExternalTool,
     UserObservation,
     ReusedEvidence,
@@ -536,7 +643,7 @@ pub enum EvidenceSourceKind {
 #[serde(rename_all = "snake_case")]
 pub enum EvidenceAssuranceLevel {
     CooperativeReport,
-    RegisteredSurfaceObserved,
+    RegisteredConnectionObserved,
     ExternalToolResult,
     UserObserved,
     Unverified,
@@ -722,8 +829,8 @@ pub enum ErrorCode {
     BaselineStale,
     ScopeRequired,
     ScopeViolation,
-    WriteAuthorizationRequired,
-    WriteAuthorizationInvalid,
+    WriteCheckRequired,
+    WriteCheckInvalid,
     ApprovalDenied,
     ApprovalExpired,
     ApprovalRequired,
