@@ -92,10 +92,10 @@ implementation workflow all matter:
   acceptance, close readiness, and residual-risk acceptance distinct in
   documentation, code, tests, and reports.
 - When repository guidance, examples, or reports mention user decisions, route
-  authority-bearing user judgments to documented `user_interaction` paths and
-  applicable Reference owners. Do not direct an `agent` role integration to
-  record or impersonate a user judgment, and do not treat generated Markdown,
-  status summaries, or projections as Core authority.
+  authority-bearing user judgments to the documented `User Channel` path and
+  applicable Reference owners. Do not direct an Agent Connection to record or
+  impersonate a user judgment, and do not treat generated Markdown, status
+  summaries, or projections as Core authority.
 
 ## Language And Terminology
 

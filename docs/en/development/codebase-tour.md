@@ -296,16 +296,16 @@ Why it exists:
 `volicord-cli` implements the local `volicord` administrative executable and
 reusable agent setup modules. It handles Runtime Home initialization, project
 and Agent Connection registration, Agent Connection setup, host-specific
-MCP configuration, optional repository guidance, and preflight execution.
+MCP configuration, connection-project membership, and preflight execution.
 
 Owns in the implementation:
 
 - Process entry and administrative command dispatch for the `volicord` binary.
 - `volicord agent` option parsing, storage preparation, host plan construction,
-  preflight invocation, status/verify/project membership/uninstall/guidance
+  preflight invocation, connect/status/verify/project membership/uninstall
   commands, and output.
 - Codex, Claude Code, and generic export host integration planning.
-- Optional Product Repository guidance rendering and managed-block updates.
+- Managed host configuration planning and safety checks.
 - Agent Connection and invocation metadata generation.
 
 Does not own:
@@ -351,10 +351,10 @@ Most relevant tests:
 
 - [`crates/volicord-cli/tests/binary_admin.rs`](../../../crates/volicord-cli/tests/binary_admin.rs)
   exercises the `volicord` binary for administrative setup, dry-run behavior,
-  `volicord agent` host setup, repository guidance, setup-command rejection,
+  `volicord agent` host setup, connection-project membership, setup-command rejection,
   preflight handling, and config-file safety.
 - Colocated unit tests in CLI modules cover parsing, planning, rendering,
-  registration metadata, and host/guidance behavior.
+  registration metadata, and host-configuration behavior.
 
 Recommended next component:
 

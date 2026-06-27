@@ -232,7 +232,7 @@ flowchart TD
   dry{"--dry-run?"}
   dryout["Return plan only; no Runtime Home or SQLite writes, MCP preflight, host apply, initialization, or tool discovery"]
   runtime["Initialize or reuse Runtime Home and project state"]
-  connection["Create or reuse Agent Connection, Connection Projects, and default-project routing"]
+  connection["Create or reuse Agent Connection and Connection Projects allowlist"]
   preflight["Run volicord-mcp --check --connection with the resolved Runtime Home"]
   host["Read host target snapshot and apply the planned host configuration"]
   inventory["Register or update Agent Connection inventory before final verification"]
@@ -262,7 +262,7 @@ The connection sequence has a read-only planning phase before persistent setup. 
 
 When `--dry-run` is selected, the command returns the plan from that planning phase. It does not create Runtime Home directories or SQLite state, run `volicord-mcp --check`, apply host configuration, initialize MCP stdio, or perform tool discovery.
 
-Non-dry-run execution then initializes or reuses Runtime Home and project state, creates or reuses the Agent Connection, Connection Projects allowlist, and default-project routing, and only then runs `volicord-mcp --check --connection <connection_id>` with the resolved Runtime Home. That MCP startup preflight happens before host configuration is applied.
+Non-dry-run execution then initializes or reuses Runtime Home and project state, creates or reuses the Agent Connection and Connection Projects allowlist, and only then runs `volicord-mcp --check --connection <connection_id>` with the resolved Runtime Home. That MCP startup preflight happens before host configuration is applied.
 
 Host configuration application follows the previously constructed host plan and is guarded by the target snapshot, stale-plan checks, ownership markers, and fingerprint checks. Agent Connection inventory is registered or updated only after host configuration application, initially before the final verification state has been recorded. Product Repository guidance and generated host instructions are advisory context only and are not an authority-bearing setup effect.
 
@@ -296,7 +296,7 @@ to choose a test layer for a concrete change.
 |---|---|
 | Colocated unit tests in implementation modules | Check local helpers, parsing, serialization, migration, Store, policy, and edge behavior close to the code under test. |
 | `crates/volicord-core/src/methods/tests.rs` | Exercises Core method planning, shared preflight behavior, effect branches, replay behavior, staging distinction, artifact promotion, close-readiness calculations, and method-owned storage mutation outcomes through `CoreService`. |
-| `crates/volicord-cli/tests/binary_admin.rs` | Runs the `volicord` binary for administrative initialization, registration, `volicord agent` install/status/verify/uninstall/guidance behavior, dry-run behavior, host integration preflight handling, host config writes, repository guidance safety, and command-line error paths. |
+| `crates/volicord-cli/tests/binary_admin.rs` | Runs the `volicord` binary for administrative initialization, registration, `volicord agent` connect/status/verify/project membership/uninstall behavior, dry-run behavior, host integration preflight handling, host config writes, repository guidance safety, and command-line error paths. |
 | `crates/volicord-mcp/tests/binary_transport.rs` | Runs the `volicord-mcp` binary for help/version, `--check`, stdio framing, line-delimited JSON-RPC, reconnection behavior, and MCP response wrapping. |
 | `tests/integration/mcp_connection.rs` | Verifies MCP connection binding, tool schemas, public method exposure, per-method `operation_category` derivation, Core/MCP parity, session rejection cases, replay context binding, and cross-layer storage effects. |
 | `tests/conformance/baseline.rs` | Exercises baseline public behavior scenarios through Core-facing APIs using shared fixtures, including replay, no-effect branches, Write Check, artifact lifecycle, judgment boundaries, close readiness, error routing, and corruption handling. |
