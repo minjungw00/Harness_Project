@@ -33,17 +33,17 @@ impl GenericAdapter {
         }
 
         let server_name =
-            validated_server_name(request.integration_id, request.explicit_server_name)?;
+            validated_server_name(request.connection_id, request.explicit_server_name)?;
         let target = request
             .output_path
             .map(Path::to_path_buf)
             .unwrap_or_else(|| {
                 request
                     .output_dir
-                    .join(export_file_name(request.integration_id))
+                    .join(export_file_name(request.connection_id))
             });
         let entry = ManagedServerEntry::new(
-            request.integration_id,
+            request.connection_id,
             request.mcp_command,
             request.runtime_home,
         );
@@ -210,7 +210,7 @@ impl HostAdapter for GenericAdapter {
 #[derive(Debug, Clone, Copy)]
 pub struct GenericPlanRequest<'a> {
     pub scope: HostScope,
-    pub integration_id: &'a str,
+    pub connection_id: &'a str,
     pub explicit_server_name: Option<&'a str>,
     pub output_dir: &'a Path,
     pub output_path: Option<&'a Path>,
@@ -314,7 +314,7 @@ mod tests {
             HostTarget::Export(dir.join("volicord-int_alpha.mcp.json"))
         );
         assert_eq!(plan.entry.command, "/bin/volicord-mcp");
-        assert_eq!(plan.entry.args, ["--integration", "int_alpha"]);
+        assert_eq!(plan.entry.args, ["--connection", "int_alpha"]);
         assert_eq!(
             plan.entry.env.get("VOLICORD_HOME"),
             Some(&"/runtime".to_owned())
@@ -440,7 +440,7 @@ mod tests {
     ) -> GenericPlanRequest<'a> {
         GenericPlanRequest {
             scope: HostScope::Export,
-            integration_id: "int_alpha",
+            connection_id: "int_alpha",
             explicit_server_name: None,
             output_dir,
             output_path,

@@ -8,23 +8,16 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-use serde_json::Value;
 use volicord_cli::{
     agent_command::{agent_usage, run_agent_command, AgentCommandError, ProductionAgentProcess},
-    registration::{
-        access_class_from_local_access, capability_profile_json, local_access_json,
-        parse_access_class, push_access_class, push_access_classes, validate_role_access_classes,
-        RegistrationMetadataError, ADMIN_METADATA_JSON, BASELINE_WORKFLOW_PROFILE,
-        DEFAULT_ACCESS_CLASS, DEFAULT_SURFACE_KIND,
-    },
+    registration::ADMIN_METADATA_JSON,
     user_command::{run_user_command, user_usage, UserCommandError},
 };
 use volicord_store::bootstrap::{
-    initialize_runtime_home, list_projects, list_surfaces, register_project, register_surface,
-    ProjectRegistration, SurfaceRegistration, ACTIVE_PROJECT_STATUS,
+    initialize_runtime_home, list_projects, register_project, ProjectRegistration,
+    ACTIVE_PROJECT_STATUS,
 };
 use volicord_store::runtime_home::{resolve_runtime_home, RuntimeHomeResolutionError};
-use volicord_types::{AccessClass, SurfaceInteractionRole, BASELINE_WORKFLOW_ACCESS_CLASSES};
 
 type CliOptions = BTreeMap<String, Vec<String>>;
 
@@ -83,7 +76,6 @@ where
         }
         "user" => run_user_command(&args[2..], env_var, current_dir).map_err(CliError::from),
         "project" => command_project(&args[2..], env_var, current_dir),
-        "surface" => command_surface(&args[2..], env_var, current_dir),
         other => Err(CliError::usage(format!(
             "unknown command: {other}\n\n{}",
             usage()
@@ -169,109 +161,6 @@ where
         other => Err(CliError::usage(format!(
             "unknown project command: {other}\n\n{}",
             project_usage()
-        ))),
-    }
-}
-
-fn command_surface<F>(args: &[String], env_var: F, current_dir: &Path) -> Result<String, CliError>
-where
-    F: Fn(&str) -> Option<std::ffi::OsString>,
-{
-    let Some(subcommand) = args.first().map(String::as_str) else {
-        return Err(CliError::usage(surface_usage()));
-    };
-    let runtime_home = resolve_runtime_home(env_var, current_dir)?;
-
-    match subcommand {
-        "register" => {
-            let options = parse_options_with_repeatable(
-                &args[1..],
-                &[
-                    "project-id",
-                    "surface-id",
-                    "surface-instance-id",
-                    "kind",
-                    "name",
-                    "access-class",
-                    "profile",
-                    "capability-profile",
-                    "interaction-role",
-                ],
-                &["access-class"],
-            )?;
-            let project_id = required_option(&options, "project-id")?;
-            let surface_id = required_option(&options, "surface-id")?;
-            let surface_instance_id = options
-                .value("surface-instance-id")
-                .unwrap_or_else(|| generated_id("surface_instance"));
-            let surface_kind = options
-                .value("kind")
-                .unwrap_or_else(|| DEFAULT_SURFACE_KIND.to_owned());
-            let display_name = options.value("name");
-            let interaction_role = surface_interaction_role(&options)?;
-            let access_classes = surface_access_classes(&options)?;
-            validate_role_access_classes(interaction_role, &access_classes)?;
-            let capability_profile_json = capability_profile_json(
-                &access_classes,
-                options.value_ref("capability-profile").map(String::as_str),
-            )?;
-            let local_access_json = local_access_json(&access_classes)?;
-
-            let record = register_surface(
-                &runtime_home,
-                SurfaceRegistration {
-                    project_id,
-                    surface_id,
-                    surface_instance_id,
-                    surface_kind,
-                    interaction_role,
-                    display_name,
-                    capability_profile_json,
-                    local_access_json,
-                    metadata_json: ADMIN_METADATA_JSON.to_owned(),
-                },
-            )?;
-            let access_class = access_class_from_local_access(&record.local_access_json)
-                .unwrap_or_else(|| DEFAULT_ACCESS_CLASS.as_str().to_owned());
-
-            Ok(format!(
-                "surface registered\nproject_id: {}\nsurface_id: {}\nsurface_instance_id: {}\nsurface_kind: {}\ninteraction_role: {}\naccess_class: {}\n",
-                record.project_id,
-                record.surface_id,
-                record.surface_instance_id,
-                record.surface_kind,
-                record.interaction_role,
-                access_class
-            ))
-        }
-        "list" => {
-            let options = parse_options(&args[1..], &["project-id"])?;
-            let project_id = required_option(&options, "project-id")?;
-            let surfaces = list_surfaces(&runtime_home, &project_id)?;
-            let mut output = String::from(
-                "project_id\tsurface_id\tsurface_instance_id\tsurface_kind\tinteraction_role\taccess_class\tdisplay_name\n",
-            );
-            for surface in surfaces {
-                let access_class = access_class_from_local_access(&surface.local_access_json)
-                    .unwrap_or_else(|| String::from(""));
-                let display_name = surface.display_name.unwrap_or_default();
-                output.push_str(&format!(
-                    "{}\t{}\t{}\t{}\t{}\t{}\t{}\n",
-                    surface.project_id,
-                    surface.surface_id,
-                    surface.surface_instance_id,
-                    surface.surface_kind,
-                    surface.interaction_role,
-                    access_class,
-                    display_name
-                ));
-            }
-            Ok(output)
-        }
-        "-h" | "--help" | "help" => Ok(surface_usage()),
-        other => Err(CliError::usage(format!(
-            "unknown surface command: {other}\n\n{}",
-            surface_usage()
         ))),
     }
 }
@@ -388,42 +277,6 @@ fn absolute_path(current_dir: &Path, path: PathBuf) -> PathBuf {
     }
 }
 
-fn surface_access_classes(options: &CliOptions) -> Result<Vec<AccessClass>, CliError> {
-    let mut access_classes = Vec::new();
-    if let Some(values) = options.get("access-class") {
-        for value in values {
-            push_access_class(&mut access_classes, parse_access_class(value)?);
-        }
-    }
-
-    if let Some(profile) = options.value_ref("profile") {
-        if profile != BASELINE_WORKFLOW_PROFILE {
-            return Err(CliError::usage(format!("unknown profile: {profile}")));
-        }
-        push_access_classes(&mut access_classes, BASELINE_WORKFLOW_ACCESS_CLASSES);
-    }
-
-    if access_classes.is_empty() && !options.contains_key("profile") {
-        push_access_class(&mut access_classes, DEFAULT_ACCESS_CLASS);
-    }
-
-    if access_classes.is_empty() {
-        Err(CliError::usage(
-            "surface registration requires at least one access class",
-        ))
-    } else {
-        Ok(access_classes)
-    }
-}
-
-fn surface_interaction_role(options: &CliOptions) -> Result<SurfaceInteractionRole, CliError> {
-    match options.value_ref("interaction-role") {
-        Some(value) => serde_json::from_value(Value::String(value.to_owned()))
-            .map_err(|_| CliError::usage(format!("unknown interaction role: {value}"))),
-        None => Ok(SurfaceInteractionRole::Agent),
-    }
-}
-
 fn generated_id(prefix: &str) -> String {
     let nanos = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -438,11 +291,10 @@ fn display_path(path: &Path) -> String {
 
 fn usage() -> String {
     format!(
-        "Usage:\n  volicord --help\n  volicord --version\n  volicord init [--runtime-home-id ID]\n  {}\n  {}\n  {}\n  {}\n\nEnvironment:\n  VOLICORD_HOME  Override Runtime Home path (default: $HOME/.volicord)\n\nThese are local administrative commands, not public Volicord API methods.\n",
+        "Usage:\n  volicord --help\n  volicord --version\n  volicord init [--runtime-home-id ID]\n  {}\n  {}\n  {}\n\nEnvironment:\n  VOLICORD_HOME  Override Runtime Home path (default: $HOME/.volicord)\n\nThese are local administrative commands, not public Volicord API methods.\n",
         agent_usage().trim_end(),
         user_usage().trim_end(),
-        project_usage().trim_end(),
-        surface_usage().trim_end()
+        project_usage().trim_end()
     )
 }
 
@@ -452,11 +304,6 @@ fn version() -> String {
 
 fn project_usage() -> String {
     "volicord project register --project-id ID --repo-root PATH [--status active]\nvolicord project list\n"
-        .to_owned()
-}
-
-fn surface_usage() -> String {
-    "volicord surface register --project-id ID --surface-id ID [--surface-instance-id ID] [--kind KIND] [--name NAME] [--interaction-role agent|user_interaction] [--access-class ACCESS_CLASS ...] [--profile baseline-workflow] [--capability-profile JSON]\nvolicord surface list --project-id ID\n"
         .to_owned()
 }
 
@@ -495,15 +342,6 @@ impl From<volicord_store::StoreError> for CliError {
     }
 }
 
-impl From<RegistrationMetadataError> for CliError {
-    fn from(error: RegistrationMetadataError) -> Self {
-        match error {
-            RegistrationMetadataError::Usage(message) => Self::Usage(message),
-            RegistrationMetadataError::Runtime(message) => Self::Runtime(message),
-        }
-    }
-}
-
 impl From<RuntimeHomeResolutionError> for CliError {
     fn from(error: RuntimeHomeResolutionError) -> Self {
         Self::Runtime(error.to_string())
@@ -524,7 +362,6 @@ impl From<UserCommandError> for CliError {
     fn from(error: UserCommandError) -> Self {
         match error {
             UserCommandError::Usage(message) => Self::Usage(message),
-            UserCommandError::Runtime(message) => Self::Runtime(message),
         }
     }
 }
@@ -538,7 +375,6 @@ mod tests {
     };
 
     use rusqlite::Connection;
-    use serde_json::{json, Value};
     use volicord_store::sqlite::{project_state_db_path, registry_db_path};
     use volicord_test_support::TempRuntimeHome;
 
@@ -812,468 +648,25 @@ mod tests {
     }
 
     #[test]
-    fn surface_register_and_list_store_local_context_metadata() {
-        let runtime_home = TempRuntimeHome::new("cli-surface").expect("temp runtime home");
-        run_with_home(
-            runtime_home.path(),
+    fn removed_admin_tree_is_not_supported() {
+        let removed = ["sur", "face"].concat();
+        let error = run_cli(
             [
                 "volicord",
-                "init",
-                "--runtime-home-id",
-                "runtime_home_surface",
-            ],
-        )
-        .expect("init should succeed");
-        run_with_home(
-            runtime_home.path(),
-            [
-                "volicord",
-                "project",
-                "register",
-                "--project-id",
-                "project_surface",
-                "--repo-root",
-                ".",
-            ],
-        )
-        .expect("project register should succeed");
-
-        let output = run_with_home(
-            runtime_home.path(),
-            [
-                "volicord",
-                "surface",
-                "register",
-                "--project-id",
-                "project_surface",
-                "--surface-id",
-                "surface_cli",
-                "--surface-instance-id",
-                "surface_instance_test",
-                "--kind",
-                "cli",
-                "--name",
-                "Local CLI",
-                "--access-class",
-                "core_mutation",
-                "--capability-profile",
-                r#"{"local_reachability":true}"#,
-            ],
-        )
-        .expect("surface register should succeed");
-
-        assert_eq!(
-            output,
-            "surface registered\nproject_id: project_surface\nsurface_id: surface_cli\nsurface_instance_id: surface_instance_test\nsurface_kind: cli\ninteraction_role: agent\naccess_class: core_mutation\n"
-        );
-
-        let list_output = run_with_home(
-            runtime_home.path(),
-            [
-                "volicord",
-                "surface",
+                removed.as_str(),
                 "list",
                 "--project-id",
-                "project_surface",
+                "project_a",
             ],
+            |_| None,
+            Path::new(env!("CARGO_MANIFEST_DIR")),
         )
-        .expect("surface list should succeed");
-        assert_eq!(
-            list_output,
-            "project_id\tsurface_id\tsurface_instance_id\tsurface_kind\tinteraction_role\taccess_class\tdisplay_name\nproject_surface\tsurface_cli\tsurface_instance_test\tcli\tagent\tcore_mutation\tLocal CLI\n"
-        );
+        .expect_err("removed command should stay unavailable");
 
-        let conn = Connection::open(project_state_db_path(
-            runtime_home.path(),
-            "project_surface",
-        ))
-        .expect("state database should open");
-        let (default_surface_id, interaction_role, capability_profile, local_access): (
-            String,
-            String,
-            String,
-            String,
-        ) = conn
-            .query_row(
-                "SELECT default_surface_id, interaction_role, capability_profile_json, local_access_json
-                   FROM project_state
-                   JOIN surfaces USING (project_id)
-                  WHERE project_id = 'project_surface'",
-                [],
-                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
-            )
-            .expect("surface metadata should exist");
-        assert_eq!(default_surface_id, "surface_cli");
-        assert_eq!(interaction_role, "agent");
-        let capability = serde_json::from_str::<Value>(&capability_profile)
-            .expect("capability profile should be JSON");
-        assert_eq!(capability["access_class"], "core_mutation");
-        assert_eq!(capability["local_reachability"], true);
-        let local_access =
-            serde_json::from_str::<Value>(&local_access).expect("local access should be JSON");
-        assert!(local_access.get("access_class").is_none());
-        assert_eq!(
-            local_access["authorized_access_classes"],
-            json!(["core_mutation"])
-        );
-        assert_eq!(
-            local_access["verification_basis"],
-            "local_admin_registration"
-        );
-    }
-
-    #[test]
-    fn surface_register_explicit_user_interaction_role_is_stored() {
-        let runtime_home =
-            TempRuntimeHome::new("cli-surface-user-role").expect("temp runtime home");
-        run_with_home(
-            runtime_home.path(),
-            [
-                "volicord",
-                "init",
-                "--runtime-home-id",
-                "runtime_home_surface_user_role",
-            ],
-        )
-        .expect("init should succeed");
-        run_with_home(
-            runtime_home.path(),
-            [
-                "volicord",
-                "project",
-                "register",
-                "--project-id",
-                "project_user_role",
-                "--repo-root",
-                ".",
-            ],
-        )
-        .expect("project register should succeed");
-
-        let output = run_with_home(
-            runtime_home.path(),
-            [
-                "volicord",
-                "surface",
-                "register",
-                "--project-id",
-                "project_user_role",
-                "--surface-id",
-                "surface_user_role",
-                "--surface-instance-id",
-                "surface_instance_user_role",
-                "--interaction-role",
-                "user_interaction",
-                "--access-class",
-                "core_mutation",
-                "--access-class",
-                "read_status",
-            ],
-        )
-        .expect("user-interaction surface register should succeed");
-
-        assert!(output.contains("interaction_role: user_interaction\n"));
-        assert!(output.contains("access_class: core_mutation,read_status\n"));
-        let conn = Connection::open(project_state_db_path(
-            runtime_home.path(),
-            "project_user_role",
-        ))
-        .expect("state database should open");
-        let interaction_role: String = conn
-            .query_row(
-                "SELECT interaction_role
-                   FROM surfaces
-                  WHERE project_id = 'project_user_role'
-                    AND surface_id = 'surface_user_role'",
-                [],
-                |row| row.get(0),
-            )
-            .expect("surface role should exist");
-        assert_eq!(interaction_role, "user_interaction");
-    }
-
-    #[test]
-    fn surface_register_user_interaction_rejects_broad_grants() {
-        let runtime_home =
-            TempRuntimeHome::new("cli-surface-user-role-broad").expect("temp runtime home");
-        run_with_home(
-            runtime_home.path(),
-            [
-                "volicord",
-                "init",
-                "--runtime-home-id",
-                "runtime_home_surface_user_role_broad",
-            ],
-        )
-        .expect("init should succeed");
-        run_with_home(
-            runtime_home.path(),
-            [
-                "volicord",
-                "project",
-                "register",
-                "--project-id",
-                "project_user_role_broad",
-                "--repo-root",
-                ".",
-            ],
-        )
-        .expect("project register should succeed");
-
-        let error = run_with_home(
-            runtime_home.path(),
-            [
-                "volicord",
-                "surface",
-                "register",
-                "--project-id",
-                "project_user_role_broad",
-                "--surface-id",
-                "surface_user_role_broad",
-                "--interaction-role",
-                "user_interaction",
-                "--profile",
-                "baseline-workflow",
-            ],
-        )
-        .expect_err("user-interaction role should reject broad baseline profile grants");
-
-        assert_eq!(
-            error,
-            CliError::Usage(
-                "user_interaction surfaces may grant only read_status and core_mutation access"
-                    .to_owned()
-            )
-        );
-    }
-
-    #[test]
-    fn surface_register_repeatable_access_classes_are_deduplicated_in_order() {
-        let runtime_home = TempRuntimeHome::new("cli-surface-repeat").expect("temp runtime home");
-        run_with_home(
-            runtime_home.path(),
-            [
-                "volicord",
-                "init",
-                "--runtime-home-id",
-                "runtime_home_surface_repeat",
-            ],
-        )
-        .expect("init should succeed");
-        run_with_home(
-            runtime_home.path(),
-            [
-                "volicord",
-                "project",
-                "register",
-                "--project-id",
-                "project_repeat",
-                "--repo-root",
-                ".",
-            ],
-        )
-        .expect("project register should succeed");
-
-        let output = run_with_home(
-            runtime_home.path(),
-            [
-                "volicord",
-                "surface",
-                "register",
-                "--project-id",
-                "project_repeat",
-                "--surface-id",
-                "surface_repeat",
-                "--surface-instance-id",
-                "surface_instance_repeat",
-                "--access-class",
-                "core_mutation",
-                "--access-class",
-                "read_status",
-                "--access-class",
-                "core_mutation",
-            ],
-        )
-        .expect("surface register should succeed");
-
-        assert!(output.contains("access_class: core_mutation,read_status\n"));
-        let conn = Connection::open(project_state_db_path(runtime_home.path(), "project_repeat"))
-            .expect("state database should open");
-        let (capability_profile, local_access): (String, String) = conn
-            .query_row(
-                "SELECT capability_profile_json, local_access_json
-                   FROM surfaces
-                  WHERE project_id = 'project_repeat'
-                    AND surface_id = 'surface_repeat'",
-                [],
-                |row| Ok((row.get(0)?, row.get(1)?)),
-            )
-            .expect("surface metadata should exist");
-        let capability = serde_json::from_str::<Value>(&capability_profile)
-            .expect("capability profile should be JSON");
-        assert_eq!(capability["access_class"], "core_mutation");
-        assert_eq!(
-            capability["supported_access_classes"],
-            json!(["core_mutation", "read_status"])
-        );
-        let local_access =
-            serde_json::from_str::<Value>(&local_access).expect("local access should be JSON");
-        assert!(local_access.get("access_class").is_none());
-        assert_eq!(
-            local_access["authorized_access_classes"],
-            json!(["core_mutation", "read_status"])
-        );
-    }
-
-    #[test]
-    fn surface_register_baseline_workflow_profile_persists_explicit_grants() {
-        let runtime_home = TempRuntimeHome::new("cli-surface-profile").expect("temp runtime home");
-        run_with_home(
-            runtime_home.path(),
-            [
-                "volicord",
-                "init",
-                "--runtime-home-id",
-                "runtime_home_surface_profile",
-            ],
-        )
-        .expect("init should succeed");
-        run_with_home(
-            runtime_home.path(),
-            [
-                "volicord",
-                "project",
-                "register",
-                "--project-id",
-                "project_profile",
-                "--repo-root",
-                ".",
-            ],
-        )
-        .expect("project register should succeed");
-
-        let output = run_with_home(
-            runtime_home.path(),
-            [
-                "volicord",
-                "surface",
-                "register",
-                "--project-id",
-                "project_profile",
-                "--surface-id",
-                "surface_profile",
-                "--surface-instance-id",
-                "surface_instance_profile",
-                "--profile",
-                "baseline-workflow",
-            ],
-        )
-        .expect("surface register should succeed");
-
-        let expected = json!([
-            "read_status",
-            "core_mutation",
-            "write_authorization",
-            "artifact_registration",
-            "run_recording"
-        ]);
-        assert!(output.contains(
-            "access_class: read_status,core_mutation,write_authorization,artifact_registration,run_recording\n"
-        ));
-        let conn = Connection::open(project_state_db_path(
-            runtime_home.path(),
-            "project_profile",
-        ))
-        .expect("state database should open");
-        let local_access: String = conn
-            .query_row(
-                "SELECT local_access_json
-                   FROM surfaces
-                  WHERE project_id = 'project_profile'
-                    AND surface_id = 'surface_profile'",
-                [],
-                |row| row.get(0),
-            )
-            .expect("surface metadata should exist");
-        let local_access =
-            serde_json::from_str::<Value>(&local_access).expect("local access should be JSON");
-        assert!(local_access.get("access_class").is_none());
-        assert_eq!(local_access["authorized_access_classes"], expected);
-        assert!(local_access.get("profile").is_none());
-    }
-
-    #[test]
-    fn surface_register_profile_and_explicit_classes_use_deterministic_union() {
-        let runtime_home = TempRuntimeHome::new("cli-surface-union").expect("temp runtime home");
-        run_with_home(
-            runtime_home.path(),
-            [
-                "volicord",
-                "init",
-                "--runtime-home-id",
-                "runtime_home_surface_union",
-            ],
-        )
-        .expect("init should succeed");
-        run_with_home(
-            runtime_home.path(),
-            [
-                "volicord",
-                "project",
-                "register",
-                "--project-id",
-                "project_union",
-                "--repo-root",
-                ".",
-            ],
-        )
-        .expect("project register should succeed");
-
-        run_with_home(
-            runtime_home.path(),
-            [
-                "volicord",
-                "surface",
-                "register",
-                "--project-id",
-                "project_union",
-                "--surface-id",
-                "surface_union",
-                "--surface-instance-id",
-                "surface_instance_union",
-                "--access-class",
-                "run_recording",
-                "--profile",
-                "baseline-workflow",
-            ],
-        )
-        .expect("surface register should succeed");
-
-        let conn = Connection::open(project_state_db_path(runtime_home.path(), "project_union"))
-            .expect("state database should open");
-        let local_access: String = conn
-            .query_row(
-                "SELECT local_access_json
-                   FROM surfaces
-                  WHERE project_id = 'project_union'
-                    AND surface_id = 'surface_union'",
-                [],
-                |row| row.get(0),
-            )
-            .expect("surface metadata should exist");
-        let local_access =
-            serde_json::from_str::<Value>(&local_access).expect("local access should be JSON");
-        assert_eq!(
-            local_access["authorized_access_classes"],
-            json!([
-                "run_recording",
-                "read_status",
-                "core_mutation",
-                "write_authorization",
-                "artifact_registration"
-            ])
-        );
-        assert!(local_access.get("access_class").is_none());
+        assert!(matches!(error, CliError::Usage(_)));
+        assert!(error
+            .to_string()
+            .contains(&format!("unknown command: {removed}")));
     }
 
     #[test]

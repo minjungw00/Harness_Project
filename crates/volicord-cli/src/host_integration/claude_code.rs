@@ -122,7 +122,7 @@ impl<R: CommandRunner> ClaudeCodeAdapter<R> {
             )));
         }
         let server_name =
-            validated_server_name(request.integration_id, request.explicit_server_name)?;
+            validated_server_name(request.connection_id, request.explicit_server_name)?;
         if server_name == "workspace" {
             return Err(HostConfigError::Conflict(HostConflict::new(
                 HostConflictKind::InvalidServerName,
@@ -130,7 +130,7 @@ impl<R: CommandRunner> ClaudeCodeAdapter<R> {
             )));
         }
         let entry = ManagedServerEntry::new(
-            request.integration_id,
+            request.connection_id,
             request.mcp_command,
             request.runtime_home,
         );
@@ -504,7 +504,7 @@ impl<R: CommandRunner> HostAdapter for ClaudeCodeAdapter<R> {
 #[derive(Debug, Clone, Copy)]
 pub struct ClaudePlanRequest<'a> {
     pub scope: HostScope,
-    pub integration_id: &'a str,
+    pub connection_id: &'a str,
     pub explicit_server_name: Option<&'a str>,
     pub repo_root: Option<&'a Path>,
     pub mcp_command: &'a Path,
@@ -976,7 +976,7 @@ mod tests {
             .expect("separator");
         assert_eq!(
             &local.args[separator + 1..],
-            ["/bin/volicord-mcp", "--integration", "int_alpha"]
+            ["/bin/volicord-mcp", "--connection", "int_alpha"]
         );
         assert_eq!(project.args[project.args.len() - 3], "volicord-mcp");
     }
@@ -1062,7 +1062,7 @@ mod tests {
         let connected = parse_claude_mcp_get_output(&CommandOutput {
             success: true,
             status_code: Some(0),
-            stdout: "Status: ✓ Connected\nScope: local\nCommand: /bin/volicord-mcp\nArgs: [\"--integration\",\"int_alpha\"]\nEnvironment:\n  VOLICORD_HOME=/runtime\n".to_owned(),
+            stdout: "Status: ✓ Connected\nScope: local\nCommand: /bin/volicord-mcp\nArgs: [\"--connection\",\"int_alpha\"]\nEnvironment:\n  VOLICORD_HOME=/runtime\n".to_owned(),
             stderr: String::new(),
         });
         assert_eq!(connected.state, ClaudeMcpState::Connected);
@@ -1070,7 +1070,7 @@ mod tests {
         assert_eq!(connected.command.as_deref(), Some("/bin/volicord-mcp"));
         assert_eq!(
             connected.args,
-            Some(vec!["--integration".to_owned(), "int_alpha".to_owned()])
+            Some(vec!["--connection".to_owned(), "int_alpha".to_owned()])
         );
         assert_eq!(
             connected.env.get("VOLICORD_HOME"),
@@ -1113,7 +1113,7 @@ mod tests {
         let mut adapter = ClaudeCodeAdapter::new(FakeRunner::new(vec![
             missing_output(),
             ok_output(
-                "Status: ✓ Connected\nScope: local\nCommand: /bin/volicord-mcp\nArgs: --integration int_alpha\nEnvironment:\n  VOLICORD_HOME=/runtime\n",
+                "Status: ✓ Connected\nScope: local\nCommand: /bin/volicord-mcp\nArgs: --connection int_alpha\nEnvironment:\n  VOLICORD_HOME=/runtime\n",
             ),
         ]));
         let plan = adapter.plan(request(
@@ -1273,7 +1273,7 @@ mod tests {
     ) -> ClaudePlanRequest<'a> {
         ClaudePlanRequest {
             scope,
-            integration_id: "int_alpha",
+            connection_id: "int_alpha",
             explicit_server_name: None,
             repo_root,
             mcp_command,

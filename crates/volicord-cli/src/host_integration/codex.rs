@@ -51,7 +51,7 @@ impl<R: CommandRunner> CodexAdapter<R> {
         if !matches!(request.scope, HostScope::User | HostScope::Project) {
             return Ok(conflicted_plan(
                 HostScope::Project,
-                request.integration_id,
+                request.connection_id,
                 request.explicit_server_name,
                 request.mcp_command,
                 HostConflict::new(
@@ -69,10 +69,10 @@ impl<R: CommandRunner> CodexAdapter<R> {
         }
 
         let server_name =
-            validated_server_name(request.integration_id, request.explicit_server_name)?;
+            validated_server_name(request.connection_id, request.explicit_server_name)?;
         let target = self.config_path(request.scope, request.repo_root)?;
         let entry = ManagedServerEntry::new(
-            request.integration_id,
+            request.connection_id,
             request.mcp_command,
             request.runtime_home,
         );
@@ -148,9 +148,9 @@ impl<R: CommandRunner> CodexAdapter<R> {
             )));
         }
 
-        let server_name = validated_server_name(request.integration_id, Some(request.server_name))?;
+        let server_name = validated_server_name(request.connection_id, Some(request.server_name))?;
         let entry = ManagedServerEntry::new(
-            request.integration_id,
+            request.connection_id,
             request.mcp_command,
             request.runtime_home,
         );
@@ -211,7 +211,7 @@ impl<R: CommandRunner> CodexAdapter<R> {
         let Some(executable) = find_executable_in_path("codex", self.env.path.as_ref()) else {
             return CodexExecutableAvailability::unavailable(
                 format!(
-                    "Codex executable `codex` was not found on PATH; install Codex or make it available before using this Host Installation; configuration target: {}",
+                    "Codex executable `codex` was not found on PATH; install Codex or make it available before using this Agent Connection; configuration target: {}",
                     config_target.display()
                 ),
                 "Codex executable `codex` was not found on PATH",
@@ -230,7 +230,7 @@ impl<R: CommandRunner> CodexAdapter<R> {
             )),
             Ok(output) => CodexExecutableAvailability::unavailable(
                 format!(
-                    "Codex executable failed its availability check `codex --version` with status {}; install or repair Codex before using this Host Installation; configuration target: {}",
+                    "Codex executable failed its availability check `codex --version` with status {}; install or repair Codex before using this Agent Connection; configuration target: {}",
                     status_text(output.status_code),
                     config_target.display()
                 ),
@@ -241,7 +241,7 @@ impl<R: CommandRunner> CodexAdapter<R> {
             ),
             Err(error) => CodexExecutableAvailability::unavailable(
                 format!(
-                    "Codex executable could not be launched for availability check `codex --version`: {error}; install Codex or make it executable before using this Host Installation; configuration target: {}",
+                    "Codex executable could not be launched for availability check `codex --version`: {error}; install Codex or make it executable before using this Agent Connection; configuration target: {}",
                     config_target.display()
                 ),
                 format!("Codex executable availability check could not launch: {error}"),
@@ -375,7 +375,7 @@ impl<R: CommandRunner> HostAdapter for CodexAdapter<R> {
 #[derive(Debug, Clone, Copy)]
 pub struct CodexPlanRequest<'a> {
     pub scope: HostScope,
-    pub integration_id: &'a str,
+    pub connection_id: &'a str,
     pub explicit_server_name: Option<&'a str>,
     pub repo_root: Option<&'a Path>,
     pub mcp_command: &'a Path,
@@ -386,7 +386,7 @@ pub struct CodexPlanRequest<'a> {
 #[derive(Debug, Clone, Copy)]
 pub struct CodexExistingPlanRequest<'a> {
     pub scope: HostScope,
-    pub integration_id: &'a str,
+    pub connection_id: &'a str,
     pub server_name: &'a str,
     pub config_target: &'a Path,
     pub mcp_command: &'a Path,
@@ -671,14 +671,14 @@ fn remove_effect(request: HostRemoveRequest, change: PlannedChange) -> HostEffec
 
 fn conflicted_plan(
     scope: HostScope,
-    integration_id: &str,
+    connection_id: &str,
     explicit_server_name: Option<&str>,
     command: &Path,
     conflict: HostConflict,
 ) -> HostPlan {
-    let server_name = validated_server_name(integration_id, explicit_server_name)
-        .unwrap_or_else(|_| super::default_server_name(integration_id));
-    let entry = ManagedServerEntry::new(integration_id, command, None);
+    let server_name = validated_server_name(connection_id, explicit_server_name)
+        .unwrap_or_else(|_| super::default_server_name(connection_id));
+    let entry = ManagedServerEntry::new(connection_id, command, None);
     let fingerprint = managed_fingerprint(HostKind::Codex, scope, &server_name, &entry);
     HostPlan {
         host_kind: HostKind::Codex,
@@ -758,7 +758,7 @@ mod tests {
 
         let plan = adapter.plan(CodexPlanRequest {
             scope: HostScope::Project,
-            integration_id: "int-project",
+            connection_id: "int-project",
             explicit_server_name: None,
             repo_root: Some(&repo),
             mcp_command: Path::new("volicord-mcp"),
@@ -862,7 +862,7 @@ mod tests {
         assert!(text.contains("model = \"gpt-5.5\""));
         assert!(text.contains("[mcp_servers.other]"));
         assert!(text.contains("[mcp_servers.volicord-int_alpha]"));
-        assert!(text.contains("args = [\"--integration\", \"int_alpha\"]"));
+        assert!(text.contains("args = [\"--connection\", \"int_alpha\"]"));
         Ok(())
     }
 
@@ -961,7 +961,7 @@ mod tests {
         assert!(matches!(
             adapter.plan(CodexPlanRequest {
                 scope: HostScope::Project,
-                integration_id: "int_alpha",
+                connection_id: "int_alpha",
                 explicit_server_name: None,
                 repo_root: Some(&repo),
                 mcp_command: Path::new("/personal/target/debug/volicord-mcp"),
@@ -973,7 +973,7 @@ mod tests {
         assert!(matches!(
             adapter.plan(CodexPlanRequest {
                 scope: HostScope::Project,
-                integration_id: "int_alpha",
+                connection_id: "int_alpha",
                 explicit_server_name: None,
                 repo_root: Some(&repo),
                 mcp_command: Path::new("volicord-mcp"),
@@ -1249,7 +1249,7 @@ mod tests {
         let repo = temp_dir("codex-project-verify")?;
         let project = adapter.plan(CodexPlanRequest {
             scope: HostScope::Project,
-            integration_id: "int_alpha",
+            connection_id: "int_alpha",
             explicit_server_name: None,
             repo_root: Some(&repo),
             mcp_command: Path::new("volicord-mcp"),
@@ -1274,7 +1274,7 @@ mod tests {
     ) -> CodexPlanRequest<'a> {
         CodexPlanRequest {
             scope,
-            integration_id: "int_alpha",
+            connection_id: "int_alpha",
             explicit_server_name: None,
             repo_root,
             mcp_command,
@@ -1291,7 +1291,7 @@ mod tests {
     ) -> CodexExistingPlanRequest<'a> {
         CodexExistingPlanRequest {
             scope,
-            integration_id: "int_alpha",
+            connection_id: "int_alpha",
             server_name: "volicord-existing",
             config_target,
             mcp_command,

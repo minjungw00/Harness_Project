@@ -58,7 +58,7 @@ pub struct ManagedServerEntry {
 
 impl ManagedServerEntry {
     pub fn new(
-        integration_id: impl Into<String>,
+        connection_id: impl Into<String>,
         mcp_command: &Path,
         runtime_home: Option<&Path>,
     ) -> Self {
@@ -71,7 +71,7 @@ impl ManagedServerEntry {
         }
         Self {
             command: mcp_command.display().to_string(),
-            args: vec!["--integration".to_owned(), integration_id.into()],
+            args: vec!["--connection".to_owned(), connection_id.into()],
             env,
         }
     }
@@ -249,9 +249,9 @@ pub struct HostRemoveRequest {
     pub expected_fingerprint: String,
 }
 
-pub fn default_server_name(integration_id: &str) -> String {
-    let sanitized = sanitize_identifier(integration_id);
-    let suffix = short_hash(integration_id);
+pub fn default_server_name(connection_id: &str) -> String {
+    let sanitized = sanitize_identifier(connection_id);
+    let suffix = short_hash(connection_id);
     if sanitized.is_empty() {
         return format!("volicord-{suffix}");
     }
@@ -270,10 +270,10 @@ pub fn default_server_name(integration_id: &str) -> String {
     }
 }
 
-pub fn export_file_name(integration_id: &str) -> String {
-    let sanitized = sanitize_identifier(integration_id);
+pub fn export_file_name(connection_id: &str) -> String {
+    let sanitized = sanitize_identifier(connection_id);
     let stem = if sanitized.is_empty() {
-        short_hash(integration_id)
+        short_hash(connection_id)
     } else {
         sanitized
     };
@@ -281,12 +281,12 @@ pub fn export_file_name(integration_id: &str) -> String {
 }
 
 pub fn validated_server_name(
-    integration_id: &str,
+    connection_id: &str,
     explicit: Option<&str>,
 ) -> Result<String, HostConflict> {
     let name = explicit
         .map(str::to_owned)
-        .unwrap_or_else(|| default_server_name(integration_id));
+        .unwrap_or_else(|| default_server_name(connection_id));
     if is_valid_server_name(&name) {
         Ok(name)
     } else {
@@ -445,7 +445,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn deterministic_server_name_uses_integration_identity() {
+    fn deterministic_server_name_uses_connection_identity() {
         let first = default_server_name("integration/Alpha:One");
         let second = default_server_name("integration/Alpha:One");
         let other = default_server_name("integration/Alpha:Two");
