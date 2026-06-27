@@ -56,7 +56,7 @@
 
 `VOLICORD_HOME`은 지원되는 MCP 프로세스 환경 입력의 전부입니다. 이 값은 프로세스의 Runtime Home을 선택하지만 프로젝트, 연결, 행위자 출처, 작업 범주, 연결 모드를 선택하지 않습니다. stdio 프로세스와 `--check`는 시작 검증에 들어가기 전에 `VOLICORD_HOME`을 사용합니다. help와 version 모드는 이를 사용하지 않습니다.
 
-연결 식별 정보는 `--connection <connection_id>`로 제공합니다. 묶인 Agent Connection과 Runtime Home 레지스트리 상태가 연결 모드, 연결 프로젝트, 어댑터가 파생하는 `actor_source`와 `operation_category`를 제공합니다. 프로젝트 접근은 Runtime Home 레지스트리 상태에 있는 선택된 Agent Connection의 연결 프로젝트로 제어됩니다. 선택 프로젝트는 공개 MCP 도구 호출마다 결정됩니다. Surface 식별 정보는 현재 공개 또는 내부 `volicord-mcp` 호출 계약의 일부가 아닙니다.
+연결 식별 정보는 `--connection <connection_id>`로 제공합니다. 묶인 Agent Connection과 Runtime Home 레지스트리 상태가 연결 모드, 연결 프로젝트, 어댑터가 파생하는 `actor_source`와 `operation_category`를 제공합니다. 프로젝트 접근은 Runtime Home 레지스트리 상태에 있는 선택된 Agent Connection의 연결 프로젝트로 제어됩니다. 선택 프로젝트는 공개 MCP 도구 호출마다 결정됩니다. MCP 프로세스는 그 밖의 프로세스 환경 입력을 해석하지 않습니다.
 
 현재 MCP Runtime Home 경로 해석:
 

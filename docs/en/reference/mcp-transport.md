@@ -55,7 +55,7 @@ Supported optional environment input:
 
 `VOLICORD_HOME` is the only supported MCP process environment input. It selects the Runtime Home for the process; it does not select a project, connection, actor provenance, operation category, or connection mode. The stdio process and `--check` use `VOLICORD_HOME` before entering startup validation. Help and version modes do not use it.
 
-Connection identity is supplied by `--connection <connection_id>`. The bound Agent Connection and Runtime Home registry state supply the connection mode, connected Projects, and adapter-derived `actor_source` and `operation_category`. Project access is controlled by the selected Agent Connection's connected Projects in Runtime Home registry state. The selected project is determined per public MCP tool call. Surface identity is not part of the current public or internal `volicord-mcp` invocation contract.
+Connection identity is supplied by `--connection <connection_id>`. The bound Agent Connection and Runtime Home registry state supply the connection mode, connected Projects, and adapter-derived `actor_source` and `operation_category`. Project access is controlled by the selected Agent Connection's connected Projects in Runtime Home registry state. The selected project is determined per public MCP tool call. No other process environment input is interpreted by the MCP process.
 
 Current MCP Runtime Home resolution:
 
