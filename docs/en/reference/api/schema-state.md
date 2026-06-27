@@ -1,6 +1,6 @@
 # API state schemas
 
-This document owns API state-shaped schemas for the baseline scope. It defines public response shapes for `StateSummary`, `StateRecordRef`, lifecycle state as API data, state-related snapshots, `ProjectContinuityRecord`, `ProjectContinuitySummary`, `ShapingReadiness`, `ChangeUnitEffectContract`, and display shapes such as `NextActionSummary`, `WriteAuthoritySummary`, `WriteAuthorizationSummary`, `AuthorizedAttemptScope`, `EvidenceSummary`, `EvidenceObservation`, `CurrentCloseBasis`, `ResidualRisk`, `RiskAcceptanceCoverage`, `CloseReadinessBlocker`, `ValidatorResult`, and `GuaranteeDisplay`.
+This document owns API state-shaped schemas for the baseline scope. It defines public response shapes for `StateSummary`, `StateRecordRef`, lifecycle state as API data, state-related snapshots, `ProjectContinuityRecord`, `ProjectContinuitySummary`, `ShapingReadiness`, `ChangeUnitEffectContract`, and display shapes such as `NextActionSummary`, `WriteCheckStateSummary`, `WriteCheckSummary`, `WriteCheckAttemptScope`, `EvidenceSummary`, `EvidenceObservation`, `CurrentCloseBasis`, `ResidualRisk`, `RiskAcceptanceCoverage`, `CloseReadinessBlocker`, `ValidatorResult`, and `GuaranteeDisplay`.
 
 ## Owner boundary
 
@@ -17,7 +17,7 @@ This document owns state-shaped API fields, nesting, references, summaries, snap
 
 ## Boundary
 
-State schemas describe API data shapes only. A state-shaped field does not choose a response branch or create persistence, Core transitions, replay rows, `task_events`, artifact effects, `Write Authorization` effects, or a `state_version` increment.
+State schemas describe API data shapes only. A state-shaped field does not choose a response branch or create persistence, Core transitions, replay rows, `task_events`, artifact effects, `Write Check` effects, or a `state_version` increment.
 
 State projections must be truthful about computed state:
 - A `null` or omitted field means the method did not select a value, the value is unavailable, or the owning schema explicitly allows absence. It must not be replaced with an empty value that implies "computed and none."
@@ -75,7 +75,7 @@ StateSummary:
   shaping_readiness: ShapingReadiness | null
   pending_user_judgment_refs: StateRecordRef[]
   blocker_refs: StateRecordRef[]
-  write_authority_summary: WriteAuthoritySummary | null
+  write_check_summary: WriteCheckStateSummary | null
   evidence_summary: EvidenceSummary | null
   close_state: string | null
   close_blockers: CloseReadinessBlocker[]
@@ -142,7 +142,7 @@ Meaning:
 - `ProjectContinuitySummary` is selected by method owners as a read view; it is not the full persisted record.
 
 Does not imply:
-- A project continuity record is not current Task authority, evidence, `Write Authorization`, final acceptance, close readiness, residual-risk acceptance for a future close basis, or a blocker waiver.
+- A project continuity record is not current Task authority, evidence, `Write Check`, final acceptance, close readiness, residual-risk acceptance for a future close basis, or a blocker waiver.
 - `status=active` means the continuity record is live project context. It does not mean the record is currently applicable to every Task or that its source decision remains sufficient for a new authority check.
 
 Owner links:
@@ -173,7 +173,7 @@ Meaning:
 
 Does not imply:
 - `ChangeUnitEffectContract` is not a runtime sandbox, command interceptor, network blocker, operating-system permission system, or development-methodology state machine.
-- It does not replace user-owned judgment, sensitive-action approval, evidence, `Write Authorization`, final acceptance, close readiness, or residual-risk acceptance.
+- It does not replace user-owned judgment, sensitive-action approval, evidence, `Write Check`, final acceptance, close readiness, or residual-risk acceptance.
 
 Owner links:
 - Effect value strings: [method-local values](schema-value-sets.md#method-local-values)
@@ -242,23 +242,23 @@ NextActionSummary:
   blocking_question: string | null
   required_refs: StateRecordRef[]
 
-WriteAuthoritySummary:
+WriteCheckStateSummary:
   status: string
-  write_authorization_ref: StateRecordRef | null
+  write_check_ref: StateRecordRef | null
   basis_state_version: integer | null
   intended_paths: string[]
   consumed_by_run_ref: StateRecordRef | null
   observation_refs: StateRecordRef[]
   guarantee_display: GuaranteeDisplay | null
 
-WriteAuthorizationSummary:
-  write_authorization_ref: StateRecordRef
+WriteCheckSummary:
+  write_check_ref: StateRecordRef
   status: string
-  authorized_attempt_scope: AuthorizedAttemptScope
+  attempt_scope: WriteCheckAttemptScope
   basis_state_version: integer
   expires_at: string | null
 
-AuthorizedAttemptScope:
+WriteCheckAttemptScope:
   task_id: string
   change_unit_id: string
   intended_operation: string
@@ -277,11 +277,11 @@ WriteDecisionReason:
 Meaning:
 - `NextActionSummary` is the canonical next-action display shape. Its valid fields are `action_kind`, `owner_method`, `label`, `blocking_question`, and `required_refs`.
 - A `next_actions` entry that uses stale `action` or `reason` fields is not a valid `NextActionSummary`.
-- `WriteAuthoritySummary.status` and `WriteAuthorizationSummary.status` are controlled value strings.
-- `WriteAuthoritySummary.consumed_by_run_ref` is non-null only when the summarized `Write Authorization` has been consumed by a recorded Run.
-- `WriteAuthoritySummary.observation_refs` lists evidence observation refs created by that consuming Run when those refs are available; it is empty when the authorization is not consumed or the consuming Run created no observations.
-- `AuthorizedAttemptScope` is the one-attempt boundary captured by a `Write Authorization`.
-- `AuthorizedAttemptScope` is not ordinary write approval, sensitive-action approval, final acceptance, residual-risk acceptance, or broad user approval.
+- `WriteCheckStateSummary.status` and `WriteCheckSummary.status` are controlled value strings.
+- `WriteCheckStateSummary.consumed_by_run_ref` is non-null only when the summarized `Write Check` has been consumed by a recorded Run.
+- `WriteCheckStateSummary.observation_refs` lists evidence observation refs created by that consuming Run when those refs are available; it is empty when the authorization is not consumed or the consuming Run created no observations.
+- `WriteCheckAttemptScope` is the one-attempt boundary captured by a `Write Check`.
+- `WriteCheckAttemptScope` is not ordinary write approval, sensitive-action approval, final acceptance, residual-risk acceptance, or broad user approval.
 - `WriteDecisionReason` is used by `PrepareWriteResult.write_decision_reasons`.
 
 `NextActionSummary` field classifications:
@@ -294,7 +294,7 @@ Meaning:
 | `blocking_question` | Free-form display string or `null`. | The question to resolve before the action can proceed, or `null` when no blocking question is needed. |
 | `required_refs` | `StateRecordRef[]`. | Records required for the next action. Use `[]` when there are no required refs. |
 
-`AuthorizedAttemptScope` field classifications:
+`WriteCheckAttemptScope` field classifications:
 
 | Field | Classification | Rule |
 |---|---|---|
@@ -320,12 +320,12 @@ Meaning:
 Owner links:
 - `action_kind` values: [next-action values](schema-value-sets.md#next-action-values)
 - `owner_method` values: [method name values](schema-value-sets.md#method-name-values)
-- `WriteAuthoritySummary.status` and `WriteAuthorizationSummary.status` values: [method-local values](schema-value-sets.md#method-local-values)
+- `WriteCheckStateSummary.status` and `WriteCheckSummary.status` values: [method-local values](schema-value-sets.md#method-local-values)
 - `WriteDecisionReason.category` values: [state and blocker values](schema-value-sets.md#state-and-blocker-values)
 - `WriteDecisionReason.code` value-set boundary: [opaque and method-scoped string fields](schema-value-sets.md#opaque-and-method-scoped-string-fields)
 - `WriteDecisionReason.code` production and local meaning: method owner documents, including [`volicord.prepare_write`](method-prepare-write.md)
-- `Write Authorization` creation behavior: [`volicord.prepare_write`](method-prepare-write.md)
-- `Write Authorization` product meaning and approval boundaries: [Core Model](../core-model.md)
+- `Write Check` creation behavior: [`volicord.prepare_write`](method-prepare-write.md)
+- `Write Check` product meaning and approval boundaries: [Core Model](../core-model.md)
 - Public `ErrorCode` values are separate: [API error codes](error-codes.md)
 
 ## Evidence and run snapshot shapes
@@ -371,10 +371,7 @@ EvidenceObservation:
   claim: string
   source_kind: string
   assurance_level: string
-  observed_by_actor_kind: string | null
-  observed_actor_role: string | null
-  observed_by_surface_id: string | null
-  observed_by_surface_instance_id: string | null
+  observed_by_actor_source: string | null
   tool_name: string | null
   tool_invocation_id: string | null
   tool_metadata: object
@@ -388,10 +385,7 @@ EvidenceObservationInput:
   claim: string
   source_kind: string
   assurance_level: string
-  observed_by_actor_kind: string | null
-  observed_actor_role: string | null
-  observed_by_surface_id: string | null
-  observed_by_surface_instance_id: string | null
+  observed_by_actor_source: string | null
   tool_name: string | null
   tool_invocation_id: string | null
   tool_metadata: object
@@ -419,9 +413,9 @@ Meaning:
 - `CompletionPolicy.required_claims`, `EvidenceCoverageItem.claim`, `EvidenceObservation.claim`, `EvidenceObservationInput.claim`, and `RunSummary.summary` are free-form claim or display strings.
 - `EvidenceCoverageItem.provenance` is optional on request input and is omitted from committed evidence summaries after Core creates or links the corresponding `EvidenceObservation`. A supported evidence update for a close-relevant claim must have a matching observation input, a usable observation ref, or this provenance object so Core can create an observation.
 - `EvidenceSummary.observation_refs` and `EvidenceCoverageItem.observation_refs` list `StateRecordRef` values for committed evidence observations that Core relates to the summary or claim.
-- `EvidenceObservation` is a durable provenance record for one reported or observed evidence claim. It records source, assurance, observer metadata, optional tool metadata, input refs, output artifact refs, limitations, and observation timestamps.
+- `EvidenceObservation` is a durable provenance record for one reported or observed evidence claim. It records source, assurance, observer actor source, optional tool metadata, input refs, output artifact refs, limitations, and observation timestamps.
 - `EvidenceObservationInput` is the request-side shape accepted by `volicord.record_run`; Core fills `observation_id`, project and Task coordinates, `run_ref`, and `recorded_at` when it commits.
-- `observed_by_surface_id` and `observed_by_surface_instance_id` must be both null or both non-null. When both are null in an observation input, Core may fill them from the verified request surface context.
+- `observed_by_actor_source`, when present, must be an `ActorSource` value. When it is null in an observation input, Core may fill it from the verified invocation context.
 - `source_kind` and `assurance_level` describe provenance and observation assurance. They do not by themselves prove product correctness, grant user authority, satisfy final acceptance, satisfy residual-risk acceptance, or raise `GuaranteeDisplay.level`.
 - `user_observation` records a user-attributed observation, not final acceptance or any other authority-bearing user judgment.
 - `external_tool` and `external_tool_result` record an external tool result. They are not a product correctness proof without the applicable evidence, artifact, close-readiness, and security owners.
@@ -465,7 +459,7 @@ SensitiveActionRequirement:
   baseline_ref: string | null
   change_unit_id: string
   source_run_ref: StateRecordRef
-  source_write_authorization_ref: StateRecordRef
+  source_write_check_ref: StateRecordRef
 
 ResidualRisk:
   risk_id: string
@@ -506,7 +500,7 @@ Meaning:
 - `ResidualRisk.risk_id` is an opaque Core-generated identifier. `ResidualRisk.summary` and `ResidualRisk.consequence` are display strings and do not authorize text matching.
 - `result_refs`, `source_run_ref`, `source_refs`, `evidence_summary_ref`, and `accepted_by_judgment_refs` use `StateRecordRef`.
 - `sensitive_categories` are opaque sensitive-category classification strings unless an affected method or profile owner publishes a narrower local list.
-- `sensitive_action_requirements` are Core-derived close requirements from committed Runs and consumed `Write Authorization` records. Category-only caller input cannot establish or erase these requirements.
+- `sensitive_action_requirements` are Core-derived close requirements from committed Runs and consumed `Write Check` records. Category-only caller input cannot establish or erase these requirements.
 - `recovery_constraints` and `RiskAcceptanceCoverage.missing_reason` are display strings. Current close-readiness results use `acceptance_required` when required acceptance is absent and may use `stale_acceptance` when a non-current residual-risk acceptance exists but does not cover the current residual-risk `risk_id` values.
 - `RiskAcceptanceCoverage` reports whether the current residual-risk requirements are covered by compatible judgments. It does not report evidence sufficiency or final acceptance.
 - `CloseReadinessBlocker` is a data shape for close-readiness findings.
@@ -520,18 +514,18 @@ These shapes do not define close-readiness meaning, response routing, or persist
 
 Close-basis reference rules:
 - Caller-supplied close-assessment refs accepted into `CurrentCloseBasis.result_refs` or `ResidualRisk.source_refs` are limited to result/evidence record kinds `run`, `artifact`, `evidence_summary`, and `change_unit` unless an owner document explicitly adds another kind.
-- `project_state`, `write_authorization`, `user_judgment`, `blocker`, `task_event`, `local_surface_registration`, and `task` are not caller-supplied result refs for a close basis unless an owner document explicitly adds them.
+- `project_state`, `write_check`, `user_judgment`, `blocker`, `task_event`, and `task` are not caller-supplied result refs for a close basis unless an owner document explicitly adds them.
 - Every accepted ref must exist, belong to the same project and Task, and be canonicalized by Core. Core never preserves caller-supplied `state_version` metadata as authority.
 - Artifact refs used for close evidence must be linked to the Task and have `integrity_status=verified` plus current-byte verification at use time under [Artifact Storage](../storage-artifacts.md).
 - Evidence refs must identify the current Task evidence summary. Run refs used as current close-basis result refs must identify a recorded current Run compatible with the current Task, current Change Unit, current scope revision, compatible baseline, and recorded status. Historical Runs are audit records unless a current Run explicitly reuses their verified artifacts or evidence and records that reuse.
 - Core may add the current Run, current Change Unit, and current EvidenceSummary refs when constructing the canonical close basis.
 
 Guarantee display rules:
-- `GuaranteeDisplay` is derived from the project enforcement profile, verified bound surface registration, enabled enforcement mechanisms, and supported baseline scope.
-- Capability declarations alone do not create guarantees, and cooperative-only deployments must not claim `detective`.
-- `detective` requires supported enforcement or observation facts for the named surface and observed scope, not only text in a capability profile.
-- A guarantee display for a surface must cite the surface facts that justify it. A guarantee display for an observation must cite the specific `EvidenceObservation` facts that justify it; a cooperative `agent_report` Run or observation is not displayed as `detective` or externally observed unless a separate supporting observation justifies that display.
-- `capability_refs` should identify the actual profile, surface, or observation facts when such refs are available.
+- `GuaranteeDisplay` is derived from the project enforcement profile, verified invocation context, enabled enforcement mechanisms, and supported baseline scope.
+- `capability_refs` is the implemented field name for references that justify the display; in the baseline connection architecture it should cite invocation binding, Agent Connection, or observation facts when such refs are available.
+- A cooperative-only deployment must not claim `detective`.
+- `detective` requires supported enforcement or observation facts for the observed scope, not host instructions, connection mode, or generated text alone.
+- A cooperative `agent_report` Run or observation is not displayed as `detective` or externally observed unless a separate supporting observation justifies that display.
 
 Owner links:
 - Close-readiness meaning and non-substitution rules: [Core Model close readiness](../core-model.md#close_task)

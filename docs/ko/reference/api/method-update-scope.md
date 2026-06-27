@@ -74,7 +74,7 @@ UpdateScopeRequest:
 
 커밋되는 `dry_run`이 아닌 요청에는 아래 조건이 필요합니다.
 
-- `access_class=core_mutation`인 서버 파생 `VerifiedSurfaceContext`
+- `operation_category=agent_workflow`인 확인된 호출 맥락
 - 같은 프로젝트의 호환되는 `Task`
 - 현재 적용 Change Unit을 만들거나 교체할 때 다음 안전한 행동을 정직하게 만들 만큼 충분한 범위
 
@@ -82,7 +82,7 @@ UpdateScopeRequest:
 
 커밋된 `dry_run`이 아닌 결과는 `project_state.state_version`을 정확히 한 번 올립니다.
 
-기준이 아래 항목과 더 이상 맞지 않으면 Core는 `status=active`인 `Write Authorization`(쓰기 권한 부여)을 `status=stale`로 표시합니다.
+기준이 아래 항목과 더 이상 맞지 않으면 Core는 `status=active`인 Write Check를 `status=stale`로 표시합니다.
 
 - 현재 적용 범위
 - 기준선
@@ -103,7 +103,7 @@ UpdateScopeRequest:
 - `task_ref`
 - 선택적 `change_unit_ref`
 - 연결된 `scope_decision` 참조
-- 오래된 `Write Authorization` 참조
+- 오래된 `Write Check` 참조
 - 차단 사유 참조
 - 현재 `state`
 - `next_actions`
@@ -118,12 +118,12 @@ UpdateScopeRequest:
 | `task_ref` | 범위 결과가 갱신한 `Task`의 `StateRecordRef`입니다. |
 | `change_unit_ref` | 작업 뒤 현재 적용 Change Unit의 `StateRecordRef | null`입니다. 현재 적용 Change Unit이 없으면 `null`입니다. |
 | `linked_scope_decision_refs` | 갱신에 적용된 `scope_decision` 사용자 판단의 `StateRecordRef[]`입니다. |
-| `stale_write_authorization_refs` | 커밋된 갱신 때문에 오래된 상태가 된 `Write Authorization` 기록의 `StateRecordRef[]`입니다. 저장 효과와 버전 관리는 지속 세부사항을 담당합니다. |
+| `stale_write_check_refs` | 커밋된 갱신 때문에 오래된 상태가 된 `Write Check` 기록의 `StateRecordRef[]`입니다. 저장 효과와 버전 관리는 지속 세부사항을 담당합니다. |
 | `blocker_refs` | 메서드가 소유하며 갱신에서 커밋했거나 계속 관련되는 차단 사유의 `StateRecordRef[]`입니다. |
 | `state` | 범위 갱신 뒤의 현재 `StateSummary`입니다. 현재 적용 범위와 현재 적용 Change Unit 표시 필드를 포함합니다. |
 | `next_actions` | 다음 안전한 API 단계를 설명하는 `NextActionSummary[]`입니다. |
 
-지원되는 `change_unit.operation` 값은 [API 값 집합](schema-value-sets.md#method-local-values)이 담당합니다. 이 메서드는 각 작업이 `change_unit_ref`, `state.active_change_unit_ref`, 오래된 `Write Authorization` 참조, 차단 사유 참조, `next_actions`에 어떻게 반영되는지를 담당합니다.
+지원되는 `change_unit.operation` 값은 [API 값 집합](schema-value-sets.md#method-local-values)이 담당합니다. 이 메서드는 각 작업이 `change_unit_ref`, `state.active_change_unit_ref`, 오래된 `Write Check` 참조, 차단 사유 참조, `next_actions`에 어떻게 반영되는지를 담당합니다.
 
 `change_unit.operation=create_current` 또는 `change_unit.operation=replace_current`일 때 `change_unit.effect_contract`를 새 현재 적용 Change Unit에 기록할 수 있습니다. 효과 계약은 선택적 Core 상태입니다. 워크플로 엔진을 만들거나 사용자 소유 권한 기록을 대신하지 않으면서 허용 효과, 금지 효과, 허용 Product Repository 경로, 기대 출력, 불변 조건, 증거 기대, 민감 동작 기대를 표현할 수 있습니다.
 
@@ -156,7 +156,7 @@ UpdateScopeRequest:
 - 미해결 필수 판단
 - 자율성 경계 위반
 - 오래된 기준선
-- 로컬 접근 실패
+- 행위자 출처 또는 작업 범주 불일치
 - 검증기 실패
 
 공개 오류 코드 의미, 우선순위, 거절 응답 처리 경로는 아래 오류 담당 문서가 담당합니다.
@@ -166,11 +166,11 @@ UpdateScopeRequest:
 `dry_run=true`에서 유효한 상태 효과 미리보기:
 
 - `ToolDryRunResponse`를 반환합니다.
-- 범위, Change Unit, 차단 사유, `Write Authorization` 상태를 만들지 않습니다.
+- 범위, Change Unit, 차단 사유, `Write Check` 상태를 만들지 않습니다.
 
 ## 저장 효과
 
-커밋 시 범위 담당 현재 상태와 오래된 `Write Authorization` 처리 결과를 지속할 수 있습니다. 정확한 저장 효과는 아래 저장 담당 문서가 담당합니다.
+커밋 시 범위 담당 현재 상태와 오래된 `Write Check` 처리 결과를 지속할 수 있습니다. 정확한 저장 효과는 아래 저장 담당 문서가 담당합니다.
 
 아래 예시는 메서드 안에서만 성립하도록 짧게 구성했습니다. 대표 응답은 범위 갱신 결과 분기, 참조, 상태 버전, 현재 적용 범위, 현재 적용 Change Unit, 생명주기, 다음 행동을 보여 주는 데 필요한 필드로 축약했습니다.
 
@@ -245,7 +245,7 @@ change_unit_ref:
   task_id: task_filter_001
   state_version: 19
 linked_scope_decision_refs: []
-stale_write_authorization_refs: []
+stale_write_check_refs: []
 blocker_refs: []
 state:
   project_id: proj_filter_001
@@ -279,7 +279,7 @@ state:
   shaping_readiness: null
   pending_user_judgment_refs: []
   blocker_refs: []
-  write_authority_summary: null
+  write_check_summary: null
   evidence_summary: null
   close_state: null
   close_blockers: []
@@ -307,6 +307,6 @@ next_actions:
 - 요청 래퍼와 응답 분기: [API 코어 스키마](schema-core.md).
 - 상태 참조, `StateSummary`, `ShapingReadiness`, 차단 사유, 다음 행동: [API 상태 스키마](schema-state.md).
 - 범위 관련 사용자 판단 형태: [API 판단 스키마](schema-judgment.md).
-- 지원되는 값 집합, `change_unit.operation` 의미, 접근 등급: [API 값 집합](schema-value-sets.md#method-local-values), [접근 등급 값](schema-value-sets.md#access-class-values).
+- 지원되는 값 집합, `change_unit.operation` 의미, 작업 범주: [API 값 집합](schema-value-sets.md#operation-category-values).
 - 공개 오류, 우선순위, 거절 응답 처리 경로: [API 오류 코드](error-codes.md), [API 오류 우선순위](error-precedence.md), [API 오류 처리 경로](error-routing.md).
-- 저장 효과와 오래된 `Write Authorization` 동작: [저장 효과](../storage-effects.md), [저장소 버전 관리](../storage-versioning.md).
+- 저장 효과와 오래된 `Write Check` 동작: [저장 효과](../storage-effects.md), [저장소 버전 관리](../storage-versioning.md).

@@ -50,8 +50,8 @@ Detail data must stay limited to stable diagnostic facts. It must not expose sen
 Stale `expected_state_version` details:
 - Include `state_clock: project_state.state_version`, `current_state_version`, `expected_state_version`, `project_id`, and `task_id` when available.
 
-Stale Write Authorization basis details:
-- Identify both the stale `WriteAuthorization.basis_state_version` value and the current `project_state.state_version` value.
+Stale Write Check basis details:
+- Identify both the stale `WriteCheck.basis_state_version` value and the current `project_state.state_version` value.
 
 Idempotency request-hash conflict details:
 - Identify the `idempotency_key` and request-hash mismatch without exposing sensitive request bodies.
@@ -75,15 +75,15 @@ These diagnostics must not include raw stored JSON, secrets, SQL text, or sensit
 
 <a id="authorization-reason"></a>
 
-### `authorization_reason`
+### `write_check_reason`
 
-`ToolError.details.authorization_reason` uses `missing`, `expired`, `stale`, `revoked`, `consumed`, `incompatible`, `task_mismatch`, `change_unit_mismatch`, `product_write_flag_mismatch`, `baseline_mismatch`, `sensitive_category_mismatch`, or `path_mismatch`. The mismatch-specific values identify the incompatible record or scope fact while keeping public code `WRITE_AUTHORIZATION_INVALID`. Expired `Write Authorization` use sets `authorization_reason=expired` with public code `WRITE_AUTHORIZATION_INVALID`. A stale `WriteAuthorization.basis_state_version` uses `STATE_VERSION_CONFLICT`, not `WRITE_AUTHORIZATION_INVALID`.
+`ToolError.details.write_check_reason` uses `missing`, `expired`, `stale`, `revoked`, `consumed`, `incompatible`, `task_mismatch`, `change_unit_mismatch`, `product_write_flag_mismatch`, `baseline_mismatch`, `sensitive_category_mismatch`, or `path_mismatch`. The mismatch-specific values identify the incompatible record or scope fact while keeping public code `WRITE_CHECK_INVALID`. Expired `Write Check` use sets `write_check_reason=expired` with public code `WRITE_CHECK_INVALID`. A stale `WriteCheck.basis_state_version` uses `STATE_VERSION_CONFLICT`, not `WRITE_CHECK_INVALID`.
 
 <a id="artifact-input-error-reason"></a>
 
 ### `artifact_input_error.reason`
 
-`ToolError.details.artifact_input_error.reason` uses these detail helper values. They are not top-level public `ErrorCode` values; staged-handle validation failures keep the public code `VALIDATION_FAILED` unless the actual failure is request-level local access or capability verification.
+`ToolError.details.artifact_input_error.reason` uses these detail helper values. They are not top-level public `ErrorCode` values; staged-handle validation failures keep the public code `VALIDATION_FAILED` unless the actual failure is a request-level invocation-context, actor-source, or Product Repository path-boundary mismatch.
 
 | `artifact_input_error.reason` | Meaning |
 |---|---|
@@ -91,7 +91,7 @@ These diagnostics must not include raw stored JSON, secrets, SQL text, or sensit
 | `staged_handle_consumed` | The staged handle was already consumed. |
 | `staged_handle_project_mismatch` | The staged handle belongs to a different project. |
 | `staged_handle_task_mismatch` | The staged handle belongs to a different Task. |
-| `staged_handle_surface_mismatch` | The staged handle provenance does not match the verified surface. |
+| `staged_handle_actor_source_mismatch` | The staged handle provenance does not match the verified actor source. |
 | `staged_handle_checksum_mismatch` | The staged bytes do not match the expected checksum. |
 | `staged_handle_size_mismatch` | The staged bytes do not match the expected size. |
 | `staged_handle_not_found` | The staged handle cannot be found. |

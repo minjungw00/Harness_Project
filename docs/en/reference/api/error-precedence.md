@@ -10,7 +10,7 @@ Owned here:
 
 - The primary `errors[0]` selection order for error-bearing branches.
 - The result-side and blocker-code path boundary for `STATE_VERSION_CONFLICT`.
-- Public stale `expected_state_version`, stale `WriteAuthorization.basis_state_version`, and idempotency request-hash conflict behavior.
+- Public stale `expected_state_version`, stale `WriteCheck.basis_state_version`, and idempotency request-hash conflict behavior.
 
 Adjacent owners:
 
@@ -39,8 +39,8 @@ When an error-bearing branch has non-empty `errors`, `errors[0]` is the primary 
 | <a id="precedence-baseline-stale"></a>7 | `BASELINE_STALE` | [`BASELINE_STALE`](error-codes.md#errorcode-baseline-stale) |
 | <a id="precedence-scope-required"></a>8 | `SCOPE_REQUIRED` | [`SCOPE_REQUIRED`](error-codes.md#errorcode-scope-required) |
 | <a id="precedence-scope-violation"></a>9 | `SCOPE_VIOLATION` | [`SCOPE_VIOLATION`](error-codes.md#errorcode-scope-violation) |
-| <a id="precedence-write-authorization-required"></a>10 | `WRITE_AUTHORIZATION_REQUIRED` | [`WRITE_AUTHORIZATION_REQUIRED`](error-codes.md#errorcode-write-authorization-required) |
-| <a id="precedence-write-authorization-invalid"></a>11 | `WRITE_AUTHORIZATION_INVALID` | [`WRITE_AUTHORIZATION_INVALID`](error-codes.md#errorcode-write-authorization-invalid) |
+| <a id="precedence-write-check-required"></a>10 | `WRITE_CHECK_REQUIRED` | [`WRITE_CHECK_REQUIRED`](error-codes.md#errorcode-write-check-required) |
+| <a id="precedence-write-check-invalid"></a>11 | `WRITE_CHECK_INVALID` | [`WRITE_CHECK_INVALID`](error-codes.md#errorcode-write-check-invalid) |
 | <a id="precedence-approval-denied"></a>12 | `APPROVAL_DENIED` | [`APPROVAL_DENIED`](error-codes.md#errorcode-approval-denied) |
 | <a id="precedence-approval-expired"></a>13 | `APPROVAL_EXPIRED` | [`APPROVAL_EXPIRED`](error-codes.md#errorcode-approval-expired) |
 | <a id="precedence-approval-required"></a>14 | `APPROVAL_REQUIRED` | [`APPROVAL_REQUIRED`](error-codes.md#errorcode-approval-required) |
@@ -59,7 +59,7 @@ When an error-bearing branch has non-empty `errors`, `errors[0]` is the primary 
 ### `STATE_VERSION_CONFLICT` selection boundary
 
 Selection condition:
-- A rejected response selects `STATE_VERSION_CONFLICT` when a stale `expected_state_version`, stale `WriteAuthorization.basis_state_version`, or idempotency request-hash conflict prevents the method from proceeding.
+- A rejected response selects `STATE_VERSION_CONFLICT` when a stale `expected_state_version`, stale `WriteCheck.basis_state_version`, or idempotency request-hash conflict prevents the method from proceeding.
 
 Selection boundary:
 - Represent these conflicts through `ToolRejectedResponse.errors[]`; they do not produce a `MethodResult` or `CloseTaskResult(close_state=blocked)` branch. Do not model `STATE_VERSION_CONFLICT` as a result-side decision, blocker code, close-readiness blocker code, or planned blocker code, including `WriteDecisionReason.code`, `CloseReadinessBlocker.code`, or `PlannedBlocker.code`.
@@ -75,7 +75,7 @@ Related owner:
 | Conflict case | Detail section |
 |---|---|
 | stale `expected_state_version` | [Stale `expected_state_version`](#state-conflict-expected-state-version) |
-| stale `WriteAuthorization.basis_state_version` | [Stale `Write Authorization` basis](#state-conflict-write-authorization-basis) |
+| stale `WriteCheck.basis_state_version` | [Stale `Write Check` basis](#state-conflict-write-check-basis) |
 | idempotency request-hash conflict | [Idempotency request-hash conflict](#state-conflict-idempotency-hash) |
 
 For precedence, these conflict cases select `STATE_VERSION_CONFLICT` as a project-wide pre-commit freshness or idempotency conflict.
@@ -104,11 +104,11 @@ Response path:
 Detail fields:
 - Use [State conflict detail fields](error-details.md#state-conflict-detail-fields).
 
-<a id="state-conflict-write-authorization-basis"></a>
-### Stale `Write Authorization` basis
+<a id="state-conflict-write-check-basis"></a>
+### Stale `Write Check` basis
 
 Condition:
-- Before consumption, `WriteAuthorization.basis_state_version` does not equal the current `project_state.state_version`.
+- Before consumption, `WriteCheck.basis_state_version` does not equal the current `project_state.state_version`.
 
 Public code:
 - `STATE_VERSION_CONFLICT`
@@ -117,29 +117,29 @@ Response path:
 - `ToolRejectedResponse.errors[]`
 
 Consumption boundary:
-- The stale `Write Authorization` is not consumed.
+- The stale `Write Check` is not consumed.
 - The rejected attempt creates no consumption-side state changes.
 
 Detail fields:
 - Use [State conflict detail fields](error-details.md#state-conflict-detail-fields).
 
-### Expired `Write Authorization`
+### Expired `Write Check`
 
 Condition:
-- Before consumption, the authorization is expired under the effective expiration rule owned by [`volicord.record_run`](method-record-run.md) and [`volicord.prepare_write`](method-prepare-write.md), and `WriteAuthorization.basis_state_version` is not stale.
+- Before consumption, the authorization is expired under the effective expiration rule owned by [`volicord.record_run`](method-record-run.md) and [`volicord.prepare_write`](method-prepare-write.md), and `WriteCheck.basis_state_version` is not stale.
 
 Public code:
-- `WRITE_AUTHORIZATION_INVALID`
+- `WRITE_CHECK_INVALID`
 
 Response path:
 - `ToolRejectedResponse.errors[]`
 
 Precedence boundary:
-- If `WriteAuthorization.basis_state_version` is stale, select `STATE_VERSION_CONFLICT` instead of expiration invalidity.
+- If `WriteCheck.basis_state_version` is stale, select `STATE_VERSION_CONFLICT` instead of expiration invalidity.
 - Expiration is not modeled as a result-side decision, blocker code, close-readiness blocker code, or planned blocker code.
 
 Detail fields:
-- Use `ToolError.details.authorization_reason=expired`.
+- Use `ToolError.details.write_check_reason=expired`.
 
 <a id="state-conflict-idempotency-hash"></a>
 ### Idempotency request-hash conflict

@@ -64,11 +64,11 @@ Nested owner links:
 
 A committed non-dry-run request requires:
 
-- server-derived `VerifiedSurfaceContext` with `access_class=core_mutation`
+- verified invocation context with `operation_category=agent_workflow`
 
-Surface identity boundary:
+Invocation boundary:
 
-- `surface_id` selects a registered local surface; `surface_id` is not itself authority.
+- `actor_source` and `operation_category` are derived from the verified local invocation context; callers do not submit them as authority claims.
 
 ## State version behavior
 
@@ -82,7 +82,7 @@ The following create no Task, Change Unit, event, replay row, blocker update, or
 - dry run
 - read failure
 - validation failure
-- local access failure
+- actor-source or operation-category mismatch
 - stale `expected_state_version`
 
 ## Success result
@@ -128,8 +128,8 @@ Returns `ToolRejectedResponse` for pre-commit failures such as:
 
 - validation failure
 - stale `expected_state_version`
-- unavailable Core or local surface
-- local access mismatch
+- unavailable Core or invocation context
+- actor-source or operation-category mismatch
 - missing current Task compatibility
 - validator failure
 
@@ -221,7 +221,7 @@ state:
   shaping_readiness: null
   pending_user_judgment_refs: []
   blocker_refs: []
-  write_authority_summary: null
+  write_check_summary: null
   evidence_summary: null
   close_state: null
   close_blockers: []
@@ -243,6 +243,6 @@ next_actions:
 
 - Request envelope and response branches: [`ToolEnvelope`](schema-core.md#tool-envelope) and [common response branches](schema-core.md#common-response).
 - State refs, `StateSummary`, `ShapingReadiness`, and next actions: [API State Schemas](schema-state.md).
-- Supported method names, mode values, `resume_policy`, `response_kind`, `effect_kind`, and access classes: [API Value Sets](schema-value-sets.md).
+- Supported method names, mode values, `resume_policy`, `response_kind`, `effect_kind`, and operation categories: [API Value Sets](schema-value-sets.md#operation-category-values).
 - Public errors, precedence, and rejected-response routing: [API error codes](error-codes.md), [API error precedence](error-precedence.md), and [API error routing](error-routing.md).
 - Persistence effects and storage records: [Storage Effects](../storage-effects.md), [Storage Records](../storage-records.md), and [Storage Versioning](../storage-versioning.md).

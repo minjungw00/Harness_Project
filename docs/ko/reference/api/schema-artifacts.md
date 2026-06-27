@@ -49,14 +49,13 @@ ArtifactRef:
   redaction_state: string
   availability: string
   created_by_run_ref: StateRecordRef | null
-  created_by_surface_id: string | null
-  created_by_surface_instance_id: string | null
+  created_by_actor_source: string | null
   storage_ref: string | null
 ```
 
 `ArtifactRef`는 참조와 메타데이터 형태입니다. 이 값만으로 아티팩트 본문을 읽을 수 있는 것도 아니고, 그 본문이 닫기에 충분한 증거라는 뜻도 아닙니다.
 
-`artifact_id`, `project_id`, `task_id`, `created_by_surface_id`, `created_by_surface_instance_id`, `storage_ref`는 불투명 식별자입니다. `display_name`은 자유 형식 표시 문자열입니다. `content_type`은 알 때의 미디어 타입 메타데이터이고, `sha256`은 알 때의 체크섬 문자열이며, `size_bytes`는 알 때의 바이트 크기 메타데이터입니다. `integrity_status`, `redaction_state`, `availability`는 [아티팩트 값](schema-value-sets.md#artifact-values)이 담당하는 제어 값 문자열입니다.
+`artifact_id`, `project_id`, `task_id`, `storage_ref`는 불투명 식별자입니다. `created_by_actor_source`는 행위자 출처입니다. `display_name`은 자유 형식 표시 문자열입니다. `content_type`은 알 때의 미디어 타입 메타데이터이고, `sha256`은 알 때의 체크섬 문자열이며, `size_bytes`는 알 때의 바이트 크기 메타데이터입니다. `integrity_status`, `redaction_state`, `availability`는 [아티팩트 값](schema-value-sets.md#artifact-values)이 담당하는 제어 값 문자열입니다.
 
 `integrity_status`는 필수입니다. `content_type`, `sha256`, `size_bytes`가 null이면 그 사실을 모른다는 뜻이며, 비어 있음, 0, 기본값이 아닙니다. 빠진 사실을 빈 해시, 0바이트 크기, 만들어 낸 콘텐츠 타입으로 표현하면 안 됩니다. 실제 0바이트 아티팩트는 `size_bytes: 0`과 빈 바이트의 SHA-256인 `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`를 가집니다.
 
@@ -71,8 +70,7 @@ StagedArtifactHandle:
   handle_id: string
   project_id: string
   task_id: string
-  created_by_surface_id: string
-  created_by_surface_instance_id: string
+  created_by_actor_source: string
   content_type: string
   sha256: string
   size_bytes: integer
@@ -81,9 +79,9 @@ StagedArtifactHandle:
   consumed: boolean
 ```
 
-호출자는 `created_by_surface_id`나 `created_by_surface_instance_id`를 권한 주장으로 제출하지 않습니다. 스테이징 핸들의 생명주기, 출처 검증, 만료, 승격은 [아티팩트 저장소](../storage-artifacts.md)와 메서드 담당 문서가 담당합니다.
+호출자는 `created_by_actor_source`를 권한 주장으로 제출하지 않습니다. 스테이징 핸들의 생명주기, 출처 검증, 만료, 승격은 [아티팩트 저장소](../storage-artifacts.md)와 메서드 담당 문서가 담당합니다.
 
-`handle_id`, `project_id`, `task_id`, `created_by_surface_id`, `created_by_surface_instance_id`는 불투명 식별자입니다. `content_type`은 미디어 타입 메타데이터이고, `sha256`은 체크섬 문자열이며, `redaction_state`는 제어 값 문자열입니다.
+`handle_id`, `project_id`, `task_id`는 불투명 식별자입니다. `created_by_actor_source`는 행위자 출처입니다. `content_type`은 미디어 타입 메타데이터이고, `sha256`은 체크섬 문자열이며, `redaction_state`는 제어 값 문자열입니다.
 
 ## `ArtifactInput`
 
@@ -114,7 +112,7 @@ ArtifactInput:
 
 ## 참조 제약
 
-`ArtifactInput[]`은 입력마다 아티팩트 출처 형태 하나를 고릅니다. 공개 API 요청에 두 번째 요청 수준 접근 등급을 더하지 않습니다.
+`ArtifactInput[]`은 입력마다 아티팩트 출처 형태 하나를 고릅니다. 공개 API 요청에 두 번째 요청 수준 작업 범주나 행위자 출처를 더하지 않습니다.
 
 출처 필드 형태 오류의 공개 오류 의미와 응답 처리 경로는 [API 오류 코드](error-codes.md)와 [API 오류 처리 경로](error-routing.md)가 담당합니다. 스테이징된 아티팩트 핸들 검증, 승격, 본문 읽기 자격, 지속 연결은 [아티팩트 저장소](../storage-artifacts.md)와 메서드 담당 문서가 담당합니다.
 
@@ -124,4 +122,4 @@ ArtifactInput:
 - [아티팩트 저장소](../storage-artifacts.md): 스테이징, 승격, 지속 연결, 본문 읽기 생명주기.
 - [API 값 집합](schema-value-sets.md): `ArtifactInput.source_kind`, `redaction_state`, 가용성, 관련 값.
 - [API 상태 스키마](schema-state.md): `ArtifactRef`를 언급하는 증거 요약.
-- [런타임 경계](../runtime-boundaries.md)와 [보안](../security.md): 로컬 접근과 비주장 경계.
+- [런타임 경계](../runtime-boundaries.md)와 [보안](../security.md): 런타임 경계와 비주장 경계.

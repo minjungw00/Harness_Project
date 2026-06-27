@@ -16,16 +16,16 @@
 
 - 공통 요청 래퍼, 응답 분기, `dry_run`, 거절 응답 스키마 본문
 - `UserJudgment`, 선택지, 맥락, 답변 요청 본문, 값 집합, 상태 필드 정의
-- Core의 사용자 소유 판단 의미, 최종 수락 의미, 잔여 위험 의미, 민감 동작 승인 의미, `Write Authorization` 의미
+- Core의 사용자 소유 판단 의미, 최종 수락 의미, 잔여 위험 의미, 민감 동작 승인 의미, `Write Check` 의미
 - 저장 기록 레이아웃, 정확한 저장 효과, 공개 오류 코드 의미, 공개 오류 우선순위, 공통 응답 분기 처리 경로
 
 ## 목적
 
 `volicord.request_user_judgment`는 초점이 분명한 사용자 소유 판단 하나에 대해 대기 중인 `UserJudgment`를 만듭니다. 이 메서드는 사용자에게 묻는 경로입니다. 에이전트는 사용자를 대신해 답하거나, 추론하거나, 판단 범위를 넓히거나, 결정해서는 안 됩니다.
 
-대기 중인 판단은 결정을 요청하는 기록입니다. 결정 자체가 아니며, 증거를 만들거나, 현재 적용 범위를 바꾸거나, `Write Authorization`을 만들거나, `Task`를 닫지 않습니다.
+대기 중인 판단은 결정을 요청하는 기록입니다. 결정 자체가 아니며, 증거를 만들거나, 현재 적용 범위를 바꾸거나, `Write Check`을 만들거나, `Task`를 닫지 않습니다.
 
-이 메서드가 대기 판단을 만들 때 Core는 현재 상태에서 `JudgmentBasis`를 파생합니다. 호출자는 `basis`, `scope_revision`, `close_basis_revision`, 세션 바인딩 필드, 접근 등급 필드, 확인된 행위자 맥락, 기계 동작, 해결 결과, 현재 닫기 근거 권한 필드를 제출하지 않습니다.
+이 메서드가 대기 판단을 만들 때 Core는 현재 상태에서 `JudgmentBasis`를 파생합니다. 호출자는 `basis`, `scope_revision`, `close_basis_revision`, 세션 바인딩 필드, 작업 범주 필드, 확인된 행위자 맥락, 기계 동작, 해결 결과, 현재 닫기 근거 권한 필드를 제출하지 않습니다.
 
 ## 필수 입력
 
@@ -74,10 +74,10 @@ RequestUserJudgmentRequest:
 
 이 메서드에는 아래 조건이 필요합니다.
 
-- `access_class=core_mutation`인 서버 파생 `VerifiedSurfaceContext`
+- `operation_category=agent_workflow`인 확인된 호출 맥락
 - 같은 프로젝트의 호환되는 `Task`와 선택적 Change Unit
 
-로컬 접근 실패, 읽을 수 없는 프로젝트나 `Task` 식별자, 부족한 로컬 역량은 커밋 전에 거절됩니다.
+행위자 출처 불일치, 작업 범주 불일치, 읽을 수 없는 프로젝트나 `Task` 식별자, 지원되지 않는 호출 맥락은 커밋 전에 거절됩니다.
 
 ## 상태 버전 동작
 
@@ -137,8 +137,8 @@ RequestUserJudgmentRequest:
 - 미해결 선행 판단
 - 최종 수락 또는 잔여 위험 수락에 필요한 현재 닫기 근거 없음
 - 잔여 위험 수락에 필요한 현재 잔여 위험 ID 누락 또는 불일치
-- 로컬 접근 실패
-- 부족한 역량
+- 행위자 출처 또는 작업 범주 불일치
+- 지원되지 않는 호출 맥락
 - 오래된 `expected_state_version`
 - 검증기 실패
 
@@ -410,7 +410,7 @@ state:
       task_id: task_banner_001
       state_version: 52
   blocker_refs: []
-  write_authority_summary: null
+  write_check_summary: null
   evidence_summary: null
   close_state: null
   close_blockers: []

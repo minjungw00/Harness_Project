@@ -20,7 +20,6 @@ Fast reader routes:
 - Choose the Codex or Claude Code setup path: [English](en/getting-started/quickstart.md) / [Korean](ko/getting-started/quickstart.md)
 - Complete host setup and recovery: [English setup](en/guides/agent-host-setup.md) / [Korean setup](ko/guides/agent-host-setup.md) / [English troubleshooting](en/guides/agent-host-troubleshooting.md) / [Korean troubleshooting](ko/guides/agent-host-troubleshooting.md)
 - Multi-repository operation: [English](en/guides/multi-repository-agent-setup.md) / [Korean](ko/guides/multi-repository-agent-setup.md)
-- Surface recipes: [English](en/guides/surface-recipes.md) / [Korean](ko/guides/surface-recipes.md)
 - Exact CLI and API contracts: [English CLI](en/reference/admin-cli.md) / [Korean CLI](ko/reference/admin-cli.md) / [English API](en/reference/api/methods.md) / [Korean API](ko/reference/api/methods.md)
 - Reference navigation: [English](en/reference/README.md) / [Korean](ko/reference/README.md)
 - Brand presentation and claim guidance: [English](en/maintain/brand-guidelines.md) / [Korean](ko/maintain/brand-guidelines.md)

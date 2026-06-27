@@ -79,7 +79,7 @@ May claim:
 - The approved sensitive step remains scoped to the prompt, `SensitiveActionScope`, affected object, and visible consequence that the user was asked to judge.
 
 Must not claim:
-- Sensitive-action approval is `Write Check`, `AuthorizedAttemptScope`, OS permission, shell permission, command approval, deployment approval, final acceptance, residual-risk acceptance, or product correctness.
+- Sensitive-action approval is `Write Check`, `WriteCheckAttemptScope`, OS permission, shell permission, command approval, deployment approval, final acceptance, residual-risk acceptance, or product correctness.
 - Sensitive-action approval authorizes product-file writes, commands, hosts, networks, secrets, destructive operations, or unbounded activity.
 - Broad approval substitutes for a required sensitive-action approval, final acceptance, residual-risk acceptance, scope decision, or `Write Check`.
 
@@ -106,7 +106,7 @@ Must not claim:
 - A local path, directory name, copied identifier, displayed identifier, or rendered text is a security token.
 - Direct local modification outside those documented Volicord contracts creates valid Volicord records, evidence, acceptance, residual-risk acceptance, `Write Check`, or artifact authority.
 - `Volicord Runtime Home` is automatically an OS security boundary, sandbox, or isolation layer.
-- A caller-supplied `verified` flag, requested `operation_category`, copied `actor_source`, public request field, or environment variable grants local access or supplies trusted provenance.
+- A caller-supplied `verified` flag, requested `operation_category`, copied `actor_source`, public request field, or environment variable supplies trusted provenance.
 - `actor_source=agent_connection:<connection_id>` proves human identity or supplies user authority.
 - Host configuration installation proves that a host has trusted, approved, loaded, initialized, or exposed the MCP server.
 - Repository guidance, MCP server instructions, or host rule files enforce model behavior or guarantee that an agent will choose Volicord tools.
@@ -170,7 +170,7 @@ Must not claim:
 Host trust and approval decisions belong to the external host and the user. Volicord can install supported configuration and report whether further user action appears required, but it does not control the host trust decision.
 
 May claim:
-- Host Installation verification can distinguish `complete` from `action_required`, `partial_failure`, and `failed` when the administrative CLI can observe the required checks.
+- managed host configuration state verification can distinguish `complete` from `action_required`, `partial_failure`, and `failed` when the administrative CLI can observe the required checks.
 - MCP server instructions and optional repository guidance can describe how an agent should select projects and tools.
 
 Must not claim:

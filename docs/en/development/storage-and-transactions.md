@@ -47,8 +47,7 @@ method execution is available:
    and registration metadata helpers in
    [`crates/volicord-cli/src/registration.rs`](../../../crates/volicord-cli/src/registration.rs).
 2. Store bootstrap initializes Runtime Home metadata and registers projects and
-   surfaces through `initialize_runtime_home`, `register_project`, and
-   `register_surface`.
+   Agent Connections through `initialize_runtime_home`, `register_project`, and connection registration helpers.
 3. Existing state is opened and validated through SQLite helpers and migrations
    where the setup path allows it.
 4. Public method calls later open a project through `CoreProjectStore::open`
@@ -64,8 +63,8 @@ Normal public method execution has two implementation phases before persistence:
 1. The shared Core preflight in
    [`crates/volicord-core/src/pipeline.rs`](../../../crates/volicord-core/src/pipeline.rs)
    validates the envelope, adapter binding, committed-effect envelope
-   requirements, request hash, project state, verified surface context, replay
-   eligibility, Task requirement, freshness, and access class.
+   requirements, request hash, project state, verified connection context, replay
+   eligibility, Task requirement, freshness, and operation category.
 2. The method module in [`crates/volicord-core/src/methods/`](../../../crates/volicord-core/src/methods/)
    performs method-specific planning and returns an `OwnerPipelineBranch`.
 
@@ -77,7 +76,7 @@ Committed branches provide result fields, event data, and a list of
 
 `CoreStorageMutation` functions as a command-like value between method planning
 and Store persistence. Method planners create values such as `InsertTask`,
-`InsertWriteAuthorization`, `InsertRun`, `PromoteStagedArtifact`,
+`InsertWriteCheck`, `InsertRun`, `PromoteStagedArtifact`,
 `LinkArtifact`, and judgment updates. Store applies those values through
 `ProjectMutation` inside the active commit transaction.
 

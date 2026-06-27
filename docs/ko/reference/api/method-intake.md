@@ -64,11 +64,11 @@ IntakeRequest:
 
 커밋되는 `dry_run`이 아닌 요청에는 아래 조건이 필요합니다.
 
-- `access_class=core_mutation`인 서버 파생 `VerifiedSurfaceContext`
+- `operation_category=agent_workflow`인 확인된 호출 맥락
 
-접점 식별 경계:
+호출 경계:
 
-- `surface_id`는 등록된 로컬 접점을 고르는 선택자일 뿐, 그 자체가 권한이 아닙니다.
+- `actor_source`와 `operation_category`는 확인된 로컬 호출 맥락에서 파생됩니다. 호출자는 이를 권한 주장으로 제출하지 않습니다.
 
 ## 상태 버전 동작
 
@@ -82,7 +82,7 @@ IntakeRequest:
 - `dry_run`
 - 읽기 실패
 - 검증 실패
-- 로컬 접근 실패
+- 행위자 출처 또는 작업 범주 불일치
 - 오래된 `expected_state_version`
 
 ## 성공 결과
@@ -128,8 +128,8 @@ IntakeRequest:
 
 - 검증 실패
 - 오래된 `expected_state_version`
-- Core 또는 로컬 접점 사용 불가
-- 로컬 접근 불일치
+- Core 또는 호출 맥락 사용 불가
+- 행위자 출처 또는 작업 범주 불일치
 - 현재 `Task` 호환성 누락
 - 검증기 실패
 
@@ -221,7 +221,7 @@ state:
   shaping_readiness: null
   pending_user_judgment_refs: []
   blocker_refs: []
-  write_authority_summary: null
+  write_check_summary: null
   evidence_summary: null
   close_state: null
   close_blockers: []
@@ -243,6 +243,6 @@ next_actions:
 
 - 요청 래퍼와 응답 분기: [`ToolEnvelope`](schema-core.md#tool-envelope), [공통 응답 분기](schema-core.md#common-response).
 - 상태 참조, `StateSummary`, `ShapingReadiness`, 다음 행동: [API 상태 스키마](schema-state.md).
-- 지원되는 메서드 이름, 모드 값, `resume_policy`, `response_kind`, `effect_kind`, 접근 등급: [API 값 집합](schema-value-sets.md).
+- 지원되는 메서드 이름, 모드 값, `resume_policy`, `response_kind`, `effect_kind`, 작업 범주: [API 값 집합](schema-value-sets.md#operation-category-values).
 - 공개 오류, 우선순위, 거절 응답 처리 경로: [API 오류 코드](error-codes.md), [API 오류 우선순위](error-precedence.md), [API 오류 처리 경로](error-routing.md).
 - 저장 효과와 저장 기록: [저장 효과](../storage-effects.md), [저장소 기록](../storage-records.md), [저장소 버전 관리](../storage-versioning.md).

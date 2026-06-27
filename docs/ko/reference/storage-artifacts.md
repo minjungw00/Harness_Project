@@ -19,7 +19,7 @@
 - 기록 계열 개요: [저장소 기록](storage-records.md)을 봅니다.
 - 기준 SQLite DDL, 제약, 인덱스, 외래 키, 마이그레이션 테이블 형태: [저장소 DDL](storage-ddl.md)을 봅니다.
 - 일반 메서드 저장 효과; [저장 효과](storage-effects.md)를 봅니다.
-- 로컬 접근 보안 주장; [보안](security.md)과 [런타임 경계](runtime-boundaries.md)를 봅니다.
+- 로컬 파일 접근 보안 주장; [보안](security.md)과 [런타임 경계](runtime-boundaries.md)를 봅니다.
 
 <a id="lifecycle-boundary"></a>
 ## 아티팩트 생명주기 요약
@@ -75,7 +75,7 @@
 
 조건:
 
-- 접근 등급, 역량, 가림 처리, 가용성, 담당 관계 검사를 통과해야 합니다.
+- operation category, connection capability, 가림 처리, 가용성, 담당 관계 검사를 통과해야 합니다.
 
 담당 경계:
 
@@ -106,8 +106,7 @@
 - `handle_id`
 - `project_id`
 - `task_id`
-- `created_by_surface_id`
-- `created_by_surface_instance_id`
+- `created_by_actor_source`
 - `sha256`
 - `size_bytes`
 - `content_type`
@@ -116,16 +115,16 @@
 - `expires_at`
 - `consumed_by_run_id`, `promoted_artifact_id`, `consumed_at` 같은 소비 사실
 
-Core는 성공한 `volicord.stage_artifact` 요청의 `VerifiedSurfaceContext`에서 `created_by_surface_*` 필드를 기록합니다.
+Core는 성공한 `volicord.stage_artifact` 요청의 확인된 호출 맥락에서 `created_by_actor_source`를 기록합니다.
 
 조건:
 
 - 제출된 `StagedArtifactHandle`이 호환되는 저장된 `artifact_staging` 행이나 동등하게 저장소가 관리하는 스테이징 기록에 대응할 때만, 그 핸들을 스테이징된 아티팩트에 대한 권한 근거로 취급할 수 있습니다.
-- 소비하는 담당 메서드는 저장된 `created_by_surface_*` 필드를 그 스테이징 행과 대조해야 합니다.
+- 소비하는 담당 메서드는 저장된 `created_by_actor_source`를 그 스테이징 행과 대조해야 합니다.
 
 허용되지 않는 것:
 
-- `created_by_surface_*` 필드를 호출자가 제출한 권한 주장으로 취급하면 안 됩니다.
+- `created_by_actor_source`를 호출자가 제출한 권한 주장으로 취급하면 안 됩니다.
 - 제출된 `StagedArtifactHandle` 형태만으로 아티팩트 권한처럼 취급하면 안 됩니다.
 
 허용되는 것:
@@ -220,17 +219,16 @@ expires_at: "<future-expiration-timestamp>"
 - 핸들이 만료되지 않았습니다.
 - 핸들이 같은 프로젝트에 속합니다.
 - 핸들이 같은 `Task`에 속합니다.
-- 현재 확인된 `surface_id`가 `created_by_surface_id`와 일치합니다.
-- 현재 확인된 `surface_instance_id`가 `created_by_surface_instance_id`와 일치합니다.
+- 현재 확인된 `actor_source`가 `created_by_actor_source`와 일치합니다.
 
 허용되지 않는 것:
 
-- 접점 간 스테이징 핸들 전달을 기준 범위에서 지원되는 동작으로 취급하면 안 됩니다.
+- actor source가 다른 스테이징 핸들 전달을 기준 범위에서 지원되는 동작으로 취급하면 안 됩니다.
 - `StagedArtifactHandle`을 어떤 로컬 호출자든 사용할 수 있는 베어러 토큰으로 취급하면 안 됩니다.
 
 소비 트랜잭션은 아래 항목을 검증해야 합니다.
 
-- 저장된 `project_id`, `task_id`, `created_by_surface_id`, `created_by_surface_instance_id`
+- 저장된 `project_id`, `task_id`, `created_by_actor_source`
 - 만료와 소비 상태
 - `sha256`, `size_bytes`, `redaction_state`
 
@@ -411,9 +409,9 @@ expires_at: "<future-expiration-timestamp>"
 - 등록된 `ArtifactRef`.
 - 같은 프로젝트의 일치하는 `task_id`.
 - 필요한 `artifact_links` 담당 관계.
-- 호출자의 접근 등급에 필요한 가림 처리/가용성 상태.
-- `access_class=artifact_read`에 대한 API/보안 담당 문서 요구사항.
-- 문서화된 접점 또는 커넥터 역량 경계.
+- 호출자의 operation category에 필요한 가림 처리/가용성 상태.
+- `operation_category=read`에 대한 API/보안 담당 문서 요구사항.
+- 문서화된 Agent Connection 또는 User Channel 출처 경계.
 
 허용되지 않는 것:
 
@@ -421,13 +419,13 @@ expires_at: "<future-expiration-timestamp>"
 
 ## 검증과 실패
 
-거절된 스테이징 핸들 입력은 아티팩트 검증 실패로 남아야 합니다. 증거 충분성, 로컬 접근 불일치, 역량 부족, 메서드 성공으로 숨기면 안 됩니다.
+거절된 스테이징 핸들 입력은 아티팩트 검증 실패로 남아야 합니다. 증거 충분성, 호출 맥락 불일치, 역량 부족, 메서드 성공으로 숨기면 안 됩니다.
 
 | 실패 유형 | 세부사항 |
 |---|---|
 | 존재 또는 생명주기 문제 | [존재 또는 생명주기 문제](#staged-handle-failure-existence-lifecycle) |
 | 범위 불일치 | [범위 불일치](#staged-handle-failure-scope) |
-| 접점 불일치 | [접점 불일치](#staged-handle-failure-surface) |
+| actor-source 불일치 | [actor-source 불일치](#staged-handle-failure-actor-source) |
 | 무결성 불일치 | [무결성 불일치](#staged-handle-failure-integrity) |
 
 <a id="staged-handle-failure-existence-lifecycle"></a>
@@ -449,14 +447,13 @@ expires_at: "<future-expiration-timestamp>"
 - `Task`가 다름.
 - 프로젝트가 다름.
 
-<a id="staged-handle-failure-surface"></a>
-**접점 불일치**
+<a id="staged-handle-failure-actor-source"></a>
+**actor-source 불일치**
 
 예:
 
-- 접점이 다름.
-- `created_by_surface_id` 불일치.
-- `created_by_surface_instance_id` 불일치.
+- actor source가 다름.
+- `created_by_actor_source` 불일치.
 
 <a id="staged-handle-failure-integrity"></a>
 **무결성 불일치**
@@ -497,4 +494,4 @@ expires_at: "<future-expiration-timestamp>"
 - [아티팩트 스테이징 메서드](api/method-stage-artifact.md), [실행 기록 메서드](api/method-record-run.md), [API 메서드](api/methods.md): `volicord.stage_artifact`, `volicord.record_run`, 아티팩트 읽기 API 동작.
 - [저장 효과](storage-effects.md): 응답 분기가 저장 효과를 만드는지 여부.
 - [저장소 기록](storage-records.md): `artifact_staging`, `artifacts`, `artifact_links` 테이블 개요.
-- [보안](security.md): 접근 등급, 역량 경계, 보장 비주장.
+- [보안](security.md): operation category, connection capability 경계, 보장 비주장.

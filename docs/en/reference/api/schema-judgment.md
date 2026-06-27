@@ -39,7 +39,7 @@ Judgment schemas preserve the field structure of a user-owned choice. They are n
 
 `UserJudgmentOptionInput` and `UserJudgmentOption` are distinct shapes. `UserJudgmentOptionInput` is caller request input only where a method allows caller-authored options; `UserJudgmentOption` is Core-owned state or output.
 
-A `RecordUserJudgmentPayload` is not the schema for current scope, evidence, `Write Authorization`, a close result, or a broad approval.
+A `RecordUserJudgmentPayload` is not the schema for current scope, evidence, `Write Check`, a close result, or a broad approval.
 
 `JudgmentRationale` is descriptive metadata. It preserves the user's visible reason and review context, but it is not an authority source and cannot override the selected option, outcome, actor provenance, or basis compatibility.
 
@@ -191,7 +191,7 @@ JudgmentRationale:
 
 `machine_action` and `resolution_outcome` are copied from the selected `UserJudgmentOption`. The selected option's stored action and outcome are authoritative and must match the action/outcome mapping. Any outcome, decision, or acceptance field inside `answer` must agree with the selected option; free-form answer text cannot grant authority.
 
-Rationale text cannot grant authority, create write authorization, satisfy evidence requirements, establish final acceptance, accept residual risk, make stale judgments current, or change which option was selected.
+Rationale text cannot grant authority, create write approval, satisfy evidence requirements, establish final acceptance, accept residual risk, make stale judgments current, or change which option was selected.
 
 `resolved_by_actor_source` uses the `ActorSource` value set; see [actor source values](schema-value-sets.md#actor-source-values). It records derived provenance, not free-form caller attribution. Authority-bearing user-judgment resolution requires `resolved_by_actor_source=local_user` with compatible User Channel provenance.
 
@@ -213,7 +213,7 @@ Not allowed:
 
 ## `SensitiveActionScope`
 
-`SensitiveActionScope` is the schema shape for a named sensitive-action approval context. It is not `AuthorizedAttemptScope`, not `Write Authorization`, and not security authority; see [Security](../security.md).
+`SensitiveActionScope` is the schema shape for a named sensitive-action approval context. It is not `WriteCheckAttemptScope`, not `Write Check`, and not security authority; see [Security](../security.md).
 
 ```yaml
 SensitiveActionScope:

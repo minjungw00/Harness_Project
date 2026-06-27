@@ -69,11 +69,11 @@ StageArtifactRequest:
 
 요구사항:
 
-- `access_class=artifact_registration`인 서버 파생 `VerifiedSurfaceContext`
+- `operation_category=agent_workflow`인 확인된 호출 맥락
 - 호환되는 `project_id`와 `task_id`
 - `manual_artifact_attachment_supported=true`
 
-서버는 파생된 `VerifiedSurfaceContext`에서 `created_by_surface_id`와 `created_by_surface_instance_id`를 기록합니다. 호출자는 이 값을 권한 근거로 제출하지 않습니다.
+서버는 확인된 호출 맥락에서 `created_by_actor_source`를 기록합니다. 호출자는 이 값을 권한 근거로 제출하지 않습니다.
 
 ## 상태 버전 동작
 
@@ -115,7 +115,7 @@ StageArtifactRequest:
 커밋된 차단 분기는 없습니다.
 
 - 유효하지 않은 스테이징 요청은 Core 변경 전에 거절됩니다.
-- 스테이징 가용성이나 역량 문제는 차단 사유를 만들지 않습니다.
+- 스테이징 가용성이나 호출 맥락 문제는 차단 사유를 만들지 않습니다.
 
 ## 거절 결과
 
@@ -125,9 +125,9 @@ StageArtifactRequest:
 - 체크섬 또는 크기 불일치
 - 안전하지 않은 아티팩트 입력
 - 지원하지 않는 가림 처리 상태
-- Core 또는 로컬 접점 사용 불가
-- 로컬 접근 불일치
-- 아티팩트 등록 역량 부족
+- Core 또는 호출 맥락 사용 불가
+- 행위자 출처 또는 작업 범주 불일치
+- 지원되지 않는 아티팩트 스테이징 호출
 
 공개 오류 코드 의미, 우선순위, 거절 응답 처리 경로는 아래 오류 담당 문서가 담당합니다.
 
@@ -183,8 +183,7 @@ staged_artifact_handle:
   handle_id: staged_trace_log_001
   project_id: proj_trace_001
   task_id: task_trace_001
-  created_by_surface_id: surface_artifact
-  created_by_surface_instance_id: surface_instance_trace_01
+  created_by_actor_source: agent_connection:conn_artifact
   content_type: text/plain
   sha256: sha256:example-trace
   size_bytes: 42
@@ -198,6 +197,6 @@ expires_at: "<future-expiration-timestamp>"
 
 - 요청 래퍼, 응답 분기, `dry_run` 요약: [API 코어 스키마](schema-core.md).
 - `StagedArtifactHandle`, `ArtifactInput`, `ArtifactRef`: [API 아티팩트 스키마](schema-artifacts.md).
-- 지원되는 아티팩트 값과 접근 등급: [API 값 집합](schema-value-sets.md).
+- 지원되는 아티팩트 값과 작업 범주: [API 값 집합](schema-value-sets.md#operation-category-values).
 - 공개 오류, 우선순위, 거절 응답 처리 경로: [API 오류 코드](error-codes.md), [API 오류 우선순위](error-precedence.md), [API 오류 처리 경로](error-routing.md).
 - 저장 효과와 아티팩트 생명주기: [저장 효과](../storage-effects.md), [아티팩트 저장소](../storage-artifacts.md).

@@ -21,7 +21,7 @@ This document does not own:
 
 ## Purpose
 
-`volicord.status` returns a read-only current-position view over Core state. The view can include current Task summary, blockers, pending user judgments, `Write Authorization` summary, evidence summary, close state, close-readiness findings, project continuity summaries, guarantee display, and next safe actions.
+`volicord.status` returns a read-only current-position view over Core state. The view can include current Task summary, blockers, pending user judgments, `Write Check` summary, evidence summary, close state, close-readiness findings, project continuity summaries, guarantee display, and next safe actions.
 
 ## Required inputs
 
@@ -47,8 +47,8 @@ Field notes:
 
 When protected Core detail is requested, the read requires:
 
-- same-project current local surface
-- `VerifiedSurfaceContext.access_class=read_status`
+- same-project verified invocation context
+- `operation_category=read`
 
 For this response, state authority comes from the Core-owned state summarized in `StatusResult`.
 
@@ -66,7 +66,7 @@ The method creates no:
 - artifact effect
 - staged-handle consumption
 - evidence update
-- `Write Authorization` change
+- `Write Check` change
 
 ## Success result
 
@@ -83,10 +83,10 @@ Include projection contract:
 
 - `include.task` returns the selected `Task` summary and current Change Unit through `active_task`.
 - `include.pending_user_judgments` returns current pending judgment refs, and relevant stale or superseded judgment state appears through existing result fields such as `blocker_refs` and `next_actions.required_refs`.
-- `include.write_authority` returns effective active, expired, stale, and consumed write-authority states through `write_authority_summary`.
+- `include.write_check` returns effective active, expired, stale, and consumed Write Check states through `write_check_summary`.
 - `include.evidence` returns current `EvidenceSummary` and coverage when available.
 - `include.close` returns `CurrentCloseBasis | null`, close state, computed blockers, risk acceptance coverage, and relevant next actions. The blockers use the same close-readiness calculation as `volicord.close_task intent=check`.
-- `include.guarantees` returns only guarantees derived from the project enforcement profile, verified bound surface registration, enabled enforcement mechanisms, and supported baseline scope.
+- `include.guarantees` returns only guarantees derived from the project enforcement profile, verified invocation context, enabled enforcement mechanisms, and supported baseline scope.
 - `include.continuity` returns active `ProjectContinuitySummary[]` entries for durable project-level context.
 - `include.evidence=false` means evidence summaries, coverage, artifact evidence refs, and evidence-only next actions are not computed and not returned.
 - `include.close=false` means close readiness is not computed and `CurrentCloseBasis`, close state, close blockers, residual-risk coverage, and close-only next actions are not returned.
@@ -97,7 +97,7 @@ Truthful projection rules:
 - Uncomputed, unselected, or unavailable data is omitted where the schema permits, or `null` only when the selected projection was computed and unavailable. It is not an empty value that implies "computed and none."
 - Empty arrays, including empty close blockers, mean the method computed that field and found no entries.
 - Capability declarations alone do not create guarantees. A cooperative-only deployment must not claim `detective`.
-- `GuaranteeDisplay.capability_refs` should identify actual profile or surface facts when those refs are available.
+- `GuaranteeDisplay.capability_refs` should identify invocation binding, Agent Connection, or observation facts when those refs are available.
 
 `include.close=true` and [`volicord.close_task`](method-close-task.md) with `intent=check` use the same close-readiness calculation. `volicord.status` remains read-only and creates no replay row, event, state mutation, close mutation, or state-version increment.
 
@@ -133,8 +133,8 @@ Blockers and close blockers in a `StatusResult` are computed response fields onl
 Returns `ToolRejectedResponse` only when the read cannot be safely served, such as:
 
 - unavailable Core
-- local access mismatch
-- insufficient capability for the requested protected detail
+- actor-source or operation-category mismatch
+- unsupported invocation context for the requested protected detail
 - missing current Task for a Task-scoped read
 - stale or unavailable projection when a projection-backed view was requested
 
@@ -228,7 +228,7 @@ active_task:
       task_id: task_export_001
       state_version: 42
   blocker_refs: []
-  write_authority_summary: null
+  write_check_summary: null
   evidence_summary: null
   close_state: blocked
   close_blockers:
@@ -309,7 +309,7 @@ guarantee_display:
 
 - Request envelope and response branches: [API Schema Core](schema-core.md).
 - Status state, current close basis, close-readiness shapes, evidence summaries, and guarantee display: [API State Schemas](schema-state.md).
-- Supported values and access classes: [API Value Sets](schema-value-sets.md).
+- Supported values and operation categories: [API Value Sets](schema-value-sets.md#operation-category-values).
 - Public errors, precedence, and rejected-response routing: [API error codes](error-codes.md), [API error precedence](error-precedence.md), and [API error routing](error-routing.md).
 - Close-readiness blocker routing: [API blocker routing](blocker-routing.md).
 - Persistence effects: [Storage Effects](../storage-effects.md).

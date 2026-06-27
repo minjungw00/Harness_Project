@@ -19,7 +19,7 @@ This document does not own:
 - record-family overview; see [Storage Records](storage-records.md)
 - baseline SQLite DDL, constraints, indexes, foreign keys, or migration table shape; see [Storage DDL](storage-ddl.md)
 - generic method storage effects; see [Storage Effects](storage-effects.md)
-- local-access security claims; see [Security](security.md) and [Runtime Boundaries](runtime-boundaries.md)
+- invocation-context security claims; see [Security](security.md) and [Runtime Boundaries](runtime-boundaries.md)
 
 <a id="lifecycle-boundary"></a>
 ## Lifecycle summary
@@ -106,8 +106,7 @@ Tracked facts:
 - `handle_id`
 - `project_id`
 - `task_id`
-- `created_by_surface_id`
-- `created_by_surface_instance_id`
+- `created_by_actor_source`
 - `sha256`
 - `size_bytes`
 - `content_type`
@@ -116,16 +115,16 @@ Tracked facts:
 - `expires_at`
 - consumption facts such as `consumed_by_run_id`, `promoted_artifact_id`, and `consumed_at`
 
-Core records the `created_by_surface_*` fields from the successful `volicord.stage_artifact` request's `VerifiedSurfaceContext`.
+Core records `created_by_actor_source` from the successful `volicord.stage_artifact` request's verified invocation context.
 
 Conditions:
 
 - A submitted `StagedArtifactHandle` can be treated as authority for a staged artifact only when it resolves to a compatible stored `artifact_staging` row or equivalent storage-owned staging record.
-- The consuming owner method must check the stored `created_by_surface_*` fields against that staging row.
+- The consuming owner method must check stored `created_by_actor_source` against that staging row.
 
 Not allowed:
 
-- Do not treat the `created_by_surface_*` fields as caller-provided authority claims.
+- Do not treat `created_by_actor_source` as a caller-provided authority claim.
 - Do not treat the submitted `StagedArtifactHandle` shape alone as artifact authority.
 
 Allowed:
@@ -220,17 +219,16 @@ Required conditions:
 - The handle is unexpired.
 - The handle belongs to the same project.
 - The handle belongs to the same Task.
-- The current verified `surface_id` matches `created_by_surface_id`.
-- The current verified `surface_instance_id` matches `created_by_surface_instance_id`.
+- The current verified `actor_source` matches `created_by_actor_source`.
 
 Not allowed:
 
-- Do not treat cross-surface staged artifact transfer as baseline-supported.
+- Do not treat cross-actor staged artifact transfer as baseline-supported.
 - Do not treat `StagedArtifactHandle` as a bearer token that any local caller may use.
 
 The consuming transaction must validate:
 
-- stored `project_id`, `task_id`, `created_by_surface_id`, and `created_by_surface_instance_id`
+- stored `project_id`, `task_id`, and `created_by_actor_source`
 - expiration and consumed status
 - `sha256`, `size_bytes`, and `redaction_state`
 
@@ -411,9 +409,9 @@ Artifact metadata or content reads require:
 - a registered `ArtifactRef`
 - the matching same-project `task_id`
 - the required `artifact_links` owner relation
-- the redaction/availability state needed by the caller's access class
-- the API/security owner requirements for `access_class=artifact_read`
-- any documented surface or connector capability boundary
+- the redaction/availability state needed by the caller's operation category
+- the API/security owner requirements for `operation_category=read`
+- any documented Agent Connection or User Channel provenance boundary
 
 Not allowed:
 
@@ -421,13 +419,13 @@ Not allowed:
 
 ## Validation and failures
 
-Rejected staged-handle inputs remain artifact validation failures. They must not be hidden as evidence sufficiency, local-access mismatch, capability insufficiency, or method success.
+Rejected staged-handle inputs remain artifact validation failures. They must not be hidden as evidence sufficiency, invocation-context mismatch, capability insufficiency, or method success.
 
 | Failure type | Details |
 |---|---|
 | Existence or lifecycle problem | [Existence or lifecycle problem](#staged-handle-failure-existence-lifecycle) |
 | Scope mismatch | [Scope mismatch](#staged-handle-failure-scope) |
-| Surface mismatch | [Surface mismatch](#staged-handle-failure-surface) |
+| Actor-source mismatch | [Actor-source mismatch](#staged-handle-failure-actor-source) |
 | Integrity mismatch | [Integrity mismatch](#staged-handle-failure-integrity) |
 
 <a id="staged-handle-failure-existence-lifecycle"></a>
@@ -449,14 +447,13 @@ Examples:
 - cross-task
 - cross-project
 
-<a id="staged-handle-failure-surface"></a>
-**Surface mismatch**
+<a id="staged-handle-failure-actor-source"></a>
+**Actor-source mismatch**
 
 Examples:
 
-- cross-surface
-- wrong `created_by_surface_id`
-- wrong `created_by_surface_instance_id`
+- cross-actor handoff
+- wrong `created_by_actor_source`
 
 <a id="staged-handle-failure-integrity"></a>
 **Integrity mismatch**

@@ -46,22 +46,22 @@ only the structure visible in the repository.
 - [`crates/volicord-core/src/pipeline.rs`](../../../../crates/volicord-core/src/pipeline.rs):
   `CoreService`, `MethodPolicy`, `OwnerPipelineBranch`, and common preflight.
 - [`crates/volicord-mcp/src/lib.rs`](../../../../crates/volicord-mcp/src/lib.rs):
-  `PUBLIC_METHOD_TOOL_NAMES`, `McpIntegrationStartupInspection`,
-  `McpIntegrationContext`, `McpAdapter`, `McpAdapter::call_tool`, and
-  `prepare_integration_arguments`.
+  `PUBLIC_METHOD_TOOL_NAMES`, `McpConnectionStartupInspection`,
+  `McpConnectionContext`, `McpAdapter`, `McpAdapter::call_tool`, and
+  `prepare_connection_arguments`.
 - [`crates/volicord-cli/src/agent_command.rs`](../../../../crates/volicord-cli/src/agent_command.rs):
   administrative host setup orchestration outside the Core/MCP adapter path.
 - [`crates/volicord-cli/src/registration.rs`](../../../../crates/volicord-cli/src/registration.rs):
-  registered surface capability and local-access metadata helpers.
+  registered connection capability and invocation metadata helpers.
 - Cargo manifests for `volicord-core`, `volicord-mcp`, and `volicord-cli`.
 
 ## Related Tests And Reference Owners
 
 - `adapter_and_direct_core_status_have_equivalent_response_meaning` in
   [`crates/volicord-mcp/src/lib.rs`](../../../../crates/volicord-mcp/src/lib.rs).
-- `mcp_session_derives_access_per_method_call` and
-  `mcp_exposes_exactly_the_documented_public_methods` in
-  [`tests/integration/mcp_surface.rs`](../../../../tests/integration/mcp_surface.rs).
+- `connection_invocation_is_injected_and_single_project_is_auto_selected` and
+  `read_only_mode_rejects_agent_workflow_methods_before_core` in
+  [`tests/integration/mcp_connection.rs`](../../../../tests/integration/mcp_connection.rs).
 - [API Methods](../../reference/api/methods.md), [MCP Transport](../../reference/mcp-transport.md),
   [Administrative CLI](../../reference/admin-cli.md), and
   [Agent Integration](../../reference/agent-integration.md).

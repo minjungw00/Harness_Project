@@ -24,7 +24,7 @@ Do not infer support from Rust portability alone. A Rust crate being portable in
 | Shell syntax | Supported for the maintained POSIX-style examples. Other shells are unverified for these examples. | Installation examples use `export VOLICORD_BIN="$(pwd)/target/debug"`, quoted variable expansion, `PATH="$VOLICORD_BIN:$PATH"`, and `test -x`. | If your shell cannot run that syntax, translate the commands yourself and verify each resulting command before continuing. |
 | Executable role names | Supported and verified. | Reference owners define `volicord` as the administrative CLI role and `volicord-mcp` as the local MCP adapter role. | Build or install both `volicord` and `volicord-mcp`; do not treat one executable as a substitute for the other. |
 | Package-manager installation | Out of scope. | The Installation page documents source build and separately installed executable discovery, but no package-manager procedure or release layout is defined in repository owners. | Use the source build path or an already installed executable directory that contains both executables. |
-| Host version minimums for Codex and Claude Code | No stable minimum host version is defined. Host compatibility is checked operationally, not by a documented version floor. | Codex verification looks for `codex` on `PATH` and runs `codex --version`. Claude Code verification inspects host state through `claude mcp get <server_name>`. Administrative verification owns the final result states. | Use `volicord agent verify --integration-id <id>` after installation. Do not rely on an undocumented Codex or Claude Code minimum version. |
+| Host version minimums for Codex and Claude Code | No stable minimum host version is defined. Host compatibility is checked operationally, not by a documented version floor. | Codex verification looks for `codex` on `PATH` and runs `codex --version`. Claude Code verification inspects host state through `claude mcp get <server_name>`. Administrative verification owns the final result states. | Use `volicord agent verify --connection-id <id>` after installation. Do not rely on an undocumented Codex or Claude Code minimum version. |
 
 ## Toolchain Requirements
 
@@ -88,7 +88,7 @@ A usable `Volicord Runtime Home` must be a local filesystem location the selecte
 Before installation:
 
 - Select a Runtime Home that is not the `Product Repository` and is not inside or above the `Product Repository`.
-- Ensure the selected user can create the directory or write into it when running `volicord init`, project registration, agent installation, or verification.
+- Ensure the selected user can create the directory or write into it when running `volicord init`, project registration, agent connection, or verification.
 - Ensure future `volicord-mcp` host processes receive the same Runtime Home selection when the default `$HOME/.volicord` is not the intended location.
 
 Runtime Home selection and exact creation behavior are owned by [Administrative CLI](admin-cli.md) and [MCP Transport](mcp-transport.md). Runtime location and separation rules are owned by [Runtime Boundaries](runtime-boundaries.md).
@@ -119,11 +119,11 @@ Baseline host and scope requirements:
 | Claude Code | `project` | The `Product Repository` must be writable when applying `.mcp.json`; the future Claude Code host must find `volicord-mcp` on `PATH`; project MCP approval may still be required. |
 | Generic | `export` | A writable export target is needed only when writing an export file. The external host remains user-managed and unverified until loaded and checked by a host-specific mechanism. |
 
-Installing host configuration does not prove that the host trusted, approved, loaded, initialized, or exposed `volicord-mcp`. Host Installation meaning and host trust boundaries are owned by [Agent Integration](agent-integration.md).
+Installing host configuration does not prove that the host trusted, approved, loaded, initialized, or exposed `volicord-mcp`. managed host configuration state meaning and host trust boundaries are owned by [Agent Integration](agent-integration.md).
 
 ## MCP Host Environment Requirements
 
-The baseline MCP host environment must be able to start `volicord-mcp --integration <integration_id>` as a local child process and communicate over stdin/stdout. It is not a network listener requirement.
+The baseline MCP host environment must be able to start `volicord-mcp --connection <connection_id>` as a local child process and communicate over stdin/stdout. It is not a network listener requirement.
 
 The host process environment must provide:
 
@@ -131,7 +131,7 @@ The host process environment must provide:
 - `VOLICORD_HOME` when the intended Runtime Home is not the default home-derived location
 - local filesystem access to the Runtime Home and each explicitly allowed `Product Repository`
 
-`volicord-mcp --check --integration <integration_id>` is a startup validation check. It is not complete host integration verification. Complete host verification requires the administrative result gates defined by [Administrative CLI](admin-cli.md).
+`volicord-mcp --check --connection <connection_id>` is a startup validation check. It is not complete host integration verification. Complete host verification requires the administrative result gates defined by [Administrative CLI](admin-cli.md).
 
 ## Stop Criteria
 

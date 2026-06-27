@@ -49,14 +49,13 @@ ArtifactRef:
   redaction_state: string
   availability: string
   created_by_run_ref: StateRecordRef | null
-  created_by_surface_id: string | null
-  created_by_surface_instance_id: string | null
+  created_by_actor_source: string | null
   storage_ref: string | null
 ```
 
 `ArtifactRef` is a reference and metadata shape. It does not make artifact body content readable by default and does not prove that the content is sufficient evidence for close.
 
-`artifact_id`, `project_id`, `task_id`, `created_by_surface_id`, `created_by_surface_instance_id`, and `storage_ref` are opaque identifiers. `display_name` is a free-form display string. `content_type` is media-type metadata when known, `sha256` is a checksum string when known, and `size_bytes` is byte-size metadata when known. `integrity_status`, `redaction_state`, and `availability` are controlled value strings owned by [artifact values](schema-value-sets.md#artifact-values).
+`artifact_id`, `project_id`, `task_id`, and `storage_ref` are opaque identifiers. `created_by_actor_source` is actor provenance. `display_name` is a free-form display string. `content_type` is media-type metadata when known, `sha256` is a checksum string when known, and `size_bytes` is byte-size metadata when known. `integrity_status`, `redaction_state`, and `availability` are controlled value strings owned by [artifact values](schema-value-sets.md#artifact-values).
 
 `integrity_status` is required. Null `content_type`, `sha256`, or `size_bytes` means the fact is unknown, not empty, not zero, and not defaulted. Missing facts must not be represented as an empty hash, zero-byte size, or invented content type. A real zero-byte artifact has `size_bytes: 0` and the SHA-256 of empty bytes, `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
 
@@ -71,8 +70,7 @@ StagedArtifactHandle:
   handle_id: string
   project_id: string
   task_id: string
-  created_by_surface_id: string
-  created_by_surface_instance_id: string
+  created_by_actor_source: string
   content_type: string
   sha256: string
   size_bytes: integer
@@ -81,9 +79,9 @@ StagedArtifactHandle:
   consumed: boolean
 ```
 
-The caller does not submit `created_by_surface_id` or `created_by_surface_instance_id` as authority claims. Staged-handle lifecycle, provenance validation, expiry, and promotion are owned by [Artifact Storage](../storage-artifacts.md) and method owner documents.
+The caller does not submit `created_by_actor_source` as an authority claim. Staged-handle lifecycle, provenance validation, expiry, and promotion are owned by [Artifact Storage](../storage-artifacts.md) and method owner documents.
 
-`handle_id`, `project_id`, `task_id`, `created_by_surface_id`, and `created_by_surface_instance_id` are opaque identifiers. `content_type` is media-type metadata, `sha256` is a checksum string, and `redaction_state` is a controlled value string.
+`handle_id`, `project_id`, and `task_id` are opaque identifiers. `created_by_actor_source` is actor provenance. `content_type` is media-type metadata, `sha256` is a checksum string, and `redaction_state` is a controlled value string.
 
 ## `ArtifactInput`
 
@@ -114,7 +112,7 @@ Caller-supplied paths, logs, capture claims, or local file references are not ar
 
 ## Reference constraints
 
-`ArtifactInput[]` selects one artifact source shape per input. It does not add a second request-level access class to a public API request.
+`ArtifactInput[]` selects one artifact source shape per input. It does not add a second request-level operation category or actor source to a public API request.
 
 Public error semantics and response routing for invalid source-field shape are owned by [API error codes](error-codes.md) and [API error routing](error-routing.md). Staged-handle validation, promotion, body-read eligibility, and persistent linking are owned by [Artifact Storage](../storage-artifacts.md) and method owner documents.
 
@@ -124,4 +122,4 @@ Public error semantics and response routing for invalid source-field shape are o
 - [Artifact Storage](../storage-artifacts.md) for staging, promotion, persistent linking, and body-read lifecycle.
 - [API Value Sets](schema-value-sets.md) for `ArtifactInput.source_kind`, `redaction_state`, availability, and related values.
 - [API State Schemas](schema-state.md) for evidence summaries that mention `ArtifactRef`.
-- [Runtime Boundaries](../runtime-boundaries.md) and [Security](../security.md) for local access and non-claim boundaries.
+- [Runtime Boundaries](../runtime-boundaries.md) and [Security](../security.md) for runtime boundary and non-claim boundaries.

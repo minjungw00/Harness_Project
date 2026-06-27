@@ -34,7 +34,7 @@ Adjacent owners:
 Rejected response:
 - Public shape: `ToolRejectedResponse.errors[]` with `ToolError.code: ErrorCode`.
 - Meaning: The method did not proceed to the committed operation.
-- Condition: The failure is public transport, request, freshness, local-access, capability, or precondition rejection.
+- Condition: The failure is public transport, request, freshness, invocation-context, actor-source, operation-category, or precondition rejection.
 - State effect: No committed operation and no state change.
 
 <a id="error-vs-blocker-blocked-result"></a>
@@ -85,19 +85,19 @@ Result boundary:
 ### Precondition failure
 
 Condition:
-- Core, MCP, local access, surface capability, state lookup, Task identity, or a required precondition fails before commit.
+- Core, MCP, invocation context, actor-source/operation-category compatibility, state lookup, Task identity, or a required precondition fails before commit.
 
 Route:
 - `ToolRejectedResponse.errors[]`.
 
 State effect:
-- No records, replay rows, artifacts, events, `Write Authorization` consumption, close-state mutation, or state-version increment.
+- No records, replay rows, artifacts, events, `Write Check` consumption, close-state mutation, or state-version increment.
 
 <a id="rejected-state-or-idempotency-conflict"></a>
 ### State or idempotency conflict
 
 Condition:
-- `expected_state_version`, `WriteAuthorization.basis_state_version`, or idempotency request hash is stale or conflicting.
+- `expected_state_version`, `WriteCheck.basis_state_version`, or idempotency request hash is stale or conflicting.
 
 Route:
 - `ToolRejectedResponse.errors[]` with `STATE_VERSION_CONFLICT`.

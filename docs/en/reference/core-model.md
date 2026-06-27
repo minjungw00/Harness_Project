@@ -434,7 +434,7 @@ Close blockers:
 Close transition:
 
 - When no close blocker remains and the method owner permits the requested terminal path, the terminal transition may proceed through API-owned method behavior.
-- Rejected requests before close-readiness evaluation, stale state, local access failures, and public error precedence belong to API and error owners.
+- Rejected requests before close-readiness evaluation, stale state, invocation-context failures, and public error precedence belong to API and error owners.
 
 ## 11. Blockers, waivers, and residual risk
 

@@ -4,7 +4,7 @@
 
 이 참조 문서는 안정적인 적합성 시나리오 의미와 참조 기준을 정의합니다.
 
-적합성 시나리오는 이름 붙은 동작 기준입니다. API, 저장소, 보안, 범위, Core, 아티팩트, 접점 담당 문서가 권한 있는 사실로 정한 내용만 기준으로 평가할 수 있습니다.
+적합성 시나리오는 이름 붙은 동작 기준입니다. API, 저장소, 보안, 범위, Core, 아티팩트, Agent Connection 담당 문서가 권한 있는 사실로 정한 내용만 기준으로 평가할 수 있습니다.
 
 이 문서가 담당하는 항목은 아래와 같습니다.
 
@@ -16,7 +16,7 @@
 
 이 참조 문서는 인접 계약을 정의하지 않습니다.
 
-- API와 저장소: API 분기, 저장 효과, 접근 등급, 아티팩트 승격
+- API와 저장소: API 분기, 저장 효과, operation category, 아티팩트 승격
 - API 메서드 참조 예시: 메서드 안의 예시 페이로드와 준비 맥락
 - 보안과 닫기 준비 상태: 보안 보장, 닫기 준비 상태 동작
 - 구현: 구현 경로
@@ -49,7 +49,7 @@
 - 시나리오는 적합한 결과가 보존하거나, 거절하거나, 노출하거나, 바꾸지 않아야 하는 결과를 요약할 수 있습니다.
 
 허용되지 않는 것:
-- 시나리오는 자신이 인용하는 API, 저장소, 보안, 범위, 닫기 준비 상태, 아티팩트, 접점 계약을 다시 정의하면 안 됩니다.
+- 시나리오는 자신이 인용하는 API, 저장소, 보안, 범위, 닫기 준비 상태, 아티팩트, Agent Connection 계약을 다시 정의하면 안 됩니다.
 
 <a id="scenario-id-rules"></a>
 ### 시나리오 ID 규칙
@@ -128,7 +128,7 @@ API 메서드 예시는 자신이 설명하는 개념을 밝히기 위해 적합
 - 동작 전에 필요한 사실을 이름 붙입니다.
 
 예상 내용:
-- `Task`, Change Unit, 상태 버전, 접점, 담당 문서 참조, Core 상태, 저장소 행, `ArtifactRef`, 접점 기능 사실을 담습니다.
+- `Task`, Change Unit, 상태 버전, Agent Connection, 담당 문서 참조, Core 상태, 저장소 행, `ArtifactRef`, Agent Connection capability 사실을 담습니다.
 
 <a id="criterion-action"></a>
 ### 동작
@@ -174,7 +174,7 @@ API 메서드 예시는 자신이 설명하는 개념을 밝히기 위해 적합
 | 공통 응답 분기와 `dry_run` 미리보기 형태 | [API 코어 스키마](api/schema-core.md) |
 | 상태 요약, 차단 사유, 증거, 닫기 준비 상태 구조 | [API 상태 스키마](api/schema-state.md) |
 | `ArtifactRef`, `ArtifactInput`, `StagedArtifactHandle` 형태 | [API 아티팩트 스키마](api/schema-artifacts.md) |
-| `access_class` 값을 포함한 API 값 집합 | [API 값 집합](api/schema-value-sets.md) |
+| `operation_category` 값을 포함한 API 값 집합 | [API 값 집합](api/schema-value-sets.md) |
 | 공개 오류와 우선순위 | [API 오류 코드](api/error-codes.md), [API 오류 우선순위](api/error-precedence.md) |
 | 저장 효과, 효과 없음 분기, 상태 버전 효과 | [저장 효과](storage-effects.md) |
 | 아티팩트 스테이징, 승격, 지속 저장, 본문 읽기 생명주기 | [아티팩트 저장소](storage-artifacts.md) |
@@ -185,12 +185,12 @@ API 메서드 예시는 자신이 설명하는 개념을 밝히기 위해 적합
 
 아래 `scenario_id`는 작은 참조 기준입니다. 예시, 튜토리얼, 런타임 결과, 구현 계획도 아니고, API 예시가 반드시 따라야 하는 페이로드나 API 메서드 참조 예시가 함께 쓰는 축도 아닙니다. 정확한 분기, 저장, 접근, 아티팩트, 보안, 닫기 준비 상태 계약은 위 담당 문서 링크를 사용합니다.
 
-- `BASELINE-registered-surface-mismatch-blocks-mutation`
-  [등록된 접점 불일치](#scenario-baseline-registered-surface-mismatch-blocks-mutation)를 참고합니다.
-- `BASELINE-verified-local-surface-allows-owner-mutation`
-  [확인된 로컬 접점](#scenario-baseline-verified-local-surface-allows-owner-mutation)을 참고합니다.
-- `BASELINE-single-access-class-per-public-request`
-  [단일 접근 등급](#scenario-baseline-single-access-class-per-public-request)을 참고합니다.
+- `BASELINE-agent-connection-mismatch-blocks-mutation`
+  [Agent Connection 불일치](#scenario-baseline-agent-connection-mismatch-blocks-mutation)를 참고합니다.
+- `BASELINE-verified-agent-connection-allows-owner-mutation`
+  [확인된 Agent Connection](#scenario-baseline-verified-agent-connection-allows-owner-mutation)을 참고합니다.
+- `BASELINE-single-operation-category-per-public-request`
+  [단일 operation category](#scenario-baseline-single-operation-category-per-public-request)을 참고합니다.
 - `BASELINE-detective-display-capability-gated`
   [`detective` 표시](#scenario-baseline-detective-display-capability-gated)를 참고합니다.
 - `BASELINE-shaping-readiness-gap-blocks-or-asks`
@@ -205,26 +205,26 @@ API 메서드 예시는 자신이 설명하는 개념을 밝히기 위해 적합
   [민감 동작 승인 범위](#scenario-baseline-sensitive-approval-records-sensitive-action-scope)를 참고합니다.
 - `BASELINE-prepare-write-requires-compatible-scope-and-approval`
   [`prepare_write` 호환성](#scenario-baseline-prepare-write-requires-compatible-scope-and-approval)을 참고합니다.
-- `BASELINE-authorized-attempt-scope-product-file-write-only`
-  [`AuthorizedAttemptScope`](#scenario-baseline-authorized-attempt-scope-product-file-write-only)를 참고합니다.
-- `BASELINE-record-run-consumes-write-authorization-once`
-  [1회용 `Write Authorization`](#scenario-baseline-record-run-consumes-write-authorization-once)을 참고합니다.
+- `BASELINE-write-check-attempt-scope-product-file-write-only`
+  [`WriteCheckAttemptScope`](#scenario-baseline-write-check-attempt-scope-product-file-write-only)를 참고합니다.
+- `BASELINE-record-run-consumes-write-check-once`
+  [1회용 `Write Check`](#scenario-baseline-record-run-consumes-write-check-once)을 참고합니다.
 - `BASELINE-stage-artifact-transient-handle-only`
   [임시 스테이징 핸들](#scenario-baseline-stage-artifact-transient-handle-only)을 참고합니다.
 - `BASELINE-record-run-artifact-input-validation-order`
   [아티팩트 입력 검증 순서](#scenario-baseline-record-run-artifact-input-validation-order)를 참고합니다.
 - `BASELINE-record-run-promotes-staged-artifact-to-artifact-ref`
   [스테이징된 아티팩트 승격](#scenario-baseline-record-run-promotes-staged-artifact-to-artifact-ref)을 참고합니다.
-- `BASELINE-record-run-rejects-staged-artifact-surface-instance-mismatch`
-  [스테이징된 아티팩트 불일치](#scenario-baseline-record-run-rejects-staged-artifact-surface-instance-mismatch)를 참고합니다.
+- `BASELINE-record-run-rejects-staged-artifact-actor-source-mismatch`
+  [스테이징된 아티팩트 불일치](#scenario-baseline-record-run-rejects-staged-artifact-actor-source-mismatch)를 참고합니다.
 - `BASELINE-record-run-links-existing-artifact-without-registering-bytes`
   [기존 아티팩트 연결](#scenario-baseline-record-run-links-existing-artifact-without-registering-bytes)을 참고합니다.
 - `BASELINE-captured-artifact-rejected-in-baseline-scope`
   [캡처 아티팩트 거절](#scenario-baseline-captured-artifact-rejected-in-baseline-scope)을 참고합니다.
 - `BASELINE-close-task-complete-stale-state-version-rejected`
   [오래된 닫기 상태](#scenario-baseline-close-task-complete-stale-state-version-rejected)를 참고합니다.
-- `BASELINE-close-task-complete-stale-write-authorization-basis-rejected`
-  [오래된 `Write Authorization` 근거](#scenario-baseline-close-task-complete-stale-write-authorization-basis-rejected)를 참고합니다.
+- `BASELINE-close-task-complete-stale-write-check-basis-rejected`
+  [오래된 `Write Check` 근거](#scenario-baseline-close-task-complete-stale-write-check-basis-rejected)를 참고합니다.
 - `BASELINE-close-task-blocks-current-write-compatibility`
   [쓰기 호환성 차단](#scenario-baseline-close-task-blocks-current-write-compatibility)을 참고합니다.
 - `BASELINE-close-task-blocks-evidence-insufficient`
@@ -242,11 +242,11 @@ API 메서드 예시는 자신이 설명하는 개념을 밝히기 위해 적합
 - `BASELINE-close-task-supersede-one-state-version`
   [`supersede` 상태 버전](#scenario-baseline-close-task-supersede-one-state-version)을 참고합니다.
 
-<a id="scenario-baseline-registered-surface-mismatch-blocks-mutation"></a>
-### `BASELINE-registered-surface-mismatch-blocks-mutation`
+<a id="scenario-baseline-agent-connection-mismatch-blocks-mutation"></a>
+### `BASELINE-agent-connection-mismatch-blocks-mutation`
 
 기대 동작:
-- 상태 변경 전 로컬 접점이 등록 정보와 맞지 않습니다.
+- 상태 변경 전 로컬 Agent Connection이 등록 정보와 맞지 않습니다.
 
 담당 문서 링크:
 - [에이전트 통합](agent-integration.md)
@@ -254,22 +254,22 @@ API 메서드 예시는 자신이 설명하는 개념을 밝히기 위해 적합
 - [API 오류 처리 경로](api/error-routing.md)
 - [보안](security.md)
 
-<a id="scenario-baseline-verified-local-surface-allows-owner-mutation"></a>
-### `BASELINE-verified-local-surface-allows-owner-mutation`
+<a id="scenario-baseline-verified-agent-connection-allows-owner-mutation"></a>
+### `BASELINE-verified-agent-connection-allows-owner-mutation`
 
 기대 동작:
-- 확인된 로컬 접점은 담당 메서드 계약 안에서만 상태 변경 확인을 허용합니다.
+- 확인된 Agent Connection은 담당 메서드 계약 안에서만 상태 변경 확인을 허용합니다.
 
 담당 문서 링크:
 - [에이전트 통합](agent-integration.md)
 - [API 메서드 담당 문서 경로](api/methods.md#method-owner-routing-table)
 - [저장 효과](storage-effects.md)
 
-<a id="scenario-baseline-single-access-class-per-public-request"></a>
-### `BASELINE-single-access-class-per-public-request`
+<a id="scenario-baseline-single-operation-category-per-public-request"></a>
+### `BASELINE-single-operation-category-per-public-request`
 
 기대 동작:
-- 공개 API 요청 하나에는 요청 수준 `access_class` 하나만 있습니다.
+- 공개 API 요청 하나에는 요청 수준 `operation_category` 하나만 있습니다.
 
 담당 문서 링크:
 - [API 값 집합](api/schema-value-sets.md)
@@ -337,7 +337,7 @@ API 메서드 예시는 자신이 설명하는 개념을 밝히기 위해 적합
 ### `BASELINE-sensitive-approval-records-sensitive-action-scope`
 
 기대 동작:
-- 민감 동작 승인은 `Write Authorization`, 최종 수락과 분리됩니다.
+- 민감 동작 승인은 `Write Check`, 최종 수락과 분리됩니다.
 
 담당 문서 링크:
 - [Core 모델](core-model.md)
@@ -355,22 +355,22 @@ API 메서드 예시는 자신이 설명하는 개념을 밝히기 위해 적합
 - [Core 모델](core-model.md)
 - [보안](security.md)
 
-<a id="scenario-baseline-authorized-attempt-scope-product-file-write-only"></a>
-### `BASELINE-authorized-attempt-scope-product-file-write-only`
+<a id="scenario-baseline-write-check-attempt-scope-product-file-write-only"></a>
+### `BASELINE-write-check-attempt-scope-product-file-write-only`
 
 기대 동작:
-- `AuthorizedAttemptScope`는 제품 파일 쓰기 범위만 다룹니다.
+- `WriteCheckAttemptScope`는 제품 파일 쓰기 범위만 다룹니다.
 
 담당 문서 링크:
 - [Core 모델](core-model.md)
 - [쓰기 준비 메서드](api/method-prepare-write.md)
 - [API 판단 스키마](api/schema-judgment.md)
 
-<a id="scenario-baseline-record-run-consumes-write-authorization-once"></a>
-### `BASELINE-record-run-consumes-write-authorization-once`
+<a id="scenario-baseline-record-run-consumes-write-check-once"></a>
+### `BASELINE-record-run-consumes-write-check-once`
 
 기대 동작:
-- 호환되는 실행 기록은 맞는 `Write Authorization`을 한 번 소비합니다.
+- 호환되는 실행 기록은 맞는 `Write Check`을 한 번 소비합니다.
 
 담당 문서 링크:
 - [실행 기록 메서드](api/method-record-run.md)
@@ -410,8 +410,8 @@ API 메서드 예시는 자신이 설명하는 개념을 밝히기 위해 적합
 - [실행 기록 메서드](api/method-record-run.md)
 - [저장 효과](storage-effects.md)
 
-<a id="scenario-baseline-record-run-rejects-staged-artifact-surface-instance-mismatch"></a>
-### `BASELINE-record-run-rejects-staged-artifact-surface-instance-mismatch`
+<a id="scenario-baseline-record-run-rejects-staged-artifact-actor-source-mismatch"></a>
+### `BASELINE-record-run-rejects-staged-artifact-actor-source-mismatch`
 
 기대 동작:
 - 스테이징 핸들의 출처가 맞지 않으면 승격이 거절됩니다.
@@ -436,7 +436,7 @@ API 메서드 예시는 자신이 설명하는 개념을 밝히기 위해 적합
 ### `BASELINE-captured-artifact-rejected-in-baseline-scope`
 
 기대 동작:
-- 접점 자체 캡처 아티팩트 출처는 기준 범위 아티팩트 권한이 아닙니다.
+- Agent Connection 자체 캡처 아티팩트 출처는 기준 범위 아티팩트 권한이 아닙니다.
 
 담당 문서 링크:
 - [기준 범위](scope.md)
@@ -454,11 +454,11 @@ API 메서드 예시는 자신이 설명하는 개념을 밝히기 위해 적합
 - [상태 버전 충돌](api/error-precedence.md#state-conflict-behavior)
 - [저장 효과](storage-effects.md)
 
-<a id="scenario-baseline-close-task-complete-stale-write-authorization-basis-rejected"></a>
-### `BASELINE-close-task-complete-stale-write-authorization-basis-rejected`
+<a id="scenario-baseline-close-task-complete-stale-write-check-basis-rejected"></a>
+### `BASELINE-close-task-complete-stale-write-check-basis-rejected`
 
 기대 동작:
-- 닫기 관련 `Write Authorization` 근거가 오래됐으면 닫기 커밋 전에 실패합니다.
+- 닫기 관련 `Write Check` 근거가 오래됐으면 닫기 커밋 전에 실패합니다.
 
 담당 문서 링크:
 - [Task 닫기 메서드](api/method-close-task.md)

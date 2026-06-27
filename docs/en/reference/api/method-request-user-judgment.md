@@ -16,14 +16,14 @@ This document does not own:
 
 - common request envelope, response branch, dry-run, or rejected-response schema bodies
 - `UserJudgment`, option, context, answer payload, value-set, or status field definitions
-- Core user-owned judgment meaning, final acceptance meaning, residual-risk meaning, sensitive-action approval meaning, or `Write Authorization` meaning
+- Core user-owned judgment meaning, final acceptance meaning, residual-risk meaning, sensitive-action approval meaning, or `Write Check` meaning
 - storage record layouts, exact storage effects, public error code meaning, public error precedence, or shared response-branch routing
 
 ## Purpose
 
 `volicord.request_user_judgment` creates one pending `UserJudgment` for a focused user-owned judgment. It asks the user; the agent must not answer, infer, broaden, or decide the judgment for the user.
 
-The pending judgment is a request for a decision. It is not the decision itself, does not create evidence, does not change current scope, does not create `Write Authorization`, and does not close a `Task`.
+The pending judgment is a request for a decision. It is not the decision itself, does not create evidence, does not change current scope, does not create `Write Check`, and does not close a `Task`.
 
 When this method creates a pending judgment, Core derives a `JudgmentBasis` from current state. Callers do not submit `basis`, `scope_revision`, `close_basis_revision`, session-binding fields, access-class fields, verified actor context, machine action, resolution outcome, or current close-basis authority fields.
 
@@ -74,10 +74,10 @@ Nested owner links:
 
 The method requires:
 
-- server-derived `VerifiedSurfaceContext` with `access_class=core_mutation`
+- verified invocation context with `operation_category=agent_workflow`
 - a compatible same-project Task and optional Change Unit
 
-Local access failures, unreadable project or Task identity, and insufficient local capability reject before commit.
+Actor-source mismatches, operation-category mismatches, unreadable project or Task identity, and unsupported invocation contexts reject before commit.
 
 ## State version behavior
 
@@ -137,8 +137,8 @@ Returns `ToolRejectedResponse` for pre-commit failures such as:
 - unresolved prerequisite judgment
 - missing current close basis for final acceptance or residual-risk acceptance
 - missing or non-current residual-risk ID for residual-risk acceptance
-- local access failure
-- insufficient capability
+- actor-source or operation-category mismatch
+- unsupported invocation context
 - stale `expected_state_version`
 - validator failure
 
@@ -399,7 +399,7 @@ state:
       task_id: task_banner_001
       state_version: 52
   blocker_refs: []
-  write_authority_summary: null
+  write_check_summary: null
   evidence_summary: null
   close_state: null
   close_blockers: []

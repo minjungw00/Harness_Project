@@ -24,7 +24,7 @@ This document does not own:
 - state and current-position schemas; see [API State Schemas](schema-state.md)
 - artifact schemas; see [API Artifact Schemas](schema-artifacts.md)
 - user-owned judgment schemas; see [API Judgment Schemas](schema-judgment.md)
-- supported method names, `response_kind` values, `effect_kind` values, access classes, or other enum-like values; see [API Value Sets](schema-value-sets.md)
+- supported method names, `response_kind` values, `effect_kind` values, operation categories, or other enum-like values; see [API Value Sets](schema-value-sets.md)
 - public error codes, precedence, or error semantics; see [API error codes](error-codes.md) and [API error precedence](error-precedence.md)
 - storage records or effects; see [Storage Records](../storage-records.md) and [Storage Effects](../storage-effects.md)
 
@@ -65,7 +65,7 @@ Meaning:
 
 Does not imply:
 - It does not override narrower method-specific request rules.
-- It does not carry `actor_source`, `operation_category`, capability profile, verification basis, or other invocation provenance.
+- It does not carry `actor_source`, `operation_category`, verification basis or other invocation provenance.
 
 Owner links:
 - Method-specific request rules: method owner documents routed from [API Methods](methods.md).
@@ -136,7 +136,7 @@ Meaning:
 - Method-specific result fields belong only to the method result branch.
 
 Does not imply:
-- `ToolRejectedResponse` and `ToolDryRunResponse` do not carry result-only fields such as `task_ref`, `run_summary`, `staged_artifact_handle`, `write_authorization_ref`, `user_judgment_ref`, `decision`, or `close_state`.
+- `ToolRejectedResponse` and `ToolDryRunResponse` do not carry result-only fields such as `task_ref`, `run_summary`, `staged_artifact_handle`, `write_check_ref`, `user_judgment_ref`, `decision`, or `close_state`.
 
 Owner links:
 - supported `response_kind` and `effect_kind` values: [response and effect values](schema-value-sets.md#response-and-effect-values)

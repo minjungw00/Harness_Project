@@ -2,7 +2,7 @@
 
 This document owns the local `volicord` administrative and bootstrap CLI contract. The CLI initializes a `Volicord Runtime Home`, registers local projects, provides the local `User Channel` path for selected user-facing Core actions, manages Agent Connections, installs host configuration for supported coding-agent hosts, and verifies host connection state. These commands are not public Volicord API methods.
 
-It does not define public API method behavior, API schemas, access-class value meanings, storage record layout, security guarantees, Core authority semantics, or MCP stdio transport behavior.
+It does not define public API method behavior, API schemas, storage record layout, security guarantees, Core authority semantics, or MCP stdio transport behavior.
 
 ## Owns / does not own
 
@@ -21,7 +21,7 @@ This document owns:
 This document does not own:
 
 - public Volicord API methods; see [API Methods](api/methods.md)
-- Agent Connection, Connection Projects, actor provenance, and capability declaration meanings; see [Agent Integration](agent-integration.md)
+- Agent Connection, Connection Projects, connection mode, and actor provenance meanings; see [Agent Integration](agent-integration.md)
 - runtime data boundary meaning and `Product Repository` file-boundary exceptions; see [Runtime Boundaries](runtime-boundaries.md)
 - MCP process startup, stdio framing, wire behavior, response wrapping, preflight internals, and shutdown; see [MCP Transport](mcp-transport.md)
 - storage record layout, SQLite DDL, general storage migration definitions, Core authority semantics, and security guarantee meanings
@@ -92,7 +92,7 @@ Rules:
 <a id="user-interaction-commands"></a>
 ## User Channel commands
 
-`volicord user` commands provide a local CLI path for a human user to inspect task status and answer pending user judgments through the `User Channel`. They do not require a setup command, user-facing adapter registration, adapter identifiers, or local access grants. They do not create an Agent Connection, install MCP host configuration, or make an Agent Connection eligible to act as the user.
+`volicord user` commands provide a local CLI path for a human user to inspect task status and answer pending user judgments through the `User Channel`. They do not require a setup command, user-facing adapter registration, or adapter identifiers. They do not create an Agent Connection, install MCP host configuration, or make an Agent Connection eligible to act as the user.
 
 `volicord user status` shows user-oriented task status through `volicord.status` with `actor_source=local_user`, `operation_category=read`, and `verification_basis=cli_direct_user_channel`.
 
@@ -361,7 +361,7 @@ Rules:
 
 - `--allow-repository-write` is required for any command that writes, replaces, or removes project-scoped host configuration.
 - `--replace-managed` applies only to Volicord-managed content with matching ownership markers or managed fingerprints.
-- A broad shell approval, write approval, host trust decision, or sensitive-action approval is not a `Write Authorization` and does not substitute for the explicit administrative flag required by this CLI contract.
+- A broad shell approval, write approval, host trust decision, sensitive-action approval, or Write Check does not substitute for the explicit administrative flag required by this CLI contract.
 - Host trust, project trust, project MCP approval, OAuth, restart, or reload actions remain user-controlled host actions and cannot be supplied by the CLI.
 
 ## Project registration
@@ -385,7 +385,7 @@ Runtime location boundaries, including the distinction between `Product Reposito
 
 ## Administrative boundary
 
-The administrative CLI can initialize and register local resources. It does not create public Volicord API methods and does not by itself create Core authority, `Write Authorization`, evidence sufficiency, close readiness, user-owned judgment, acceptance, residual-risk acceptance, artifact authority, or security guarantees.
+The administrative CLI can initialize and register local resources. It does not create public Volicord API methods and does not by itself create Core authority, Write Check compatibility, evidence sufficiency, close readiness, user-owned judgment, acceptance, residual-risk acceptance, artifact authority, or security guarantees.
 
 Owner routes:
 

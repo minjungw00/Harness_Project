@@ -19,14 +19,14 @@ This document does not own:
 - common request envelope, response branch, dry-run, or rejected-response schema bodies
 - `UserJudgment`, `JudgmentRationale`, `RecordUserJudgmentPayload`, `SensitiveActionScope`, `AcceptedRiskInput`, value-set, or status field definitions
 - `ProjectContinuityRecord` or `ProjectContinuitySummary` field definitions
-- Core user-owned judgment meaning, final acceptance meaning, residual-risk meaning, sensitive-action approval meaning, or `Write Authorization` meaning
+- Core user-owned judgment meaning, final acceptance meaning, residual-risk meaning, sensitive-action approval meaning, or `Write Check` meaning
 - storage record layouts, exact storage effects, public error code meaning, public error precedence, or shared response-branch routing
 
 ## Purpose
 
 `volicord.record_user_judgment` records the user's answer to one existing pending `UserJudgment`.
 
-The method updates the addressed pending judgment according to the user's answer. It does not broaden the answer into unrelated approval, current scope expansion, final acceptance, residual-risk acceptance, sensitive-action approval, or `Write Authorization`.
+The method updates the addressed pending judgment according to the user's answer. It does not broaden the answer into unrelated approval, current scope expansion, final acceptance, residual-risk acceptance, sensitive-action approval, or `Write Check`.
 
 Before recording the answer, Core checks the pending judgment's `JudgmentBasis` against current state. A stale, superseded, incompatible, or invalid stored basis cannot be answered successfully.
 
@@ -121,7 +121,7 @@ Returns `RecordUserJudgmentResult` with:
 
 The method commits the addressed judgment as `status=resolved` when an answer is recorded successfully. The recorded `machine_action` and `resolution_outcome` are copied from the selected option and must match the option's action/outcome mapping. The recorded `rationale` is returned inside `user_judgment.resolution` as descriptive metadata.
 
-The result updates only covered blockers, judgment-dependent summaries, and method-selected project continuity records. It does not create unrelated approvals, evidence, scope updates, `Write Authorization`, close state, final acceptance, residual-risk acceptance, sensitive approval, or cancellation authority beyond an accepted, compatible authority-bearing judgment itself.
+The result updates only covered blockers, judgment-dependent summaries, and method-selected project continuity records. It does not create unrelated approvals, evidence, scope updates, `Write Check`, close state, final acceptance, residual-risk acceptance, sensitive approval, or cancellation authority beyond an accepted, compatible authority-bearing judgment itself.
 
 ## Method result fields
 
@@ -157,7 +157,7 @@ Returns `ToolRejectedResponse` for pre-commit failures, including:
 - stale, superseded, incompatible, or invalid stored judgment basis
 - answer incompatible with the pending judgment
 - missing or non-current residual-risk `risk_id`
-- local access failure
+- actor-source or operation-category mismatch
 - validator failure
 
 Public error code meaning, precedence, and rejected-response routing are owned by the error documents linked below.
@@ -375,7 +375,7 @@ state:
   shaping_readiness: null
   pending_user_judgment_refs: []
   blocker_refs: []
-  write_authority_summary: null
+  write_check_summary: null
   evidence_summary: null
   close_state: null
   close_blockers: []

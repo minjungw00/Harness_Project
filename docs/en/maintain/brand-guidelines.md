@@ -56,7 +56,7 @@ into operational Reference contracts, error messages, or routine CLI output.
   transport, and response-wrapping behavior belongs to [MCP Transport](../reference/mcp-transport.md).
 - `Volicord Runtime Home` is a product label. Exact runtime location and
   repository-boundary behavior belongs to [Runtime Boundaries](../reference/runtime-boundaries.md).
-- Domain concepts such as `Task`, Change Unit, `Write Authorization`, final
+- Domain concepts such as `Task`, Change Unit, `Write Check`, final
   acceptance, residual-risk acceptance, and close readiness must not be given
   decorative Volicord-derived names.
 
@@ -79,7 +79,7 @@ Do not describe Volicord as making user-owned judgments. Volicord can help
 record, route, preserve, or show the boundary where the user's judgment is
 needed, but the judgment remains user-owned.
 
-Do not merge test success, write authorization, final acceptance, and
+Do not merge test success, write approval, final acceptance, and
 residual-risk acceptance into one generic approval. Keep those concepts
 separate and route exact meaning to [Core Model](../reference/core-model.md) and
 the relevant API owners.
@@ -125,9 +125,9 @@ their contracts into brand material:
 | Question | Owner |
 |---|---|
 | Product scope and supported baseline boundaries | [Scope](../reference/scope.md) |
-| Core authority concepts, user-owned judgment, evidence, `Write Authorization`, acceptance, residual risk, and close readiness | [Core Model](../reference/core-model.md) |
+| Core authority concepts, user-owned judgment, evidence, `Write Check`, acceptance, residual risk, and close readiness | [Core Model](../reference/core-model.md) |
 | Runtime locations, product repository boundaries, Runtime Home boundaries, and component/location separation | [Runtime Boundaries](../reference/runtime-boundaries.md) |
-| Security wording, guarantee levels, local-access assumptions, and explicit non-guarantees | [Security](../reference/security.md) |
+| Security wording, guarantee levels, invocation-context assumptions, and explicit non-guarantees | [Security](../reference/security.md) |
 | Administrative CLI commands, arguments, output, host setup, and command/API boundary | [Administrative CLI](../reference/admin-cli.md) |
 | Local MCP adapter process startup, stdio transport, protocol handling, and response wrapping | [MCP Transport](../reference/mcp-transport.md) |
 | Documentation owner routing and metadata | [Documentation Policy](documentation-policy.md), [doc-index.yaml](../../doc-index.yaml) |

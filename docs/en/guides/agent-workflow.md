@@ -13,9 +13,8 @@ This guide is workflow guidance. It is not a connector contract, API schema, tem
 
 Owner links:
 
-- Exact connector behavior: [Agent Integration Reference](../reference/agent-integration.md)
+- Exact Agent Connection behavior: [Agent Connection Reference](../reference/agent-integration.md)
 - Host setup and multi-repository operation: [Agent Host Setup](agent-host-setup.md) and [Multi-Repository Agent Setup](multi-repository-agent-setup.md)
-- Interface-specific presentation: [Surface Recipes](surface-recipes.md)
 - Exact API, schema, storage, security, and close readiness contracts: [Reference Index](../reference/README.md)
 
 <a id="operating-loop"></a>
@@ -309,11 +308,10 @@ When the task is Korean-facing, preserve exact identifiers such as API names, sc
 
 Agent authors and operators should use this path:
 
-[AGENTS.md](../../../AGENTS.md) -> [doc-index.yaml](../../doc-index.yaml) -> this guide -> [Agent Integration Reference](../reference/agent-integration.md)
+[AGENTS.md](../../../AGENTS.md) -> [doc-index.yaml](../../doc-index.yaml) -> this guide -> [Agent Connection Reference](../reference/agent-integration.md)
 
 Then use:
 
-- [Surface Recipes](surface-recipes.md) for CLI, IDE/editor, chat, and local MCP presentation choices
 - [Agent Host Setup](agent-host-setup.md) for connecting, verifying, and removing Codex or Claude Code Agent Connections
 - [Multi-Repository Agent Setup](multi-repository-agent-setup.md) for user-scope Agent Connections that allow more than one `Product Repository`
 - [Reference Index](../reference/README.md) only when the next action needs an exact owner contract

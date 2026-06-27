@@ -24,7 +24,7 @@
 - 상태와 현재 위치 스키마: [API 상태 스키마](schema-state.md)
 - 아티팩트 스키마: [API 아티팩트 스키마](schema-artifacts.md)
 - 사용자 소유 판단 스키마: [API 판단 스키마](schema-judgment.md)
-- 지원되는 메서드 이름, `response_kind` 값, `effect_kind` 값, 접근 등급, 그 밖의 enum 형태 값: [API 값 집합](schema-value-sets.md)
+- 지원되는 메서드 이름, `response_kind` 값, `effect_kind` 값, operation category 값, 그 밖의 enum 형태 값: [API 값 집합](schema-value-sets.md)
 - 공개 오류 코드, 우선순위, 오류 의미: [API 오류 코드](error-codes.md), [API 오류 우선순위](error-precedence.md)
 - 저장소 기록과 효과: [저장소 기록](../storage-records.md), [저장 효과](../storage-effects.md)
 
@@ -65,7 +65,7 @@
 
 의미하지 않는 것:
 - 더 좁은 메서드별 요청 규칙을 덮어쓰지 않습니다.
-- `actor_source`, `operation_category`, 역량 프로필, 검증 근거, 그 밖의 호출 출처를 담지 않습니다.
+- `actor_source`, `operation_category`, connection capability, 검증 근거, 그 밖의 호출 출처를 담지 않습니다.
 
 담당 문서 링크:
 - 메서드별 요청 규칙: [API 메서드](methods.md)가 안내하는 메서드 담당 문서.
@@ -136,7 +136,7 @@ ToolDryRunResponse:
 - 메서드별 결과 필드는 그 메서드 결과 분기에만 둡니다.
 
 의미하지 않는 것:
-- `ToolRejectedResponse`와 `ToolDryRunResponse`는 `task_ref`, `run_summary`, `staged_artifact_handle`, `write_authorization_ref`, `user_judgment_ref`, `decision`, `close_state` 같은 결과 전용 필드를 담지 않습니다.
+- `ToolRejectedResponse`와 `ToolDryRunResponse`는 `task_ref`, `run_summary`, `staged_artifact_handle`, `write_check_ref`, `user_judgment_ref`, `decision`, `close_state` 같은 결과 전용 필드를 담지 않습니다.
 
 담당 문서 링크:
 - 지원되는 `response_kind`와 `effect_kind` 값: [응답과 효과 값](schema-value-sets.md#response-and-effect-values)

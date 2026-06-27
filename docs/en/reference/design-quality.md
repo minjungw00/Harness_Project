@@ -2,7 +2,7 @@
 
 ## 1. Owns / does not own
 
-This reference owns the baseline design-quality routing boundary. The boundary makes quality observations legible as routes to existing judgment, evidence, scope, residual-risk, surface-capability, or close-readiness owners.
+This reference owns the baseline design-quality routing boundary. The boundary makes quality observations legible as routes to existing judgment, evidence, scope, residual-risk, connection-capability, or close-readiness owners.
 
 Design-quality observations route to judgment, evidence, or scope owners when they identify:
 
@@ -17,7 +17,7 @@ It owns:
 
 - the baseline design-quality role as judgment-routing and evidence/scope reference
 - how design-quality observations route to `judgment_kind=product_decision`, `judgment_kind=technical_decision`, and `judgment_kind=scope_decision`
-- how design-quality observations point to existing supported blocker categories such as `scope`, `user_judgment`, `evidence`, `artifact_availability`, `residual_risk_visibility`, or `surface_capability`
+- how design-quality observations point to existing supported blocker categories such as `scope`, `user_judgment`, `evidence`, `artifact_availability`, `residual_risk_visibility`, or `connection_capability`
 - the baseline design-quality severity boundary: severity-like wording is advisory triage unless the relevant owner contract separately requires action
 - the boundary between design-quality observations, any supported `ValidatorResult.validator_id` value, and out-of-scope quality-policy material
 
@@ -39,7 +39,7 @@ This reference does not define neighboring authority:
 - API, storage, and schemas: API method behavior, method-specific blocker production, storage effects, SQLite DDL, persisted tables, or supported validator families
 - evidence and reporting: evidence authority, QA results, operations reports, conformance catalogs, projection authority, rendered reports, or template bodies
 
-Reference text documents the design-quality boundary and owner routing. It does not create Volicord runtime state, user-owned judgment, `Write Authorization`, sensitive-action approval, evidence, QA, final acceptance, residual-risk acceptance, or close-readiness state.
+Reference text documents the design-quality boundary and owner routing. It does not create Volicord runtime state, user-owned judgment, `Write Check`, sensitive-action approval, evidence, QA, final acceptance, residual-risk acceptance, or close-readiness state.
 
 ## 2. Baseline design-quality role
 
@@ -54,7 +54,7 @@ A design-quality finding can do only these things in the baseline:
 | scope boundary change | See [Scope boundary change](#design-quality-scope-boundary-change) |
 | missing close-relevant support | See [Missing close-relevant support](#design-quality-missing-close-relevant-support) |
 | residual risk visibility | See [Residual risk visibility](#design-quality-residual-risk-visibility) |
-| surface capability gap | See [Surface capability gap](#design-quality-surface-capability-gap) |
+| connection capability gap | See [Connection capability gap](#design-quality-connection-capability-gap) |
 | advisory severity | See [Advisory severity](#design-quality-advisory-severity) |
 | focused next action | See [Focused next action](#design-quality-focused-next-action) |
 | owner gap | See [Owner gap](#design-quality-no-applicable-owner-path) |
@@ -65,7 +65,7 @@ Baseline owner-boundary rules:
 |---|---|
 | Independent close authority | A design-quality finding does not automatically become a close-readiness blocker, close category, product acceptance gate, scope override, evidence rule, or guarantee. |
 | Evidence and risk | Evidence requirements, final acceptance, residual-risk visibility, and residual-risk acceptance affect close only when the Core evidence authority or another relevant reference contract defines that requirement or effect. |
-| Judgment and authorization | A finding does not replace user-owned judgment, `Write Authorization`, sensitive-action approval, final acceptance, residual-risk acceptance, or required evidence. |
+| Judgment and authorization | A finding does not replace user-owned judgment, `Write Check`, sensitive-action approval, final acceptance, residual-risk acceptance, or required evidence. |
 | Severity | Severity labels are advisory triage; they do not override API, storage, security, scope, or close-readiness owners. |
 | Focused action | A next action must stay limited to what the relevant owner contract requires; documentation-routing convenience cannot expand it. |
 | Owner gap | An owner gap means the required owner document or contract is absent or unclear. It does not make a route or document path a product authority. |
@@ -132,14 +132,14 @@ Route:
 Close effect:
 - Affects close only when the residual-risk visibility or residual-risk acceptance contract defines the dependency.
 
-<a id="design-quality-surface-capability-gap"></a>
-### Surface capability gap
+<a id="design-quality-connection-capability-gap"></a>
+### Connection capability gap
 
 Condition:
-- The connected surface cannot honestly support the claimed operation or guarantee.
+- The Agent Connection cannot honestly support the claimed operation or guarantee.
 
 Route:
-- Use `CloseReadinessBlocker.category=surface_capability`, `CAPABILITY_INSUFFICIENT`, or a lower guarantee display through the relevant capability and API error contracts.
+- Use `CloseReadinessBlocker.category=connection_capability`, `CAPABILITY_INSUFFICIENT`, or a lower guarantee display through the relevant capability and API error contracts.
 
 Close effect:
 - Affects close only when the relevant capability or API error contract defines the effect.
@@ -203,7 +203,7 @@ A design-quality observation has a baseline product effect only when the relevan
 | scope boundary change needed | See [Scope boundary route](#design-quality-route-scope-boundary) |
 | close-relevant support missing | See [Evidence route](#design-quality-route-evidence) |
 | residual risk matters to close | See [Residual-risk route](#design-quality-route-residual-risk) |
-| surface capability cannot support claim | See [Surface capability route](#design-quality-route-surface-capability) |
+| connection capability cannot support claim | See [Connection capability route](#design-quality-route-connection-capability) |
 
 <a id="design-quality-route-product-direction"></a>
 ### Undecided product direction
@@ -268,14 +268,14 @@ Route:
 Close effect:
 - Affects close only when the applicable residual-risk contract defines the dependency.
 
-<a id="design-quality-route-surface-capability"></a>
-### Surface capability route
+<a id="design-quality-route-connection-capability"></a>
+### Connection capability route
 
 Condition:
-- The connected surface cannot honestly support the claimed operation or guarantee.
+- The Agent Connection cannot honestly support the claimed operation or guarantee.
 
 Route:
-- Use `CloseReadinessBlocker.category=surface_capability`, `CAPABILITY_INSUFFICIENT`, or a lower guarantee display through the relevant capability and API error contracts.
+- Use `CloseReadinessBlocker.category=connection_capability`, `CAPABILITY_INSUFFICIENT`, or a lower guarantee display through the relevant capability and API error contracts.
 
 Close effect:
 - Affects close only when the applicable capability or API error contract defines the effect.
@@ -478,7 +478,7 @@ Close effect:
 
 ## 7. Validator ID boundary
 
-Validator IDs are reporting labels. They do not create Core invariants, product gates, close blockers, waivers, evidence records, user judgments, `Write Authorization`, final acceptance, or residual-risk acceptance.
+Validator IDs are reporting labels. They do not create Core invariants, product gates, close blockers, waivers, evidence records, user judgments, `Write Check`, final acceptance, or residual-risk acceptance.
 
 `ValidatorResult` shape is owned by [API State Schemas](api/schema-state.md). Severity-like values and the boundary for any supported stable `ValidatorResult.validator_id` value are owned by [API Value Sets](api/schema-value-sets.md).
 

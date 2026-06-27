@@ -37,8 +37,8 @@
 | `BASELINE_STALE` | [`BASELINE_STALE`](#errorcode-baseline-stale) |
 | `SCOPE_REQUIRED` | [`SCOPE_REQUIRED`](#errorcode-scope-required) |
 | `SCOPE_VIOLATION` | [`SCOPE_VIOLATION`](#errorcode-scope-violation) |
-| `WRITE_AUTHORIZATION_REQUIRED` | [`WRITE_AUTHORIZATION_REQUIRED`](#errorcode-write-authorization-required) |
-| `WRITE_AUTHORIZATION_INVALID` | [`WRITE_AUTHORIZATION_INVALID`](#errorcode-write-authorization-invalid) |
+| `WRITE_CHECK_REQUIRED` | [`WRITE_CHECK_REQUIRED`](#errorcode-write-check-required) |
+| `WRITE_CHECK_INVALID` | [`WRITE_CHECK_INVALID`](#errorcode-write-check-invalid) |
 | `APPROVAL_DENIED` | [`APPROVAL_DENIED`](#errorcode-approval-denied) |
 | `APPROVAL_EXPIRED` | [`APPROVAL_EXPIRED`](#errorcode-approval-expired) |
 | `APPROVAL_REQUIRED` | [`APPROVAL_REQUIRED`](#errorcode-approval-required) |
@@ -80,7 +80,7 @@
 - 공개 최신성 또는 멱등성 충돌이 있습니다. 오래된 `expected_state_version`은 요청 상태 형태입니다.
 
 참고:
-- 오래된 `WriteAuthorization.basis_state_version`과 멱등 요청 해시 충돌은 [상태 버전 충돌](error-precedence.md#state-conflict-behavior)에서 다룹니다.
+- 오래된 `WriteCheck.basis_state_version`과 멱등 요청 해시 충돌은 [상태 버전 충돌](error-precedence.md#state-conflict-behavior)에서 다룹니다.
 
 <a id="errorcode-mcp-unavailable"></a>
 ### `MCP_UNAVAILABLE`
@@ -89,7 +89,7 @@
 - `ToolRejectedResponse.errors[]`
 
 조건:
-- 필요한 Core, MCP, 저장소, 타입이 지정된 담당 상태, 접점 도달 가능성을 사용할 수 없습니다. 여기에는 공개 메서드가 권한, 생명주기, 범위, 증거, 완료, 닫기 준비 상태, 쓰기 호환성을 평가하는 데 필요한 지속 타입 지정 담당 상태가 손상되었거나 읽을 수 없는 경우가 포함됩니다.
+- 필요한 Core, MCP, 저장소, 타입이 지정된 담당 상태, Agent Connection 도달 가능성을 사용할 수 없습니다. 여기에는 공개 메서드가 권한, 생명주기, 범위, 증거, 완료, 닫기 준비 상태, 쓰기 호환성을 평가하는 데 필요한 지속 타입 지정 담당 상태가 손상되었거나 읽을 수 없는 경우가 포함됩니다.
 
 <a id="errorcode-local-access-mismatch"></a>
 ### `LOCAL_ACCESS_MISMATCH`
@@ -98,7 +98,7 @@
 - `ToolRejectedResponse.errors[]`
 
 조건:
-- 도달 가능한 로컬 접근이 등록된 전송 경로, 세션, 바인딩, 프로젝트, 접점 인스턴스와 맞지 않거나 접근이 철회되었습니다.
+- 확인된 호출 맥락, connection 바인딩, 프로젝트 라우팅, Product Repository 경로 경계, 또는 actor-source/operation-category 호환성이 요청 동작과 맞지 않습니다.
 
 <a id="errorcode-no-active-task"></a>
 ### `NO_ACTIVE_TASK`
@@ -149,27 +149,27 @@
 조건:
 - 의도했거나 관찰된 경로 또는 민감 범주가 현재 적용 범위나 저장된 승인 범위를 넘었습니다.
 
-<a id="errorcode-write-authorization-required"></a>
-### `WRITE_AUTHORIZATION_REQUIRED`
+<a id="errorcode-write-check-required"></a>
+### `WRITE_CHECK_REQUIRED`
 
 사용 위치:
 - `ToolRejectedResponse.errors[]`
 
 조건:
-- 쓰기 가능한 실행 기록에 필요한 `Write Authorization`이 없습니다.
+- 쓰기 가능한 실행 기록에 필요한 `Write Check`이 없습니다.
 
-<a id="errorcode-write-authorization-invalid"></a>
-### `WRITE_AUTHORIZATION_INVALID`
+<a id="errorcode-write-check-invalid"></a>
+### `WRITE_CHECK_INVALID`
 
 사용 위치:
 - `ToolRejectedResponse.errors[]`
 
 조건:
-- 제공된 `Write Authorization`이 만료, 철회, 소비, 또는 버전 외 사유로 비호환입니다.
+- 제공된 `Write Check`이 만료, 철회, 소비, 또는 버전 외 사유로 비호환입니다.
 
 참고:
-- 만료된 `Write Authorization` 사용은 `ToolError.details.authorization_reason=expired`와 함께 이 코드를 유지합니다.
-- 오래된 `WriteAuthorization.basis_state_version`은 이 코드가 아니라 `STATE_VERSION_CONFLICT`로 경로가 정해집니다.
+- 만료된 `Write Check` 사용은 `ToolError.details.write_check_reason=expired`와 함께 이 코드를 유지합니다.
+- 오래된 `WriteCheck.basis_state_version`은 이 코드가 아니라 `STATE_VERSION_CONFLICT`로 경로가 정해집니다.
 
 <a id="errorcode-approval-denied"></a>
 ### `APPROVAL_DENIED`
@@ -239,7 +239,7 @@
 - 담당 문서가 정의한 결과 경로
 
 조건:
-- 접점은 인식되었지만 필요한 접근 등급, 관찰, 캡처, 보장 지원, 지원 동작이 없습니다.
+- 호출 맥락은 인식되었지만 요청한 동작, 관찰, 캡처, 보장 표시, 또는 지원 동작을 그 맥락에서 사용할 수 없습니다.
 
 <a id="errorcode-evidence-insufficient"></a>
 ### `EVIDENCE_INSUFFICIENT`

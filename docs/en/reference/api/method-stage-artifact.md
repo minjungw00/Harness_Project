@@ -69,11 +69,11 @@ Requests that fail these admission requirements use the existing rejected-result
 
 Requires:
 
-- server-derived `VerifiedSurfaceContext` with `access_class=artifact_registration`
+- verified invocation context with `operation_category=agent_workflow`
 - compatible `project_id` and `task_id`
 - `manual_artifact_attachment_supported=true`
 
-A server records `created_by_surface_id` and `created_by_surface_instance_id` from the derived `VerifiedSurfaceContext`. The caller does not provide those fields as authority.
+A server records `created_by_actor_source` from the verified invocation context. The caller does not provide that field as authority.
 
 ## State version behavior
 
@@ -115,7 +115,7 @@ The result contains a transient handle, not a persistent `ArtifactRef`.
 There is no committed blocked branch.
 
 - Invalid staging requests are rejected before any Core mutation.
-- Staging availability or capability problems do not create blockers.
+- Staging availability or invocation-context problems do not create blockers.
 
 ## Rejected result
 
@@ -125,9 +125,9 @@ Returns `ToolRejectedResponse` for:
 - checksum or size mismatch
 - unsafe artifact input
 - unsupported redaction state
-- unavailable Core or local surface
-- local access mismatch
-- insufficient artifact registration capability
+- unavailable Core or invocation context
+- actor-source or operation-category mismatch
+- unsupported artifact staging invocation
 
 Public error code meaning, precedence, and rejected-response routing are owned by the error documents linked below.
 
@@ -183,8 +183,7 @@ staged_artifact_handle:
   handle_id: staged_trace_log_001
   project_id: proj_trace_001
   task_id: task_trace_001
-  created_by_surface_id: surface_artifact
-  created_by_surface_instance_id: surface_instance_trace_01
+  created_by_actor_source: agent_connection:conn_artifact
   content_type: text/plain
   sha256: sha256:example-trace
   size_bytes: 42
@@ -198,6 +197,6 @@ expires_at: "<future-expiration-timestamp>"
 
 - Request envelope, response branches, and dry-run summaries: [API Schema Core](schema-core.md).
 - `StagedArtifactHandle`, `ArtifactInput`, and `ArtifactRef`: [API Artifact Schemas](schema-artifacts.md).
-- Supported artifact values and access classes: [API Value Sets](schema-value-sets.md).
+- Supported artifact values and operation categories: [API Value Sets](schema-value-sets.md#operation-category-values).
 - Public errors, precedence, and rejected-response routing: [API error codes](error-codes.md), [API error precedence](error-precedence.md), and [API error routing](error-routing.md).
 - Persistence effects and artifact lifecycle: [Storage Effects](../storage-effects.md) and [Artifact Storage](../storage-artifacts.md).

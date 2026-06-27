@@ -1,6 +1,6 @@
 # Projection and template display boundaries
 
-This document owns the distinction between authoritative Volicord records and read-only projected, status, or template views. A `Projection` is a view or rendered state surface; it does not create authority. Current rendered body guidance, display phrasing, and user-facing labels live in [Template Bodies](template-bodies.md).
+This document owns the distinction between authoritative Volicord records and read-only projected, status, or template views. A `Projection` is a view or rendered state view; it does not create authority. Current rendered body guidance, display phrasing, and user-facing labels live in [Template Bodies](template-bodies.md).
 
 ## Owns / Does not own
 
@@ -18,7 +18,7 @@ This document does not own:
 - source-of-truth Core state, user-owned judgment, evidence, acceptance decisions, residual-risk decisions, or close-readiness state; see [Core Model](core-model.md)
 - storage records, artifact records, or storage effects; see storage owners through [Reference Index](README.md)
 - public API schemas or method behavior; see API owners through [Reference Index](README.md)
-- surface registration, current surface context, or capability declarations; see [Agent Integration](agent-integration.md)
+- Agent Connection registration, current connection context, or connection capability declarations; see [Agent Integration](agent-integration.md)
 
 ## Authority boundary
 
@@ -28,9 +28,9 @@ Projected, status, and template views are read-only display. They may quote owne
 
 ## Views cannot create authority
 
-A rendered label, status badge, Markdown section, projection, template body, chat summary, surface output, or agent context packet cannot by itself:
+A rendered label, status badge, Markdown section, projection, template body, chat summary, rendered output, or agent context packet cannot by itself:
 
-- create `Write Authorization`
+- create `Write Check`
 - create evidence or a persistent `ArtifactRef`
 - satisfy verification, QA, evidence, acceptance, or other gates
 - create final acceptance or accept residual risk
@@ -67,4 +67,4 @@ Rendered labels may refer to semantic owners to help readers understand owner re
 - [Template Bodies](template-bodies.md) owns current rendered body guidance, display phrasing, and user-facing labels.
 - [Core Model](core-model.md) owns Core authority, user-owned judgment, close readiness, final acceptance, and residual-risk boundaries.
 - [Reference Index](README.md) routes API, storage, artifact, and security owner questions.
-- [Agent Integration](agent-integration.md) owns surface registration, current surface context, and capability declarations.
+- [Agent Integration](agent-integration.md) owns Agent Connection registration, current connection context, and connection capability declarations.

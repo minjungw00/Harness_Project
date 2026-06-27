@@ -1,35 +1,20 @@
 # Installation
 
-This tutorial prepares the Volicord executables for first host setup. It
-covers choosing an executable source, verifying `volicord` and `volicord-mcp`, and
-recognizing when the selected binaries are ready for [Quickstart](quickstart.md).
-It does not define package-manager distribution, operating-system support,
-public API behavior, storage effects, `Product Repository` registration, host
-trust, or MCP wire behavior.
+This tutorial prepares the Volicord executables for first host setup. It covers choosing an executable source, verifying `volicord` and `volicord-mcp`, and recognizing when the selected binaries are ready for [Quickstart](quickstart.md).
+
+It does not define public API behavior, storage effects, `Product Repository` registration, host trust, or MCP wire behavior.
 
 ## Audience, Goal, And Completion
 
-Audience: first-time users, operators, or implementers who need a working local
-`volicord` administrative CLI and `volicord-mcp` MCP adapter before connecting an
-agent host.
+Audience: first-time users, operators, or implementers who need a working local `volicord` administrative CLI and `volicord-mcp` MCP adapter before connecting an agent host.
 
-Goal: select either a source-build output directory or a separately installed
-executable directory, then prove that both executables can run from the same
-POSIX-style shell.
+Goal: select either a source-build output directory or a separately installed executable directory, then prove that both executables can run from the same POSIX-style shell.
 
-Completion state: `VOLICORD_BIN` names one absolute directory containing
-executable `volicord` and `volicord-mcp` files, and the version/help checks below
-all succeed. That means the executables are ready for host setup. It does not
-mean a `Volicord Runtime Home`, `Product Repository`, or host configuration has
-been created.
+Completion state: `VOLICORD_BIN` names one absolute directory containing executable `volicord` and `volicord-mcp` files, and the version/help checks below all succeed. That means the executables are ready for Agent Connection setup. It does not mean a `Volicord Runtime Home`, `Product Repository`, or host configuration has been created.
 
 ## Prerequisites
 
-Read [System Requirements](../reference/system-requirements.md) before choosing
-a path. The command examples on this page use POSIX-style shell syntax:
-`export`, `$(pwd)`, quoted variable expansion, inline `PATH=...`, and `test -x`.
-If your shell cannot run that syntax, translate the examples yourself and verify
-each translated command before continuing.
+Read [System Requirements](../reference/system-requirements.md) before choosing a path. The command examples on this page use POSIX-style shell syntax: `export`, `$(pwd)`, quoted variable expansion, inline `PATH=...`, and `test -x`.
 
 Use one of these setup paths:
 
@@ -38,8 +23,7 @@ Use one of these setup paths:
 | Source build | You have this repository checkout and want to build current workspace executables. | Rust 1.85 or newer with Cargo is available, and Cargo can resolve workspace dependencies. |
 | Separately installed executables | You already have a Volicord installation directory. | One absolute directory contains both `volicord` and `volicord-mcp`. |
 
-For the next setup stage, also have a local `Product Repository`, a separate
-`Volicord Runtime Home`, and a supported host path such as Codex or Claude Code.
+For the next setup stage, also have a local `Product Repository`, a separate `Volicord Runtime Home`, and a supported host path such as Codex or Claude Code.
 
 ## Path A: Build From Source
 
@@ -52,8 +36,7 @@ cargo --version
 rustc --version
 ```
 
-If either command is unavailable, or if the selected Rust compiler is older than
-1.85, stop and fix the toolchain before building.
+If either command is unavailable, or if the selected Rust compiler is older than 1.85, stop and fix the toolchain before building.
 
 For a debug build:
 
@@ -69,21 +52,17 @@ cargo build --release -p volicord-cli -p volicord-mcp
 export VOLICORD_BIN="$(pwd)/target/release"
 ```
 
-Choose one build output for the rest of the shell session. The Cargo package
-names are `volicord-cli` and `volicord-mcp`; the executable names are `volicord`
-and `volicord-mcp`.
+Choose one build output for the rest of the shell session. The Cargo package names are `volicord-cli` and `volicord-mcp`; the executable names are `volicord` and `volicord-mcp`.
 
 ## Path B: Select Installed Executables
 
-Use this path when the executables were installed separately from the source
-checkout:
+Use this path when the executables were installed separately from the source checkout:
 
 ```sh
 export VOLICORD_BIN="/absolute/path/to/installed/bin"
 ```
 
-Replace `/absolute/path/to/installed/bin` with the real absolute directory that
-contains both executables. Do not copy the example value literally.
+Replace `/absolute/path/to/installed/bin` with the real absolute directory that contains both executables. Do not copy the example value literally.
 
 ## Verify The Selected Directory
 
@@ -99,37 +78,19 @@ test -x "$VOLICORD_BIN/volicord-mcp"
 "$VOLICORD_BIN/volicord-mcp" --help
 ```
 
-The version commands print `volicord <version>` and `volicord-mcp <version>`. The
-help commands should show the `volicord agent` command family and the
-integration-bound `volicord-mcp --integration <integration_id>` process usage.
+The version commands print `volicord <version>` and `volicord-mcp <version>`. The help commands should show the `volicord agent connect` command family and `volicord-mcp --connection <connection_id>` process usage.
 
-`VOLICORD_BIN` is only a shell convenience variable for these examples. Volicord
-does not read it as configuration, and it is not persisted into generated host
-configuration. If you open a new shell, set it again or use the absolute paths
-directly.
+`VOLICORD_BIN` is only a shell convenience variable for these examples. Volicord does not read it as configuration, and it is not persisted into generated host configuration. If you open a new shell, set it again or use the absolute paths directly.
 
 ## How Host Setup Uses This Choice
 
-`volicord agent install` installs or exports host configuration that starts
-`volicord-mcp --integration <integration_id>`.
+`volicord agent connect` installs or exports host configuration that starts `volicord-mcp --connection <connection_id>`.
 
-For user-scope Codex or user/local-scope Claude Code setup, pass the selected
-absolute executable path with `--mcp-command "$VOLICORD_BIN/volicord-mcp"`, or put
-`volicord-mcp` beside `volicord` or on `PATH` so the CLI can discover it. The
-persisted host configuration receives the resolved absolute command path, not
-the shell variable.
+For user-scope Codex or user/local-scope Claude Code setup, pass the selected absolute executable path with `--mcp-command "$VOLICORD_BIN/volicord-mcp"`, or put `volicord-mcp` beside `volicord` or on `PATH` so the CLI can discover it. The persisted host configuration receives the resolved absolute command path, not the shell variable.
 
-For project-scoped Codex or Claude Code setup, the generated project file must
-remain shareable. Run setup with `PATH="$VOLICORD_BIN:$PATH"` and use
-`--mcp-command volicord-mcp` or omit `--mcp-command`. The project file keeps the
-portable command name, and the later host process must be able to find
-`volicord-mcp` on its own `PATH`.
+For project-scoped Codex or Claude Code setup, the generated project file must remain shareable. Run setup with `PATH="$VOLICORD_BIN:$PATH"` and omit `--mcp-command`. The project file keeps the portable command name, and the later host process must be able to find `volicord-mcp` on its own `PATH`.
 
-Installation location is not runtime state. Volicord source or
-installation files contain executables, `Volicord Runtime Home` contains Volicord
-runtime records, `Product Repository` contains product files and selected
-project-scoped integration files, and the agent host owns its actual
-configuration and trust state.
+Installation location is not runtime state. Volicord source or installation files contain executables, `Volicord Runtime Home` contains Volicord runtime records, `Product Repository` contains product files and selected project-scoped host configuration, and the agent host owns its actual configuration and trust state.
 
 ## Failure Routing
 
@@ -145,10 +106,6 @@ configuration and trust state.
 
 ## Next Step
 
-Continue to [Quickstart](quickstart.md) after all verification commands on this
-page succeed.
+Continue to [Quickstart](quickstart.md) after all verification commands on this page succeed.
 
-Exact command behavior belongs to
-[Administrative CLI](../reference/admin-cli.md). Exact `volicord-mcp` startup,
-environment, stdio transport, preflight, and shutdown behavior belongs to
-[MCP Transport](../reference/mcp-transport.md).
+Exact command behavior belongs to [Administrative CLI](../reference/admin-cli.md). Exact `volicord-mcp` startup, environment, stdio transport, preflight, and shutdown behavior belongs to [MCP Transport](../reference/mcp-transport.md).

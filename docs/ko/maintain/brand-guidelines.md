@@ -58,7 +58,7 @@ CLI 출력에 태그라인을 넣지 않습니다.
   응답 래핑 동작은 [MCP 전송](../reference/mcp-transport.md)이 담당합니다.
 - `Volicord Runtime Home`은 제품 라벨입니다. 정확한 런타임 위치와 저장소 경계
   동작은 [런타임 경계](../reference/runtime-boundaries.md)가 담당합니다.
-- `Task`, Change Unit, `Write Authorization`, 최종 수락, 잔여 위험 수락, 닫기
+- `Task`, Change Unit, `Write Check`, 최종 수락, 잔여 위험 수락, 닫기
   준비 상태 같은 도메인 개념에는 Volicord에서 파생한 장식적 이름을 붙이지
   않습니다.
 
@@ -129,9 +129,9 @@ Volicord가 사용자 소유 판단을 대신한다고 설명하지 않습니다
 | 질문 | 담당 문서 |
 |---|---|
 | 제품 범위와 지원되는 기준 경계 | [범위](../reference/scope.md) |
-| Core 권한 개념, 사용자 소유 판단, 증거, `Write Authorization`, 수락, 잔여 위험, 닫기 준비 상태 | [Core 모델](../reference/core-model.md) |
+| Core 권한 개념, 사용자 소유 판단, 증거, `Write Check`, 수락, 잔여 위험, 닫기 준비 상태 | [Core 모델](../reference/core-model.md) |
 | 런타임 위치, 제품 저장소 경계, Runtime Home 경계, 구성 요소/위치 분리 | [런타임 경계](../reference/runtime-boundaries.md) |
-| 보안 표현, 보장 수준, 로컬 접근 가정, 명시적 비보장 | [보안](../reference/security.md) |
+| 보안 표현, 보장 수준, 로컬 파일 접근 가정, 명시적 비보장 | [보안](../reference/security.md) |
 | 관리 CLI 명령, 인자, 출력, 호스트 설정, 명령/API 경계 | [관리 CLI](../reference/admin-cli.md) |
 | 로컬 MCP 어댑터 프로세스 시작, stdio 전송, 프로토콜 처리, 응답 래핑 | [MCP 전송](../reference/mcp-transport.md) |
 | 문서 담당 경로와 메타데이터 | [문서 정책](documentation-policy.md), [doc-index.yaml](../../doc-index.yaml) |

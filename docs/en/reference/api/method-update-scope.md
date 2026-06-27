@@ -74,7 +74,7 @@ Nested owner links:
 
 A committed non-dry-run request requires:
 
-- server-derived `VerifiedSurfaceContext` with `access_class=core_mutation`
+- verified invocation context with `operation_category=agent_workflow`
 - a compatible same-project Task
 - enough scope to make the next safe action honest when creating or replacing the currently applied Change Unit
 
@@ -82,7 +82,7 @@ A committed non-dry-run request requires:
 
 A committed non-dry-run result increments `project_state.state_version` exactly once.
 
-Core marks a `status=active` `Write Authorization` `status=stale` when its basis no longer matches:
+Core marks a `status=active` `Write Check` `status=stale` when its basis no longer matches:
 
 - current scope
 - baseline
@@ -103,7 +103,7 @@ Returns `UpdateScopeResult` with:
 - `task_ref`
 - optional `change_unit_ref`
 - linked scope-decision refs
-- stale `Write Authorization` refs
+- stale `Write Check` refs
 - blocker refs
 - current `state`
 - `next_actions`
@@ -118,12 +118,12 @@ Returns `UpdateScopeResult` with:
 | `task_ref` | `StateRecordRef` for the Task updated by the scope result. |
 | `change_unit_ref` | `StateRecordRef | null` for the currently applied Change Unit after the operation, or `null` when no current Change Unit applies. |
 | `linked_scope_decision_refs` | `StateRecordRef[]` for `scope_decision` user judgments applied by the update. |
-| `stale_write_authorization_refs` | `StateRecordRef[]` for `Write Authorization` records made stale by the committed update. Storage effects and versioning own the persistence detail. |
+| `stale_write_check_refs` | `StateRecordRef[]` for `Write Check` records made stale by the committed update. Storage effects and versioning own the persistence detail. |
 | `blocker_refs` | `StateRecordRef[]` for method-owned blockers committed or still relevant to the update. |
 | `state` | Current `StateSummary` after the scope update, including current scope and currently applied Change Unit display fields. |
 | `next_actions` | `NextActionSummary[]` describing the next safe API steps. |
 
-The supported `change_unit.operation` values are owned by [API Value Sets](schema-value-sets.md#method-local-values). This method owns how each operation is reflected in `change_unit_ref`, `state.active_change_unit_ref`, stale `Write Authorization` refs, blocker refs, and `next_actions`.
+The supported `change_unit.operation` values are owned by [API Value Sets](schema-value-sets.md#method-local-values). This method owns how each operation is reflected in `change_unit_ref`, `state.active_change_unit_ref`, stale `Write Check` refs, blocker refs, and `next_actions`.
 
 When `change_unit.operation=create_current` or `change_unit.operation=replace_current`, `change_unit.effect_contract` may be recorded on the new current Change Unit. The effect contract is optional Core state. It can express allowed effects, forbidden effects, allowed Product Repository paths, expected outputs, invariants, evidence expectations, and sensitive-action expectations without creating a workflow engine or replacing user-owned authority records.
 
@@ -156,7 +156,7 @@ Returns `ToolRejectedResponse` for pre-commit failures such as:
 - unresolved required decision
 - autonomy-boundary violation
 - stale baseline
-- local access failure
+- actor-source or operation-category mismatch
 - validator failure
 
 Public error code meaning, precedence, and rejected-response routing are owned by the error documents linked below.
@@ -166,7 +166,7 @@ Public error code meaning, precedence, and rejected-response routing are owned b
 For `dry_run=true`, a valid state-effecting preview:
 
 - returns `ToolDryRunResponse`
-- creates no scope, Change Unit, blocker, or `Write Authorization` state
+- creates no scope, Change Unit, blocker, or `Write Check` state
 
 ## Storage effect
 
@@ -245,7 +245,7 @@ change_unit_ref:
   task_id: task_filter_001
   state_version: 19
 linked_scope_decision_refs: []
-stale_write_authorization_refs: []
+stale_write_check_refs: []
 blocker_refs: []
 state:
   project_id: proj_filter_001
@@ -279,7 +279,7 @@ state:
   shaping_readiness: null
   pending_user_judgment_refs: []
   blocker_refs: []
-  write_authority_summary: null
+  write_check_summary: null
   evidence_summary: null
   close_state: null
   close_blockers: []
@@ -307,6 +307,6 @@ next_actions:
 - Request envelope and response branches: [API Schema Core](schema-core.md).
 - State refs, `StateSummary`, `ShapingReadiness`, blockers, and next actions: [API State Schemas](schema-state.md).
 - Scope-related user judgment shapes: [API Judgment Schemas](schema-judgment.md).
-- Supported value sets, `change_unit.operation` meanings, and access classes: [API Value Sets](schema-value-sets.md#method-local-values) and [access class values](schema-value-sets.md#access-class-values).
+- Supported value sets, `change_unit.operation` meanings, and operation categories: [API Value Sets](schema-value-sets.md#operation-category-values).
 - Public errors, precedence, and rejected-response routing: [API error codes](error-codes.md), [API error precedence](error-precedence.md), and [API error routing](error-routing.md).
-- Persistence effects and stale authorization behavior: [Storage Effects](../storage-effects.md) and [Storage Versioning](../storage-versioning.md).
+- Persistence effects and stale Write Check behavior: [Storage Effects](../storage-effects.md) and [Storage Versioning](../storage-versioning.md).

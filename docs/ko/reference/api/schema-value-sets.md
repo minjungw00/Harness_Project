@@ -10,13 +10,13 @@
 - 지원되는 행위자 종류 값
 - 지원되는 다음 행동 값
 - API `response_kind`와 `effect_kind` 값
-- 지원되는 `access_class` 값
+- 지원되는 operation category 값
 - 공유 상태 참조에서 쓰는 기록/참조 판별 값
 - 지원되는 생명주기, 닫기 상태, 증거 관찰 출처와 보장 수준, 쓰기 결정 범주, 판단 종류, 표시 형식, 필요 판단 위치, 판단 해결 결과, 아티팩트 가림 처리, 아티팩트 무결성, 아티팩트 가용성 표시, `ValidatorResult.status`, `ValidatorResult.severity`, 보장 표시 등 API 값 집합
 - 지원되는 `change_unit.operation` 값
 - 지원되는 공개 `ValidatorResult.validator_id` 값의 경계
 - 메서드 범위 사유 코드와 불투명 분류 문자열에 대한 값 집합 경계
-- 지원되는 스키마 해석에 영향을 주는 프로필 조건부 또는 예약 값 경계
+- 지원되는 스키마 해석에 영향을 주는 모드 조건부 또는 예약 값 경계
 - 렌더링된 라벨이 기준 스키마 값이 아니라는 규칙
 
 이 문서는 담당하지 않습니다.
@@ -32,7 +32,7 @@
 
 이 문서가 지원 값으로 둔 값만 지원되는 API 값입니다.
 
-- 프로필 조건부 값은 사용하는 자리에서 프로필이나 역량 조건을 이름 붙여야 합니다.
+- 모드 조건부 값은 사용하는 자리에서 connection mode, User Channel, admin-local, 또는 담당 문서가 정의한 조건을 이름 붙여야 합니다.
 - 지원 목록 밖의 값은 [범위 참조](../scope.md)와 영향받는 의미 담당 문서가 지원 동작을 정의하기 전까지 기준 범위 API 값이 아닙니다.
 - 지원 목록 밖의 이름을 적는 것만으로 기준 범위가 넓어지지 않습니다.
 - 화면에 보이는 라벨은 표시 텍스트일 뿐이며, 이 문서의 기준 값을 대신하지 않습니다.
@@ -71,7 +71,7 @@ volicord.close_task
 | `agent_connection:<connection_id>` | Agent Connection 호출 출처와 에이전트가 만들거나 관찰한 상태. | 호출 의미: [에이전트 통합](../agent-integration.md). 중첩 형태 담당 문서가 값이 나타나는 위치를 정의합니다. |
 | `system` | 담당 문서가 명시적으로 허용하는 내부 시스템 출처. | 메서드와 저장소 담당 문서가 값이 나타나는 위치를 정의합니다. |
 
-이 값들은 파생된 호출 출처 또는 지속 행위자 출처를 분류합니다. 이 값만으로 사용자 소유 판단, 승인, 범위 결정 권한, 최종 수락, 잔여 위험 수락, `Write Authorization`이 생기지는 않습니다. 권한을 지니는 사용자 판단 해결은 [에이전트 통합](../agent-integration.md)과 메서드 담당 문서가 정의하는 호환 User Channel 출처와 함께 `resolved_by_actor_source=local_user`를 요구합니다.
+이 값들은 파생된 호출 출처 또는 지속 행위자 출처를 분류합니다. 이 값만으로 사용자 소유 판단, 승인, 범위 결정 권한, 최종 수락, 잔여 위험 수락, `Write Check`이 생기지는 않습니다. 권한을 지니는 사용자 판단 해결은 [에이전트 통합](../agent-integration.md)과 메서드 담당 문서가 정의하는 호환 User Channel 출처와 함께 `resolved_by_actor_source=local_user`를 요구합니다.
 
 <a id="next-action-values"></a>
 ## 다음 행동 값
@@ -124,21 +124,19 @@ no_effect
 
 공개 `ErrorCode` 값은 별도이며 [API 오류 코드](error-codes.md)가 담당합니다.
 
-<a id="access-class-values"></a>
-## 접근 등급 값
+<a id="operation-category-values"></a>
+## Operation category 값
 
-메서드 담당 API 호환성 점검은 공개 API 요청 하나마다 요청 수준 접근 등급 하나를 사용합니다.
+메서드 담당 API 호환성 점검은 공개 API 요청 하나마다 요청 수준 operation category 하나를 사용합니다.
 
 | 값 | 어휘 설명 |
 |---|---|
-| `read_status` | 상태와 닫기 확인 읽기의 접근 등급 값. |
-| `core_mutation` | Core 변경 접근 등급 값. |
-| `write_authorization` | `volicord.prepare_write`와 연결되는 접근 등급 값. |
-| `run_recording` | `volicord.record_run`과 연결되는 접근 등급 값. |
-| `artifact_registration` | `volicord.stage_artifact`와 연결되는 접근 등급 값. |
-| `artifact_read` | 아티팩트 읽기 접근 등급 값입니다. 아티팩트 본문 읽기 지원은 [아티팩트 저장소](../storage-artifacts.md)가 담당합니다. |
+| `read` | 읽기 전용 API operation category입니다. `read_only` Agent Connection은 이 category를 실행할 수 있습니다. |
+| `agent_workflow` | 에이전트 워크플로 API operation category입니다. `workflow` Agent Connection은 이 category와 `read`를 실행할 수 있습니다. |
+| `user_only` | 권한을 지니는 사용자 동작을 위한 User Channel operation category입니다. Agent Connection은 이 category를 실행하지 않습니다. |
+| `admin_local` | 로컬 관리 operation category입니다. Agent Connection은 이 category를 실행하지 않습니다. |
 
-접근 등급은 Volicord API 호환성 분류이지 OS 권한 분류가 아닙니다. 메서드별 접근 요구사항은 [API 메서드](methods.md)가 안내하는 메서드 담당 문서가 담당하고, Agent Connection 호출 검증 동작은 [에이전트 통합](../agent-integration.md)과 [보안](../security.md)이 담당합니다.
+Operation category는 Volicord API 호환성 분류이지 OS 권한, 파일시스템 ACL, 샌드박스 규칙, 네트워크 정책, 비밀 격리가 아닙니다. 메서드별 동작 요구사항은 [API 메서드](methods.md)가 안내하는 메서드 담당 문서가 담당하고, Agent Connection 호출 검증 동작은 [에이전트 통합](../agent-integration.md)과 [보안](../security.md)이 담당합니다.
 
 <a id="record-and-reference-values"></a>
 ## 기록과 참조 값
@@ -149,7 +147,7 @@ no_effect
 project_state
 task
 change_unit
-write_authorization
+write_check
 user_judgment
 run
 evidence_summary
@@ -157,7 +155,7 @@ evidence_observation
 artifact
 blocker
 task_event
-local_surface_registration
+agent_connection
 project_continuity_record
 ```
 
@@ -184,7 +182,7 @@ superseded
 closed
 ```
 
-이 값들은 오래 유지하는 프로젝트 수준 맥락을 분류합니다. 그 자체로 현재 `Task` 권한을 만들거나, 대기 중인 사용자 판단을 만족하거나, 증거를 증명하거나, `Write Authorization`을 부여하거나, 닫기 준비 상태를 만족하거나, 미래 닫기 근거의 잔여 위험을 수락하지 않습니다.
+이 값들은 오래 유지하는 프로젝트 수준 맥락을 분류합니다. 그 자체로 현재 `Task` 권한을 만들거나, 대기 중인 사용자 판단을 만족하거나, 증거를 증명하거나, `Write Check`을 부여하거나, 닫기 준비 상태를 만족하거나, 미래 닫기 근거의 잔여 위험을 수락하지 않습니다.
 
 <a id="task-lifecycle-values"></a>
 ## `Task` 생명주기 값
@@ -286,7 +284,7 @@ external_network
 secret_access
 ```
 
-이 값들은 효과를 Core 상태로 분류합니다. 값 자체가 런타임 샌드박스, 명령 가로채기, 네트워크 차단, 비밀 격리, 사용자 판단, 민감 동작 승인, 증거, `Write Authorization`, 최종 수락, 닫기 준비 상태, 잔여 위험 수락을 만들지는 않습니다.
+이 값들은 효과를 Core 상태로 분류합니다. 값 자체가 런타임 샌드박스, 명령 가로채기, 네트워크 차단, 비밀 격리, 사용자 판단, 민감 동작 승인, 증거, `Write Check`, 최종 수락, 닫기 준비 상태, 잔여 위험 수락을 만들지는 않습니다.
 
 `volicord.close_task.intent`는 아래 값을 사용합니다.
 
@@ -306,7 +304,7 @@ approval_required
 decision_required
 ```
 
-`PrepareWriteResult.authorization_effect`는 아래 값을 사용합니다.
+`PrepareWriteResult.write_check_effect`는 아래 값을 사용합니다.
 
 ```text
 none
@@ -314,7 +312,7 @@ would_create
 created
 ```
 
-`WriteAuthoritySummary.status`와 `WriteAuthorizationSummary.status`는 아래 값을 사용합니다.
+`WriteCheckStateSummary.status`와 `WriteCheckSummary.status`는 아래 값을 사용합니다.
 
 ```text
 active
@@ -356,7 +354,7 @@ close_readiness
 | `write_compatibility` | 쓰기 호환성 사유. |
 | `baseline` | 기준선 호환성 사유. |
 | `effect_contract` | Change Unit 효과 계약 호환성 사유. |
-| `surface_capability` | 확인된 접점 역량 사유. |
+| `connection_capability` | Agent Connection 호환성 또는 모드 지원 사유. |
 
 이 범주는 `volicord.prepare_write` 결정 사유를 분류합니다. `CloseReadinessBlocker` 객체가 아니며 닫기 준비 상태를 평가하지 않습니다. 메서드별 결정 동작과 사유 생성은 [`volicord.prepare_write`](method-prepare-write.md)에 둡니다.
 
@@ -373,7 +371,7 @@ pending_user_judgment
 sensitive_approval
 write_compatibility
 baseline
-surface_capability
+connection_capability
 evidence
 evidence_claim
 evidence_provenance
@@ -411,7 +409,7 @@ blocked
 
 ```text
 agent_report
-surface_observation
+connection_observation
 external_tool
 user_observation
 reused_evidence
@@ -419,8 +417,8 @@ unverified_claim
 ```
 
 출처 종류 의미:
-- `agent_report`는 에이전트 접점이 만든 보고를 기록합니다. 그 자체로 외부 도구 결과가 아닙니다.
-- `surface_observation`은 등록된 접점에 귀속된 관찰을 기록합니다. 그 자체로 증명이 아닙니다.
+- `agent_report`는 에이전트 행위자 맥락이 만든 보고를 기록합니다. 그 자체로 외부 도구 결과가 아닙니다.
+- `connection_observation`은 등록된 Agent Connection에 귀속된 관찰을 기록합니다. 그 자체로 증명이 아닙니다.
 - `external_tool`은 외부 도구의 출력이나 상태를 기록합니다. 그 자체로 제품 정확성 증명이 아닙니다.
 - `user_observation`은 사용자 귀속 관찰을 기록합니다. 그 자체로 최종 수락이나 다른 권한을 지니는 판단이 아닙니다.
 - `reused_evidence`는 이전 증거나 아티팩트 재사용을 기록합니다. 그 자체로 새 관찰이 아닙니다.
@@ -430,15 +428,15 @@ unverified_claim
 
 ```text
 cooperative_report
-registered_surface_observed
+registered_connection_observed
 external_tool_result
 user_observed
 unverified
 ```
 
 보장 수준 의미:
-- `cooperative_report`는 제출 접점 또는 행위자 맥락의 협력형 보고입니다.
-- `registered_surface_observed`는 등록된 접점이 기록된 접점 맥락 안에서 그 주장을 관찰했음을 기록합니다.
+- `cooperative_report`는 제출 행위자 맥락의 협력형 보고입니다.
+- `registered_connection_observed`는 등록된 Agent Connection이 기록된 connection 맥락 안에서 그 주장을 관찰했음을 기록합니다.
 - `external_tool_result`는 관찰이 외부 도구 결과에 기반함을 기록합니다.
 - `user_observed`는 사용자 귀속 관찰 출처를 기록합니다.
 - `unverified`는 확인된 관찰 보장 수준이 없음을 기록합니다.
@@ -472,7 +470,7 @@ cooperative
 detective
 ```
 
-`cooperative`는 기준 대체값입니다. `detective`는 보안 담당 문서가 그 주장을 지원하고, 프로젝트 강제 프로필, 확인된 묶인 접점 등록, 활성화된 강제 메커니즘, 관찰 범위 사실이 이를 뒷받침할 때만 표시할 수 있습니다. 역량 선언만으로 표시 보장을 높일 수 없습니다.
+`cooperative`는 기준 대체값입니다. `detective`는 보안 담당 문서가 그 주장을 지원하고, 프로젝트 강제 사실, 확인된 Agent Connection 또는 User Channel 출처, 활성화된 강제 메커니즘, 관찰 범위 사실이 이를 뒷받침할 때만 표시할 수 있습니다. 선언된 connection capability만으로 표시 보장을 높일 수 없습니다.
 
 <a id="artifact-values"></a>
 ## 아티팩트 값
@@ -609,7 +607,7 @@ superseded
 
 ## 오류 세부사항 보조 값
 
-`ToolError.details.authorization_reason`과 `ToolError.details.artifact_input_error.reason` 보조 값은 [API 오류 세부사항](error-details.md#error-detail-helper-values)이 담당합니다. 이 값 집합 문서는 기계 판독용 오류 세부사항 의미를 정의하지 않습니다.
+`ToolError.details.write_check_reason`과 `ToolError.details.artifact_input_error.reason` 보조 값은 [API 오류 세부사항](error-details.md#error-detail-helper-values)이 담당합니다. 이 값 집합 문서는 기계 판독용 오류 세부사항 의미를 정의하지 않습니다.
 
 ## 프로필 조건부 및 예약 값
 

@@ -32,7 +32,7 @@ owner_areas:
   user_workflow:
     description: User-facing and agent-facing workflow guide maintenance.
   agent_integration:
-    description: Agent host, MCP adapter, administrative setup, and surface-integration documentation
+    description: Agent host, MCP adapter, administrative setup, and connection-integration documentation
       maintenance.
   developer_documentation:
     description: Source-learning, implementation workflow, architecture, and test documentation maintenance.
@@ -56,8 +56,8 @@ applicability:
       `Cargo.toml`.
   mcp_protocol_2025_11_25:
     description: MCP protocol version 2025-11-25 supported by the local `volicord-mcp` stdio process.
-  storage_baseline_sqlite_v2_schema_v1:
-    description: '`baseline_sqlite_v2` storage profile with registry and project-state schema version
+  storage_baseline_sqlite_v3_schema_v1:
+    description: '`baseline_sqlite_v3` storage profile with registry and project-state schema version
       1.'
   doc_index_schema_v3:
     description: Documentation index metadata schema version 3 used by `docs/doc-index.yaml` and
@@ -453,25 +453,6 @@ documents:
   - maintainers
   journeys:
   - operate
-- doc_id: use.surface-recipes
-  path_en: docs/en/guides/surface-recipes.md
-  path_ko: docs/ko/guides/surface-recipes.md
-  kind: how_to
-  summary: How-to recipes for using Volicord surfaces and connector contexts.
-  normative_level: guide
-  translation_policy: semantic_parity
-  owner_area: user_workflow
-  created_on: '2026-06-10'
-  last_updated_on: '2026-06-24'
-  last_verified_on: '2026-06-24'
-  applies_to:
-  - volicord_workspace_0_1
-  primary_audience:
-  - users
-  - agents
-  - connector authors
-  journeys:
-  - operate
 - doc_id: use.agent-host-setup
   path_en: docs/en/guides/agent-host-setup.md
   path_ko: docs/ko/guides/agent-host-setup.md
@@ -535,7 +516,7 @@ documents:
   path_en: docs/en/guides/multi-repository-agent-setup.md
   path_ko: docs/ko/guides/multi-repository-agent-setup.md
   kind: how_to
-  summary: How-to guidance for one user-scope agent integration serving multiple explicitly allowed Product
+  summary: How-to guidance for one user-scope Agent Connection serving multiple explicitly allowed Product
     Repositories.
   normative_level: guide
   translation_policy: semantic_parity
@@ -688,7 +669,7 @@ documents:
   applies_to:
   - volicord_workspace_0_1
   - rust_workspace_1_85
-  - storage_baseline_sqlite_v2_schema_v1
+  - storage_baseline_sqlite_v3_schema_v1
   primary_audience:
   - implementers
   - reviewers
@@ -756,7 +737,7 @@ documents:
   - learn
   - implement
   depends_on:
-  - development.decision.agent-integration-profile
+  - development.decision.agent-connection-routing
   - development.decision.core-adapter-boundary
   - development.decision.plan-and-atomic-commit
   - development.decision.runtime-home-and-product-repository
@@ -843,9 +824,9 @@ documents:
   - reference.storage-artifacts
   - reference.admin-cli
   - reference.security
-- doc_id: development.decision.agent-integration-profile
-  path_en: docs/en/development/decisions/agent-integration-profile.md
-  path_ko: docs/ko/development/decisions/agent-integration-profile.md
+- doc_id: development.decision.agent-connection-routing
+  path_en: docs/en/development/decisions/agent-connection-routing.md
+  path_ko: docs/ko/development/decisions/agent-connection-routing.md
   kind: explanation
   summary: Architecture decision explaining Agent Connection, host routing, and explicit project
     allowlists for agent-host connections.
@@ -1110,7 +1091,7 @@ documents:
   applies_to:
   - volicord_workspace_0_1
   - mcp_protocol_2025_11_25
-  - storage_baseline_sqlite_v2_schema_v1
+  - storage_baseline_sqlite_v3_schema_v1
   primary_audience:
   - implementers
   - agent integrators
@@ -1125,13 +1106,13 @@ documents:
   - Runtime Home path selection rules for `volicord` administrative commands
   - administrative project registration command behavior
   - administrative Agent Connection and User Channel registration command behavior
-  - agent connection install, status, verify, uninstall, and project allowlist commands
+  - agent connection connect, status, verify, uninstall, and project membership commands
   - Codex, Claude Code, and generic host setup scope support
-  - Host Installation setup result states and verification reporting
+  - managed host configuration state setup result states and verification reporting
   - administrative dry-run, machine output, and noninteractive approval behavior
-  - repository guidance apply, status, and remove commands
+  - Product Repository guidance boundary
   - unsupported `volicord setup` command-family rejection behavior
-  - '`baseline-workflow` local registration profile expansion'
+  - 'Agent Connection mode and project routing'
   - administrative command boundary from public Volicord API methods
   depends_on:
   - reference.runtime-boundaries
@@ -1778,7 +1759,7 @@ documents:
   last_verified_on: '2026-06-24'
   applies_to:
   - volicord_workspace_0_1
-  - storage_baseline_sqlite_v2_schema_v1
+  - storage_baseline_sqlite_v3_schema_v1
   primary_audience:
   - implementers
   - maintainers
@@ -1802,7 +1783,7 @@ documents:
   last_verified_on: '2026-06-26'
   applies_to:
   - volicord_workspace_0_1
-  - storage_baseline_sqlite_v2_schema_v1
+  - storage_baseline_sqlite_v3_schema_v1
   primary_audience:
   - storage implementers
   - maintainers
@@ -1815,7 +1796,7 @@ documents:
   - table overview
   - storage-owned record values
   - storage-owned JSON placement
-  - Agent Connection, Connection Projects, and Host Installation record families
+  - Agent Connection, Connection Projects, and managed host configuration state record families
 - doc_id: reference.storage-ddl
   path_en: docs/en/reference/storage-ddl.md
   path_ko: docs/ko/reference/storage-ddl.md
@@ -1829,7 +1810,7 @@ documents:
   last_verified_on: '2026-06-26'
   applies_to:
   - volicord_workspace_0_1
-  - storage_baseline_sqlite_v2_schema_v1
+  - storage_baseline_sqlite_v3_schema_v1
   primary_audience:
   - storage implementers
   - API implementers
@@ -1841,7 +1822,7 @@ documents:
   - baseline SQLite DDL
   - '`registry.sqlite` schema shape'
   - project `state.sqlite` schema shape
-  - Agent Connection, Connection Projects, and Host Installation registry tables
+  - Agent Connection, Connection Projects, and managed host configuration state registry tables
   - baseline SQLite indexes, foreign keys, migration tables, and constraints
   - storage constraints for state clock columns, replay rows, current Change Unit uniqueness, Write Check
     basis versions, and staged artifact provenance
@@ -1858,7 +1839,7 @@ documents:
   last_verified_on: '2026-06-26'
   applies_to:
   - volicord_workspace_0_1
-  - storage_baseline_sqlite_v2_schema_v1
+  - storage_baseline_sqlite_v3_schema_v1
   primary_audience:
   - storage implementers
   - API implementers
@@ -1883,7 +1864,7 @@ documents:
   last_verified_on: '2026-06-26'
   applies_to:
   - volicord_workspace_0_1
-  - storage_baseline_sqlite_v2_schema_v1
+  - storage_baseline_sqlite_v3_schema_v1
   primary_audience:
   - storage implementers
   - API implementers
@@ -1909,7 +1890,7 @@ documents:
   last_verified_on: '2026-06-24'
   applies_to:
   - volicord_workspace_0_1
-  - storage_baseline_sqlite_v2_schema_v1
+  - storage_baseline_sqlite_v3_schema_v1
   primary_audience:
   - storage implementers
   - maintainers
@@ -1922,7 +1903,7 @@ documents:
   - storage locking
   - migration boundaries
   - supported storage profile migration semantics
-  - baseline_sqlite_v2 initial migration boundary
+  - baseline_sqlite_v3 initial migration boundary
 - doc_id: reference.agent-integration
   path_en: docs/en/reference/agent-integration.md
   path_ko: docs/ko/reference/agent-integration.md
@@ -1953,7 +1934,7 @@ documents:
   - operation_category declaration boundaries
   - agent context transfer boundaries
   - Agent Connection meaning and Connection Projects rules
-  - Host Installation meaning and host trust boundary
+  - managed host configuration state meaning and host trust boundary
   - per-call MCP project selection authority
   - agent guidance and MCP server instruction boundaries
 - doc_id: reference.projection-and-templates

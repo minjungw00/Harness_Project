@@ -62,7 +62,7 @@ like these:
 Volicord itself is not the local authority record. Core is the local authority
 record for Volicord state. Volicord is the broader product/system around that
 record, including local runtime components, host-integration records,
-supported surfaces, and documentation routes.
+supported Agent Connections, and documentation routes.
 
 <a id="why-volicord-exists"></a>
 ## Why Volicord Exists
@@ -113,7 +113,7 @@ AI host
         |
         | starts a local child process
         v
-volicord-mcp --integration <integration_id>
+volicord-mcp --connection <connection_id>
         |
         | uses the selected Volicord Runtime Home and allowed Product Repository
         v
@@ -126,12 +126,12 @@ volicord
 
 `volicord-mcp` is a local stdio child process started by the host. It is not a
 TCP, HTTP, socket, or other network listener. One `volicord-mcp` process is bound
-to one Agent Integration Profile by `--integration <integration_id>`. Project
+to one Agent Connection by `--connection <connection_id>`. Project
 selection happens per public Volicord tool call.
 
 `volicord` is the administrative CLI. It is used to build setup state, install or
 export host configuration, inspect status, and refresh verification. It is not a
-long-running server and is not a public Volicord API method surface.
+long-running server and is not a public Volicord API method set.
 
 <a id="terms"></a>
 ## Terms For First Setup
@@ -146,8 +146,8 @@ long-running server and is not a public Volicord API method surface.
 | `Volicord Runtime Home` | Local runtime storage for Volicord records and operational data. | [Runtime Boundaries](docs/en/reference/runtime-boundaries.md) |
 | `Product Repository` | Your project workspace and product-file boundary. | [Runtime Boundaries](docs/en/reference/runtime-boundaries.md) |
 | Agent host | Codex, Claude Code, or a user-managed MCP host that can start `volicord-mcp`. | [Agent Integration](docs/en/reference/agent-integration.md) |
-| Agent Integration Profile | The durable Volicord integration record selected by `integration_id`. | [Agent Integration](docs/en/reference/agent-integration.md) |
-| Host Installation | Volicord-managed inventory for host configuration and last verification state. | [Agent Integration](docs/en/reference/agent-integration.md) |
+| Agent Connection | The durable Volicord integration record selected by `connection_id`. | [Agent Integration](docs/en/reference/agent-integration.md) |
+| managed host configuration state | Volicord-managed inventory for host configuration and last verification state. | [Agent Integration](docs/en/reference/agent-integration.md) |
 
 <a id="support"></a>
 ## Current Capabilities And Boundaries
@@ -168,7 +168,7 @@ Current first-setup support is intentionally local:
 | Area | Current baseline |
 |---|---|
 | Executable source | Build from this source checkout, or use an already available Volicord installation directory containing both `volicord` and `volicord-mcp`. |
-| Direct host setup | Codex and Claude Code have supported direct `volicord agent install` paths. |
+| Direct host setup | Codex and Claude Code have supported direct `volicord agent connect` paths. |
 | Generic MCP hosts | Generic export renders configuration for a user-managed host. Volicord does not directly install into that host or prove that the host loaded it. |
 | MCP transport | The baseline process is local stdio: the host starts `volicord-mcp` as a child process. |
 | Package managers | No package-manager installation path is documented by current owner docs. |
@@ -227,9 +227,9 @@ and ID with your real values.
 |---|---|---|
 | `acme-api` | `--project-id` | Stable logical project identifier chosen or reused by the operator. It does not need to equal the repository directory name. |
 | `/work/acme-api` | `--repo-root` | `Product Repository` path for the selected project. |
-| `int-codex-team` | `--integration-id` | Example Codex `integration_id`. |
-| `int-claude-acme` | `--integration-id` | Example Claude Code `integration_id`. |
-| `int-generic-acme` | `--integration-id` | Example generic export `integration_id`. |
+| `conn-codex-team` | `--connection-id` | Example Codex `connection_id`. |
+| `conn-claude-acme` | `--connection-id` | Example Claude Code `connection_id`. |
+| `conn-generic-acme` | `--connection-id` | Example generic export `connection_id`. |
 | `/Users/alex/.volicord` | `--runtime-home` | Runtime Home path supplied directly in user-scope and export examples. |
 | `"$VOLICORD_BIN/volicord-mcp"` | `--mcp-command` | Verified absolute `volicord-mcp` path supplied in user-scope and export examples. |
 | `/tmp/volicord-mcp-export` | `--export-dir` | Directory for the generated generic export file. |
@@ -302,16 +302,16 @@ test -x "$VOLICORD_BIN/volicord-mcp"
 
 "$VOLICORD_BIN/volicord" --version
 "$VOLICORD_BIN/volicord" agent --help
-"$VOLICORD_BIN/volicord" agent install --help
+"$VOLICORD_BIN/volicord" agent connect --help
 "$VOLICORD_BIN/volicord-mcp" --version
 "$VOLICORD_BIN/volicord-mcp" --help
 ```
 
 The version commands should print `volicord <version>` and
 `volicord-mcp <version>`. `volicord agent --help` should list the agent command
-family. `volicord agent install --help` should explain install-specific
+family. `volicord agent connect --help` should explain connect-specific
 arguments and requiredness. `volicord-mcp --help` should show the
-integration-bound `volicord-mcp --integration <integration_id>` process usage.
+connection-bound `volicord-mcp --connection <connection_id>` process usage.
 
 Continue only after both executables run from the same selected directory. This
 confirms the selected executables are available for host setup. It does not
@@ -339,8 +339,8 @@ one generic export path. More host and scope combinations are documented in
 <a id="install-arguments"></a>
 ## Install Argument Quick Reference
 
-This quick reference covers only the `volicord agent install` options shown in
-this README's install examples. Use `volicord agent install --help` and
+This quick reference covers only the `volicord agent connect` options shown in
+this README's connect examples. Use `volicord agent connect --help` and
 [Administrative CLI](docs/en/reference/admin-cli.md#volicord-agent-install) for
 the complete option list, omission rules, and edge cases.
 
@@ -350,12 +350,12 @@ the complete option list, omission rules, and edge cases.
 | `--scope` | Required | Identifies the target configuration scope or export mode: `user`, `project`, or `export`. |
 | `--project-id` | Required for this new-project example | Supplies the stable logical project identifier chosen or reused by the operator. These examples introduce `/work/acme-api` as a project registration, so they pass `acme-api`; the ID does not need to equal the directory name. |
 | `--repo-root` | Required for this new-project example | Supplies the selected project's `Product Repository` path. Keep it distinct from the `Volicord Runtime Home`. |
-| `--integration-id` | Optional, pinned for reproducibility | Pins a predictable integration identifier so later administrative commands and generated host configuration use the same ID. If omitted, the CLI derives a stable value. |
+| `--connection-id` | Optional, pinned for reproducibility | Pins a predictable connection identifier so later administrative commands and generated host configuration use the same ID. If omitted, the CLI derives a stable value. |
 | `--runtime-home` | Optional, pinned for reproducibility | Selects the `Volicord Runtime Home` for the administrative command and, where the host scope permits it, generated host environment. The examples pin `/Users/alex/.volicord` when they should not rely on normal Runtime Home resolution. |
 | `--mcp-command` | Optional, pinned for reproducibility | In `user` and `export` examples, pins the verified absolute `volicord-mcp` executable. The `project` example omits it because omission uses the portable `volicord-mcp` command. |
 | `--dry-run` | Optional preview control | Previews the install plan without performing the real write. It is not required installation input and does not require `--allow-repository-write`. |
 | `--output` | Optional output formatting | Selects output formatting. Text is the default; the dry-run example requests JSON so the preview is easier to inspect. |
-| `--allow-repository-write` | Conditionally required | Explicit write authorization for the real project-scoped write to `/work/acme-api/.mcp.json`. It is not required for the corresponding dry run. |
+| `--allow-repository-write` | Conditionally required | Explicit write approval for the real project-scoped write to `/work/acme-api/.mcp.json`. It is not required for the corresponding dry run. |
 | `--export-dir` | Optional, pinned for reproducibility | Selects the directory for the generic exported MCP configuration when `--export-path` is not supplied. The example pins `/tmp/volicord-mcp-export` as the destination. |
 
 <a id="codex"></a>
@@ -375,10 +375,10 @@ Before running it:
 Install:
 
 ```sh
-"$VOLICORD_BIN/volicord" agent install \
+"$VOLICORD_BIN/volicord" agent connect \
   --host codex \
   --scope user \
-  --integration-id int-codex-team \
+  --connection-id conn-codex-team \
   --project-id acme-api \
   --repo-root /work/acme-api \
   --runtime-home /Users/alex/.volicord \
@@ -387,17 +387,17 @@ Install:
 
 Because `--default-project-id` and `--server-name` are omitted, the new
 integration uses the selected project as its default and the CLI derives a
-stable host MCP server name from `integration_id`, such as
-`volicord-int-codex-team`.
+stable host MCP server name from `connection_id`, such as
+`volicord-conn-codex-team`.
 
 Expected first result includes:
 
 ```text
 status: complete
-integration_id: int-codex-team
+connection_id: conn-codex-team
 host_kind: codex
 host_scope: user
-server_name: volicord-int-codex-team
+server_name: volicord-conn-codex-team
 verification: complete
 ```
 
@@ -409,7 +409,7 @@ Independent completion check:
 
 ```sh
 "$VOLICORD_BIN/volicord" agent verify \
-  --integration-id int-codex-team \
+  --connection-id conn-codex-team \
   --runtime-home /Users/alex/.volicord
 ```
 
@@ -434,18 +434,18 @@ Before running it:
 - You intentionally allow the administrative command to write
   `/work/acme-api/.mcp.json`.
 - The optional dry-run below previews the planned write without
-  repository-write authorization; the apply command is the real write and
-  includes explicit repository-write authorization.
+  repository-write approval; the apply command is the real write and
+  includes explicit repository-write approval.
 
 Optional dry-run:
 
 ```sh
 VOLICORD_HOME=/Users/alex/.volicord \
 PATH="$VOLICORD_BIN:$PATH" \
-"$VOLICORD_BIN/volicord" agent install \
+"$VOLICORD_BIN/volicord" agent connect \
   --host claude-code \
   --scope project \
-  --integration-id int-claude-acme \
+  --connection-id conn-claude-acme \
   --project-id acme-api \
   --repo-root /work/acme-api \
   --dry-run \
@@ -457,10 +457,10 @@ Apply setup:
 ```sh
 VOLICORD_HOME=/Users/alex/.volicord \
 PATH="$VOLICORD_BIN:$PATH" \
-"$VOLICORD_BIN/volicord" agent install \
+"$VOLICORD_BIN/volicord" agent connect \
   --host claude-code \
   --scope project \
-  --integration-id int-claude-acme \
+  --connection-id conn-claude-acme \
   --project-id acme-api \
   --repo-root /work/acme-api \
   --allow-repository-write
@@ -470,10 +470,10 @@ Expected first result before host approval may include:
 
 ```text
 status: action_required
-integration_id: int-claude-acme
+connection_id: conn-claude-acme
 host_kind: claude_code
 host_scope: project
-server_name: volicord-int-claude-acme
+server_name: volicord-conn-claude-acme
 verification: action_required
 ```
 
@@ -494,11 +494,11 @@ After completing the host-owned approval or reload step, verify:
 VOLICORD_HOME=/Users/alex/.volicord \
 PATH="$VOLICORD_BIN:$PATH" \
 "$VOLICORD_BIN/volicord" agent verify \
-  --integration-id int-claude-acme
+  --connection-id conn-claude-acme
 ```
 
 This path is complete when verification reports `status: complete` and the
-selected Host Installation reports `final_status: complete`.
+selected managed host configuration state reports `final_status: complete`.
 
 <a id="generic-export"></a>
 ## Generic Export
@@ -512,17 +512,17 @@ introduces `/work/acme-api` as a new project registration, so the shown command
 also requires `--project-id acme-api` and `--repo-root /work/acme-api`. Export
 destination and executable-path choices are separate: `--export-dir` selects
 where the rendered configuration is written, and `--mcp-command` selects the
-command path placed in that export. The optional `--integration-id`,
+command path placed in that export. The optional `--connection-id`,
 `--runtime-home`, explicit `--mcp-command`, and `--export-dir` are kept so the
 exported server name, Runtime Home environment, command path, and destination
 are reproducible. Full omission rules stay in
 [Administrative CLI](docs/en/reference/admin-cli.md#volicord-agent-install).
 
 ```sh
-"$VOLICORD_BIN/volicord" agent install \
+"$VOLICORD_BIN/volicord" agent connect \
   --host generic \
   --scope export \
-  --integration-id int-generic-acme \
+  --connection-id conn-generic-acme \
   --project-id acme-api \
   --repo-root /work/acme-api \
   --runtime-home /Users/alex/.volicord \
@@ -535,9 +535,9 @@ The export contains a host-neutral MCP server object shaped like:
 ```json
 {
   "mcpServers": {
-    "volicord-int-generic-acme": {
+    "volicord-conn-generic-acme": {
       "command": "/absolute/path/to/selected/bin/volicord-mcp",
-      "args": ["--integration", "int-generic-acme"],
+      "args": ["--connection", "conn-generic-acme"],
       "env": {
         "VOLICORD_HOME": "/Users/alex/.volicord"
       }
@@ -557,23 +557,23 @@ These checks have different meanings:
 
 | Command | What it tells you | What it does not prove |
 |---|---|---|
-| `volicord agent status` | Registry state, allowed projects, Host Installation inventory, last verification status, and guidance status. | It does not prove the host loaded or exposed the MCP server. |
-| `volicord agent verify` | Administrative verification for selected Host Installations, including startup checks and host-specific gates where observable. | It does not make host-owned trust or approval decisions for you. |
-| `volicord-mcp --check --integration <integration_id>` | Startup validation for the local `volicord-mcp` process and selected integration. | It is not complete host integration and does not prove Codex, Claude Code, or a generic host loaded it. |
+| `volicord agent status` | Registry state, allowed projects, managed host configuration state inventory, last verification status, and guidance status. | It does not prove the host loaded or exposed the MCP server. |
+| `volicord agent verify` | Administrative verification for selected managed host configuration states, including startup checks and host-specific gates where observable. | It does not make host-owned trust or approval decisions for you. |
+| `volicord-mcp --check --connection <connection_id>` | Startup validation for the local `volicord-mcp` process and selected Agent Connection. | It is not complete host integration and does not prove Codex, Claude Code, or a generic host loaded it. |
 
 Useful checks:
 
 ```sh
 "$VOLICORD_BIN/volicord" agent status \
-  --integration-id int-codex-team \
+  --connection-id conn-codex-team \
   --runtime-home /Users/alex/.volicord
 
 "$VOLICORD_BIN/volicord" agent verify \
-  --integration-id int-codex-team \
+  --connection-id conn-codex-team \
   --runtime-home /Users/alex/.volicord
 
 VOLICORD_HOME=/Users/alex/.volicord \
-"$VOLICORD_BIN/volicord-mcp" --check --integration int-codex-team
+"$VOLICORD_BIN/volicord-mcp" --check --connection conn-codex-team
 ```
 
 Setup result states at onboarding level:
@@ -632,14 +632,14 @@ Keep these locations separate:
 | Volicord source repository or installation | Volicord implementation maintainer or installer | Source checkout, installed executables, build output, documentation, tests, or required executable resources. | Source builds write Cargo output under `target/`. |
 | `Volicord Runtime Home` | Local Volicord operator | Volicord registry, integration state, project state, runtime records, and runtime data as storage owners define them. | Agent setup creates or reuses Volicord records there. |
 | `Product Repository` | Product project owner | Product files and explicitly selected project-scoped integration files. | Only explicitly selected and authorized integration files or guidance, such as `.codex/config.toml`, `.mcp.json`, `AGENTS.md` guidance, or `.claude/rules/` guidance. |
-| Codex or Claude Code configuration | Host operator | Host-owned settings that start `volicord-mcp --integration <integration_id>`. | Direct setup may write managed host configuration where the selected host and scope require it. |
+| Codex or Claude Code configuration | Host operator | Host-owned settings that start `volicord-mcp --connection <connection_id>`. | Direct setup may write managed host configuration where the selected host and scope require it. |
 | Generic export target | User-managed host operator | Exported MCP configuration for another host. | The export file or directory you select, such as `/tmp/volicord-mcp-export`. |
 
 Volicord runtime databases, runtime records, generated records, logs,
 projections, QA results, acceptance records, close-readiness state, and
 residual-risk records are not stored in the `Product Repository`.
 
-Repository writes during setup are limited to explicitly selected integration
+Repository writes during setup are limited to explicitly selected Agent Connection
 configuration or guidance, and noninteractive project-scoped writes require
 `--allow-repository-write`. Those files are host configuration or advisory
 context. They are not Core authority, evidence, final acceptance, close

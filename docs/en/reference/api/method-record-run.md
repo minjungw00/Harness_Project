@@ -27,13 +27,13 @@ This document does not own:
 - a direct answer or result
 - implementation work
 
-The method may also update the current close basis, update compact evidence coverage, record evidence observations for reported or observed claims, consume a compatible `Write Authorization` when recording a product write, link existing artifacts, and promote eligible staged handles to persistent `ArtifactRef` records where allowed.
+The method may also update the current close basis, update compact evidence coverage, record evidence observations for reported or observed claims, consume a compatible `Write Check` when recording a product write, link existing artifacts, and promote eligible staged handles to persistent `ArtifactRef` records where allowed.
 
 ## Required inputs
 
 - A valid `ToolEnvelope`; committed non-dry-run requests require non-null `idempotency_key` and current `expected_state_version`.
-- `task_id`, `change_unit_id`, `kind`, `run_id`, `baseline_ref`, `write_authorization_id`, `summary`, `observed_changes`, `artifact_inputs`, `evidence_updates`, `evidence_observations`, and `close_assessment`.
-- Product-write runs require a compatible `status=active` `Write Authorization` from `volicord.prepare_write`.
+- `task_id`, `change_unit_id`, `kind`, `run_id`, `baseline_ref`, `write_check_id`, `summary`, `observed_changes`, `artifact_inputs`, `evidence_updates`, `evidence_observations`, and `close_assessment`.
+- Product-write runs require a compatible `status=active` `Write Check` from `volicord.prepare_write`.
 - New artifact bytes must already be represented by a valid `StagedArtifactHandle`; `volicord.record_run` does not stage new bytes.
 - A supported evidence update must be backed by a same-claim `EvidenceObservationInput`, a usable same-claim evidence observation ref, or `EvidenceCoverageItem.provenance` from which Core can create an evidence observation with explicit `source_kind` and `assurance_level`.
 
@@ -51,7 +51,7 @@ RecordRunRequest:
   kind: string
   run_id: string | null
   baseline_ref: string
-  write_authorization_id: string | null
+  write_check_id: string | null
   summary: string
   observed_changes: ObservedChanges
   artifact_inputs: ArtifactInput[]
@@ -82,11 +82,11 @@ Nested owner links:
 
 Path and access notes:
 - `observed_changes.changed_paths` entries are `Product Repository` API product paths. Product Repository path normalization is owned by [Runtime Boundaries](../runtime-boundaries.md#product-repository-api-path-normalization).
-- `ArtifactInput[]` and staged handles do not create a second request-level access class; the request-level access class remains the one in the derived `VerifiedSurfaceContext`.
+- `ArtifactInput[]` and staged handles do not create a second request-level operation category or actor source; the invocation remains the one in the verified invocation context.
 
 Close-assessment ref rules:
 - Caller-supplied `close_assessment.result_refs` and `ResidualRiskInput.source_refs` are restricted to `record_kind=run`, `artifact`, `evidence_summary`, or `change_unit` unless an owner explicitly adds another kind.
-- The method rejects or excludes caller-supplied `project_state`, `write_authorization`, `user_judgment`, `blocker`, `task_event`, `local_surface_registration`, and `task` refs from the close basis unless an owner explicitly adds them.
+- The method rejects or excludes caller-supplied `project_state`, `write_check`, `user_judgment`, `blocker`, `task_event`, and `task` refs from the close basis unless an owner explicitly adds them.
 - Every accepted ref must exist and belong to the same project and Task. Artifact refs must be linked to the Task and pass current-byte verification with `integrity_status=verified`; evidence refs must identify the current Task evidence summary; Run refs used as current close-basis result refs must identify a recorded current Run compatible with the current Task, current Change Unit, current scope revision, compatible baseline, and recorded status.
 - Historical Run refs are audit records for close-basis purposes unless this new current Run explicitly reuses verified artifacts or evidence from history and records that reuse in its committed evidence or close assessment.
 - Core stores canonical refs in `CurrentCloseBasis` and never preserves caller-supplied `state_version` metadata as authority.
@@ -95,7 +95,7 @@ Close-assessment ref rules:
 Evidence update provenance rules:
 - `coverage_state=supported` is a claim about coverage, not sufficient provenance by itself.
 - When `EvidenceCoverageItem.provenance` is supplied for a supported item and no explicit same-claim observation input is supplied, Core creates an `EvidenceObservation` for the current Run and links its ref into the committed evidence summary.
-- Committed evidence observations keep the explicit provenance class through `source_kind` and `assurance_level`, including `agent_report`, `surface_observation`, `external_tool`, `user_observation`, and `unverified_claim`.
+- Committed evidence observations keep the explicit provenance class through `source_kind` and `assurance_level`, including `agent_report`, `connection_observation`, `external_tool`, `user_observation`, and `unverified_claim`.
 - `unverified_claim`, `unverified`, and cooperative `agent_report` observations may be recorded as evidence observations, but close readiness evaluates them as weak provenance when stronger provenance is required.
 - Evidence observations do not replace user-owned judgment, final acceptance, residual-risk acceptance, or close readiness.
 
@@ -103,19 +103,18 @@ Evidence update provenance rules:
 
 Requires:
 
-- server-derived `VerifiedSurfaceContext` with `access_class=run_recording`
+- verified invocation context with `operation_category=agent_workflow`
 
 For `source_kind=staged_artifact`:
 
-- the current derived `VerifiedSurfaceContext.surface_id` must match the staged handle's recorded provenance
-- the current derived `VerifiedSurfaceContext.surface_instance_id` must match the staged handle's recorded provenance
+- the current verified `actor_source` must match the staged handle's recorded provenance
 
-The recorded provenance was captured from the derived `VerifiedSurfaceContext` at staging time. This method compares it with the current derived context instead of accepting caller-submitted provenance as authority.
+The recorded provenance was captured from the verified invocation context at staging time. This method compares it with the current verified context instead of accepting caller-submitted provenance as authority.
 
 Non-claims:
 
 - `ArtifactInput[]` does not add `artifact_registration`.
-- Cross-surface staged artifact transfer is outside the baseline scope.
+- Cross-actor staged artifact transfer is outside the baseline scope.
 
 ## State version behavior
 
@@ -125,28 +124,28 @@ A compatible committed result increments the selected `Task.close_basis_revision
 
 An empty `close_assessment.residual_risks` list explicitly means the current result has no identified residual risks. Core generates opaque `risk_id` values only for committed non-null assessments. A dry-run never reserves persistent `risk_id` values.
 
-Sensitive action requirements in the resulting `CurrentCloseBasis` are derived by Core from the committed Run and any consumed `Write Authorization`. Category-only caller input in `close_assessment.sensitive_categories` can contribute display context but cannot establish, satisfy, or erase a sensitive approval requirement.
+Sensitive action requirements in the resulting `CurrentCloseBasis` are derived by Core from the committed Run and any consumed `Write Check`. Category-only caller input in `close_assessment.sensitive_categories` can contribute display context but cannot establish, satisfy, or erase a sensitive approval requirement.
 
-The Run, current close basis, evidence updates, evidence observations, artifact links or promotions, `Write Authorization` consumption, and revision changes are committed atomically when the result commits.
+The Run, current close basis, evidence updates, evidence observations, artifact links or promotions, `Write Check` consumption, and revision changes are committed atomically when the result commits.
 
-Product-write recording consumes the `Write Authorization` only when:
+Product-write recording consumes the `Write Check` only when:
 
 - the authorization has `status=active` and has not already been consumed or revoked
-- the current `project_state.state_version` equals `WriteAuthorization.basis_state_version` immediately before consumption
+- the current `project_state.state_version` equals `WriteCheck.basis_state_version` immediately before consumption
 - the authorization is not expired under the effective expiration rule: the earlier of stored `expires_at` and `created_at + 15 minutes`
-- the authorization and its `AuthorizedAttemptScope` identify the same `task_id` and `change_unit_id` as the Run being recorded
+- the authorization and its `WriteCheckAttemptScope` identify the same `task_id` and `change_unit_id` as the Run being recorded
 - the authorized attempt has `product_file_write_intended=true`
 - the authorized attempt `baseline_ref` matches the Run `baseline_ref`
 - observed sensitive categories match the authorized attempt's normalized `sensitive_categories`
 - observed changed paths, after Product Repository path normalization, are compatible with the authorized attempt
 
-An authorization created by `volicord.prepare_write` is not stale immediately after creation when no intervening project state change has occurred. If `volicord.prepare_write` commits from version `19` to version `20`, `volicord.record_run` may consume that authorization while the current `project_state.state_version` and `WriteAuthorization.basis_state_version` are both `20`.
+An authorization created by `volicord.prepare_write` is not stale immediately after creation when no intervening project state change has occurred. If `volicord.prepare_write` commits from version `19` to version `20`, `volicord.record_run` may consume that authorization while the current `project_state.state_version` and `WriteCheck.basis_state_version` are both `20`.
 
-The method rejects stale `expected_state_version` and stale authorization basis before consuming the `Write Authorization`. A stale `WriteAuthorization.basis_state_version` retains higher-priority `STATE_VERSION_CONFLICT` routing even if the same authorization is also expired.
+The method rejects stale `expected_state_version` and stale Write Check basis before consuming the `Write Check`. A stale `WriteCheck.basis_state_version` retains higher-priority `STATE_VERSION_CONFLICT` routing even if the same Write Check is also expired.
 
-Expiration is calculated using parsed UTC timestamps, not lexical string comparison. An expired authorization is never consumed. Expired authorization use returns `WRITE_AUTHORIZATION_INVALID` with `ToolError.details.authorization_reason=expired`.
+Expiration is calculated using parsed UTC timestamps, not lexical string comparison. An expired Write Check is never consumed. Expired Write Check use returns `WRITE_CHECK_INVALID` with `ToolError.details.write_check_reason=expired`.
 
-Compatibility mismatch rejections use `WRITE_AUTHORIZATION_INVALID` with `ToolError.details.authorization_reason` values such as `task_mismatch`, `change_unit_mismatch`, `product_write_flag_mismatch`, `baseline_mismatch`, `sensitive_category_mismatch`, or `path_mismatch`.
+Compatibility mismatch rejections use `WRITE_CHECK_INVALID` with `ToolError.details.write_check_reason` values such as `task_mismatch`, `change_unit_mismatch`, `product_write_flag_mismatch`, `baseline_mismatch`, `sensitive_category_mismatch`, or `path_mismatch`.
 
 ## Method result fields
 
@@ -161,9 +160,9 @@ Compatibility mismatch rejections use `WRITE_AUTHORIZATION_INVALID` with `ToolEr
 | `evidence_observations` | `EvidenceObservation[]` for observation records committed by this run result. Empty when the request records no observations. Shape is owned by [API State Schemas](schema-state.md#evidence-and-run-snapshot-shapes); observation source and assurance values are owned by [API Value Sets](schema-value-sets.md#evidence-observation-values). |
 | `current_close_basis` | `CurrentCloseBasis | null` after this run is recorded. Non-null means this Run established the current close basis; `null` means this Run did not establish one. Shape is owned by [API State Schemas](schema-state.md#close-readiness-and-validation-shapes). |
 | `blocker_refs` | `StateRecordRef[]` for run- or evidence-related blockers committed or still relevant because of this result. |
-| `state` | Current `StateSummary` after the run is recorded. Nested state fields, including `write_authority_summary` after any `Write Authorization` consumption, are owned by [API State Schemas](schema-state.md). When a product-write Run consumes an authorization, that summary can expose `status=consumed`, `consumed_by_run_ref`, and observation refs created by the consuming Run. |
+| `state` | Current `StateSummary` after the run is recorded. Nested state fields, including `write_check_summary` after any `Write Check` consumption, are owned by [API State Schemas](schema-state.md). When a product-write Run consumes a Write Check, that summary can expose `status=consumed`, `consumed_by_run_ref`, and observation refs created by the consuming Run. |
 
-Nested `StateRecordRef`, `RunSummary`, `ObservedChanges`, `EvidenceSummary`, `EvidenceCoverageItem`, `EvidenceObservation`, `StateSummary`, and `ArtifactRef` field bodies stay with the schema owners linked above. Exact persistence effects, including staged-handle consumption, artifact promotion, evidence updates, evidence observation records, replay rows, and `Write Authorization` consumption, stay with [Storage Effects](../storage-effects.md) and [Artifact Storage](../storage-artifacts.md).
+Nested `StateRecordRef`, `RunSummary`, `ObservedChanges`, `EvidenceSummary`, `EvidenceCoverageItem`, `EvidenceObservation`, `StateSummary`, and `ArtifactRef` field bodies stay with the schema owners linked above. Exact persistence effects, including staged-handle consumption, artifact promotion, evidence updates, evidence observation records, replay rows, and `Write Check` consumption, stay with [Storage Effects](../storage-effects.md) and [Artifact Storage](../storage-artifacts.md).
 
 ## Success result
 
@@ -185,7 +184,7 @@ The method may commit compatible run-related blocker state when the run is recor
 
 Not allowed:
 
-- A committed blocked result must not hide invalid staged handles, missing `Write Authorization`, stale state, stale authorization basis, or local access failures.
+- A committed blocked result must not hide invalid staged handles, missing `Write Check`, stale state, stale Write Check basis, or invocation-context failures.
 
 Those failures are rejected before commit.
 
@@ -194,34 +193,34 @@ Those failures are rejected before commit.
 Returns `ToolRejectedResponse` for:
 
 - stale `expected_state_version`
-- stale `Write Authorization` basis
-- missing or invalid `Write Authorization` for product writes
-- expired `Write Authorization`
-- incompatible `Write Authorization` path, baseline, product-write flag, sensitivity category, Task, or Change Unit
+- stale `Write Check` basis
+- missing or invalid `Write Check` for product writes
+- expired `Write Check`
+- incompatible `Write Check` path, baseline, product-write flag, sensitivity category, Task, or Change Unit
 - invalid staged handle
 - incompatible staged-handle provenance
 - supported evidence update without required observation provenance
 - missing artifact
 - scope violation
 - baseline staleness
-- local access failure
-- insufficient capability
+- actor-source or operation-category mismatch
+- unsupported invocation context
 - validator failure
 
-Non-claim: invalid staged handles are validation failures with artifact-input details owned by [API error details](error-details.md#artifact-input-error-reason), not local access mismatch unless request-level local access itself failed.
+Non-claim: invalid staged handles are validation failures with artifact-input details owned by [API error details](error-details.md#artifact-input-error-reason), not invocation-context mismatch unless the request invocation itself failed.
 
 Public error code meaning, precedence, details, and rejected-response routing are owned by the error documents linked below.
 
-For a stale `Write Authorization` basis, rejection happens before consumption and creates no Run, evidence update, evidence observation, artifact link, artifact promotion, event, replay row, or `project_state.state_version` increment.
+For a stale `Write Check` basis, rejection happens before consumption and creates no Run, evidence update, evidence observation, artifact link, artifact promotion, event, replay row, or `project_state.state_version` increment.
 
-For an expired `Write Authorization`, rejection happens before consumption and creates no Run, event, replay row, artifact promotion, evidence update, evidence observation, authorization consumption, or `project_state.state_version` increment.
+For an expired `Write Check`, rejection happens before consumption and creates no Run, event, replay row, artifact promotion, evidence update, evidence observation, Write Check consumption, or `project_state.state_version` increment.
 
 ## Dry-run behavior
 
 For `dry_run=true`, a valid preview:
 
 - returns `ToolDryRunResponse`
-- creates no Run, current close basis, residual-risk IDs, evidence update, evidence observation, blocker update, artifact link, artifact promotion, or `Write Authorization` consumption
+- creates no Run, current close basis, residual-risk IDs, evidence update, evidence observation, blocker update, artifact link, artifact promotion, or `Write Check` consumption
 
 ## Storage effect
 
@@ -231,7 +230,7 @@ The examples are intentionally compact and method-local. The representative resp
 
 ## Minimal valid request
 
-This example records validation output from a method-local staged handle. Method-local precondition: `staged_runprobe_001` is unexpired, unconsumed, and belongs to `proj_runprobe_001` / `task_runprobe_001`; its recorded surface provenance, captured at staging time, is `surface_run_probe` and `surface_instance_run_probe_01`. The precondition is local to this document and does not reuse any other method example.
+This example records validation output from a method-local staged handle. Method-local precondition: `staged_runprobe_001` is unexpired, unconsumed, and belongs to `proj_runprobe_001` / `task_runprobe_001`; its recorded actor provenance, captured at staging time, is `agent_connection:conn_run_probe`. The precondition is local to this document and does not reuse any other method example.
 
 ```yaml
 method: volicord.record_run
@@ -249,7 +248,7 @@ params:
   kind: implementation
   run_id: null
   baseline_ref: baseline_runprobe_001
-  write_authorization_id: null
+  write_check_id: null
   summary: "Search-result count validation passed."
   observed_changes:
     changed_paths: []
@@ -263,8 +262,7 @@ params:
         handle_id: staged_runprobe_001
         project_id: proj_runprobe_001
         task_id: task_runprobe_001
-        created_by_surface_id: surface_run_probe
-        created_by_surface_instance_id: surface_instance_run_probe_01
+        created_by_actor_source: agent_connection:conn_run_probe
         content_type: application/json
         sha256: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
         size_bytes: 96
@@ -291,8 +289,7 @@ params:
       assurance_level: external_tool_result
       observed_by_actor_kind: null
       observed_actor_role: null
-      observed_by_surface_id: null
-      observed_by_surface_instance_id: null
+      observed_by_actor_source: null
       tool_name: "search-count-validator"
       tool_invocation_id: null
       tool_metadata:
@@ -353,8 +350,7 @@ run_summary:
         project_id: proj_runprobe_001
         task_id: task_runprobe_001
         state_version: 32
-      created_by_surface_id: surface_run_probe
-      created_by_surface_instance_id: surface_instance_run_probe_01
+      created_by_actor_source: agent_connection:conn_run_probe
       storage_ref: "artifact-storage://search-result-count-validation"
 registered_artifacts:
   - artifact_id: artifact_runprobe_report_001
@@ -373,8 +369,7 @@ registered_artifacts:
       project_id: proj_runprobe_001
       task_id: task_runprobe_001
       state_version: 32
-    created_by_surface_id: surface_run_probe
-    created_by_surface_instance_id: surface_instance_run_probe_01
+    created_by_actor_source: agent_connection:conn_run_probe
     storage_ref: "artifact-storage://search-result-count-validation"
 evidence_summary:
   status: sufficient
@@ -415,8 +410,7 @@ evidence_summary:
             project_id: proj_runprobe_001
             task_id: task_runprobe_001
             state_version: 32
-          created_by_surface_id: surface_run_probe
-          created_by_surface_instance_id: surface_instance_run_probe_01
+          created_by_actor_source: agent_connection:conn_run_probe
           storage_ref: "artifact-storage://search-result-count-validation"
       gap_refs: []
   artifact_refs:
@@ -436,8 +430,7 @@ evidence_summary:
         project_id: proj_runprobe_001
         task_id: task_runprobe_001
         state_version: 32
-      created_by_surface_id: surface_run_probe
-      created_by_surface_instance_id: surface_instance_run_probe_01
+      created_by_actor_source: agent_connection:conn_run_probe
       storage_ref: "artifact-storage://search-result-count-validation"
   observation_refs:
     - record_kind: evidence_observation
@@ -467,8 +460,7 @@ evidence_observations:
     assurance_level: external_tool_result
     observed_by_actor_kind: agent
     observed_actor_role: agent
-    observed_by_surface_id: surface_run_probe
-    observed_by_surface_instance_id: surface_instance_run_probe_01
+    observed_by_actor_source: agent_connection:conn_run_probe
     tool_name: "search-count-validator"
     tool_invocation_id: null
     tool_metadata:
@@ -491,8 +483,7 @@ evidence_observations:
           project_id: proj_runprobe_001
           task_id: task_runprobe_001
           state_version: 32
-        created_by_surface_id: surface_run_probe
-        created_by_surface_instance_id: surface_instance_run_probe_01
+        created_by_actor_source: agent_connection:conn_run_probe
         storage_ref: "artifact-storage://search-result-count-validation"
     limitations: []
     observed_at: "<example-observed-at>"
@@ -570,7 +561,7 @@ state:
   shaping_readiness: null
   pending_user_judgment_refs: []
   blocker_refs: []
-  write_authority_summary: null
+  write_check_summary: null
   evidence_summary: null
   close_state: null
   close_blockers: []
@@ -582,8 +573,8 @@ state:
 - Request envelope, response branches, and dry-run summaries: [API Schema Core](schema-core.md).
 - `RunSummary`, `EvidenceSummary`, `EvidenceCoverageItem`, `EvidenceObservation`, `CurrentCloseBasis`, `ResidualRisk`, `StateSummary`, and refs: [API State Schemas](schema-state.md).
 - `ArtifactInput`, `StagedArtifactHandle`, and `ArtifactRef`: [API Artifact Schemas](schema-artifacts.md).
-- `Write Authorization` and close-relevant evidence boundaries: [Core Model](../core-model.md).
+- `Write Check` and close-relevant evidence boundaries: [Core Model](../core-model.md).
 - Product Repository path normalization: [Runtime Boundaries](../runtime-boundaries.md#product-repository-api-path-normalization).
-- Supported values and access classes: [API Value Sets](schema-value-sets.md).
+- Supported values and operation categories: [API Value Sets](schema-value-sets.md#operation-category-values).
 - Public errors, precedence, response routing, and artifact-input detail values: [API error codes](error-codes.md), [API error precedence](error-precedence.md), [API error routing](error-routing.md), and [artifact-input error details](error-details.md#artifact-input-error-reason).
 - Persistence effects and artifact promotion: [Storage Effects](../storage-effects.md) and [Artifact Storage](../storage-artifacts.md).

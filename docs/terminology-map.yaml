@@ -174,13 +174,10 @@ identifier_preservation:
     - "ToolError.details"
     - "ErrorCode"
     - "SensitiveActionScope"
-    - "AuthorizedAttemptScope"
     - "connection_id"
     - "connection.mode"
     - "actor_source"
     - "operation_category"
-    - "default_project_id"
-    - "installation_id"
     - "host_kind"
     - "host_scope"
     - "server_name"
@@ -189,7 +186,6 @@ identifier_preservation:
     - "last_verified_status"
     - "agent_connections"
     - "connection_projects"
-    - "host_installations"
     - "active_change_unit_ref"
     - "state_version"
     - "status=active"
@@ -207,14 +203,14 @@ identifier_preservation:
     - "volicord"
     - "volicord-mcp"
     - "volicord.list_projects"
-    - "volicord agent install"
+    - "volicord agent connect"
     - "VOLICORD_BIN"
     - "VOLICORD_PROJECT_ID"
     - "VOLICORD_HOME"
     - "~/.volicord"
     - "volicord-artifact://{project_id}/{artifact_id}"
-    - "volicord-<integration>"
-    - "volicord-<integration>.mcp.json"
+    - "volicord-<connection>"
+    - "volicord-<connection>.mcp.json"
     - "volicord-host-entry-v1"
     - "volicord-repository-guidance-v1"
     - "<!-- BEGIN VOLICORD MANAGED GUIDANCE v1 -->"
@@ -226,7 +222,7 @@ identifier_preservation:
     - "Volicord Runtime Home"
     - "Agent Connection"
     - "User Channel"
-    - "Host Installation"
+    - "managed host configuration state"
     - "Projection"
     - "Write Check"
 avoid:
@@ -236,7 +232,7 @@ avoid:
     - phrase: "local work-authority server"
       use: "local work-authority product/system for Volicord; for implementation context use Volicord implementation, Volicord source repository, Volicord Rust workspace, Volicord installation, `volicord`, or `volicord-mcp` as applicable."
     - phrase: "coding-agent integration"
-      use: "agent-host integration, Agent Connection, Host Installation, or agent connection according to context."
+      use: "agent-host integration, Agent Connection, managed host configuration state, or agent connection according to context."
     - phrase: "Volicord-as-server product label"
       use: "Volicord, Volicord implementation, Volicord source repository, Volicord Rust workspace, Volicord installation, `volicord`, or `volicord-mcp` according to context."
     - phrase: "server implementation set"
@@ -249,7 +245,7 @@ avoid:
       use: "current scope or currently applied scope, except when preserving an exact identifier or status value."
     - phrase: "active Change Unit"
       use: "current Change Unit or currently applied Change Unit, except when preserving an exact identifier such as `active_change_unit_ref`."
-    - phrase: "active surface context"
+    - phrase: "active connection context"
       use: "current connection context or currently applied connection context."
     - phrase: "verification expectations"
       use: "verification criteria when the meaning is user-visible criteria for checking work."
@@ -663,7 +659,7 @@ terms:
       - en: "docs/en/reference/api/schema-value-sets.md"
         ko: "docs/ko/reference/api/schema-value-sets.md"
     notes:
-      - "A reserved value may be listed as vocabulary or reserved surface area without being supported behavior."
+      - "A reserved value may be listed as vocabulary or reserved extension area without being supported behavior."
       - "Presence in a value set does not make behavior supported."
       - "Mark reserved values at the point of use; do not imply default, required, supported, enforced, accepted, verified, or close-ready behavior unless the semantic owner defines that supported behavior."
   profile_gated_value:
@@ -818,7 +814,7 @@ terms:
     preserve_as_identifier:
       - "scope"
       - "scope_decision"
-      - "AuthorizedAttemptScope"
+      - "WriteCheckAttemptScope"
       - "SensitiveActionScope"
     primary_owner:
       en: "docs/en/reference/core-model.md"
@@ -1381,7 +1377,7 @@ terms:
     notes:
       - "Use for the local MCP host connection unit identified by `connection_id`."
       - "`connection.mode` is either `read_only` or `workflow`."
-      - "Do not use as a synonym for Product Repository, Runtime Home, User Channel, or Host Installation."
+      - "Do not use as a synonym for Product Repository, Runtime Home, User Channel, or managed host configuration state."
       - "Do not make Agent Connection wording sound like OS permission, secret isolation, filesystem ACLs, or user authority."
   connection_id:
     category: "identifier"
@@ -1491,7 +1487,7 @@ terms:
       - en: "docs/en/reference/api/schema-core.md"
         ko: "docs/ko/reference/api/schema-core.md"
     notes:
-      - "`actor_source` is durable provenance, not a registered surface or user-identity proof."
+      - "`actor_source` is durable provenance, not user identity or authority proof."
       - "Supported provenance values are `agent_connection:<connection_id>`, `local_user`, and `system`."
       - "Only User Channel provenance can satisfy authority-bearing user-judgment requirements."
   operation_category:
@@ -1518,17 +1514,15 @@ terms:
     notes:
       - "`operation_category` is an internal API operation classification, not OS permission, host trust, or broad authority."
       - "Supported categories are `read`, `agent_workflow`, `user_only`, and `admin_local`."
-  host_installation:
+  managed_host_configuration_state:
     category: "product_label"
-    en: "Host Installation"
-    ko_reference: "Host Installation"
-    ko_user: "호스트 설치"
-    ko_reference_first_reference: "`Host Installation`(호스트 설치)"
+    en: "managed host configuration state"
+    ko_reference: "managed host configuration state"
+    ko_user: "관리 호스트 설정 상태"
+    ko_reference_first_reference: "`managed host configuration state`(관리 호스트 설정 상태)"
     preserve_as_label:
-      - "Host Installation"
+      - "managed host configuration state"
     preserve_as_identifier:
-      - "installation_id"
-      - "host_installations"
       - "host_kind"
       - "host_scope"
       - "last_verified_status"
@@ -1545,8 +1539,8 @@ terms:
       - en: "docs/en/reference/storage-records.md"
         ko: "docs/ko/reference/storage-records.md"
     notes:
-      - "Use the exact product label when naming the managed host setup inventory record."
-      - "Do not treat Host Installation as proof that the external host trusted, approved, loaded, or exposed the MCP server."
+      - "Use this label for managed host configuration and last-known verification state."
+      - "Do not treat managed host configuration state as proof that the external host trusted, approved, loaded, or exposed the MCP server."
   volicord_list_projects:
     category: "identifier"
     en: "volicord.list_projects"
@@ -1759,7 +1753,7 @@ terms:
       ko: "docs/ko/reference/design-quality.md"
     related_references: []
     notes:
-      - "Use for the Design Quality reference boundary that routes observations to relevant judgment, evidence, scope, surface-capability, residual-risk, or close-readiness owners."
+      - "Use for the Design Quality reference boundary that routes observations to relevant judgment, evidence, scope, connection-capability, residual-risk, or close-readiness owners."
       - "Design-quality wording does not create an independent close blocker, QA result, acceptance decision, residual-risk decision, evidence authority, validator catalog, or close authority."
       - "Product effects must be defined by the relevant owner document or owner contract."
   error_code:

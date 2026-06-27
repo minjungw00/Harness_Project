@@ -5,7 +5,7 @@ Rust implementation:
 
 - `volicord.status` as a read-only path
 - `volicord.intake` as a committed state-mutation path
-- `volicord.prepare_write` as a policy- and authorization-sensitive path
+- `volicord.prepare_write` as a policy- and Write Check-sensitive path
 
 It names source files and symbols so developers can follow the code. It does
 not define exact public method behavior, request or response schemas, storage
@@ -26,7 +26,7 @@ sequenceDiagram
   Host->>MCP: JSON-RPC tools/call
   MCP->>MCP: call_tool_result extracts name and arguments
   MCP->>MCP: McpAdapter::call_tool routes tool
-  MCP->>MCP: prepare_integration_arguments selects project and fills envelope
+  MCP->>MCP: prepare_connection_arguments selects project and fills envelope
   MCP->>MCP: decode_params decodes typed request
   MCP->>MCP: McpDerivedInvocationContext::core_invocation derives InvocationContext
   MCP->>Core: CoreService method(request, invocation)
@@ -51,23 +51,22 @@ The shared adapter path lives in
 - `McpAdapter::call_tool` matches the tool name, calls
   `prepare_typed_request<T>`, and dispatches to the matching `CoreService`
   method.
-- `prepare_typed_request<T>` derives the request's method-level access class
+- `prepare_typed_request<T>` derives the request's method-level operation category
   from the adapter-controlled tool/method mapping, rather than caller-supplied
   authority fields, then decodes the prepared arguments with
   `decode_params<T>`.
-- `prepare_integration_arguments` checks the request envelope against
-  `McpIntegrationContext`, selects one permitted project for the call, and
+- `prepare_connection_arguments` checks the request envelope against
+  `McpConnectionContext`, selects one permitted project for the call, and
   fills the trusted envelope fields before typed decoding.
 - Project selection creates `McpDerivedInvocationContext` for the selected
-  project, bound surface, surface instance, requested access class, and
+  project, bound Agent Connection, actor source, requested operation category, and
   adapter-binding basis.
 - `McpDerivedInvocationContext::core_invocation` creates the Core
   `InvocationContext`.
 
 Startup and session validation also live in `volicord-mcp`, especially
-`McpIntegrationStartupInspection::resolve`. That startup path reads Store
-directly through Runtime Home, Agent Integration Profile state, surface and
-surface-instance binding, role, membership, metadata, and local registry JSON
+`McpConnectionStartupInspection::resolve`. That startup path reads Store
+directly through Runtime Home, Agent Connection state, actor-source binding, role, membership, metadata, and local registry JSON
 checks. It does not select one project for all calls, and it is not an
 alternate implementation of public method behavior; public method execution
 routes through `volicord-core`.
@@ -78,13 +77,13 @@ and [`crates/volicord-core/src/methods/mod.rs`](../../../crates/volicord-core/sr
 
 - Method files call `prepare_or_response`, which delegates to
   `CoreService::prepare_request`.
-- `MethodPolicy` selects the required `AccessClass`, `TaskRequirement`,
+- `MethodPolicy` selects the required `OperationCategory`, `TaskRequirement`,
   `ReplayPolicy`, `FreshnessPolicy`, and `MethodEffectPolicy`.
 - `CoreService::prepare_request` validates the envelope, rejects adapter
   binding mismatches, validates committed-effect envelope requirements,
   computes `canonical_request_hash`, opens `CoreProjectStore`, reads
-  `project_state`, derives `VerifiedSurfaceContext`, handles replay preflight,
-  resolves the Task, checks state-version freshness, checks method access, and
+  `project_state`, derives `VerifiedInvocationContext`, handles replay preflight,
+  resolves the Task, checks state-version freshness, checks operation category, and
   produces `PreparedRequest`.
 - `CoreService::execute_prepared_request` routes `OwnerPipelineBranch` to
   read-only, no-effect, dry-run, or committed mutation response construction.
@@ -116,8 +115,8 @@ and method-specific planning:
 Do not treat all blocked-looking outcomes as the same implementation path. For
 example, `volicord.prepare_write` can reject before commit with no effect, return
 a dry-run preview with no effect, commit a non-allow decision event without
-creating a `Write Authorization`, or commit an allowed decision that inserts a
-`Write Authorization`.
+creating a `Write Check`, or commit an allowed decision that inserts a
+`Write Check`.
 
 ## `volicord.status`: read-only path
 
@@ -129,7 +128,7 @@ Primary source path:
 
 1. [`crates/volicord-types/src/methods.rs`](../../../crates/volicord-types/src/methods.rs)
    defines `StatusRequest`, `StatusInclude`, `StatusResult`, and the
-   `MethodAccessClass` implementation that returns `AccessClass::ReadStatus`.
+   `MethodOperationCategory` implementation that returns `OperationCategory::Read`.
 2. [`crates/volicord-mcp/src/lib.rs`](../../../crates/volicord-mcp/src/lib.rs)
    routes `"volicord.status"` in `McpAdapter::call_tool`, decodes
    `StatusRequest`, derives `InvocationContext`, and calls
@@ -149,8 +148,8 @@ Lifecycle:
 1. The MCP host sends `tools/call` with `name="volicord.status"`.
 2. `call_tool_result` extracts the tool name and arguments.
 3. `McpAdapter::call_tool` routes the call to the status branch.
-4. `prepare_typed_request` derives the status access class, selects an allowed
-   project from the `McpIntegrationContext`, fills the trusted envelope fields,
+4. `prepare_typed_request` derives the status operation category, selects an allowed
+   project from the `McpConnectionContext`, fills the trusted envelope fields,
    decodes `StatusRequest`, and produces the Core `InvocationContext`.
 5. `CoreService::status` serializes the typed request to request JSON and calls
    `prepare_or_response` with `MethodPolicy::exact`,
@@ -177,7 +176,7 @@ What does not happen:
 - No state-version increment.
 - No task event.
 - No replay row.
-- No `Write Authorization` change.
+- No `Write Check` change.
 - No project-continuity record creation.
 
 Representative tests:
@@ -189,7 +188,7 @@ Representative tests:
 - `adapter_and_direct_core_status_have_equivalent_response_meaning` in
   [`crates/volicord-mcp/src/lib.rs`](../../../crates/volicord-mcp/src/lib.rs)
 - `mcp_and_direct_status_omit_same_excluded_projection_fields` in
-  [`tests/integration/mcp_surface.rs`](../../../tests/integration/mcp_surface.rs)
+  [`tests/integration/mcp_connection.rs`](../../../tests/integration/mcp_connection.rs)
 - `status_projection_matches_public_close_check_and_stays_read_only` in
   [`tests/conformance/baseline.rs`](../../../tests/conformance/baseline.rs)
 
@@ -211,7 +210,7 @@ Primary source path:
 
 1. [`crates/volicord-types/src/methods.rs`](../../../crates/volicord-types/src/methods.rs)
    defines `IntakeRequest`, `InitialScope`, `IntakeResult`, and the
-   `MethodAccessClass` implementation that returns `AccessClass::CoreMutation`.
+   `MethodOperationCategory` implementation that returns `OperationCategory::AgentWorkflow`.
 2. [`crates/volicord-mcp/src/lib.rs`](../../../crates/volicord-mcp/src/lib.rs)
    routes `"volicord.intake"` in `McpAdapter::call_tool`, decodes
    `IntakeRequest`, derives `InvocationContext`, and calls
@@ -239,7 +238,7 @@ Lifecycle:
    `ReplayPolicy::Committed`.
 4. `prepare_or_response` delegates to `CoreService::prepare_request` for common
    preflight. Committed calls use the shared committed-effect envelope checks,
-   replay preflight, freshness policy, and access checks.
+   replay preflight, freshness policy, and operation-category checks.
 5. The method rejects `ResumePolicy::RejectIfActive` when the current project
    state already has an active Task.
 6. `plan_intake` resolves whether to create a new Task, resume the active Task,
@@ -281,8 +280,8 @@ Representative tests:
   [`crates/volicord-core/src/methods/tests.rs`](../../../crates/volicord-core/src/methods/tests.rs)
 - `adapter_and_direct_core_intake_dry_run_have_equivalent_response_meaning` in
   [`crates/volicord-mcp/src/lib.rs`](../../../crates/volicord-mcp/src/lib.rs)
-- `one_mcp_session_with_baseline_workflow_surface_runs_full_access_workflow` in
-  [`tests/integration/mcp_surface.rs`](../../../tests/integration/mcp_surface.rs)
+- `connection_invocation_is_injected_and_single_project_is_auto_selected` in
+  [`tests/integration/mcp_connection.rs`](../../../tests/integration/mcp_connection.rs)
 - `no_effect_branches_state_version_and_idempotency_are_stable` in
   [`tests/conformance/baseline.rs`](../../../tests/conformance/baseline.rs)
 
@@ -296,7 +295,7 @@ Exact behavior questions:
 - Replay and error behavior: [API Errors](../reference/api/errors.md) and the
   method owner
 
-## `volicord.prepare_write`: policy and authorization path
+## `volicord.prepare_write`: policy and Write Check path
 
 Reference owner:
 
@@ -306,8 +305,8 @@ Primary source path:
 
 1. [`crates/volicord-types/src/methods.rs`](../../../crates/volicord-types/src/methods.rs)
    defines `PrepareWriteRequest`, `PrepareWriteResult`, and the
-   `MethodAccessClass` implementation that returns
-   `AccessClass::WriteAuthorization`.
+   `MethodOperationCategory` implementation that returns
+   `OperationCategory::AgentWorkflow`.
 2. [`crates/volicord-mcp/src/lib.rs`](../../../crates/volicord-mcp/src/lib.rs)
    routes `"volicord.prepare_write"` in `McpAdapter::call_tool`, decodes
    `PrepareWriteRequest`, derives `InvocationContext`, and calls
@@ -323,8 +322,8 @@ Primary source path:
 6. [`crates/volicord-core/src/policy/judgment_relevance.rs`](../../../crates/volicord-core/src/policy/judgment_relevance.rs)
    supplies judgment relevance checks used by the planner.
 7. [`crates/volicord-store/src/core_pipeline.rs`](../../../crates/volicord-store/src/core_pipeline.rs)
-   applies `CoreStorageMutation::InsertWriteAuthorization` when the committed
-   allowed branch creates an authorization.
+   applies `CoreStorageMutation::InsertWriteCheck` when the committed
+   allowed branch creates a Write Check.
 
 Lifecycle:
 
@@ -345,20 +344,20 @@ Lifecycle:
    `sensitive_categories`, and Product Repository paths. It resolves the Task
    and current Change Unit, compares product-write intent, baseline, path
    scope, pending user-owned judgments, sensitive-action approval, verified
-   access class, and surface capability.
+   operation category, and connection capability.
 7. `prepare_write_decision` classifies the collected
    `WriteDecisionReason` values. With no reasons, the plan is allowed. With
    reasons, the plan is a non-allow decision.
 8. If the request is a dry run, `CoreService::execute_prepared_request` receives
    `OwnerPipelineBranch::DryRunPreview` with `prepare_write_dry_run_summary`.
-   No `Write Authorization` ID is allocated and no Store commit runs.
+   No `Write Check` ID is allocated and no Store commit runs.
 9. For a committed allowed plan, `OwnerPipelineBranch::CommitMutation` carries
-   `CoreStorageMutation::InsertWriteAuthorization`,
-   `event_kind="write_authorization_created"`, and result fields containing
-   the new `write_authorization_ref`.
+   `CoreStorageMutation::InsertWriteCheck`,
+   `event_kind="write_check_created"`, and result fields containing
+   the new `write_check_ref`.
 10. For a committed non-allow plan, `OwnerPipelineBranch::CommitMutation`
     carries `event_kind="write_decision_recorded"` and no
-    `InsertWriteAuthorization` mutation. The Store transaction still records
+    `InsertWriteCheck` mutation. The Store transaction still records
     the decision event, advances state version, and stores replay data when the
     committed call is idempotent.
 11. `CoreProjectStore::commit_mutation` executes the transaction and returns a
@@ -368,37 +367,37 @@ Lifecycle:
 What changes by branch:
 
 - Preflight or early validation rejection has no Core commit and creates no
-  `Write Authorization`.
+  `Write Check`.
 - Dry-run returns `ToolDryRunResponse`, has no Core commit, and allocates no
-  durable `Write Authorization` ID.
+  durable `Write Check` ID.
 - Committed non-allow decisions commit an audit/result event but create no
-  consumable `Write Authorization`.
+  consumable `Write Check`.
 - Committed allowed decisions commit an event and
-  `CoreStorageMutation::InsertWriteAuthorization`.
+  `CoreStorageMutation::InsertWriteCheck`.
 - Idempotent replay returns the stored original response through replay
-  handling instead of creating another authorization.
+  handling instead of creating another Write Check.
 
 Representative tests:
 
-- `prepare_write_allowed_creates_one_authorization_with_post_commit_basis` in
+- `prepare_write_allowed_creates_one_write_check_with_post_commit_basis` in
   [`crates/volicord-core/src/methods/tests.rs`](../../../crates/volicord-core/src/methods/tests.rs)
-- `prepare_write_blocked_path_creates_no_authorization` in
+- `prepare_write_blocked_path_creates_no_write_check` in
   [`crates/volicord-core/src/methods/tests.rs`](../../../crates/volicord-core/src/methods/tests.rs)
-- `prepare_write_dry_run_has_no_authorization_effect` in
+- `prepare_write_dry_run_has_no_write_check_effect` in
   [`crates/volicord-core/src/methods/tests.rs`](../../../crates/volicord-core/src/methods/tests.rs)
-- `prepare_write_unregistered_grant_fails_before_method_decision` in
+- `prepare_write_user_only_category_is_access_rejection` in
   [`crates/volicord-core/src/methods/tests.rs`](../../../crates/volicord-core/src/methods/tests.rs)
-- `missing_write_authorization_grant_blocks_prepare_write` in
-  [`tests/integration/mcp_surface.rs`](../../../tests/integration/mcp_surface.rs)
+- `read_only_mode_rejects_agent_workflow_methods_before_core` in
+  [`tests/integration/mcp_connection.rs`](../../../tests/integration/mcp_connection.rs)
 - `committed_non_allow_prepare_write_audit_and_replay_are_exact` and
-  `prepare_write_allocates_authorization_only_on_committed_allowed_effect` in
+  `prepare_write_allocates_write_check_only_on_committed_allowed_effect` in
   [`tests/conformance/baseline.rs`](../../../tests/conformance/baseline.rs)
 
 Exact behavior questions:
 
 - Method behavior and decision branches:
   [Prepare-write method](../reference/api/method-prepare-write.md)
-- Core authority terms such as `Write Authorization`, write approval,
+- Core authority terms such as `Write Check`, write approval,
   sensitive-action approval, final acceptance, and residual-risk acceptance:
   [Core Model](../reference/core-model.md)
 - Product Repository path normalization:

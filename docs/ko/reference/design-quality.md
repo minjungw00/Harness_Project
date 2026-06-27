@@ -2,7 +2,7 @@
 
 ## 1. 담당하는 것 / 담당하지 않는 것
 
-이 참조 문서는 기준 범위의 설계 품질 라우팅 경계를 담당합니다. 이 경계는 품질 관찰 사항을 기존 판단, 증거, 범위, 잔여 위험, 접점 역량, 닫기 준비 상태 담당 문서로 읽을 수 있게 합니다.
+이 참조 문서는 기준 범위의 설계 품질 라우팅 경계를 담당합니다. 이 경계는 품질 관찰 사항을 기존 판단, 증거, 범위, 잔여 위험, connection capability, 닫기 준비 상태 담당 문서로 읽을 수 있게 합니다.
 
 설계 품질 관찰 사항은 아래 항목을 식별할 때 판단, 증거 또는 범위 담당 문서로 이어집니다.
 
@@ -17,7 +17,7 @@
 
 - 기준 범위에서 판단 라우팅, 증거/범위 참조로 쓰이는 설계 품질 역할
 - 설계 품질 관찰 사항을 `judgment_kind=product_decision`, `judgment_kind=technical_decision`, `judgment_kind=scope_decision`으로 보내는 방식
-- 설계 품질 관찰 사항을 `scope`, `user_judgment`, `evidence`, `artifact_availability`, `residual_risk_visibility`, `surface_capability` 같은 기존 지원 차단 사유 범주로 연결하는 방식
+- 설계 품질 관찰 사항을 `scope`, `user_judgment`, `evidence`, `artifact_availability`, `residual_risk_visibility`, `connection_capability` 같은 기존 지원 차단 사유 범주로 연결하는 방식
 - 기준 범위 설계 품질 심각도 경계. 심각도 형태의 문구는 관련 담당 계약이 별도 행동을 요구하지 않는 한 조언성 우선순위입니다.
 - 설계 품질 관찰 사항, 지원되는 `ValidatorResult.validator_id` 값, 지원 범위 밖 품질 정책 자료 사이의 경계
 
@@ -39,7 +39,7 @@
 - API, 저장소, 스키마: API 메서드 동작, 메서드별 차단 사유 생성, 저장 효과, SQLite DDL, 지속 테이블, 지원되는 검증기 계열
 - 증거와 보고: 증거 권한, QA 결과, 운영 보고서, 적합성 목록, 상태 보기 권한, 렌더링된 보고서, 템플릿 본문
 
-참조 문구는 설계 품질 경계와 담당 문서 안내를 문서화합니다. Volicord 런타임 상태, 사용자 소유 판단, `Write Authorization`, 민감 동작 승인, 증거, QA, 최종 수락, 잔여 위험 수락, 닫기 준비 상태를 만들지는 않습니다.
+참조 문구는 설계 품질 경계와 담당 문서 안내를 문서화합니다. Volicord 런타임 상태, 사용자 소유 판단, `Write Check`, 민감 동작 승인, 증거, QA, 최종 수락, 잔여 위험 수락, 닫기 준비 상태를 만들지는 않습니다.
 
 ## 2. 기준 범위 설계 품질 역할
 
@@ -54,7 +54,7 @@
 | 범위 경계 변경 | [범위 경계 변경](#design-quality-scope-boundary-change) 참조 |
 | 닫기 관련 뒷받침 부족 | [닫기 관련 뒷받침 부족](#design-quality-missing-close-relevant-support) 참조 |
 | 잔여 위험 표시 | [잔여 위험 표시](#design-quality-residual-risk-visibility) 참조 |
-| 접점 역량 공백 | [접점 역량 공백](#design-quality-surface-capability-gap) 참조 |
+| connection capability 공백 | [connection capability 공백](#design-quality-connection-capability-gap) 참조 |
 | 조언성 심각도 | [조언성 심각도](#design-quality-advisory-severity) 참조 |
 | 집중된 다음 행동 | [집중된 다음 행동](#design-quality-focused-next-action) 참조 |
 | 담당 문서 공백 | [담당 문서 공백](#design-quality-no-applicable-owner-path) 참조 |
@@ -65,7 +65,7 @@
 |---|---|
 | 독립적인 닫기 권한 | 설계 품질 발견 사항은 자동으로 닫기 차단 사유, 차단 사유 범주, 제품 수락 관문, 범위 재정의, 증거 규칙, 보장이 되지 않습니다. |
 | 증거와 위험 | 증거 요구사항, 최종 수락, 잔여 위험 표시, 잔여 위험 수락은 Core 증거 권한이나 다른 관련 참조 계약이 그 요구사항 또는 효과를 정의할 때만 닫기에 영향을 줍니다. |
-| 판단과 권한 | 발견 사항은 사용자 소유 판단, `Write Authorization`, 민감 동작 승인, 최종 수락, 잔여 위험 수락, 필요한 증거를 대체하지 않습니다. |
+| 판단과 권한 | 발견 사항은 사용자 소유 판단, `Write Check`, 민감 동작 승인, 최종 수락, 잔여 위험 수락, 필요한 증거를 대체하지 않습니다. |
 | 심각도 | 심각도 라벨은 조언성 우선순위입니다. API, 저장소, 보안, 범위, 닫기 준비 상태 담당 문서를 우회하지 않습니다. |
 | 집중된 행동 | 다음 행동은 관련 담당 계약이 요구하는 범위로 제한되어야 하며, 문서 경로 안내상의 편의로 그 범위를 넓힐 수 없습니다. |
 | 담당 문서 공백 | 담당 문서 공백은 필요한 담당 문서나 계약이 없거나 불분명하다는 뜻입니다. 경로나 문서 경로가 제품 권한을 가진다는 뜻이 아닙니다. |
@@ -132,14 +132,14 @@
 닫기 영향:
 - 잔여 위험 표시 또는 잔여 위험 수락 계약이 의존성을 정의할 때만 닫기에 영향을 줍니다.
 
-<a id="design-quality-surface-capability-gap"></a>
-### 접점 역량 공백
+<a id="design-quality-connection-capability-gap"></a>
+### connection capability 공백
 
 조건:
-- 연결된 접점이 주장한 동작이나 보장을 정직하게 지원하지 못합니다.
+- 연결된 Agent Connection이 주장한 동작이나 보장을 정직하게 지원하지 못합니다.
 
 라우팅:
-- 관련 역량 계약과 API 오류 계약에 따라 `CloseReadinessBlocker.category=surface_capability`, `CAPABILITY_INSUFFICIENT`, 또는 낮아진 보장 표시를 사용합니다.
+- 관련 역량 계약과 API 오류 계약에 따라 `CloseReadinessBlocker.category=connection_capability`, `CAPABILITY_INSUFFICIENT`, 또는 낮아진 보장 표시를 사용합니다.
 
 닫기 영향:
 - 관련 역량 계약이나 API 오류 계약이 그 효과를 정의할 때만 닫기에 영향을 줍니다.
@@ -203,7 +203,7 @@
 | 범위 경계 변경 필요 | [범위 경계 라우팅](#design-quality-route-scope-boundary) 참조 |
 | 닫기 관련 뒷받침 부족 | [증거 라우팅](#design-quality-route-evidence) 참조 |
 | 닫기에 중요한 잔여 위험 | [잔여 위험 라우팅](#design-quality-route-residual-risk) 참조 |
-| 접점 역량이 주장을 뒷받침하지 못함 | [접점 역량 라우팅](#design-quality-route-surface-capability) 참조 |
+| connection capability이 주장을 뒷받침하지 못함 | [connection capability 라우팅](#design-quality-route-connection-capability) 참조 |
 
 <a id="design-quality-route-product-direction"></a>
 ### 제품 방향 미결정
@@ -268,14 +268,14 @@
 닫기 영향:
 - 적용되는 잔여 위험 계약이 의존성을 정의할 때만 닫기에 영향을 줍니다.
 
-<a id="design-quality-route-surface-capability"></a>
-### 접점 역량 라우팅
+<a id="design-quality-route-connection-capability"></a>
+### connection capability 라우팅
 
 조건:
-- 연결된 접점이 주장한 동작이나 보장을 정직하게 지원하지 못합니다.
+- 연결된 Agent Connection이 주장한 동작이나 보장을 정직하게 지원하지 못합니다.
 
 라우팅:
-- 관련 역량 계약과 API 오류 계약에 따라 `CloseReadinessBlocker.category=surface_capability`, `CAPABILITY_INSUFFICIENT`, 또는 낮아진 보장 표시를 사용합니다.
+- 관련 역량 계약과 API 오류 계약에 따라 `CloseReadinessBlocker.category=connection_capability`, `CAPABILITY_INSUFFICIENT`, 또는 낮아진 보장 표시를 사용합니다.
 
 닫기 영향:
 - 적용되는 역량 계약이나 API 오류 계약이 그 효과를 정의할 때만 닫기에 영향을 줍니다.
@@ -478,7 +478,7 @@
 
 ## 7. 검증기 ID 경계
 
-검증기 ID는 보고용 라벨입니다. Core 불변조건, 제품 관문, 닫기 차단 사유, 면제, 증거 기록, 사용자 판단, `Write Authorization`, 최종 수락, 잔여 위험 수락을 만들지 않습니다.
+검증기 ID는 보고용 라벨입니다. Core 불변조건, 제품 관문, 닫기 차단 사유, 면제, 증거 기록, 사용자 판단, `Write Check`, 최종 수락, 잔여 위험 수락을 만들지 않습니다.
 
 `ValidatorResult` 형태는 [API 상태 스키마](api/schema-state.md)가 담당합니다. 심각도 형태의 값과 지원되는 안정 `ValidatorResult.validator_id` 값의 경계는 [API 값 집합](api/schema-value-sets.md)이 담당합니다.
 

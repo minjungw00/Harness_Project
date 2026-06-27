@@ -33,7 +33,7 @@ Neighboring owners stay authoritative:
 - blocker routing: [API blocker routing](api/blocker-routing.md)
 - `ToolError.details`: [API error details](api/error-details.md)
 - storage record layout, persistence, artifact lifecycle, and storage effects: storage owners through [Reference Index](README.md)
-- support boundaries, security guarantees, and surface context: [Scope Reference](scope.md), [Security](security.md), and [Agent Integration](agent-integration.md)
+- support boundaries, security guarantees, and connection context: [Scope Reference](scope.md), [Security](security.md), and [Agent Integration](agent-integration.md)
 
 ## Authority boundary
 
@@ -50,7 +50,7 @@ Their meanings, precedence, routing, storage effects, and schema authority remai
 
 Template wording must not, by itself:
 
-- create `Write Authorization` or mutate owner records
+- create `Write Check` or mutate owner records
 - create evidence, persistent artifacts, final acceptance, or residual-risk acceptance
 - satisfy evidence, QA, verification, acceptance, close-readiness, or close gates
 - define storage layout, storage effects, or make a rendered body the storage authority
@@ -61,7 +61,7 @@ Template wording must not, by itself:
 
 ## Public error display labels
 
-Use this section to choose display labels and recovery cues when rendering public API errors for a user or agent-facing surface.
+Use this section to choose display labels and recovery cues when rendering public API errors for a user or agent-facing display.
 
 It does not define:
 
@@ -73,7 +73,7 @@ It does not define:
 Rendered error copy must:
 
 - Preserve the public `ErrorCode` when the exact diagnostic identifier is shown.
-- Pair a concise label with one recovery cue when the surface has room.
+- Pair a concise label with one recovery cue when the display has room.
 - Keep labels separate from `CloseReadinessBlocker.code`, `WriteDecisionReason.code`, `PlannedBlocker.code`, and `ToolError.details` keys.
 - Link to the API owner when explaining code meaning, precedence, response branches, blocker routing, or machine-readable details.
 
@@ -122,10 +122,10 @@ Label-selection input:
 - `MCP_UNAVAILABLE`.
 
 Suggested label:
-- Core or surface unavailable
+- Core or Agent Connection unavailable
 
 Recovery cue:
-- Reconnect Core, MCP, or the selected surface, or show that the route is unavailable.
+- Reconnect Core, MCP, or the selected Agent Connection, or show that the route is unavailable.
 
 <a id="label-local-access-mismatch"></a>
 ### `LOCAL_ACCESS_MISMATCH`
@@ -134,11 +134,11 @@ Label-selection input:
 - `LOCAL_ACCESS_MISMATCH`.
 
 Suggested label:
-- local access mismatch
+- invocation context mismatch
 
 Recovery cue:
 - Use the registered local transport, session, or binding.
-- Repair local access registration when needed.
+- Repair connection or project routing when needed.
 
 <a id="label-capability-insufficient"></a>
 ### `CAPABILITY_INSUFFICIENT`
@@ -147,10 +147,10 @@ Label-selection input:
 - `CAPABILITY_INSUFFICIENT`.
 
 Suggested label:
-- insufficient surface capability
+- insufficient connection capability
 
 Recovery cue:
-- Use a capable surface.
+- Use a compatible Agent Connection.
 - Reduce the operation or avoid the missing capability.
 
 <a id="label-no-active-task"></a>
@@ -179,11 +179,11 @@ Recovery cue:
 - Use the appropriate scope or baseline owner-defined action.
 - Request the needed user judgment.
 
-<a id="label-write-authorization"></a>
-### Write Authorization
+<a id="label-write-check"></a>
+### Write Check
 
 Label-selection input:
-- `WRITE_AUTHORIZATION_REQUIRED` or `WRITE_AUTHORIZATION_INVALID`.
+- `WRITE_CHECK_REQUIRED` or `WRITE_CHECK_INVALID`.
 
 Suggested label:
 - missing or unusable pre-write check
@@ -314,7 +314,7 @@ Recovery cue:
 
 ### Must not imply
 
-- The card creates `Write Authorization`, records evidence, accepts risk, or closes the Task.
+- The card creates `Write Check`, records evidence, accepts risk, or closes the Task.
 - A green or positive label is a canonical enum value without support from [API Value Sets](api/schema-value-sets.md).
 - Artifact availability alone proves evidence sufficiency.
 - Missing source data can be replaced by optimistic wording.
@@ -354,7 +354,7 @@ Otherwise, avoid those words.
 
 ### Must show
 
-- One focused decision request that separates the user's answer from evidence, acceptance, residual-risk acceptance, and `Write Authorization`.
+- One focused decision request that separates the user's answer from evidence, acceptance, residual-risk acceptance, and `Write Check`.
 - The exact question the user is being asked to decide.
 - Why this is a user-owned judgment rather than an agent inference.
 - Options that are short, distinct, and compatible with the current facts.
@@ -500,13 +500,13 @@ Use `Closed by owner result` only when `volicord.close_task` returned an actual 
 - Evidence gaps and artifact availability summary.
 - Close readiness, residual-risk summary, and guarantee level.
 - Source refs and freshness cues.
-- Current surface context and capability limits when they affect what the agent may safely infer.
+- Current connection context and capability limits when they affect what the agent may safely infer.
 - Only the language and owner sections needed for the next action.
 
 ### Must show
 
 - A compact support packet for an agent, not a replacement for owner records.
-- A readable surface-supported structure when the surface uses Markdown, JSON-like text, or another display shape.
+- A readable display-supported structure when the display uses Markdown, JSON-like text, or another display shape.
 - Authority and freshness cues visible in the packet.
 - Current task and scope in a compact form.
 - Pending user-owned judgments and blockers.
@@ -518,13 +518,13 @@ Use `Closed by owner result` only when `volicord.close_task` returned an actual 
 
 - The packet is Core state, storage state, evidence, acceptance, residual-risk acceptance, or close output.
 - A stale packet overrides newer state returned by an owner method.
-- The agent may bypass user judgment, `Write Authorization`, artifact rules, or close blockers.
+- The agent may bypass user judgment, `Write Check`, artifact rules, or close blockers.
 - The packet should include full schemas, DDL, logs, artifact bodies, or unrelated contract material by default.
 - The packet should include out-of-scope capability catalogs or paired bilingual docs by default.
 
 ### User-facing wording
 
-If the packet is visible to a user or chat surface, label it as read-only support context:
+If the packet is visible to a user or chat display, label it as read-only support context:
 
 - `Agent context packet, read-only support context.`
 - `Source state: {state_version}; observed at {observed_at}.`
@@ -535,7 +535,7 @@ Avoid wording that presents the packet as a record, approval, or close result.
 
 ### Owner links
 
-- [Agent Integration](agent-integration.md) for current surface context and capability declarations.
+- [Agent Integration](agent-integration.md) for current connection context and connection capability declarations.
 - [Projection and template display boundaries](projection-and-templates.md) for read-only display and freshness boundaries.
 - [Core Model](core-model.md) for authority, user-owned judgment, close readiness, and residual-risk boundaries.
 - [API State Schemas](api/schema-state.md), [API Judgment Schemas](api/schema-judgment.md), and [API Artifact Schemas](api/schema-artifacts.md) for packet input shapes.

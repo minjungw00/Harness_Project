@@ -61,9 +61,9 @@ Owns in the implementation:
 
 - Public request and result Rust shapes for supported methods.
 - Shared schema-shaped structs such as `ToolEnvelope`, `ToolResultBase`,
-  `StateRecordRef`, `StateSummary`, `WriteAuthorizationSummary`,
+  `StateRecordRef`, `StateSummary`, `WriteCheckSummary`,
   `EvidenceSummary`, `CloseReadinessBlocker`, and `ArtifactRef`.
-- Controlled value enums such as `MethodName`, `AccessClass`, `EffectKind`,
+- Controlled value enums such as `MethodName`, `OperationCategory`, `EffectKind`,
   `ResponseKind`, `ResumePolicy`, `PrepareWriteDecision`, and `ErrorCode`.
 - Opaque identifier wrappers and durable ID generation helpers.
 - Deterministic canonical JSON and request hashing.
@@ -82,7 +82,7 @@ Recommended first file:
 Important modules:
 
 - [`crates/volicord-types/src/methods.rs`](../../../crates/volicord-types/src/methods.rs)
-  for `MethodAccessClass`, method request structs, method result structs, and
+  for `MethodOperationCategory`, method request structs, method result structs, and
   `public_request_schema`.
 - [`crates/volicord-types/src/schema.rs`](../../../crates/volicord-types/src/schema.rs)
   for shared envelope, response, state, artifact, judgment, and display shapes.
@@ -97,19 +97,19 @@ Important modules:
 
 Important current symbols:
 
-- `MethodAccessClass`, `IntakeRequest`, `StatusRequest`,
+- `MethodOperationCategory`, `IntakeRequest`, `StatusRequest`,
   `PrepareWriteRequest`, `RecordRunRequest`, `CloseTaskRequest`
 - `ToolEnvelope`, `ToolResponse`, `ToolRejectedResponse`,
   `ToolDryRunResponse`, `ToolError`, `DryRunSummary`
-- `MethodName`, `AccessClass`, `EffectKind`, `ResponseKind`, `ErrorCode`
+- `MethodName`, `OperationCategory`, `EffectKind`, `ResponseKind`, `ErrorCode`
 - `RequiredNullable<T>`, `StateSummary`, `StateRecordRef`,
-  `WriteAuthorizationSummary`, `AuthorizedAttemptScope`
+  `WriteCheckSummary`, `WriteCheckAttemptScope`
 - `canonical_request_hash`, `DurableIdGenerator`, `DURABLE_ID_RETRY_LIMIT`
 
 Most relevant tests:
 
 - Unit tests in [`crates/volicord-types/src/lib.rs`](../../../crates/volicord-types/src/lib.rs),
-  including `typed_requests_derive_documented_access_classes`,
+  including `typed_requests_derive_documented_operation_categories`,
   `unknown_top_level_fields_are_rejected_on_public_requests`, and
   `authority_looking_request_fields_are_rejected`.
 
@@ -131,7 +131,7 @@ failures, and atomically committing Core mutations.
 Owns in the implementation:
 
 - Runtime Home resolution and registry/project path helpers.
-- Runtime Home initialization, project registration, and surface registration.
+- Runtime Home initialization, project registration, and Agent Connection registration.
 - SQLite open, schema validation, migration, and transaction helpers.
 - `CoreProjectStore` read helpers and `CoreStorageMutation` application.
 - The `CoreProjectStore::commit_mutation` atomic transaction boundary.
@@ -155,8 +155,11 @@ Important modules:
 - [`crates/volicord-store/src/runtime_home.rs`](../../../crates/volicord-store/src/runtime_home.rs)
   for `resolve_runtime_home` and `RuntimeHomeResolutionError`.
 - [`crates/volicord-store/src/bootstrap.rs`](../../../crates/volicord-store/src/bootstrap.rs)
-  for `initialize_runtime_home`, `register_project`, `register_surface`,
-  `ProjectRecord`, and `SurfaceRecord`.
+  for `initialize_runtime_home`, `register_project`, `ProjectRegistration`,
+  and `ProjectRecord`.
+- [`crates/volicord-store/src/agent_connections.rs`](../../../crates/volicord-store/src/agent_connections.rs)
+  for `AgentConnectionRecord`, `AgentConnectionRegistration`,
+  `ensure_agent_connection`, and `add_connection_project`.
 - [`crates/volicord-store/src/sqlite.rs`](../../../crates/volicord-store/src/sqlite.rs)
   for database paths, opening, validation, and `begin_immediate_transaction`.
 - [`crates/volicord-store/src/migrations.rs`](../../../crates/volicord-store/src/migrations.rs)
@@ -177,7 +180,7 @@ Important current symbols:
 - `ToolInvocationRecord`, `VerifiedReplayContext`, `PendingTaskEvent`
 - `CommitMutationInput`, `MutationCommitOutcome`, `CommittedMutationFacts`
 - `CoreStorageMutation`, `StorageEffectCounts`, `ProjectMutation`
-- `RuntimeHomeRecord`, `ProjectRegistration`, `SurfaceRegistration`
+- `RuntimeHomeRecord`, `ProjectRegistration`, `AgentConnectionRegistration`
 - `ArtifactStagingInsert`, `ArtifactStagingRecord`,
   `PersistentArtifactVerification`
 - `inspect_runtime_home`, `inspect_registry_database`,
@@ -190,7 +193,7 @@ Most relevant tests:
   [`crates/volicord-core/src/methods/tests.rs`](../../../crates/volicord-core/src/methods/tests.rs)
   for Store-visible effects.
 - Cross-layer storage checks in
-  [`tests/integration/mcp_surface.rs`](../../../tests/integration/mcp_surface.rs)
+  [`tests/integration/mcp_connection.rs`](../../../tests/integration/mcp_connection.rs)
   and [`tests/conformance/baseline.rs`](../../../tests/conformance/baseline.rs).
 
 Recommended next component:
@@ -212,8 +215,8 @@ Owns in the implementation:
 
 - `CoreService` and the public method entry functions on it.
 - Common preflight for envelope shape, adapter binding, request hashing, Store
-  opening, project state, surface verification, replay, Task resolution,
-  state-version freshness, and access checks.
+  opening, project state, invocation verification, replay, Task resolution,
+  state-version freshness, and operation-category checks.
 - Method-specific planning in `crates/volicord-core/src/methods/`.
 - Reusable policy helpers in `crates/volicord-core/src/policy/`.
 - Core response construction and routing to read-only, no-effect, dry-run, or
@@ -248,13 +251,13 @@ Important modules:
   for `CoreService::prepare_write`, `prepare_write_policy`, and
   `plan_prepare_write`.
 - [`crates/volicord-core/src/policy/`](../../../crates/volicord-core/src/policy/)
-  for access, replay, path, write-authorization, evidence, judgment relevance,
+  for access, replay, path, Write Check, evidence, judgment relevance,
   and close-readiness helpers.
 
 Important current symbols:
 
 - `CoreService`, `CoreResult`, `CorePipelineError`
-- `AdapterSessionBinding`, `InvocationContext`, `VerifiedSurfaceContext`,
+- `AdapterSessionBinding`, `InvocationContext`, `VerifiedInvocationContext`,
   `VerifiedActorContext`
 - `MethodPolicy`, `TaskRequirement`, `ReplayPolicy`, `FreshnessPolicy`,
   `MethodEffectPolicy`
@@ -274,11 +277,11 @@ Most relevant tests:
   exercises method plans and effects. Start with
   `status_is_read_only_including_dry_run`,
   `intake_commits_once_and_replays_without_effect`,
-  `prepare_write_allowed_creates_one_authorization_with_post_commit_basis`,
-  `prepare_write_dry_run_has_no_authorization_effect`, and
+  `prepare_write_allowed_creates_one_write_check_with_post_commit_basis`,
+  `prepare_write_dry_run_has_no_write_check_effect`, and
   `status_read_only_rejects_corrupt_owner_state_without_effect`.
 - Cross-layer confirmation lives in
-  [`tests/integration/mcp_surface.rs`](../../../tests/integration/mcp_surface.rs)
+  [`tests/integration/mcp_connection.rs`](../../../tests/integration/mcp_connection.rs)
   and [`tests/conformance/baseline.rs`](../../../tests/conformance/baseline.rs).
 
 Recommended next component:
@@ -292,7 +295,7 @@ Why it exists:
 
 `volicord-cli` implements the local `volicord` administrative executable and
 reusable agent setup modules. It handles Runtime Home initialization, project
-and surface registration, Agent Integration Profile installation, host-specific
+and Agent Connection registration, Agent Connection setup, host-specific
 MCP configuration, optional repository guidance, and preflight execution.
 
 Owns in the implementation:
@@ -303,8 +306,7 @@ Owns in the implementation:
   commands, and output.
 - Codex, Claude Code, and generic export host integration planning.
 - Optional Product Repository guidance rendering and managed-block updates.
-- Capability-profile and local-access metadata generation for registered
-  surfaces.
+- Agent Connection and invocation metadata generation.
 
 Does not own:
 
@@ -320,8 +322,7 @@ Recommended first file:
 Important modules:
 
 - [`crates/volicord-cli/src/main.rs`](../../../crates/volicord-cli/src/main.rs)
-  for process dispatch, `run_cli`, `command_init`, `command_project`, and
-  `command_surface`.
+  for process dispatch, `run_cli`, `command_init`, and `command_project`.
 - [`crates/volicord-cli/src/agent_command.rs`](../../../crates/volicord-cli/src/agent_command.rs)
   for `volicord agent` connection, project membership, status, verification,
   and uninstall command orchestration.
@@ -337,16 +338,14 @@ Important current symbols:
 - `run_cli`, `CliError`
 - `run_agent_command`, `agent_usage`, `AgentCommandError`,
   `AgentProcessOutput`
-- `command_install`, `command_status`, `command_verify`,
+- `command_connect`, `command_status`, `command_verify`,
   `command_uninstall`
 - `command_project_add`, `command_project_remove`
-- `command_guidance_apply`, `command_guidance_status`,
-  `command_guidance_remove`
 - `HostKind`, `HostScope`, `HostPlan`, `HostAdapter`, `Verification`
-- `GuidanceTarget`, `GuidancePlan`, `guidance_status`,
-  `plan_guidance_apply`, `apply_guidance_plan`, `plan_guidance_remove`
-- `capability_profile_json`, `local_access_json`,
-  `normalized_access_classes_from_local_access`
+- `AgentConnectionRegistration`, `ConnectionProjectRegistration`,
+  `AgentConnectionRecord`
+- `actor_source`, `operation_category`, `connection_id`,
+  `verification_basis`
 
 Most relevant tests:
 
@@ -360,7 +359,7 @@ Most relevant tests:
 Recommended next component:
 
 - Read `volicord-store` for bootstrap, inspection, and registry storage calls.
-  Read `volicord-mcp` for the `volicord-mcp --check --integration` preflight path
+  Read `volicord-mcp` for the `volicord-mcp --check --connection` preflight path
   that agent setup validates.
 
 ## `crates/volicord-mcp`
@@ -395,9 +394,9 @@ Recommended first file:
 Important modules:
 
 - [`crates/volicord-mcp/src/lib.rs`](../../../crates/volicord-mcp/src/lib.rs)
-  for `PUBLIC_METHOD_TOOL_NAMES`, `McpIntegrationStartupInspection`,
-  `McpIntegrationContext`, `McpAdapter`, `McpAdapter::call_tool`,
-  `prepare_integration_arguments`, `public_method_tools`, `run_stdio`,
+  for `PUBLIC_METHOD_TOOL_NAMES`, `McpConnectionStartupInspection`,
+  `McpConnectionContext`, `McpAdapter`, `McpAdapter::call_tool`,
+  `prepare_connection_arguments`, `public_method_tools`, `run_stdio_from_env`,
   `handle_json_rpc_request`, and `call_tool_result`.
 - [`crates/volicord-mcp/src/main.rs`](../../../crates/volicord-mcp/src/main.rs)
   for process-mode dispatch through `dispatch_args`.
@@ -405,27 +404,27 @@ Important modules:
 Important current symbols:
 
 - `PUBLIC_METHOD_TOOL_NAMES`, `McpToolDefinition`, `public_method_tools`
-- `McpIntegrationStartupInspection`, `McpIntegrationContext`,
+- `McpConnectionStartupInspection`, `McpConnectionContext`,
   `McpDerivedInvocationContext`
 - `McpAdapter`, `McpAdapter::derive_invocation_context`,
   `McpAdapter::call_tool`
-- `prepare_typed_request`, `prepare_integration_arguments`, `decode_params`
-- `run_stdio`, `run_stdio_from_env`, `run_preflight_check_from_env`,
+- `prepare_typed_request`, `prepare_connection_arguments`, `decode_params`
+- `run_stdio_from_env`, `run_preflight_check_from_env`,
   `preflight_check`
 - `McpAdapterError`, `call_tool_result`, `json_rpc_error_for_adapter`
 
 Most relevant tests:
 
 - Unit tests in [`crates/volicord-mcp/src/lib.rs`](../../../crates/volicord-mcp/src/lib.rs),
-  including `stdio_tools_list_exposes_exactly_public_method_tools`,
-  `bootstrap_registered_surface_can_call_status_through_adapter`,
-  `adapter_and_direct_core_status_have_equivalent_response_meaning`,
-  `adapter_and_direct_core_intake_dry_run_have_equivalent_response_meaning`,
-  and `adapter_derives_access_class_per_method_call`.
+  including `tool_sets_follow_connection_mode_and_exclude_user_only_recording`,
+  `connection_context_resolves_and_preflight_reports_allowed_project`,
+  `adapter_auto_selects_single_project_and_injects_connection_invocation`,
+  `read_only_mode_rejects_agent_workflow_calls_before_core`, and
+  `mcp_visible_schemas_make_project_selector_optional`.
 - [`crates/volicord-mcp/tests/binary_transport.rs`](../../../crates/volicord-mcp/tests/binary_transport.rs)
   exercises the binary, `--check`, stdio framing, reconnect behavior, and MCP
   response wrapping.
-- [`tests/integration/mcp_surface.rs`](../../../tests/integration/mcp_surface.rs)
+- [`tests/integration/mcp_connection.rs`](../../../tests/integration/mcp_connection.rs)
   exercises cross-layer MCP/Core/Store behavior.
 
 Recommended next component:
@@ -439,13 +438,13 @@ Why it exists:
 
 `volicord-test-support` provides disposable fixture infrastructure shared by
 implementation, integration, and conformance tests. It keeps Runtime Home,
-Product Repository, project registration, surface registration, request
+Product Repository, project registration, Agent Connection registration, request
 builders, and direct Store inspection helpers out of production crates.
 
 Owns in the implementation:
 
 - Temporary Runtime Home helpers under the system temporary directory.
-- Shared `CoreFixture` setup with one registered project and surface.
+- Shared `CoreFixture` setup with one registered project and Agent Connection.
 - Request builders for public method tests.
 - Fixture-only Store inspection and mutation helpers used by tests.
 - Small marker modules for future fixture and golden-output helpers.
@@ -484,7 +483,7 @@ Most relevant tests:
 
 - This crate is primarily exercised through
   [`crates/volicord-core/src/methods/tests.rs`](../../../crates/volicord-core/src/methods/tests.rs),
-  [`tests/integration/mcp_surface.rs`](../../../tests/integration/mcp_surface.rs),
+  [`tests/integration/mcp_connection.rs`](../../../tests/integration/mcp_connection.rs),
   and [`tests/conformance/baseline.rs`](../../../tests/conformance/baseline.rs).
 
 Recommended next component:
@@ -504,7 +503,7 @@ baseline cross-method scenarios through Core-facing APIs and shared fixtures.
 Owns in the implementation:
 
 - Baseline scenario coverage that composes Core-facing public methods.
-- Cross-method checks for effect branches, idempotency, write authorization,
+- Cross-method checks for effect branches, idempotency, Write Check,
   artifact lifecycle, judgment boundaries, close readiness, error routing, and
   corruption handling.
 
@@ -522,12 +521,13 @@ Recommended first file:
 Important current symbols:
 
 - `no_effect_branches_state_version_and_idempotency_are_stable`
-- `idempotency_replay_is_bound_to_verified_access_context`
+- `idempotency_replay_rejects_actor_source_mismatch`
+- `idempotency_replay_rejects_operation_category_mismatch`
 - `committed_non_allow_prepare_write_audit_and_replay_are_exact`
-- `prepare_write_allocates_authorization_only_on_committed_allowed_effect`
+- `prepare_write_allocates_write_check_only_on_committed_allowed_effect`
 - `status_projection_matches_public_close_check_and_stays_read_only`
 - Shared helpers such as `core`, `invocation`,
-  `create_task_with_change_unit`, and `prepare_write_authorization`
+  `create_task_with_change_unit`, and `prepare_write_check`
 
 Most relevant tests:
 
@@ -544,14 +544,14 @@ Recommended next component:
 Why it exists:
 
 `tests/integration` is a Cargo workspace member containing the
-`volicord-integration-tests` package and the `mcp_surface` test target. It
-verifies the cross-layer MCP, Core, Store, surface-binding, and access-path
+`volicord-integration-tests` package and the `mcp_connection` test target. It
+verifies the cross-layer MCP, Core, Store, connection binding, and invocation-path
 composition.
 
 Owns in the implementation:
 
 - Tool exposure and schema exposure through MCP.
-- MCP session binding, invocation-context derivation, and access-class routing.
+- MCP session binding, invocation-context derivation, and operation-category routing.
 - MCP/Core response parity for representative requests.
 - Cross-layer storage effects and no-effect checks.
 - Stdio protocol error handling that should not mutate Store state.
@@ -565,24 +565,24 @@ Does not own:
 
 Recommended first file:
 
-- [`tests/integration/mcp_surface.rs`](../../../tests/integration/mcp_surface.rs)
+- [`tests/integration/mcp_connection.rs`](../../../tests/integration/mcp_connection.rs)
 
 Important current symbols:
 
-- `mcp_exposes_exactly_the_documented_public_methods`
-- `stdio_tools_list_exposes_exactly_the_public_method_set`
-- `one_mcp_session_with_baseline_workflow_surface_runs_full_access_workflow`
-- `missing_write_authorization_grant_blocks_prepare_write`
-- `mcp_session_derives_access_per_method_call`
-- `stdio_invalid_params_returns_protocol_error_without_storage_effect`
-- `mcp_and_direct_status_omit_same_excluded_projection_fields`
-- Helpers such as `adapter`, `adapter_for_surface`, `invocation`, and
-  `assert_rejected_code`
+- `workflow_tools_include_agent_workflow_and_read_tools_but_exclude_user_only`
+- `read_only_tools_expose_only_read_operations_and_project_discovery`
+- `connection_invocation_is_injected_and_single_project_is_auto_selected`
+- `read_only_mode_rejects_agent_workflow_methods_before_core`
+- `multiple_allowed_projects_require_explicit_project_id`
+- `explicit_project_outside_allowlist_is_rejected_before_core`
+- `explicit_allowed_project_routes_to_that_project`
+- Helpers such as `adapter`, `invocation`, `set_connection_mode`, and
+  `set_project_id`
 
 Most relevant tests:
 
-- The package exposes the `mcp_surface` test target from
-  [`tests/integration/mcp_surface.rs`](../../../tests/integration/mcp_surface.rs).
+- The package exposes the `mcp_connection` test target from
+  [`tests/integration/mcp_connection.rs`](../../../tests/integration/mcp_connection.rs).
 
 Recommended next component:
 

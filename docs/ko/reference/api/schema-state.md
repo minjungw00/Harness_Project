@@ -1,6 +1,6 @@
 # API 상태 스키마
 
-이 문서는 기준 범위의 상태 형태 API 스키마를 담당합니다. `StateSummary`, `StateRecordRef`, API 데이터 형태의 생명주기 상태, 상태 관련 스냅샷, `ProjectContinuityRecord`, `ProjectContinuitySummary`, `ShapingReadiness`, `ChangeUnitEffectContract`, 그리고 `NextActionSummary`, `WriteAuthoritySummary`, `WriteAuthorizationSummary`, `AuthorizedAttemptScope`, `EvidenceSummary`, `EvidenceObservation`, `CurrentCloseBasis`, `ResidualRisk`, `RiskAcceptanceCoverage`, `CloseReadinessBlocker`, `ValidatorResult`, `GuaranteeDisplay` 같은 표시 형태를 정의합니다.
+이 문서는 기준 범위의 상태 형태 API 스키마를 담당합니다. `StateSummary`, `StateRecordRef`, API 데이터 형태의 생명주기 상태, 상태 관련 스냅샷, `ProjectContinuityRecord`, `ProjectContinuitySummary`, `ShapingReadiness`, `ChangeUnitEffectContract`, 그리고 `NextActionSummary`, `WriteCheckStateSummary`, `WriteCheckSummary`, `WriteCheckAttemptScope`, `EvidenceSummary`, `EvidenceObservation`, `CurrentCloseBasis`, `ResidualRisk`, `RiskAcceptanceCoverage`, `CloseReadinessBlocker`, `ValidatorResult`, `GuaranteeDisplay` 같은 표시 형태를 정의합니다.
 
 ## 담당 경계
 
@@ -17,7 +17,7 @@
 
 ## 경계
 
-상태 스키마는 API 데이터 형태만 설명합니다. 상태처럼 보이는 필드가 있다고 해서 응답 분기가 선택되거나 지속 저장, Core 전이, 재실행 행, `task_events`, 아티팩트 효과, `Write Authorization` 효과, `state_version` 증가가 생기지는 않습니다.
+상태 스키마는 API 데이터 형태만 설명합니다. 상태처럼 보이는 필드가 있다고 해서 응답 분기가 선택되거나 지속 저장, Core 전이, 재실행 행, `task_events`, 아티팩트 효과, `Write Check` 효과, `state_version` 증가가 생기지는 않습니다.
 
 상태 보기는 계산된 상태를 정직하게 드러내야 합니다.
 - `null` 또는 생략된 필드는 메서드가 값을 선택하지 않았거나, 값을 사용할 수 없거나, 담당 스키마가 부재를 명시적으로 허용한다는 뜻입니다. "계산했고 없음"을 암시하는 빈 값으로 바꾸면 안 됩니다.
@@ -75,7 +75,7 @@ StateSummary:
   shaping_readiness: ShapingReadiness | null
   pending_user_judgment_refs: StateRecordRef[]
   blocker_refs: StateRecordRef[]
-  write_authority_summary: WriteAuthoritySummary | null
+  write_check_summary: WriteCheckStateSummary | null
   evidence_summary: EvidenceSummary | null
   close_state: string | null
   close_blockers: CloseReadinessBlocker[]
@@ -142,7 +142,7 @@ ProjectContinuitySummary:
 - `ProjectContinuitySummary`는 메서드 담당 문서가 선택하는 읽기 보기이며, 전체 지속 기록이 아닙니다.
 
 의미하지 않는 것:
-- 프로젝트 연속성 기록은 현재 `Task` 권한, 증거, `Write Authorization`, 최종 수락, 닫기 준비 상태, 미래 닫기 근거의 잔여 위험 수락, 차단 사유 면제가 아닙니다.
+- 프로젝트 연속성 기록은 현재 `Task` 권한, 증거, `Write Check`, 최종 수락, 닫기 준비 상태, 미래 닫기 근거의 잔여 위험 수락, 차단 사유 면제가 아닙니다.
 - `status=active`는 그 연속성 기록이 살아 있는 프로젝트 맥락이라는 뜻입니다. 모든 `Task`에 현재 적용된다거나 원천 결정이 새 권한 확인에 충분하다는 뜻은 아닙니다.
 
 담당 문서 링크:
@@ -173,7 +173,7 @@ ChangeUnitEffectContract:
 
 의미하지 않는 것:
 - `ChangeUnitEffectContract`는 런타임 샌드박스, 명령 가로채기 장치, 네트워크 차단 장치, 운영체제 권한 체계, 개발 방법론 상태 기계가 아닙니다.
-- 사용자 소유 판단, 민감 동작 승인, 증거, `Write Authorization`, 최종 수락, 닫기 준비 상태, 잔여 위험 수락을 대신하지 않습니다.
+- 사용자 소유 판단, 민감 동작 승인, 증거, `Write Check`, 최종 수락, 닫기 준비 상태, 잔여 위험 수락을 대신하지 않습니다.
 
 담당 문서 링크:
 - 효과 값 문자열: [메서드 내부 값](schema-value-sets.md#method-local-values)
@@ -242,23 +242,23 @@ NextActionSummary:
   blocking_question: string | null
   required_refs: StateRecordRef[]
 
-WriteAuthoritySummary:
+WriteCheckStateSummary:
   status: string
-  write_authorization_ref: StateRecordRef | null
+  write_check_ref: StateRecordRef | null
   basis_state_version: integer | null
   intended_paths: string[]
   consumed_by_run_ref: StateRecordRef | null
   observation_refs: StateRecordRef[]
   guarantee_display: GuaranteeDisplay | null
 
-WriteAuthorizationSummary:
-  write_authorization_ref: StateRecordRef
+WriteCheckSummary:
+  write_check_ref: StateRecordRef
   status: string
-  authorized_attempt_scope: AuthorizedAttemptScope
+  attempt_scope: WriteCheckAttemptScope
   basis_state_version: integer
   expires_at: string | null
 
-AuthorizedAttemptScope:
+WriteCheckAttemptScope:
   task_id: string
   change_unit_id: string
   intended_operation: string
@@ -277,11 +277,11 @@ WriteDecisionReason:
 의미:
 - `NextActionSummary`는 기준 다음 행동 표시 형태입니다. 유효한 필드는 `action_kind`, `owner_method`, `label`, `blocking_question`, `required_refs`입니다.
 - 오래된 `action` 또는 `reason` 필드를 쓰는 `next_actions` 항목은 유효한 `NextActionSummary`가 아닙니다.
-- `WriteAuthoritySummary.status`와 `WriteAuthorizationSummary.status`는 제어 값 문자열입니다.
-- `WriteAuthoritySummary.consumed_by_run_ref`는 요약된 `Write Authorization`이 기록된 Run에 의해 소비되었을 때만 `null`이 아닙니다.
-- `WriteAuthoritySummary.observation_refs`는 사용할 수 있을 때 그 소비 Run이 만든 증거 관찰 참조를 나열합니다. 권한이 소비되지 않았거나 소비 Run이 관찰을 만들지 않았다면 비어 있습니다.
-- `AuthorizedAttemptScope`는 `Write Authorization`이 포착하는 한 번의 시도 경계입니다.
-- `AuthorizedAttemptScope`는 일반 쓰기 승인, 민감 동작 승인, 최종 수락, 잔여 위험 수락, 포괄적 사용자 승인이 아닙니다.
+- `WriteCheckStateSummary.status`와 `WriteCheckSummary.status`는 제어 값 문자열입니다.
+- `WriteCheckStateSummary.consumed_by_run_ref`는 요약된 `Write Check`이 기록된 Run에 의해 소비되었을 때만 `null`이 아닙니다.
+- `WriteCheckStateSummary.observation_refs`는 사용할 수 있을 때 그 소비 Run이 만든 증거 관찰 참조를 나열합니다. 권한이 소비되지 않았거나 소비 Run이 관찰을 만들지 않았다면 비어 있습니다.
+- `WriteCheckAttemptScope`는 `Write Check`이 포착하는 한 번의 시도 경계입니다.
+- `WriteCheckAttemptScope`는 일반 쓰기 승인, 민감 동작 승인, 최종 수락, 잔여 위험 수락, 포괄적 사용자 승인이 아닙니다.
 - `WriteDecisionReason`은 `PrepareWriteResult.write_decision_reasons`에서 사용합니다.
 
 `NextActionSummary` 필드 분류:
@@ -294,7 +294,7 @@ WriteDecisionReason:
 | `blocking_question` | 자유 형식 표시 문자열 또는 `null`. | 행동을 진행하기 전에 풀어야 하는 질문입니다. 필요한 질문이 없으면 `null`을 사용합니다. |
 | `required_refs` | `StateRecordRef[]`. | 다음 행동에 필요한 기록입니다. 필요한 참조가 없으면 `[]`를 사용합니다. |
 
-`AuthorizedAttemptScope` 필드 분류:
+`WriteCheckAttemptScope` 필드 분류:
 
 | 필드 | 분류 | 규칙 |
 |---|---|---|
@@ -320,12 +320,12 @@ WriteDecisionReason:
 담당 문서 링크:
 - `action_kind` 값: [다음 행동 값](schema-value-sets.md#next-action-values)
 - `owner_method` 값: [메서드 이름 값](schema-value-sets.md#method-name-values)
-- `WriteAuthoritySummary.status`와 `WriteAuthorizationSummary.status` 값: [메서드 내부 값](schema-value-sets.md#method-local-values)
+- `WriteCheckStateSummary.status`와 `WriteCheckSummary.status` 값: [메서드 내부 값](schema-value-sets.md#method-local-values)
 - `WriteDecisionReason.category` 값: [상태와 차단 사유 값](schema-value-sets.md#state-and-blocker-values)
 - `WriteDecisionReason.code` 값 집합 경계: [불투명 문자열과 메서드 범위 문자열 필드](schema-value-sets.md#opaque-and-method-scoped-string-fields)
 - `WriteDecisionReason.code` 생성과 로컬 의미: [`volicord.prepare_write`](method-prepare-write.md)를 포함한 메서드 담당 문서
-- `Write Authorization` 생성 동작: [`volicord.prepare_write`](method-prepare-write.md)
-- `Write Authorization`의 제품 의미와 승인 경계: [Core 모델](../core-model.md)
+- `Write Check` 생성 동작: [`volicord.prepare_write`](method-prepare-write.md)
+- `Write Check`의 제품 의미와 승인 경계: [Core 모델](../core-model.md)
 - 공개 `ErrorCode` 값은 별도입니다: [API 오류 코드](error-codes.md)
 
 <a id="evidence-and-run-snapshot-shapes"></a>
@@ -372,10 +372,7 @@ EvidenceObservation:
   claim: string
   source_kind: string
   assurance_level: string
-  observed_by_actor_kind: string | null
-  observed_actor_role: string | null
-  observed_by_surface_id: string | null
-  observed_by_surface_instance_id: string | null
+  observed_by_actor_source: string | null
   tool_name: string | null
   tool_invocation_id: string | null
   tool_metadata: object
@@ -389,10 +386,7 @@ EvidenceObservationInput:
   claim: string
   source_kind: string
   assurance_level: string
-  observed_by_actor_kind: string | null
-  observed_actor_role: string | null
-  observed_by_surface_id: string | null
-  observed_by_surface_instance_id: string | null
+  observed_by_actor_source: string | null
   tool_name: string | null
   tool_invocation_id: string | null
   tool_metadata: object
@@ -420,9 +414,9 @@ ObservedChanges:
 - `CompletionPolicy.required_claims`, `EvidenceCoverageItem.claim`, `EvidenceObservation.claim`, `EvidenceObservationInput.claim`, `RunSummary.summary`는 자유 형식 주장 또는 표시 문자열입니다.
 - `EvidenceCoverageItem.provenance`는 요청 입력에서 선택적으로 사용할 수 있으며, Core가 해당 `EvidenceObservation`을 만들거나 연결한 뒤 커밋된 증거 요약에서는 생략됩니다. 닫기와 관련된 주장을 `supported`로 갱신하려면 같은 주장에 대한 관찰 입력, 사용할 수 있는 관찰 참조, 또는 Core가 관찰을 만들 수 있게 하는 이 출처 객체가 필요합니다.
 - `EvidenceSummary.observation_refs`와 `EvidenceCoverageItem.observation_refs`는 Core가 요약이나 주장과 관련지은 커밋된 증거 관찰에 대한 `StateRecordRef` 값을 나열합니다.
-- `EvidenceObservation`은 하나의 보고되었거나 관찰된 증거 주장에 대한 지속 출처 기록입니다. 출처, 보장 수준, 관찰자 메타데이터, 선택적 도구 메타데이터, 입력 참조, 출력 아티팩트 참조, 한계, 관찰 타임스탬프를 기록합니다.
+- `EvidenceObservation`은 하나의 보고되었거나 관찰된 증거 주장에 대한 지속 출처 기록입니다. 출처, 보장 수준, 관찰자 행위자 출처, 선택적 도구 메타데이터, 입력 참조, 출력 아티팩트 참조, 한계, 관찰 타임스탬프를 기록합니다.
 - `EvidenceObservationInput`은 `volicord.record_run`이 받는 요청 측 형태입니다. Core는 커밋할 때 `observation_id`, 프로젝트와 `Task` 좌표, `run_ref`, `recorded_at`을 채웁니다.
-- `observed_by_surface_id`와 `observed_by_surface_instance_id`는 둘 다 null이거나 둘 다 null이 아니어야 합니다. 관찰 입력에서 둘 다 null이면 Core가 확인된 요청 접점 맥락에서 값을 채울 수 있습니다.
+- `observed_by_actor_source`는 값이 있으면 `ActorSource` 값이어야 합니다. 관찰 입력에서 null이면 Core가 확인된 호출 맥락에서 값을 채울 수 있습니다.
 - `source_kind`와 `assurance_level`은 출처와 관찰 보장 수준을 설명합니다. 그 자체로 제품 정확성을 증명하거나, 사용자 권한을 부여하거나, 최종 수락을 만족하거나, 잔여 위험 수락을 만족하거나, `GuaranteeDisplay.level`을 높이지 않습니다.
 - `user_observation`은 사용자 귀속 관찰을 기록하지만 최종 수락이나 다른 권한을 지니는 사용자 판단이 아닙니다.
 - `external_tool`과 `external_tool_result`는 외부 도구 결과를 기록합니다. 관련 증거, 아티팩트, 닫기 준비 상태, 보안 담당 문서 없이는 제품 정확성 증명이 아닙니다.
@@ -466,7 +460,7 @@ SensitiveActionRequirement:
   baseline_ref: string | null
   change_unit_id: string
   source_run_ref: StateRecordRef
-  source_write_authorization_ref: StateRecordRef
+  source_write_check_ref: StateRecordRef
 
 ResidualRisk:
   risk_id: string
@@ -507,7 +501,7 @@ GuaranteeDisplay:
 - `ResidualRisk.risk_id`는 Core가 생성한 불투명 식별자입니다. `ResidualRisk.summary`와 `ResidualRisk.consequence`는 표시 문자열이며 텍스트 일치를 권한으로 만들지 않습니다.
 - `result_refs`, `source_run_ref`, `source_refs`, `evidence_summary_ref`, `accepted_by_judgment_refs`는 `StateRecordRef`를 사용합니다.
 - `sensitive_categories`는 영향받는 메서드나 프로필 담당 문서가 더 좁은 로컬 목록을 공개하지 않는 한 불투명 민감 범주 분류 문자열입니다.
-- `sensitive_action_requirements`는 커밋된 실행 기록과 소비된 `Write Authorization` 기록에서 Core가 파생한 닫기 요구사항입니다. 범주만 담은 호출자 입력은 이 요구사항을 만들거나 지울 수 없습니다.
+- `sensitive_action_requirements`는 커밋된 실행 기록과 소비된 `Write Check` 기록에서 Core가 파생한 닫기 요구사항입니다. 범주만 담은 호출자 입력은 이 요구사항을 만들거나 지울 수 없습니다.
 - `recovery_constraints`와 `RiskAcceptanceCoverage.missing_reason`은 표시 문자열입니다. 현재 닫기 준비 상태 결과는 필요한 수락이 없으면 `acceptance_required`를 사용하고, 현재 잔여 위험 `risk_id` 값을 덮지 못하는 오래된 잔여 위험 수락이 있으면 `stale_acceptance`를 사용할 수 있습니다.
 - `RiskAcceptanceCoverage`는 현재 잔여 위험 요구사항이 호환되는 판단으로 덮였는지를 보고합니다. 증거 충분성이나 최종 수락을 보고하지 않습니다.
 - `CloseReadinessBlocker`는 닫기 차단 사유를 표현하는 데이터 형태입니다.
@@ -521,18 +515,18 @@ GuaranteeDisplay:
 
 닫기 근거 참조 규칙:
 - `CurrentCloseBasis.result_refs`나 `ResidualRisk.source_refs`로 받아들일 수 있는 호출자 제공 닫기 평가 참조는 담당 문서가 다른 종류를 명시적으로 추가하지 않는 한 결과/증거 기록 종류인 `run`, `artifact`, `evidence_summary`, `change_unit`으로 제한됩니다.
-- 담당 문서가 명시적으로 추가하지 않는 한 `project_state`, `write_authorization`, `user_judgment`, `blocker`, `task_event`, `local_surface_registration`, `task`는 호출자 제공 결과 참조가 아닙니다.
+- 담당 문서가 명시적으로 추가하지 않는 한 `project_state`, `write_check`, `user_judgment`, `blocker`, `task_event`, `task`는 호출자 제공 결과 참조가 아닙니다.
 - 받아들인 모든 참조는 존재해야 하고 같은 프로젝트와 `Task`에 속해야 하며 Core가 정규화해야 합니다. Core는 호출자가 보낸 `state_version` 메타데이터를 권한으로 보존하지 않습니다.
 - 닫기 증거에 쓰이는 아티팩트 참조는 `Task`에 연결되어 있고 `integrity_status=verified`여야 하며 [아티팩트 저장소](../storage-artifacts.md)에 따라 사용 시점의 현재 바이트 검증을 통과해야 합니다.
 - 증거 참조는 현재 `Task` 증거 요약을 식별해야 합니다. 현재 닫기 근거 결과 참조로 쓰이는 실행 기록 참조는 현재 `Task`, 현재 적용 Change Unit, 현재 범위 리비전, 호환되는 기준선, 기록된 상태와 호환되는 기록된 현재 실행 기록을 식별해야 합니다. 이력 실행 기록은 현재 실행 기록이 그 `verified` 아티팩트나 증거를 명시적으로 재사용하고 그 재사용을 기록하지 않는 한 감사 기록입니다.
 - Core는 기준 닫기 근거를 구성하면서 현재 실행 기록, 현재 Change Unit, 현재 EvidenceSummary 참조를 추가할 수 있습니다.
 
 보장 표시 규칙:
-- `GuaranteeDisplay`는 프로젝트 강제 프로필, 확인된 묶인 접점 등록, 활성화된 강제 메커니즘, 지원되는 기준 범위에서 파생됩니다.
-- 역량 선언만으로 보장이 생기지 않으며, 협력형 전용 배포는 `detective`를 주장하면 안 됩니다.
-- `detective`는 이름 붙은 접점과 관찰 범위에 대한 지원되는 강제 또는 관찰 사실을 요구하며, `capability_profile` 안의 텍스트만으로는 부족합니다.
-- 접점에 대한 보장 표시는 그 표시를 정당화하는 접점 사실을 가리켜야 합니다. 관찰에 대한 보장 표시는 그 표시를 정당화하는 구체적인 `EvidenceObservation` 사실을 가리켜야 합니다. 별도 지원 관찰이 그 표시를 정당화하지 않는 한 협력적 `agent_report` Run이나 관찰을 `detective` 또는 외부 관찰로 표시하지 않습니다.
-- 해당 참조를 사용할 수 있으면 `capability_refs`는 실제 프로필, 접점 또는 관찰 사실을 식별해야 합니다.
+- `GuaranteeDisplay`는 프로젝트 강제 프로필, 확인된 호출 맥락, 활성화된 강제 메커니즘, 지원되는 기준 범위에서 파생됩니다.
+- `capability_refs`는 표시를 정당화하는 참조를 담는 구현 필드 이름입니다. 기준 연결 아키텍처에서는 사용할 수 있으면 호출 바인딩, Agent Connection, 관찰 사실을 인용해야 합니다.
+- 협력형 전용 배포는 `detective`를 주장하면 안 됩니다.
+- `detective`는 관찰 범위에 대한 지원되는 강제 또는 관찰 사실을 요구하며, 호스트 지침, 연결 모드, 생성된 텍스트만으로는 부족합니다.
+- 별도 지원 관찰이 그 표시를 정당화하지 않는 한 협력적 `agent_report` Run이나 관찰을 `detective` 또는 외부 관찰로 표시하지 않습니다.
 
 담당 문서 링크:
 - 닫기 준비 상태 의미와 대체 금지 규칙: [Core 모델의 닫기 준비 상태](../core-model.md#close_task)

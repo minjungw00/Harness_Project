@@ -10,7 +10,7 @@
 
 - 오류를 담는 분기의 주 `errors[0]` 선택 순서.
 - `STATE_VERSION_CONFLICT`의 결과 쪽 및 차단 사유 코드 경로 경계.
-- 오래된 공개 `expected_state_version`, 오래된 `WriteAuthorization.basis_state_version`, 멱등 요청 해시 충돌 동작.
+- 오래된 공개 `expected_state_version`, 오래된 `WriteCheck.basis_state_version`, 멱등 요청 해시 충돌 동작.
 
 이웃 담당 문서:
 
@@ -39,8 +39,8 @@
 | <a id="precedence-baseline-stale"></a>7 | `BASELINE_STALE` | [`BASELINE_STALE`](error-codes.md#errorcode-baseline-stale) |
 | <a id="precedence-scope-required"></a>8 | `SCOPE_REQUIRED` | [`SCOPE_REQUIRED`](error-codes.md#errorcode-scope-required) |
 | <a id="precedence-scope-violation"></a>9 | `SCOPE_VIOLATION` | [`SCOPE_VIOLATION`](error-codes.md#errorcode-scope-violation) |
-| <a id="precedence-write-authorization-required"></a>10 | `WRITE_AUTHORIZATION_REQUIRED` | [`WRITE_AUTHORIZATION_REQUIRED`](error-codes.md#errorcode-write-authorization-required) |
-| <a id="precedence-write-authorization-invalid"></a>11 | `WRITE_AUTHORIZATION_INVALID` | [`WRITE_AUTHORIZATION_INVALID`](error-codes.md#errorcode-write-authorization-invalid) |
+| <a id="precedence-write-check-required"></a>10 | `WRITE_CHECK_REQUIRED` | [`WRITE_CHECK_REQUIRED`](error-codes.md#errorcode-write-check-required) |
+| <a id="precedence-write-check-invalid"></a>11 | `WRITE_CHECK_INVALID` | [`WRITE_CHECK_INVALID`](error-codes.md#errorcode-write-check-invalid) |
 | <a id="precedence-approval-denied"></a>12 | `APPROVAL_DENIED` | [`APPROVAL_DENIED`](error-codes.md#errorcode-approval-denied) |
 | <a id="precedence-approval-expired"></a>13 | `APPROVAL_EXPIRED` | [`APPROVAL_EXPIRED`](error-codes.md#errorcode-approval-expired) |
 | <a id="precedence-approval-required"></a>14 | `APPROVAL_REQUIRED` | [`APPROVAL_REQUIRED`](error-codes.md#errorcode-approval-required) |
@@ -59,7 +59,7 @@
 ### `STATE_VERSION_CONFLICT` 선택 경계
 
 선택 조건:
-- 오래된 `expected_state_version`, 오래된 `WriteAuthorization.basis_state_version`, 멱등 요청 해시 충돌 때문에 메서드가 진행될 수 없으면 거부 응답에서 `STATE_VERSION_CONFLICT`가 선택됩니다.
+- 오래된 `expected_state_version`, 오래된 `WriteCheck.basis_state_version`, 멱등 요청 해시 충돌 때문에 메서드가 진행될 수 없으면 거부 응답에서 `STATE_VERSION_CONFLICT`가 선택됩니다.
 
 선택 경계:
 - 이 충돌은 `ToolRejectedResponse.errors[]`로 표현하며, `MethodResult`나 `CloseTaskResult(close_state=blocked)` 분기를 만들지 않습니다. `STATE_VERSION_CONFLICT`를 결과 쪽 판단, 차단 사유 코드, 닫기 차단 사유 코드, 미리보기 차단 사유 코드로 모델링하지 않으며, 여기에는 `WriteDecisionReason.code`, `CloseReadinessBlocker.code`, `PlannedBlocker.code`가 포함됩니다.
@@ -74,7 +74,7 @@
 | 충돌 경우 | 세부 항목 |
 |---|---|
 | 오래된 `expected_state_version` | [오래된 `expected_state_version`](#state-conflict-expected-state-version) |
-| 오래된 `WriteAuthorization.basis_state_version` | [오래된 `Write Authorization` 근거 버전](#state-conflict-write-authorization-basis) |
+| 오래된 `WriteCheck.basis_state_version` | [오래된 `Write Check` 근거 버전](#state-conflict-write-check-basis) |
 | 멱등 요청 해시 충돌 | [멱등 요청 해시 충돌](#state-conflict-idempotency-hash) |
 
 우선순위에서 아래 충돌 경우는 프로젝트 전체의 커밋 전 최신성 또는 멱등성 충돌로 `STATE_VERSION_CONFLICT`를 선택합니다.
@@ -103,11 +103,11 @@
 세부 필드:
 - [상태 충돌 세부 필드](error-details.md#state-conflict-detail-fields)를 사용합니다.
 
-<a id="state-conflict-write-authorization-basis"></a>
-### 오래된 `Write Authorization` 근거 버전
+<a id="state-conflict-write-check-basis"></a>
+### 오래된 `Write Check` 근거 버전
 
 조건:
-- 소비 전에 `WriteAuthorization.basis_state_version`이 현재 `project_state.state_version`과 같지 않습니다.
+- 소비 전에 `WriteCheck.basis_state_version`이 현재 `project_state.state_version`과 같지 않습니다.
 
 공개 오류 코드:
 - `STATE_VERSION_CONFLICT`
@@ -116,29 +116,29 @@
 - `ToolRejectedResponse.errors[]`
 
 소비 경계:
-- 오래된 `Write Authorization`은 소비되지 않습니다.
+- 오래된 `Write Check`은 소비되지 않습니다.
 - 거절된 시도는 소비 쪽 상태 변경을 만들지 않습니다.
 
 세부 필드:
 - [상태 충돌 세부 필드](error-details.md#state-conflict-detail-fields)를 사용합니다.
 
-### 만료된 `Write Authorization`
+### 만료된 `Write Check`
 
 조건:
-- 소비 전에 권한이 [`volicord.record_run`](method-record-run.md)과 [`volicord.prepare_write`](method-prepare-write.md)가 담당하는 유효 만료 규칙에 따라 만료되었고, `WriteAuthorization.basis_state_version`은 오래되지 않았습니다.
+- 소비 전에 권한이 [`volicord.record_run`](method-record-run.md)과 [`volicord.prepare_write`](method-prepare-write.md)가 담당하는 유효 만료 규칙에 따라 만료되었고, `WriteCheck.basis_state_version`은 오래되지 않았습니다.
 
 공개 오류 코드:
-- `WRITE_AUTHORIZATION_INVALID`
+- `WRITE_CHECK_INVALID`
 
 응답 경로:
 - `ToolRejectedResponse.errors[]`
 
 우선순위 경계:
-- `WriteAuthorization.basis_state_version`이 오래되었으면 만료 무효가 아니라 `STATE_VERSION_CONFLICT`를 선택합니다.
+- `WriteCheck.basis_state_version`이 오래되었으면 만료 무효가 아니라 `STATE_VERSION_CONFLICT`를 선택합니다.
 - 만료는 결과 쪽 판단, 차단 사유 코드, 닫기 준비 상태 차단 사유 코드, 미리보기 차단 사유 코드로 모델링하지 않습니다.
 
 세부 필드:
-- `ToolError.details.authorization_reason=expired`를 사용합니다.
+- `ToolError.details.write_check_reason=expired`를 사용합니다.
 
 <a id="state-conflict-idempotency-hash"></a>
 ### 멱등 요청 해시 충돌

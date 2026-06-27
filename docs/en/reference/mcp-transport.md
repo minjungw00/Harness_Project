@@ -1,19 +1,19 @@
 # MCP transport reference
 
-This document owns the local `volicord-mcp` process contract: process startup, process environment, MCP protocol-version negotiation, initialization lifecycle, stdio transport framing, JSON-RPC message validation, integration-bound startup validation, MCP response wrapping, and shutdown/reconnection behavior.
+This document owns the local `volicord-mcp` process contract: process startup, process environment, MCP protocol-version negotiation, initialization lifecycle, stdio transport framing, JSON-RPC message validation, Agent-Connection-bound startup validation, MCP response wrapping, and shutdown/reconnection behavior.
 
-It does not define public Volicord API method behavior, public request or response schemas, access-class meanings, Agent Integration Profile meaning, storage record layout, security guarantees, or Core authority semantics.
+It does not define public Volicord API method behavior, public request or response schemas, Agent Connection meaning, storage record layout, security guarantees, or Core authority semantics.
 
-## Owns / does not own
+## Owns / Does Not Own
 
 This document owns:
 
 - `volicord-mcp` process startup and exit behavior
-- required and optional process configuration for integration-bound startup
+- required and optional process configuration for Agent-Connection-bound startup
 - MCP Runtime Home environment resolution
 - MCP protocol-version negotiation and initialization lifecycle
 - stdio JSON-RPC framing, message validation, and supported MCP methods
-- MCP startup validation for one `integration_id`
+- MCP startup validation for one `connection_id`
 - MCP `tools/list`, `tools/call`, and `volicord.list_projects` adapter utility behavior at the transport boundary
 - MCP `tools/call` response wrapping
 - process shutdown and reconnection behavior
@@ -22,24 +22,23 @@ This document does not own:
 
 - the public Volicord method list or method owner table; see [API Methods](api/methods.md)
 - public Volicord request and response schemas; see [API Schema Core](api/schema-core.md)
-- access-class value meanings; see [API Value Sets](api/schema-value-sets.md#access-class-values)
-- Agent Integration Profile, Host Installation, project selection meaning, verified surface context, and actor provenance; see [Agent Integration](agent-integration.md)
-- administrative Runtime Home, agent installation, project membership, and verification commands; see [Administrative CLI](admin-cli.md)
+- Agent Connection, Connection Projects, project selection meaning, current connection context, and actor provenance; see [Agent Integration](agent-integration.md)
+- administrative Runtime Home, Agent Connection setup, project membership, and verification commands; see [Administrative CLI](admin-cli.md)
 - storage layout, migrations, and storage effects; see the storage owners through [Storage](storage.md)
 
-## Process model
+## Process Model
 
 `volicord-mcp` is a local MCP stdio process. An MCP host starts it as a child process and communicates through stdin/stdout. It is not a TCP listener, HTTP listener, Unix-domain socket listener, or other network listener.
 
 Baseline command-line behavior:
 
-- Launch the stdio loop with `volicord-mcp --integration <integration_id>`.
-- Run startup validation without reading stdin with `volicord-mcp --check --integration <integration_id>`.
-- Run project-specific startup validation with `volicord-mcp --check --integration <integration_id> --project <project_id>`.
+- Launch the stdio loop with `volicord-mcp --connection <connection_id>`.
+- Run startup validation without reading stdin with `volicord-mcp --check --connection <connection_id>`.
+- Run project-specific startup validation with `volicord-mcp --check --connection <connection_id> --project <project_id>`.
 - `-h` and `--help` print usage and environment summary, then exit with code `0`.
 - `-V` and `--version` print `volicord-mcp <version>`, then exit with code `0`.
-- No arguments, `--check` without `--integration`, unknown options, combined command-line modes, missing required option values, invalid `--project` use, and extra positional arguments write usage diagnostics to stderr and exit with code `2`.
-- Help and version handling happen before Runtime Home or integration lookup.
+- No arguments, `--check` without `--connection`, unknown options, combined command-line modes, missing required option values, invalid `--project` use, and extra positional arguments write usage diagnostics to stderr and exit with code `2`.
+- Help and version handling happen before Runtime Home or Agent Connection lookup.
 
 Exit and stream behavior:
 
@@ -48,7 +47,7 @@ Exit and stream behavior:
 - Startup configuration, JSON, or storage failures write diagnostics to stderr and exit with code `1`.
 - Once the stdio loop is running, malformed JSON and unsupported JSON-RPC requests return JSON-RPC errors when a response can be written.
 
-## Process environment
+## Process Environment
 
 Optional:
 
@@ -56,13 +55,13 @@ Optional:
 
 The stdio process and `--check` use `VOLICORD_HOME` before entering startup validation. Help and version modes do not use it.
 
-`volicord-mcp` startup does not read or support fixed-project environment inputs:
+`volicord-mcp` startup does not read or support fixed-project or provenance environment inputs:
 
 - `VOLICORD_PROJECT_ID`
 - `VOLICORD_SURFACE_ID`
 - `VOLICORD_SURFACE_INSTANCE_ID`
 
-Those variables do not select a project, surface, or surface instance for `volicord-mcp`. The selected Agent Integration Profile supplies the surface and surface-instance binding. The selected project is determined per public MCP tool call.
+Those variables do not select a project or actor provenance for `volicord-mcp`. The selected Agent Connection supplies the process binding. The selected project is determined per public MCP tool call.
 
 Current MCP Runtime Home resolution:
 
@@ -74,78 +73,68 @@ Current MCP Runtime Home resolution:
 6. Resolve a relative selected home against the process current working directory.
 7. Do not require canonicalization before startup validation.
 
-## Startup validation
+## Startup Validation
 
-Before entering the stdio loop, `volicord-mcp` validates the integration binding and the local registry records it depends on.
+Before entering the stdio loop, `volicord-mcp` validates the Agent Connection binding and the local registry records it depends on.
 
 Startup validation requires:
 
 - the Runtime Home registry exists and is valid
-- the configured `integration_id` exists
-- the integration is enabled
-- the integration role is recognized and is valid for MCP agent integration
-- the integration `surface_id` and `surface_instance_id` are present
-- the integration project membership rows are readable
-- at least one allowed project membership exists
-- `default_project_id`, when present, is also a membership row
+- the configured `connection_id` exists
+- the connection is enabled
+- the connection mode is supported
+- the connected project rows are readable
 - registry JSON and metadata needed for startup are valid
 
-Startup validation does not select a project for all calls. Project availability, project status, path separation, surface registration, and access-class grants are verified per call as defined by [Agent Integration](agent-integration.md#current-surface-context).
+Startup validation does not select one project for all calls. Project availability, project status, path separation, and mode compatibility are verified per call as defined by [Agent Integration](agent-integration.md#current-connection-context).
 
-A stored Agent Integration Profile or Host Installation record can remain after the integration reaches zero allowed projects. That persistence is not startup eligibility: a new stdio process and `volicord-mcp --check` fail startup validation while there are no allowed projects.
+A stored Agent Connection can remain after it reaches zero connected projects. That persistence is not startup eligibility: a new stdio process and `volicord-mcp --check --connection <connection_id>` fail startup validation while there are no connected projects.
 
-An already running process is different from a new process. A process that passed startup while at least one project was allowed refreshes registry state for `volicord.list_projects` and project routing. After the last membership is removed, `volicord.list_projects` may return an empty project list, but public tools that require project routing reject because no allowed project remains.
+An already running process is different from a new process. A process that passed startup while at least one project was connected refreshes registry state for `volicord.list_projects` and project routing. After the last membership is removed, `volicord.list_projects` may return an empty project list, but public tools that require project routing reject because no connected project remains.
 
-## Integration-bound process
+## Agent-Connection-Bound Process
 
 One `volicord-mcp` process is bound to:
 
-- one `integration_id`
+- one `connection_id`
 
-The integration supplies:
+The Agent Connection supplies:
 
-- one `surface_id`
-- one `surface_instance_id`
-- an explicit allowlist of project memberships
-- an optional `default_project_id`
+- one connection mode: `read_only` or `workflow`
+- an explicit allowlist of connected projects
+- host configuration inventory and last verification state through the registry
 
-The process binding remains fixed for the process lifetime. Changing integration requires another process or host configuration update. Changing project membership or disabling the integration takes effect through registry state without requiring the host configuration to be rewritten, and each new process reruns startup validation against the current registry state.
+The process binding remains fixed for the process lifetime. Changing the Agent Connection identity requires another process or host configuration update. Changing project membership, mode, or enabled state takes effect through registry state; each new process reruns startup validation against the current registry state.
 
-## Configuration preflight
+## Configuration Preflight
 
-`volicord-mcp --check --integration <integration_id>` runs the same Runtime Home, integration, membership, and registry-shape startup validation used before entering the stdio loop. `volicord-mcp --check --integration <integration_id> --project <project_id>` limits the project detail section to one project and rejects a project that is not granted to the selected integration. Neither form reads stdin.
+`volicord-mcp --check --connection <connection_id>` runs the same Runtime Home, Agent Connection, membership, and registry-shape startup validation used before entering the stdio loop. `volicord-mcp --check --connection <connection_id> --project <project_id>` limits the project detail section to one project and rejects a project that is outside the selected Agent Connection's allowlist. Neither form reads stdin.
 
-On success, `--check` writes the fixed summary lines, then one repeated project-detail block for each selected project, in this order:
+On success, `--check` writes fixed summary lines, then one repeated project-detail block for each selected project, in this order:
 
 ```text
 configuration: valid
 transport: stdio
 runtime_home: <absolute path>
-integration_id: <value>
-interaction_role: agent
-surface_id: <value>
-surface_instance_id: <value>
+connection_id: <value>
+mode: read_only|workflow
 enabled: true
 allowed_projects: <count>
 available_projects: <count>
-default_project_id: <value or empty>
 verification_scope: startup_check_only
 project[0].project_id: <value>
-project[0].default: true|false
 project[0].available: true|false
 project[0].unavailable_reason: <value or empty>
 project[0].repo_root: <path>
-project[0].baseline_workflow_access: full|partial|unavailable
-project[0].missing_access_classes: <comma-separated values or empty>
 ```
 
 Project-detail rules:
 
 - The detail index begins at zero.
-- Without `--project`, one detail block is emitted for each allowed project in the current stable project ordering, sorted by `project_id`.
-- `--project <project_id>` rejects a project that is not allowed for the integration and limits the detail block selection to that one project.
-- `allowed_projects` and `default_project_id` describe the integration as a whole. With `--project`, `available_projects` describes the emitted detail selection and is therefore `0` or `1`.
-- Unavailable projects still emit every project-detail key. `unavailable_reason` is populated for unavailable projects and empty for available projects; `missing_access_classes` is a comma-separated list or empty.
+- Without `--project`, one detail block is emitted for each connected project in stable `project_id` order.
+- `--project <project_id>` rejects a project that is not connected to the Agent Connection and limits the detail block selection to that one project.
+- `allowed_projects` describes the Agent Connection as a whole. With `--project`, `available_projects` describes the emitted detail selection and is therefore `0` or `1`.
+- Unavailable projects still emit every project-detail key. `unavailable_reason` is populated for unavailable projects and empty for available projects.
 - `verification_scope: startup_check_only` is a startup and preflight statement only, not complete host verification.
 
 Startup validation failure:
@@ -154,15 +143,15 @@ Startup validation failure:
 - exits with code `1`
 - does not enter the stdio loop or wait on stdin
 
-A successful `--check` is not a complete host integration result. Complete host integration requires durable integration state, host configuration installation, successful MCP initialization, and successful tool discovery, as defined by [Administrative CLI](admin-cli.md#agent-setup-result-states).
+A successful `--check` is not a complete host connection result. Complete host verification requires durable Agent Connection state, host configuration installation, successful MCP initialization, and successful tool discovery, as defined by [Administrative CLI](admin-cli.md#agent-connection-result-states).
 
-## MCP wire behavior
+## MCP Wire Behavior
 
 `volicord-mcp` supports MCP protocol version `2025-11-25` over stdio. It does not advertise simultaneous compatibility with older MCP protocol versions. Each new process or stdio connection starts a new MCP lifecycle and must complete its own initialization sequence.
 
 The server initialization response includes MCP server instructions. Those instructions may describe Volicord tool selection, deterministic project routing, and limitations, but they are guidance only; they are not access control or a guarantee of model behavior.
 
-### Framing and JSON-RPC validation
+### Framing And JSON-RPC Validation
 
 Framing rules:
 
@@ -197,7 +186,7 @@ Error classification:
 | Adapter or server internal failure | an appropriate JSON-RPC internal-error response |
 | Classifiable notification, including one with malformed method parameters | no response; invalid parameters do not trigger lifecycle transitions or request-only behavior |
 
-### Protocol version and lifecycle
+### Protocol Version And Lifecycle
 
 The first valid MCP request in a connection is `initialize`. A valid `initialize` request has object `params` with:
 
@@ -232,14 +221,16 @@ Supported MCP request methods:
 
 The supported lifecycle notification is `notifications/initialized`.
 
-## Tool discovery and `tools/call` response wrapping
+## Tool Discovery And `tools/call` Response Wrapping
 
-After the connection is ready, `tools/list` exposes:
+After the connection is ready, `tools/list` exposes tools according to the bound Agent Connection mode:
 
-- the nine public Volicord tools owned by [API Methods](api/methods.md)
-- the read-only MCP adapter utility tool `volicord.list_projects`
+| Mode | Exposed tools |
+|---|---|
+| `read_only` | `volicord.status`, `volicord.close_task`, `volicord.list_projects` |
+| `workflow` | `volicord.intake`, `volicord.update_scope`, `volicord.status`, `volicord.prepare_write`, `volicord.stage_artifact`, `volicord.record_run`, `volicord.request_user_judgment`, `volicord.close_task`, `volicord.list_projects` |
 
-This document does not create a second independently owned public Core method list. `volicord.list_projects` is not a public Volicord Core API method.
+`volicord.list_projects` is an MCP adapter utility, not a public Volicord Core API method. `volicord.record_user_judgment` is a public method for the User Channel path, but it is not exposed as an Agent Connection MCP tool.
 
 A structurally valid `tools/call` request has object `params` with:
 
@@ -248,13 +239,13 @@ A structurally valid `tools/call` request has object `params` with:
 
 Missing `arguments` are treated as an empty object. `arguments: null` and non-object `arguments` are malformed method parameters and return JSON-RPC `-32602`. Unknown tool names are protocol errors and return JSON-RPC `-32602`.
 
-For public Volicord tools, `tools/list` exposes MCP-visible input schemas derived from the shared Volicord request schemas with the MCP integration binding applied. `envelope.project_id` remains an optional caller selector. `envelope.surface_id` is not exposed in the MCP-visible schema and is not accepted in raw `tools/call` arguments. If raw public-tool arguments include `envelope.surface_id`, the adapter rejects the call before Core execution. After MCP-visible input validation, the adapter injects the selected Agent Integration Profile's `surface_id` into the internal typed request.
+For public Volicord tools, `tools/list` exposes MCP-visible input schemas derived from the shared Volicord request schemas with the Agent Connection binding applied. `envelope.project_id` remains an optional caller selector. `envelope.actor_source`, `envelope.operation_category`, `envelope.connection_id`, and `envelope.verification_basis` are not exposed in the MCP-visible schema and are not accepted in raw `tools/call` arguments. If raw public-tool arguments include caller-owned invocation fields at the top level or inside `envelope`, the adapter rejects the call before Core execution.
 
 For a known public Volicord tool, object `arguments` that fail the tool input schema return a `CallToolResult` with `isError: true` and actionable text content. They are tool execution errors, not JSON-RPC protocol errors.
 
-For `volicord.list_projects`, the adapter returns a read-only project list for the bound integration only. It must not enter Core, create storage effects, mutate project membership, or expose projects outside the integration allowlist. If an allowlisted project has an invalid current registration, the adapter fails the utility call instead of returning that project as a normal available or unavailable entry.
+For `volicord.list_projects`, the adapter returns a read-only project list for the bound Agent Connection only. It must not enter Core, create storage effects, mutate project membership, or expose projects outside the connection allowlist. If a connected project has an invalid current registration, the adapter fails the utility call instead of returning that project as a normal available or unavailable entry.
 
-For a public Volicord tool call, the adapter first performs deterministic project selection and per-project validation owned by [Agent Integration](agent-integration.md#current-surface-context). Ambiguous project selection is rejected before Core execution and the actionable text must instruct the agent to call `volicord.list_projects`.
+For a public Volicord tool call, the adapter first performs deterministic project selection and per-project validation owned by [Agent Integration](agent-integration.md#current-connection-context). Ambiguous project selection is rejected before Core execution and the actionable text must instruct the agent to call `volicord.list_projects`.
 
 `volicord-mcp` does not advertise or implement MCP task-augmented tool execution. A `tools/call` request does not return `CreateTaskResult`, and a `task` parameter is not a supported baseline feature.
 
@@ -273,14 +264,14 @@ Volicord response branch shapes and error meanings stay with their owners:
 - public error codes: [API Error Codes](api/error-codes.md)
 - machine-readable error details: [API Error Details](api/error-details.md)
 
-## Shutdown and reconnection
+## Shutdown And Reconnection
 
 Closing stdin or terminating the child process ends the MCP session.
 
 Shutdown and reconnection rules:
 
 - SQLite state remains in the Runtime Home.
-- Restarting with the same `integration_id` reconnects to the same integration and current registry state.
-- Changing integration requires a new process or host configuration update.
+- Restarting with the same `connection_id` reconnects to the same Agent Connection and current registry state.
+- Changing connection requires a new process or host configuration update.
 
 Runtime data location boundaries are owned by [Runtime Boundaries](runtime-boundaries.md), and storage record details are owned by the storage owners routed from [Storage](storage.md).

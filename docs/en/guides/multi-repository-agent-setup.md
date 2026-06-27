@@ -1,332 +1,145 @@
-# Multi-repository agent setup
+# Multi-Repository Agent Setup
 
-Use this guide when one user-scope integration should serve multiple explicitly allowed `Product Repository` registrations.
+Use this guide when one user-scope Agent Connection should serve multiple explicitly connected `Product Repository` registrations.
 
 The baseline topology is:
 
 ```mermaid
 flowchart LR
   host[Codex user MCP entry]
-  process["volicord-mcp --integration int-codex-team"]
-  allowlist[explicit integration project allowlist]
+  process["volicord-mcp --connection conn-codex-team"]
+  memberships[connection_projects]
   a["project_id: acme-api<br/>/work/acme-api"]
   b["project_id: billing-api<br/>/work/billing-api"]
 
   host --> process
-  process --> allowlist
-  allowlist --> a
-  allowlist --> b
+  process --> memberships
+  memberships --> a
+  memberships --> b
 ```
 
-There is one host MCP entry, one `volicord-mcp --integration <integration_id>` process, one explicit allowlist, and multiple repositories selected per tool call. Adding a project does not grant every Runtime Home project. Removing access takes effect through registry state without requiring the host entry to be rewritten.
+There is one host MCP entry, one `volicord-mcp --connection <connection_id>` process, and multiple explicitly connected Projects. Adding one Project does not grant access to every Runtime Home Project. Removing one connected Project takes effect through registry state without rewriting the host entry.
 
-Project and local host scopes remain single-repository scopes. Use user scope for this topology.
+Project and local host scopes remain single-Project scopes. Use user scope for this topology.
 
-## Prerequisites And Completion State
+## Prerequisites And Completion
 
-Before adding a second repository, complete the user-scope host setup for Product Repository A through [Agent host setup](agent-host-setup.md). The integration can be `complete`, or it can be `action_required` only when the remaining action is host-owned trust, approval, reload, restart, or comparable follow-up documented by [Agent host troubleshooting](agent-host-troubleshooting.md#status-action_required).
+Before adding a second repository, complete user-scope host setup for Product Repository A through [Agent Host Setup](agent-host-setup.md). The connection can be `complete`, or it can be `action_required` only when the remaining action is host-owned trust, approval, reload, restart, or comparable follow-up documented by [Agent Host Troubleshooting](agent-host-troubleshooting.md#status-action_required).
 
-This guide is complete when one user-scope host entry points at one `integration_id`, the integration allowlist contains the intended repositories, the agent uses `volicord.list_projects` or an explicit `project_id` for multi-repository calls, and removal or re-addition is performed through project membership commands rather than host-file edits.
+This guide is complete when one user-scope host entry points at one `connection_id`, the connection has the intended connected Projects, the agent uses `volicord.list_projects` or explicit `project_id` for multi-repository calls, and removal or re-addition is performed through project membership commands rather than host-file edits.
 
 ## Executable Convention
-
-The command examples assume you have selected one absolute directory containing both `volicord` and `volicord-mcp`, then exported it in the current shell:
 
 ```sh
 export VOLICORD_BIN="/absolute/path/to/selected/bin"
 ```
 
-When building from the Volicord source repository root, a debug build can use:
+Administrative commands use `"$VOLICORD_BIN/volicord"`.
+
+## Connect Product Repository A
 
 ```sh
-export VOLICORD_BIN="$(pwd)/target/debug"
-```
-
-Replace `/absolute/path/to/selected/bin` with your real selected directory; do not copy it literally. `VOLICORD_BIN` is only a shell convenience variable for these examples. Volicord does not read it as runtime or host configuration. For release builds and installed-directory choices, see [Installation](../getting-started/installation.md) and [Agent host setup](agent-host-setup.md).
-
-Administrative commands use `"$VOLICORD_BIN/volicord"`. The user-scope Codex install passes `--mcp-command "$VOLICORD_BIN/volicord-mcp"` so generated configuration stores the resolved absolute executable path, not the literal `VOLICORD_BIN` variable.
-
-## Install Product Repository A
-
-```sh
-"$VOLICORD_BIN/volicord" agent install \
+"$VOLICORD_BIN/volicord" agent connect \
   --host codex \
   --scope user \
   --server-name volicord-main \
-  --integration-id int-codex-team \
+  --connection-id conn-codex-team \
+  --mode workflow \
   --project-id acme-api \
   --repo-root /work/acme-api \
   --runtime-home /Users/alex/.volicord \
   --mcp-command "$VOLICORD_BIN/volicord-mcp"
 ```
 
-This example pins `--server-name volicord-main` so the host entry has a short predictable key. The option is not required; omitting it derives a stable name from `integration_id`.
-
-Because this command creates a new integration and omits `--default-project-id`, Product Repository A becomes the default project. Re-running install for an existing integration without `--default-project-id` retains its existing default when present. Later default changes should use `volicord agent project default set` rather than restating the first selected project during initial installation.
-
 The host config has one server entry:
 
 ```toml
 [mcp_servers.volicord-main]
 command = "/absolute/path/to/selected/bin/volicord-mcp"
-args = ["--integration", "int-codex-team"]
+args = ["--connection", "conn-codex-team"]
 
 [mcp_servers.volicord-main.env]
 VOLICORD_HOME = "/Users/alex/.volicord"
 ```
 
-The actual generated `command` value is the resolved absolute path selected through `VOLICORD_BIN`; generated TOML does not contain `VOLICORD_BIN`.
-
 ## Add Product Repository B
 
 ```sh
 "$VOLICORD_BIN/volicord" agent project add \
-  --integration-id int-codex-team \
+  --connection-id conn-codex-team \
   --project-id billing-api \
   --repo-root /work/billing-api \
   --runtime-home /Users/alex/.volicord
 ```
 
-`volicord agent project add` reuses `billing-api` if that project is already registered in the selected Runtime Home. If it is not registered, this command can register it because the required `--repo-root /work/billing-api` value is supplied, then add the integration membership. The command does not rewrite host configuration; the detailed command contract stays in [Administrative CLI](../reference/admin-cli.md).
+`volicord agent project add` reuses `billing-api` if that Project is already registered in the selected Runtime Home. If it is not registered, this command can register it because `--repo-root /work/billing-api` is supplied, then add the Connection Project row. The command does not rewrite host configuration.
 
-Expected result:
-
-```text
-status: complete
-allowed_projects:
-  acme-api
-  billing-api
-verification_detail: project-specific startup preflight passed
-```
-
-Confirm the host still has one MCP server entry. The Codex config should still contain only `mcp_servers.volicord-main` for this integration; it should not gain one server entry per project.
+Confirm the host still has one MCP server entry:
 
 ```sh
 "$VOLICORD_BIN/volicord" agent status \
-  --integration-id int-codex-team \
+  --connection-id conn-codex-team \
   --runtime-home /Users/alex/.volicord
 ```
 
-Status should list both `acme-api` and `billing-api` under `allowed_projects`.
+Status should list both `acme-api` and `billing-api` as connected Projects.
 
 ## What The Agent Should Do
 
-When a user asks which repositories are available, the agent calls the adapter utility:
+When a user asks which repositories are available, the agent calls:
 
 ```json
 {"name":"volicord.list_projects","arguments":{}}
 ```
 
-The MCP result contains text with a JSON object like:
+The MCP result identifies the `connection_id`, mode, and connected Projects. A workflow call that targets one repository must include explicit `project_id` once more than one Project is connected:
 
 ```json
 {
-  "integration_id": "int-codex-team",
-  "default_project_id": "acme-api",
-  "projects": [
-    {
-      "project_id": "acme-api",
-      "repo_root": "/work/acme-api",
-      "available": true,
-      "is_default": true
-    },
-    {
-      "project_id": "billing-api",
-      "repo_root": "/work/billing-api",
-      "available": true,
-      "is_default": false
-    }
-  ]
-}
-```
-
-For Product Repository A, the agent supplies `project_id: "acme-api"` in the public method envelope:
-
-```json
-{
-  "name": "volicord.status",
-  "arguments": {
-    "envelope": {
-      "project_id": "acme-api",
-      "actor_kind": "agent",
-      "request_id": "req_status_acme",
-      "idempotency_key": null,
-      "expected_state_version": null,
-      "dry_run": false,
-      "locale": "en-US",
-      "task_id": null
-    },
-    "include": {
-      "task": true,
-      "pending_user_judgments": true,
-      "write_authority": false,
-      "evidence": false,
-      "close": true,
-      "guarantees": true
-    }
+  "project_id": "billing-api",
+  "request_id": "req_billing_status_001",
+  "include": {
+    "task": true
   }
 }
 ```
 
-For Product Repository B, the later call changes only the explicit project selector and request id:
+When exactly one Project is connected, the MCP adapter can derive `project_id`. When multiple Projects are connected, ambiguous calls are rejected instead of silently selecting a Project.
 
-```json
-{
-  "name": "volicord.status",
-  "arguments": {
-    "envelope": {
-      "project_id": "billing-api",
-      "actor_kind": "agent",
-      "request_id": "req_status_billing",
-      "idempotency_key": null,
-      "expected_state_version": null,
-      "dry_run": false,
-      "locale": "en-US",
-      "task_id": null
-    },
-    "include": {
-      "task": true,
-      "pending_user_judgments": true,
-      "write_authority": false,
-      "evidence": false,
-      "close": true,
-      "guarantees": true
-    }
-  }
-}
-```
-
-The agent must not guess a project ID from folder names, current working directory, MCP roots, host labels, or memory. If multiple projects are available and no explicit project or valid default is supplied, the adapter rejects the call before Core execution with actionable text like:
-
-```text
-project selection is ambiguous; call volicord.list_projects and retry with envelope.project_id
-```
-
-## Defaults And Ambiguity
-
-A valid explicit `default_project_id` lets the adapter route an omitted `project_id` to that default. Defaults are convenience, not authority. They must name an allowed project and can become unavailable if that project is inactive or execution-ineligible.
-
-When the user's request names a repository, the agent should still use the matching `project_id` explicitly. Explicit project selection is clearest in multi-repository work and prevents accidental work against the default project.
-
-Set or change the default without rewriting host configuration:
-
-```sh
-"$VOLICORD_BIN/volicord" agent project default set \
-  --integration-id int-codex-team \
-  --project-id billing-api \
-  --runtime-home /Users/alex/.volicord
-```
-
-Expected result:
-
-```text
-status: complete
-prior_default_project_id: acme-api
-resulting_default_project_id: billing-api
-```
-
-If the default is cleared while multiple projects remain available, omitted `project_id` calls become ambiguous. The agent should call `volicord.list_projects` and retry with an explicit `envelope.project_id`.
-
-For recovery from an already ambiguous call, see [More than one allowed project exists without a usable selector or default](agent-host-troubleshooting.md#ambiguous-project-selection).
-
-## Remove Projects And Re-Add Later
-
-After the default has moved to `billing-api`, Product Repository A is only a formerly default project. Remove it while retaining the integration and host MCP entry:
+## Remove Or Re-Add One Project
 
 ```sh
 "$VOLICORD_BIN/volicord" agent project remove \
-  --integration-id int-codex-team \
-  --project-id acme-api \
-  --runtime-home /Users/alex/.volicord
-```
-
-Expected result:
-
-```text
-status: complete
-allowed_projects:
-  billing-api
-verification_detail: project membership removed; host configuration was not rewritten
-```
-
-To remove the final remaining project, clear the default first if it still names that project, then remove the membership:
-
-```sh
-"$VOLICORD_BIN/volicord" agent project default clear \
-  --integration-id int-codex-team \
-  --runtime-home /Users/alex/.volicord
-
-"$VOLICORD_BIN/volicord" agent project remove \
-  --integration-id int-codex-team \
+  --connection-id conn-codex-team \
   --project-id billing-api \
   --runtime-home /Users/alex/.volicord
 ```
 
-Expected result:
+Removing a connected Project does not delete the Project registration, Product Repository, project state, Core task/evidence/run/artifact records, or host configuration. It only removes that Project from the Agent Connection.
 
-```text
-status: complete
-allowed_project_count: 0
-not executable until one is added
-```
+Re-add it with the same `project add` command used above. The host entry still points to the same `connection_id`.
 
-After removal, Host Installation inventory and host configuration can remain, but that stored state is not proof of new startup eligibility. A `volicord-mcp` process that was already running can refresh registry state, so `volicord.list_projects` may return an empty list for `int-codex-team`; project-routed public tools cannot proceed because no allowed project remains. A newly started `volicord-mcp` process, `volicord-mcp --check`, and verification paths that need new MCP startup fail until a project is added again and normal configuration checks pass.
+## Zero Connected Projects
 
-For troubleshooting this state, see [Host configuration remains while no project is currently allowed](agent-host-troubleshooting.md#host-config-remains-zero-projects).
+If every Project is removed from a connection, the host configuration may remain but the MCP process is not eligible to route project-specific tools. `volicord.list_projects` may return an empty Project list, and project-routed tools are rejected until a Project is connected again.
 
-Observe the zero-project state:
+For troubleshooting this state, see [host configuration remains while no project is currently connected](agent-host-troubleshooting.md#host-config-remains-zero-projects).
 
-```sh
-"$VOLICORD_BIN/volicord" agent status \
-  --integration-id int-codex-team \
-  --runtime-home /Users/alex/.volicord
-```
-
-Expected status includes:
-
-```text
-allowed_project_count: 0
-not executable
-```
-
-Add a project again without reinstalling the host entry. This restores eligibility for new startup, subject to normal configuration checks:
-
-```sh
-"$VOLICORD_BIN/volicord" agent project add \
-  --integration-id int-codex-team \
-  --project-id billing-api \
-  --repo-root /work/billing-api \
-  --runtime-home /Users/alex/.volicord
-```
-
-If the re-added project should be the convenience default again, set it after adding it:
-
-```sh
-"$VOLICORD_BIN/volicord" agent project default set \
-  --integration-id int-codex-team \
-  --project-id billing-api \
-  --runtime-home /Users/alex/.volicord
-```
-
-## Full Uninstall
-
-Remove managed host configuration and managed guidance for the integration:
+## Uninstall
 
 ```sh
 "$VOLICORD_BIN/volicord" agent uninstall \
-  --integration-id int-codex-team \
+  --connection-id conn-codex-team \
   --runtime-home /Users/alex/.volicord \
-  --allow-repository-write \
-  --remove-managed
+  --dry-run
 ```
 
-Uninstall removes selected Volicord-managed host configuration when ownership and safety checks allow it. With `--remove-managed`, it also removes managed repository guidance only when selected and safely owned. A successful managed uninstall removes the corresponding Host Installation inventory; if no Host Installations remain for the Agent Integration Profile, the profile can be disabled, which is not deletion. Product Repositories, project registration and project state, Core task, evidence, decision, run, and artifact-related records, artifact storage, and unrelated host entries are preserved according to their owners.
+Then run without `--dry-run` when the planned effects are the intended ones. If uninstall reports a partial result, use [Removal completed only partially](agent-host-troubleshooting.md#partial-removal) before retrying cleanup.
 
-If uninstall reports `partial_failure`, use [Removal completed only partially](agent-host-troubleshooting.md#partial-removal) before retrying cleanup.
+## Boundaries
 
-## Reference Links
-
-- Exact host/scope and command behavior: [Administrative CLI](../reference/admin-cli.md)
-- Exact Agent Integration Profile and project selection behavior: [Agent Integration](../reference/agent-integration.md)
-- Exact `volicord.list_projects` transport behavior: [MCP Transport](../reference/mcp-transport.md)
-- Exact Product Repository write boundaries: [Runtime Boundaries](../reference/runtime-boundaries.md#explicit-integration-files-in-product-repositories)
+- Agent Connections access only explicitly connected Projects.
+- Multiple connected Projects require explicit `project_id` in MCP calls unless the call is `volicord.list_projects`.
+- A `Product Repository` is a product-file boundary and may contain selected project-scoped host configuration, but it is not Core authority.
+- `Write Check` is Core-state compatibility, not OS permission.
+- Volicord does not provide OS sandboxing, filesystem ACLs, network policy, or secret isolation.

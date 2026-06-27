@@ -78,7 +78,7 @@ The agent should not mix inspected facts with user-owned judgment, ask you to re
 
 When a choice must become authority-bearing Core state, use a supported
 `User Channel`. The stable local CLI path is `volicord user`; it does not
-require user setup, adapter registration, or local access grants. Exact command
+require user setup, adapter registration, or User Channel setup or Agent Connection registration. Exact command
 behavior belongs to [Administrative CLI](../reference/admin-cli.md#user-channel-commands);
 authority meaning belongs to [Core Model](../reference/core-model.md), and
 Agent Connection boundaries belong to
@@ -114,7 +114,7 @@ but they are not Core authority; for projection boundaries, see
 
 ## Approve writes and sensitive actions
 
-A user-facing write approval is bounded permission for a named write attempt. In this guide, write approval means ordinary user approval for a write flow; it is separate from the exact product label `Write Authorization`.
+A user-facing write approval is bounded permission for a named write attempt. In this guide, write approval means ordinary user approval for a write flow; it is separate from the exact product label `Write Check`.
 
 Write approval is not whole-plan approval, final acceptance, residual-risk acceptance, sensitive-action approval, or a guarantee that Volicord can prevent every unsafe action.
 

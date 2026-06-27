@@ -53,15 +53,15 @@ Home이나 Product Repository는 아닙니다.
 - [`crates/volicord-store/src/runtime_home.rs`](../../../../crates/volicord-store/src/runtime_home.rs):
   Runtime Home 해석.
 - [`crates/volicord-store/src/bootstrap.rs`](../../../../crates/volicord-store/src/bootstrap.rs):
-  Runtime Home 초기화와 프로젝트/접점 등록.
+  Runtime Home 초기화와 프로젝트/Agent Connection 등록.
 - [`crates/volicord-store/src/core_pipeline.rs`](../../../../crates/volicord-store/src/core_pipeline.rs):
-  `CoreProjectStore` 프로젝트 로컬 접근.
+  `CoreProjectStore` 프로젝트 로컬 Store 접근.
 - [`crates/volicord-store/src/artifacts.rs`](../../../../crates/volicord-store/src/artifacts.rs):
   Runtime Home 아티팩트 스테이징과 영구 본문 검증.
 - [`crates/volicord-cli/src/agent_command.rs`](../../../../crates/volicord-cli/src/agent_command.rs):
   에이전트 설정 오케스트레이션과 Runtime Home 준비.
 - [`crates/volicord-cli/src/registration.rs`](../../../../crates/volicord-cli/src/registration.rs):
-  등록된 접점의 역량과 로컬 접근 메타데이터 생성.
+  Agent Connection, Connection Project, 호출 출처 메타데이터 생성.
 - [`crates/volicord-core/src/policy/path.rs`](../../../../crates/volicord-core/src/policy/path.rs):
   Core 정책에서 쓰는 Product Repository 경로 정규화 도우미.
 
@@ -72,9 +72,9 @@ Home이나 Product Repository는 아닙니다.
   `volicord_binary_agent_dry_run_writes_nothing_and_rejects_invalid_scope`.
 - [`crates/volicord-test-support/src/lib.rs`](../../../../crates/volicord-test-support/src/lib.rs)의
   `disposable_runtime_home_stays_under_system_temp`.
-- 계층 간 로컬 접근 동작은
-  [`tests/integration/mcp_surface.rs`](../../../../tests/integration/mcp_surface.rs)의
-  `missing_write_authorization_grant_blocks_prepare_write`.
+- 계층 간 호출 맥락 동작은
+  [`tests/integration/mcp_connection.rs`](../../../../tests/integration/mcp_connection.rs)의
+  `read_only_mode_rejects_agent_workflow_methods_before_core`.
 - [런타임 경계](../../reference/runtime-boundaries.md),
   [저장소](../../reference/storage.md), [아티팩트 저장소](../../reference/storage-artifacts.md),
   [관리 CLI](../../reference/admin-cli.md), [보안](../../reference/security.md).

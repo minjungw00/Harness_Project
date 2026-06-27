@@ -57,8 +57,8 @@ Supported does not mean:
 | Plain-language intake and `Task` creation | A local `Task` can be started from plain-language user intent through the supported intake path. | [Intake method](api/method-intake.md), [Core Model](core-model.md) |
 | Scope updates | `Task` and Change Unit scope can be updated through the supported scope-update path. | [Update-scope method](api/method-update-scope.md), [Core Model](core-model.md) |
 | Status and close-readiness review | Status, evidence sufficiency, known blockers, and close-readiness state can be read through supported read paths. | [Status method](api/method-status.md), [Close-task method](api/method-close-task.md), [API State Schemas](api/schema-state.md), [Core Model](core-model.md) |
-| Prepare-write authorization | `volicord.prepare_write` can create an owner-scoped, single-use `Write Authorization` for one compatible product-file write attempt. | [Prepare-write method](api/method-prepare-write.md), [Storage Effects](storage-effects.md), [Security](security.md) |
-| Local surface registration | Registered local surfaces can identify the selected surface and supported capabilities for scope checks. | [Agent Integration](agent-integration.md), [Surface Recipes](../guides/surface-recipes.md), [Security](security.md) |
+| Write Check | `volicord.prepare_write` can create owner-scoped Core-state compatibility for one compatible product-file write attempt. | [Prepare-write method](api/method-prepare-write.md), [Storage Effects](storage-effects.md), [Security](security.md) |
+| Agent Connection context | Registered Agent Connections identify connection provenance, mode, and explicitly connected Projects for scope checks. | [Agent Connection Reference](agent-integration.md), [Security](security.md) |
 | Artifact staging and compatible artifact linking | New artifact bytes can enter the baseline through the supported staging path; compatible persisted artifact references can be linked when artifact owners allow it. | See [Artifact staging owners](#artifact-staging-owners). |
 | Run and evidence recording | Runs, compact evidence summaries, and claim-scoped evidence observations with provenance can be recorded for baseline work. | [Record-run method](api/method-record-run.md), [Storage Effects](storage-effects.md), [Core Model](core-model.md) |
 | Focused user-owned judgment capture | User-owned judgments can be requested and recorded through supported judgment paths without substituting for Core-owned state, evidence, or close-readiness rules. | See [User-owned judgment owners](#user-judgment-owners). |
@@ -101,7 +101,7 @@ Volicord may record, route, summarize, or display owner-defined state around AI-
 
 Excluded capabilities:
 
-- native artifact capture from surfaces
+- native artifact capture from host applications
 - persistent projection jobs, projection reconciliation, generated projection files, and managed projection repair
 - expanded or additional evidence collection workflows
 - manual QA and external verification workflows
@@ -140,7 +140,7 @@ Some value names may exist as reserved values or profile-gated values without be
 
 Reserved value:
 
-- A reserved value may appear as vocabulary, compatibility surface area, or a value-set entry.
+- A reserved value may appear as vocabulary, compatibility boundary, or a value-set entry.
 - A reserved value does not activate behavior, create a default, satisfy close readiness, or create a guarantee by name alone.
 
 Profile-gated value:
@@ -186,7 +186,7 @@ Baseline scope uses the guarantee level defined by [Security](security.md). Scop
 Supported boundary:
 
 - The baseline guarantee boundary is `cooperative` unless this page and [Security](security.md) define another supported guarantee.
-- `volicord.prepare_write` and `Write Authorization` are product-file write compatibility mechanisms, not isolation or sandboxing guarantees.
+- `volicord.prepare_write` and `Write Check` are product-file write compatibility mechanisms, not isolation or sandboxing guarantees.
 
 Not included:
 

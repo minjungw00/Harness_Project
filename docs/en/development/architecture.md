@@ -65,11 +65,11 @@ The Cargo workspace contains these members:
 | `crates/volicord-types` | `volicord-types` | Library | Shared Rust request, response, schema-shaped, value-set, identifier, and canonical-hash types. |
 | `crates/volicord-store` | `volicord-store` | Library | SQLite, Runtime Home, bootstrap, project Store, artifact storage, migration, inspection, and storage-error implementation. |
 | `crates/volicord-core` | `volicord-core` | Library | Core service, shared request pipeline, method planning, policy checks, and Store coordination. |
-| `crates/volicord-cli` | `volicord-cli` | Library and `volicord` binary | Local administrative CLI for Runtime Home setup, project registration, User Channel commands, Agent Connection installation, host adapters, and repository guidance. |
+| `crates/volicord-cli` | `volicord-cli` | Library and `volicord` binary | Local administrative CLI for Runtime Home setup, project registration, User Channel commands, Agent Connection setup, host adapters, and repository guidance. |
 | `crates/volicord-mcp` | `volicord-mcp` | Library and `volicord-mcp` binary | MCP stdio adapter, startup validation, tool listing, `tools/call` dispatch, and Core invocation. |
 | `crates/volicord-test-support` | `volicord-test-support` | Library | Disposable Runtime Home, Store, Core, and fixture helpers shared by implementation tests. |
 | `tests/conformance` | `volicord-conformance-tests` | `baseline` test target | Baseline cross-method scenarios that exercise owner-defined behavior through Core-facing APIs. |
-| `tests/integration` | `volicord-integration-tests` | `mcp_surface` test target | Cross-layer MCP, Core, Store, Agent Connection binding, and operation-category verification. |
+| `tests/integration` | `volicord-integration-tests` | `mcp_connection` test target | Cross-layer MCP, Core, Store, Agent Connection binding, and operation-category verification. |
 | `xtask` | `xtask` | Library and `xtask` binary | Repository maintenance tooling for read-only documentation validation. It is not part of Volicord runtime architecture. |
 
 Internal dependency direction from the Cargo manifests:
@@ -298,7 +298,7 @@ to choose a test layer for a concrete change.
 | `crates/volicord-core/src/methods/tests.rs` | Exercises Core method planning, shared preflight behavior, effect branches, replay behavior, staging distinction, artifact promotion, close-readiness calculations, and method-owned storage mutation outcomes through `CoreService`. |
 | `crates/volicord-cli/tests/binary_admin.rs` | Runs the `volicord` binary for administrative initialization, registration, `volicord agent` install/status/verify/uninstall/guidance behavior, dry-run behavior, host integration preflight handling, host config writes, repository guidance safety, and command-line error paths. |
 | `crates/volicord-mcp/tests/binary_transport.rs` | Runs the `volicord-mcp` binary for help/version, `--check`, stdio framing, line-delimited JSON-RPC, reconnection behavior, and MCP response wrapping. |
-| `tests/integration/mcp_surface.rs` | Verifies MCP connection binding, tool schemas, public method exposure, per-method `operation_category` derivation, Core/MCP parity, session rejection cases, replay context binding, and cross-layer storage effects. |
+| `tests/integration/mcp_connection.rs` | Verifies MCP connection binding, tool schemas, public method exposure, per-method `operation_category` derivation, Core/MCP parity, session rejection cases, replay context binding, and cross-layer storage effects. |
 | `tests/conformance/baseline.rs` | Exercises baseline public behavior scenarios through Core-facing APIs using shared fixtures, including replay, no-effect branches, Write Check, artifact lifecycle, judgment boundaries, close readiness, error routing, and corruption handling. |
 | `crates/volicord-test-support` | Supplies disposable Runtime Home fixtures, project and Agent Connection helpers, request builders, Store helpers, and shared assertions for the test packages and crate tests. |
 

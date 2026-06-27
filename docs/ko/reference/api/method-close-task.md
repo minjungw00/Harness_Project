@@ -35,7 +35,7 @@
 - 닫기 준비 상태 평가 전 요청 거절
 - 유효한 상태 변경 미리보기에 대한 공통 `dry_run` 미리보기 반환
 
-닫기는 보고서가 아니라 Core 상태 전이입니다. 이 메서드는 `intent=complete`에서 현재 닫기 근거를 평가합니다. 대화, 상태 텍스트, 종료 닫기 요약, 최종 수락만, 잔여 위험 수락만, 증거만, `Write Authorization`, 렌더링된 보기에서 닫기를 추론하지 않습니다.
+닫기는 보고서가 아니라 Core 상태 전이입니다. 이 메서드는 `intent=complete`에서 현재 닫기 근거를 평가합니다. 대화, 상태 텍스트, 종료 닫기 요약, 최종 수락만, 잔여 위험 수락만, 증거만, `Write Check`, 렌더링된 보기에서 닫기를 추론하지 않습니다.
 
 ## 담당 경계
 
@@ -72,14 +72,14 @@ API 경계 블록:
 - 요청 래퍼와 메서드 필드가 유효해야 합니다.
 - `params.task_id`는 요청이 선택한 같은 프로젝트의 `Task`를 가리켜야 합니다.
 - 요청한 `intent`, `close_reason`, `superseding_task_id` 조합이 유효해야 합니다.
-- 접점 맥락, 접근 등급, 로컬 역량, 종료 경로 선행조건이 요청한 경로를 허용해야 합니다.
+- 확인된 호출 맥락, 작업 범주, 호환 행위자 출처, 종료 경로 선행조건이 요청한 경로를 허용해야 합니다.
 
 상태 변경 조건:
 
 - `dry_run=false`인 상태 변경 `intent`에는 `null`이 아닌 `idempotency_key`와 현재 `expected_state_version`이 필요합니다.
-- 오래된 `expected_state_version`, 오래된 닫기 관련 `WriteAuthorization.basis_state_version`, 멱등 요청 해시 충돌은 닫기 준비 상태 평가 전에 거절됩니다.
-- 닫기 관련 `WriteAuthorization.basis_state_version`은 사전 확인 시 현재 `project_state.state_version`과 같지 않을 때 오래된 값입니다.
-- 닫기 관련 `Write Authorization` 최신성 확인은 쓰기 호환성 확인일 뿐입니다. 최종 수락, 잔여 위험 수락, 사용자 소유 판단, 민감 동작 승인, 포괄적 승인을 기록하지 않습니다.
+- 오래된 `expected_state_version`, 오래된 닫기 관련 `WriteCheck.basis_state_version`, 멱등 요청 해시 충돌은 닫기 준비 상태 평가 전에 거절됩니다.
+- 닫기 관련 `WriteCheck.basis_state_version`은 사전 확인 시 현재 `project_state.state_version`과 같지 않을 때 오래된 값입니다.
+- 닫기 관련 `Write Check` 최신성 확인은 쓰기 호환성 확인일 뿐입니다. 최종 수락, 잔여 위험 수락, 사용자 소유 판단, 민감 동작 승인, 포괄적 승인을 기록하지 않습니다.
 
 닫기 조건:
 
@@ -144,18 +144,18 @@ CloseTaskRequest:
 
 | 요청 종류 | 메서드 접근 규칙 |
 |---|---|
-| `intent=check` | 보호된 닫기 준비 상태 세부정보에는 `VerifiedSurfaceContext.access_class=read_status`가 필요합니다. |
-| 상태 변경 `intent` | `core_mutation`, 확인된 접점 맥락, 호환되는 `Task` 상태, 닫기 관련 담당 기록이 필요합니다. |
+| `intent=check` | 보호된 닫기 준비 상태 세부정보에는 `operation_category=read`인 확인된 호출 맥락이 필요합니다. |
+| 상태 변경 `intent` | `operation_category=agent_workflow`인 확인된 호출 맥락, 호환되는 `Task` 상태, 닫기 관련 담당 기록이 필요합니다. |
 
-이 메서드를 호출할 접근 권한은 사용자 소유 판단, 최종 수락, 잔여 위험 수락, 민감 동작 승인, `Write Authorization`과 별개입니다.
+이 메서드를 호출할 접근 권한은 사용자 소유 판단, 최종 수락, 잔여 위험 수락, 민감 동작 승인, `Write Check`과 별개입니다.
 
 ## 메서드 흐름
 
 구현은 `volicord.close_task`를 아래 순서로 평가합니다.
 
 1. 요청 래퍼, 메서드 필드, `intent` 필드 조합, 같은 프로젝트의 `Task` 식별자를 검증합니다. 형태 오류, 잘못된 프로젝트 식별자, 읽을 수 없는 `Task` 식별자는 `ToolRejectedResponse`를 반환합니다.
-2. 접점 맥락, 접근 등급, 로컬 역량, 요청한 종료 경로의 선행조건을 확인합니다.
-3. `dry_run=false`인 상태 변경 `intent`에서는 `idempotency_key`, 현재 `expected_state_version`, 멱등 요청 해시, 닫기 관련 `WriteAuthorization.basis_state_version`을 확인합니다. 오래되었거나 충돌하는 값은 `ToolRejectedResponse`를 반환합니다.
+2. 호출 맥락, 작업 범주, 행위자 출처, 요청한 종료 경로의 선행조건을 확인합니다.
+3. `dry_run=false`인 상태 변경 `intent`에서는 `idempotency_key`, 현재 `expected_state_version`, 멱등 요청 해시, 닫기 관련 `WriteCheck.basis_state_version`을 확인합니다. 오래되었거나 충돌하는 값은 `ToolRejectedResponse`를 반환합니다.
 4. `intent=check`는 [`volicord.status`](method-status.md)의 `include.close=true`와 같은 계산으로 현재 닫기 준비 상태를 계산하고 읽기 전용 `CloseTaskResult`를 반환합니다.
 5. 상태 변경 `intent`와 `dry_run=true` 조합은 유효한 사전 확인 뒤 공통 미리보기 분기를 반환합니다.
 6. `intent=complete`는 현재 `CurrentCloseBasis`에 대한 닫기 준비 상태 평가를 실행합니다. 차단 사유가 남아 있으면 차단 분기를 반환하고, 없으면 `close_state=closed`, 종료 닫기 결과, 잔여 위험 수락이 필요하지 않은 닫기 근거의 알려진 한계에 대해 메서드가 선택한 프로젝트 연속성 기록을 커밋합니다.
@@ -171,7 +171,7 @@ CloseTaskRequest:
 | 상태 변경 `intent`의 커밋된 차단 결과 | 이 메서드와 저장 효과 담당 문서가 그 커밋된 차단 결과를 허용할 때 `project_state.state_version`을 정확히 한 번 증가시킵니다. |
 | 사전 확인 거절 또는 유효한 `dry_run` 미리보기 | 아무것도 증가시키지 않습니다. |
 
-사전 확인 거절에는 오래된 `expected_state_version`, 오래된 닫기 관련 `WriteAuthorization.basis_state_version`, 멱등 요청 해시 충돌이 포함됩니다. 이런 충돌은 오류 담당 문서로 처리되며 닫기 차단 사유가 아닙니다.
+사전 확인 거절에는 오래된 `expected_state_version`, 오래된 닫기 관련 `WriteCheck.basis_state_version`, 멱등 요청 해시 충돌이 포함됩니다. 이런 충돌은 오류 담당 문서로 처리되며 닫기 차단 사유가 아닙니다.
 
 ## 성공 결과
 
@@ -217,7 +217,7 @@ CloseTaskRequest:
 | `pending_user_judgment` | `pending_user_judgment` | 필요한 사용자 소유 판단이 아직 대기 중이거나 해결되지 않았습니다. |
 | `missing_sensitive_approval` | `sensitive_approval` | 필요한 별도 민감 동작 승인이 없습니다. |
 | `missing_cancellation_authority` | `user_judgment` | `intent=cancel`에 현재 `Task`, 범위 리비전, Change Unit에 묶이고 `resolved_by_actor_source=local_user`, 호환 User Channel 출처를 가진 현재 수락된 사용자 취소 판단이 없습니다. |
-| `write_authorization_stale` | `write_compatibility` | 닫기 관련 `Write Authorization`이 `STATE_VERSION_CONFLICT`로 처리되지 않는 최신성 사유로 사용할 수 없습니다. |
+| `write_check_stale` | `write_compatibility` | 닫기 관련 `Write Check`이 `STATE_VERSION_CONFLICT`로 처리되지 않는 최신성 사유로 사용할 수 없습니다. |
 | `baseline_stale` | `baseline` | 닫기 관련 기준선 근거가 차단 사유 생성 경로에서 오래되었습니다. |
 | `evidence_claim_unsupported` | `evidence_claim` | 필요한 닫기 주장이 지원되는 증거 범위를 갖지 못했습니다. |
 | `evidence_claim_missing` | `evidence_claim` | 필요한 닫기 주장에 대한 현재 증거 범위 기록이 없습니다. |
@@ -273,19 +273,19 @@ CloseTaskRequest:
 대표적인 거절 경우:
 
 - 검증 실패
-- 로컬 접근 실패
+- 행위자 출처 또는 작업 범주 불일치
 - 오래된 `expected_state_version`
-- 오래된 닫기 관련 `WriteAuthorization.basis_state_version`
+- 오래된 닫기 관련 `WriteCheck.basis_state_version`
 - 멱등 요청 해시 충돌
 - 잘못된 프로젝트 또는 읽을 수 없는 `Task` 식별
 - Core 사용 불가
-- 역량 부족
+- 지원되지 않는 호출 맥락
 
 거절 응답:
 
 - `CloseTaskResult.blockers`를 반환하지 않습니다.
 - 닫기 효과를 만들지 않습니다.
-- `Write Authorization`, 최종 수락, 잔여 위험 수락, 증거, 아티팩트 상태를 만들지 않습니다.
+- `Write Check`, 최종 수락, 잔여 위험 수락, 증거, 아티팩트 상태를 만들지 않습니다.
 
 공개 오류 의미, 우선순위, 응답 분기 처리 경로는 아래 오류 담당 문서가 담당합니다.
 
@@ -373,7 +373,7 @@ state:
   shaping_readiness: null
   pending_user_judgment_refs: []
   blocker_refs: []
-  write_authority_summary: null
+  write_check_summary: null
   evidence_summary: null
   close_state: blocked
   close_blockers:

@@ -10,13 +10,13 @@ This document owns:
 - supported actor-kind values
 - supported next-action values
 - API `response_kind` and `effect_kind` values
-- supported `access_class` values
+- supported operation-category values
 - record/reference discriminator values used by shared state references
 - supported lifecycle, close-state, evidence observation source and assurance, write-decision category, judgment-kind, presentation, required-for, judgment resolution outcome, artifact redaction, artifact integrity, artifact availability display, `ValidatorResult.status`, `ValidatorResult.severity`, guarantee-display, and similar API value sets
 - supported `change_unit.operation` values
 - the boundary for supported public `ValidatorResult.validator_id` values
 - the value-set boundary for method-scoped reason codes and opaque classification strings
-- profile-gated or reserved value boundaries where they affect supported schema interpretation
+- mode-gated or reserved value boundaries where they affect supported schema interpretation
 - the rule that rendered labels are not canonical schema values
 
 This document does not own:
@@ -32,7 +32,7 @@ This document does not own:
 
 Only values listed as supported in this document are supported API values.
 
-- Profile-gated values must name the profile or capability gate at the point of use.
+- Mode-gated values must name the connection mode, User Channel, admin-local, or owner-defined gate at the point of use.
 - Values outside the supported lists are not baseline API values unless [Scope](../scope.md) and the affected semantic owner define the supported behavior.
 - Naming a value outside a supported list does not widen baseline scope.
 - Rendered labels are display text. They do not replace the canonical values listed in this document.
@@ -71,7 +71,7 @@ Actor provenance fields such as `UserJudgmentResolution.resolved_by_actor_source
 | `agent_connection:<connection_id>` | Agent Connection invocation provenance and agent-created or agent-observed state. | Invocation meaning: [Agent Integration](../agent-integration.md); nested shape owners define where the value appears. |
 | `system` | Internal system provenance where an owner explicitly allows it. | Method and storage owners define where the value appears. |
 
-These values classify derived invocation or persisted actor provenance. They do not by themselves create user-owned judgment, approval, scope-decision authority, final acceptance, residual-risk acceptance, or `Write Authorization`. Authority-bearing user-judgment resolution requires `resolved_by_actor_source=local_user` with compatible User Channel provenance as defined by [Agent Integration](../agent-integration.md) and the method owner.
+These values classify derived invocation or persisted actor provenance. They do not by themselves create user-owned judgment, approval, scope-decision authority, final acceptance, residual-risk acceptance, or `Write Check`. Authority-bearing user-judgment resolution requires `resolved_by_actor_source=local_user` with compatible User Channel provenance as defined by [Agent Integration](../agent-integration.md) and the method owner.
 
 <a id="next-action-values"></a>
 ## Next-action values
@@ -124,21 +124,19 @@ The fields below are intentionally not global closed value sets:
 
 Public `ErrorCode` values are separate and are owned by [API error codes](error-codes.md).
 
-<a id="access-class-values"></a>
-## Access class values
+<a id="operation-category-values"></a>
+## Operation category values
 
-Method-owned API compatibility checks use exactly one request-level access class per public API request:
+Method-owned API compatibility checks use exactly one request-level operation category per public API request:
 
 | Value | Vocabulary note |
 |---|---|
-| `read_status` | Status and close-check read access-class value. |
-| `core_mutation` | Core-mutation access-class value. |
-| `write_authorization` | Access-class value associated with `volicord.prepare_write`. |
-| `run_recording` | Access-class value associated with `volicord.record_run`. |
-| `artifact_registration` | Access-class value associated with `volicord.stage_artifact`. |
-| `artifact_read` | Artifact-read access-class value; artifact body-read support is owned by [Artifact Storage](../storage-artifacts.md). |
+| `read` | Read-only API operation category. A `read_only` Agent Connection can dispatch this category. |
+| `agent_workflow` | Agent workflow operation category. A `workflow` Agent Connection can dispatch this category and `read`. |
+| `user_only` | User Channel operation category for authority-bearing user actions. Agent Connections do not dispatch this category. |
+| `admin_local` | Local administrative operation category. Agent Connections do not dispatch this category. |
 
-Access classes are Volicord API compatibility classes, not OS permission classes. Method access requirements stay with method owner documents routed from [API Methods](methods.md); Agent Connection invocation verification behavior stays with [Agent Integration](../agent-integration.md) and [Security](../security.md).
+Operation categories are Volicord API compatibility categories, not OS permission classes, filesystem ACLs, sandbox rules, network policy, or secret isolation. Method operation requirements stay with method owner documents routed from [API Methods](methods.md); Agent Connection invocation verification behavior stays with [Agent Integration](../agent-integration.md) and [Security](../security.md).
 
 <a id="record-and-reference-values"></a>
 ## Record and reference values
@@ -149,7 +147,7 @@ Access classes are Volicord API compatibility classes, not OS permission classes
 project_state
 task
 change_unit
-write_authorization
+write_check
 user_judgment
 run
 evidence_summary
@@ -157,7 +155,7 @@ evidence_observation
 artifact
 blocker
 task_event
-local_surface_registration
+agent_connection
 project_continuity_record
 ```
 
@@ -184,7 +182,7 @@ superseded
 closed
 ```
 
-These values classify durable project-level context. They do not by themselves create current Task authority, satisfy pending user judgments, prove evidence, grant `Write Authorization`, satisfy close readiness, or accept residual risk for a future close basis.
+These values classify durable project-level context. They do not by themselves create current Task authority, satisfy pending user judgments, prove evidence, grant `Write Check`, satisfy close readiness, or accept residual risk for a future close basis.
 
 <a id="task-lifecycle-values"></a>
 ## Task lifecycle values
@@ -286,7 +284,7 @@ external_network
 secret_access
 ```
 
-These values classify effects as Core state. They do not by themselves create a runtime sandbox, command interception, network blocking, secret isolation, user judgment, sensitive-action approval, evidence, `Write Authorization`, final acceptance, close readiness, or residual-risk acceptance.
+These values classify effects as Core state. They do not by themselves create a runtime sandbox, command interception, network blocking, secret isolation, user judgment, sensitive-action approval, evidence, `Write Check`, final acceptance, close readiness, or residual-risk acceptance.
 
 `volicord.close_task.intent` uses:
 
@@ -306,7 +304,7 @@ approval_required
 decision_required
 ```
 
-`PrepareWriteResult.authorization_effect` uses:
+`PrepareWriteResult.write_check_effect` uses:
 
 ```text
 none
@@ -314,7 +312,7 @@ would_create
 created
 ```
 
-`WriteAuthoritySummary.status` and `WriteAuthorizationSummary.status` use:
+`WriteCheckStateSummary.status` and `WriteCheckSummary.status` use:
 
 ```text
 active
@@ -354,7 +352,7 @@ close_readiness
 | `write_compatibility` | Write-compatibility reason. |
 | `baseline` | Baseline compatibility reason. |
 | `effect_contract` | Change Unit effect contract compatibility reason. |
-| `surface_capability` | Verified surface capability reason. |
+| `connection_capability` | Agent Connection compatibility or mode-support reason. |
 
 These categories classify `volicord.prepare_write` decision reasons. They are not `CloseReadinessBlocker` objects and do not evaluate close readiness. Method-specific decision behavior and reason production stay with [`volicord.prepare_write`](method-prepare-write.md).
 
@@ -371,7 +369,7 @@ pending_user_judgment
 sensitive_approval
 write_compatibility
 baseline
-surface_capability
+connection_capability
 evidence
 evidence_claim
 evidence_provenance
@@ -409,7 +407,7 @@ blocked
 
 ```text
 agent_report
-surface_observation
+connection_observation
 external_tool
 user_observation
 reused_evidence
@@ -417,8 +415,8 @@ unverified_claim
 ```
 
 Source-kind meanings:
-- `agent_report` records a report made by an agent surface. It is not an external tool result by itself.
-- `surface_observation` records an observation attributed to a registered surface. It is not proof by itself.
+- `agent_report` records a report made by an agent actor context. It is not an external tool result by itself.
+- `connection_observation` records an observation attributed to a registered Agent Connection. It is not proof by itself.
 - `external_tool` records output or status from an external tool. It is not a product correctness proof by itself.
 - `user_observation` records a user-attributed observation. It is not final acceptance or any other authority-bearing judgment by itself.
 - `reused_evidence` records reuse of prior evidence or artifacts. It is not a new observation by itself.
@@ -428,15 +426,15 @@ Source-kind meanings:
 
 ```text
 cooperative_report
-registered_surface_observed
+registered_connection_observed
 external_tool_result
 user_observed
 unverified
 ```
 
 Assurance-level meanings:
-- `cooperative_report` is a cooperative report from the submitting surface or actor context.
-- `registered_surface_observed` records that a registered surface observed the claim within its recorded surface context.
+- `cooperative_report` is a cooperative report from the submitting actor context.
+- `registered_connection_observed` records that a registered Agent Connection observed the claim within its recorded connection context.
 - `external_tool_result` records that the observation is based on an external tool result.
 - `user_observed` records user-attributed observation provenance.
 - `unverified` records absence of verified observation assurance.
@@ -470,7 +468,7 @@ cooperative
 detective
 ```
 
-`cooperative` is the baseline fallback. `detective` may be displayed only when the security owner supports the claim and the project enforcement profile, verified bound surface registration, enabled enforcement mechanism, and observed-scope facts support it. Capability declarations alone cannot raise the displayed guarantee.
+`cooperative` is the baseline fallback. `detective` may be displayed only when the security owner supports the claim and project enforcement facts, verified Agent Connection or User Channel provenance, enabled enforcement mechanism, and observed-scope facts support it. Declared connection capability alone cannot raise the displayed guarantee.
 
 <a id="artifact-values"></a>
 ## Artifact values
@@ -607,7 +605,7 @@ Pending-judgment relevance:
 
 ## Error detail helper values
 
-`ToolError.details.authorization_reason` and `ToolError.details.artifact_input_error.reason` helper values are owned by [API error details](error-details.md#error-detail-helper-values). This value-set document does not define machine-readable error detail semantics.
+`ToolError.details.write_check_reason` and `ToolError.details.artifact_input_error.reason` helper values are owned by [API error details](error-details.md#error-detail-helper-values). This value-set document does not define machine-readable error detail semantics.
 
 ## Profile-gated and reserved values
 

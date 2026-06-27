@@ -80,7 +80,7 @@ For public method work, the shortest useful source path is:
 3. [`crates/volicord-core/src/pipeline.rs`](../../../crates/volicord-core/src/pipeline.rs)
 4. [`crates/volicord-core/src/methods/`](../../../crates/volicord-core/src/methods/)
 5. [`crates/volicord-store/src/core_pipeline.rs`](../../../crates/volicord-store/src/core_pipeline.rs)
-6. [`tests/integration/mcp_surface.rs`](../../../tests/integration/mcp_surface.rs)
+6. [`tests/integration/mcp_connection.rs`](../../../tests/integration/mcp_connection.rs)
 7. [`tests/conformance/baseline.rs`](../../../tests/conformance/baseline.rs)
 
 For agent host setup and operator behavior, start instead with

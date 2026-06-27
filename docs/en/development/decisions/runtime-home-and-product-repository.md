@@ -55,15 +55,15 @@ separate location concepts:
 - [`crates/volicord-store/src/runtime_home.rs`](../../../../crates/volicord-store/src/runtime_home.rs):
   Runtime Home resolution.
 - [`crates/volicord-store/src/bootstrap.rs`](../../../../crates/volicord-store/src/bootstrap.rs):
-  Runtime Home initialization and project/surface registration.
+  Runtime Home initialization and project/Agent Connection registration.
 - [`crates/volicord-store/src/core_pipeline.rs`](../../../../crates/volicord-store/src/core_pipeline.rs):
-  `CoreProjectStore` project-local access.
+  `CoreProjectStore` project-local store access.
 - [`crates/volicord-store/src/artifacts.rs`](../../../../crates/volicord-store/src/artifacts.rs):
   Runtime Home artifact staging and persistent body verification.
 - [`crates/volicord-cli/src/agent_command.rs`](../../../../crates/volicord-cli/src/agent_command.rs):
   agent setup orchestration and Runtime Home preparation.
 - [`crates/volicord-cli/src/registration.rs`](../../../../crates/volicord-cli/src/registration.rs):
-  registered surface capability and local-access metadata generation.
+  registered connection capability and invocation metadata generation.
 - [`crates/volicord-core/src/policy/path.rs`](../../../../crates/volicord-core/src/policy/path.rs):
   Product Repository path normalization helpers used by Core policy.
 
@@ -74,9 +74,9 @@ separate location concepts:
   [`crates/volicord-cli/tests/binary_admin.rs`](../../../../crates/volicord-cli/tests/binary_admin.rs).
 - `disposable_runtime_home_stays_under_system_temp` in
   [`crates/volicord-test-support/src/lib.rs`](../../../../crates/volicord-test-support/src/lib.rs).
-- `missing_write_authorization_grant_blocks_prepare_write` in
-  [`tests/integration/mcp_surface.rs`](../../../../tests/integration/mcp_surface.rs)
-  for cross-layer local access behavior.
+- `read_only_mode_rejects_agent_workflow_methods_before_core` in
+  [`tests/integration/mcp_connection.rs`](../../../../tests/integration/mcp_connection.rs)
+  for cross-layer invocation-context behavior.
 - [Runtime Boundaries](../../reference/runtime-boundaries.md),
   [Storage](../../reference/storage.md), [Artifact Storage](../../reference/storage-artifacts.md),
   [Administrative CLI](../../reference/admin-cli.md), and

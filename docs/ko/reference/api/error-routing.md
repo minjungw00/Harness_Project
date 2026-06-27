@@ -34,7 +34,7 @@ API 응답 분기를 고를 때 이 문서를 사용합니다. 개별 닫기 차
 거부 응답:
 - 공개 형태: `ToolRejectedResponse.errors[]`와 `ToolError.code: ErrorCode`.
 - 의미: 메서드가 커밋되는 동작으로 진행하지 않았다는 뜻입니다.
-- 조건: 공개 전송, 요청, 최신성, 로컬 접근, 역량, 선행조건 거부입니다.
+- 조건: 공개 전송, 요청, 최신성, 호출 맥락, actor source, operation category, 선행조건 거부입니다.
 - 상태 영향: 커밋된 동작이 없고 상태 변경도 없습니다.
 
 <a id="error-vs-blocker-blocked-result"></a>
@@ -85,19 +85,19 @@ API 응답 분기를 고를 때 이 문서를 사용합니다. 개별 닫기 차
 ### 선행조건 실패
 
 조건:
-- 커밋 전에 Core, MCP, 로컬 접근, 접점 역량, 상태 조회, `Task` 식별자, 필요한 선행조건이 실패합니다.
+- 커밋 전에 Core, MCP, 호출 맥락, actor-source/operation-category 호환성, 상태 조회, `Task` 식별자, 필요한 선행조건이 실패합니다.
 
 라우팅:
 - `ToolRejectedResponse.errors[]`.
 
 상태 영향:
-- 기록, 재실행 행, 아티팩트, 이벤트, `Write Authorization` 소비, 닫기 상태 변경, 상태 버전 증가가 없습니다.
+- 기록, 재실행 행, 아티팩트, 이벤트, `Write Check` 소비, 닫기 상태 변경, 상태 버전 증가가 없습니다.
 
 <a id="rejected-state-or-idempotency-conflict"></a>
 ### 상태 또는 멱등성 충돌
 
 조건:
-- `expected_state_version`, `WriteAuthorization.basis_state_version`, 멱등 요청 해시가 오래되었거나 충돌합니다.
+- `expected_state_version`, `WriteCheck.basis_state_version`, 멱등 요청 해시가 오래되었거나 충돌합니다.
 
 라우팅:
 - `STATE_VERSION_CONFLICT`를 담은 `ToolRejectedResponse.errors[]`.

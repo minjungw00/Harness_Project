@@ -35,7 +35,7 @@ The method can:
 - reject the request before close readiness evaluation
 - return a common `dry_run` preview for valid mutating previews
 
-Close is a Core state transition, not a report. This method evaluates the current close basis for `intent=complete`; it does not infer close from chat, status text, a terminal close summary, final acceptance alone, residual-risk acceptance alone, evidence alone, a `Write Authorization`, or a rendered view.
+Close is a Core state transition, not a report. This method evaluates the current close basis for `intent=complete`; it does not infer close from chat, status text, a terminal close summary, final acceptance alone, residual-risk acceptance alone, evidence alone, a `Write Check`, or a rendered view.
 
 ## Owner boundary
 
@@ -72,14 +72,14 @@ Preflight conditions:
 - The envelope and method fields must be valid.
 - `params.task_id` must identify the same-project `Task` selected by the request.
 - The requested `intent`, `close_reason`, and `superseding_task_id` combination must be valid.
-- The surface context, access class, local capability, and terminal-path preconditions must allow the requested path.
+- The verified invocation context, operation category, compatible actor source, and terminal-path preconditions must allow the requested path.
 
 Mutation conditions:
 
 - `dry_run=false` mutating intents require a non-null `idempotency_key` and current `expected_state_version`.
-- Stale `expected_state_version`, stale close-relevant `WriteAuthorization.basis_state_version`, or idempotency request-hash conflict is rejected before close readiness evaluation.
-- A close-relevant `WriteAuthorization.basis_state_version` is stale when it does not equal the current `project_state.state_version` at preflight.
-- A close-relevant `Write Authorization` freshness check does not record final acceptance, residual-risk acceptance, user-owned judgment, sensitive-action approval, or broad approval.
+- Stale `expected_state_version`, stale close-relevant `WriteCheck.basis_state_version`, or idempotency request-hash conflict is rejected before close readiness evaluation.
+- A close-relevant `WriteCheck.basis_state_version` is stale when it does not equal the current `project_state.state_version` at preflight.
+- A close-relevant `Write Check` freshness check does not record final acceptance, residual-risk acceptance, user-owned judgment, sensitive-action approval, or broad approval.
 
 Close condition:
 
@@ -144,18 +144,18 @@ Nested owner links:
 
 | Request kind | Method access rule |
 |---|---|
-| `intent=check` | Requires `VerifiedSurfaceContext.access_class=read_status` for protected close readiness detail. |
-| Mutating intents | Require `core_mutation`, verified surface context, compatible `Task` state, and close-relevant owner records. |
+| `intent=check` | Requires verified invocation context with `operation_category=read` for protected close readiness detail. |
+| Mutating intents | Require verified invocation context with `operation_category=agent_workflow`, compatible `Task` state, and close-relevant owner records. |
 
-Access to call this method is separate from user-owned judgment, final acceptance, residual-risk acceptance, sensitive-action approval, and `Write Authorization`.
+Access to call this method is separate from user-owned judgment, final acceptance, residual-risk acceptance, sensitive-action approval, and `Write Check`.
 
 ## Method flow
 
 Implementations evaluate `volicord.close_task` in this order:
 
 1. Validate the envelope, method fields, intent-field combination, and same-project `Task` identity. Shape failures, wrong-project identity, and unreadable `Task` identity return `ToolRejectedResponse`.
-2. Verify the surface context, access class, local capability, and requested terminal-path preconditions.
-3. For `dry_run=false` mutating intents, check `idempotency_key`, current `expected_state_version`, idempotency request hash, and close-relevant `WriteAuthorization.basis_state_version`. Stale or conflicting values return `ToolRejectedResponse`.
+2. Verify the invocation context, operation category, actor source, and requested terminal-path preconditions.
+3. For `dry_run=false` mutating intents, check `idempotency_key`, current `expected_state_version`, idempotency request hash, and close-relevant `WriteCheck.basis_state_version`. Stale or conflicting values return `ToolRejectedResponse`.
 4. For `intent=check`, compute current close readiness with the same calculation used by [`volicord.status`](method-status.md) when `include.close=true`, and return read-only `CloseTaskResult`.
 5. For mutating intents with `dry_run=true`, return the common preview branch after valid preflight.
 6. For `intent=complete`, run the close readiness evaluation over the current `CurrentCloseBasis`. If blockers remain, return the blocked branch; otherwise commit `close_state=closed`, the terminal close result, and any method-selected project continuity records for close-basis known limits that do not require residual-risk acceptance.
@@ -171,7 +171,7 @@ Implementations evaluate `volicord.close_task` in this order:
 | Committed blocked result for a mutating intent | Increments `project_state.state_version` exactly once when this method and the storage-effect owner allow the committed blocked result. |
 | Preflight rejection or valid `dry_run` preview | Increments nothing. |
 
-Preflight rejection includes stale `expected_state_version`, stale close-relevant `WriteAuthorization.basis_state_version`, and idempotency request-hash conflict. These conflicts route to the error owners; they are not close blockers.
+Preflight rejection includes stale `expected_state_version`, stale close-relevant `WriteCheck.basis_state_version`, and idempotency request-hash conflict. These conflicts route to the error owners; they are not close blockers.
 
 ## Success result
 
@@ -217,7 +217,7 @@ The production meanings below apply only after the method reaches close-readines
 | `pending_user_judgment` | `pending_user_judgment` | A required user-owned judgment remains pending or unresolved. |
 | `missing_sensitive_approval` | `sensitive_approval` | A required separate sensitive-action approval is absent. |
 | `missing_cancellation_authority` | `user_judgment` | `intent=cancel` lacks a current accepted user cancellation judgment with `resolved_by_actor_source=local_user`, compatible User Channel provenance, and a basis bound to the current Task, scope revision, and Change Unit. |
-| `write_authorization_stale` | `write_compatibility` | A close-relevant `Write Authorization` is unusable for a freshness reason that is not routed as `STATE_VERSION_CONFLICT`. |
+| `write_check_stale` | `write_compatibility` | A close-relevant `Write Check` is unusable for a freshness reason that is not routed as `STATE_VERSION_CONFLICT`. |
 | `baseline_stale` | `baseline` | The close-relevant baseline basis is stale on a blocker-producing path. |
 | `evidence_claim_unsupported` | `evidence_claim` | A required close claim lacks supported evidence coverage. |
 | `evidence_claim_missing` | `evidence_claim` | A required close claim has no current evidence coverage record. |
@@ -273,19 +273,19 @@ The method returns `ToolRejectedResponse` when the request fails before a valid 
 Common rejected cases include:
 
 - validation failure
-- local access failure
+- actor-source or operation-category mismatch
 - stale `expected_state_version`
-- stale close-relevant `WriteAuthorization.basis_state_version`
+- stale close-relevant `WriteCheck.basis_state_version`
 - idempotency request-hash conflict
 - wrong-project or unreadable `Task` identity
 - unavailable Core
-- insufficient capability
+- unsupported invocation context
 
 Rejected responses:
 
 - return no `CloseTaskResult.blockers`
 - create no close effect
-- create no `Write Authorization`, final acceptance, residual-risk acceptance, evidence, or artifact state
+- create no `Write Check`, final acceptance, residual-risk acceptance, evidence, or artifact state
 
 Public error meaning, precedence, and response-branch routing are owned by the API error documents linked below.
 
@@ -373,7 +373,7 @@ state:
   shaping_readiness: null
   pending_user_judgment_refs: []
   blocker_refs: []
-  write_authority_summary: null
+  write_check_summary: null
   evidence_summary: null
   close_state: blocked
   close_blockers:

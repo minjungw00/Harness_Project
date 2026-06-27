@@ -53,7 +53,7 @@ Contract detail stays in the focused owner documents. Translation and style rule
 | `User Channel` | 사용자 채널 | The local user path for recording authority-bearing user judgments. | [Core Model](core-model.md) |
 | `actor_source` | 행위자 출처 | Durable provenance such as `agent_connection:<connection_id>`, `local_user`, or `system`; not a registered connection or user identity proof. | [Core Model](core-model.md) |
 | `operation_category` | 작업 범주 | Internal API operation classification: `read`, `agent_workflow`, `user_only`, or `admin_local`. | [Security](security.md) |
-| `Host Installation` | 호스트 설치 | Managed host setup inventory for an Agent Connection. Not proof that the external host trusted or loaded the server. | [Administrative CLI](admin-cli.md) |
+| `managed host configuration state` | 호스트 설치 | Managed host setup inventory for an Agent Connection. Not proof that the external host trusted or loaded the server. | [Administrative CLI](admin-cli.md) |
 | `volicord.list_projects` | `volicord.list_projects` | MCP adapter utility for listing projects allowed for the bound integration. Not a public Core API method. | [MCP Transport](mcp-transport.md) |
 | baseline guarantee | 기준 범위 보장 | Security wording for a guarantee supported in the baseline scope. | [Security](security.md) |
 | `ErrorCode` | 공개 오류 코드 | The public API error-code identifier. | [API error codes](api/error-codes.md) |

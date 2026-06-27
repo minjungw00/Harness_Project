@@ -21,7 +21,7 @@
 
 ## 목적
 
-`volicord.status`는 Core 상태의 읽기 전용 현재 위치 보기를 반환합니다. 현재 `Task` 요약, 차단 사유, 대기 중인 사용자 판단, `Write Authorization` 요약, 증거 요약, 닫기 상태, 닫기 준비 상태 발견 사항, 프로젝트 연속성 요약, 보장 표시, 다음 안전한 행동을 포함할 수 있습니다.
+`volicord.status`는 Core 상태의 읽기 전용 현재 위치 보기를 반환합니다. 현재 `Task` 요약, 차단 사유, 대기 중인 사용자 판단, `Write Check` 요약, 증거 요약, 닫기 상태, 닫기 준비 상태 발견 사항, 프로젝트 연속성 요약, 보장 표시, 다음 안전한 행동을 포함할 수 있습니다.
 
 ## 필수 입력
 
@@ -47,8 +47,8 @@ StatusRequest:
 
 보호된 Core 세부정보를 요청할 때 읽기에는 아래 조건이 필요합니다.
 
-- 같은 프로젝트의 현재 로컬 접점
-- `VerifiedSurfaceContext.access_class=read_status`
+- 같은 프로젝트의 확인된 호출 맥락
+- `operation_category=read`
 
 이 응답에서 상태 권한 근거는 `StatusResult`가 요약하는 Core 소유 상태입니다.
 
@@ -66,7 +66,7 @@ StatusRequest:
 - 아티팩트 효과
 - 스테이징 핸들 소비
 - 증거 갱신
-- `Write Authorization` 변경
+- `Write Check` 변경
 
 ## 성공 결과
 
@@ -83,10 +83,10 @@ StatusRequest:
 
 - `include.task`는 선택된 `Task` 요약과 현재 Change Unit을 `active_task`로 반환합니다.
 - `include.pending_user_judgments`는 현재 대기 판단 참조를 반환하며, 관련 있는 오래됨 또는 대체됨 판단 상태는 `blocker_refs`, `next_actions.required_refs` 같은 기존 결과 필드로 나타납니다.
-- `include.write_authority`는 유효한 활성, 만료, 오래됨, 소비됨 쓰기 권한 상태를 `write_authority_summary`로 반환합니다.
+- `include.write_authority`는 유효한 활성, 만료, 오래됨, 소비됨 쓰기 권한 상태를 `write_check_summary`로 반환합니다.
 - `include.evidence`는 사용할 수 있을 때 현재 `EvidenceSummary`와 범위를 반환합니다.
 - `include.close`는 `CurrentCloseBasis | null`, 닫기 상태, 계산된 차단 사유, 위험 수락 범위, 관련 다음 행동을 반환합니다. 차단 사유는 `volicord.close_task intent=check`와 같은 닫기 준비 상태 계산을 사용합니다.
-- `include.guarantees`는 프로젝트 강제 프로필, 확인된 묶인 접점 등록, 활성화된 강제 메커니즘, 지원되는 기준 범위에서 파생된 보장만 반환합니다.
+- `include.guarantees`는 프로젝트 강제 프로필, 확인된 호출 맥락, 활성화된 강제 메커니즘, 지원되는 기준 범위에서 파생된 보장만 반환합니다.
 - `include.continuity`는 오래 유지하는 프로젝트 수준 맥락의 활성 `ProjectContinuitySummary[]` 항목을 반환합니다.
 - `include.evidence=false`는 증거 요약, 범위, 아티팩트 증거 참조, 증거 전용 다음 행동을 계산하지도 반환하지도 않는다는 뜻입니다.
 - `include.close=false`는 닫기 준비 상태를 계산하지 않고 `CurrentCloseBasis`, 닫기 상태, 닫기 차단 사유, 잔여 위험 범위, 닫기 전용 다음 행동을 반환하지 않는다는 뜻입니다.
@@ -96,8 +96,8 @@ StatusRequest:
 정직한 상태 보기 규칙:
 - 계산하지 않았거나, 선택하지 않은 데이터는 스키마가 허용하는 곳에서 생략합니다. 선택된 상태 보기를 계산했지만 사용할 수 없을 때만 `null`을 사용합니다. "계산했고 없음"을 암시하는 빈 값으로 표현하면 안 됩니다.
 - 닫기 차단 사유의 빈 배열을 포함한 빈 배열은 메서드가 그 필드를 계산했고 항목이 없었다는 뜻입니다.
-- 역량 선언만으로 보장이 생기지 않습니다. 협력형 전용 배포는 `detective`를 주장하면 안 됩니다.
-- `GuaranteeDisplay.capability_refs`는 해당 참조를 사용할 수 있을 때 실제 프로필이나 접점 사실을 식별해야 합니다.
+- 호스트 지침, 연결 모드, 생성된 텍스트만으로는 보장이 생기지 않습니다. 협력형 전용 배포는 `detective`를 주장하면 안 됩니다.
+- `GuaranteeDisplay.capability_refs`는 해당 참조를 사용할 수 있을 때 호출 바인딩, Agent Connection, 관찰 사실을 식별해야 합니다.
 
 `include.close=true`와 [`volicord.close_task`](method-close-task.md)의 `intent=check`는 같은 닫기 준비 상태 계산을 사용합니다. `volicord.status`는 읽기 전용으로 남으며 재실행 행, 이벤트, 상태 변경, 닫기 변경, 상태 버전 증가를 만들지 않습니다.
 
@@ -133,8 +133,8 @@ StatusRequest:
 읽기를 안전하게 제공할 수 없으면 `ToolRejectedResponse`를 반환합니다. 예시는 아래와 같습니다.
 
 - Core 사용 불가
-- 로컬 접근 불일치
-- 요청한 보호 세부정보에 대한 역량 부족
+- 행위자 출처 또는 작업 범주 불일치
+- 요청한 보호 세부정보에 대한 지원되지 않는 호출 맥락
 - `Task` 범위 읽기에 필요한 현재 `Task` 없음
 - 상태 보기 기반 응답을 요청했지만 상태 보기가 오래되었거나 사용 불가
 
@@ -228,7 +228,7 @@ active_task:
       task_id: task_export_001
       state_version: 42
   blocker_refs: []
-  write_authority_summary: null
+  write_check_summary: null
   evidence_summary: null
   close_state: blocked
   close_blockers:
@@ -309,7 +309,7 @@ guarantee_display:
 
 - 요청 래퍼와 응답 분기: [API 코어 스키마](schema-core.md).
 - 상태, 현재 닫기 근거, 닫기 준비 상태 형태, 증거 요약, 보장 표시: [API 상태 스키마](schema-state.md).
-- 지원되는 값과 접근 등급: [API 값 집합](schema-value-sets.md).
+- 지원되는 값과 작업 범주: [API 값 집합](schema-value-sets.md#operation-category-values).
 - 공개 오류, 우선순위, 거절 응답 처리 경로: [API 오류 코드](error-codes.md), [API 오류 우선순위](error-precedence.md), [API 오류 처리 경로](error-routing.md).
 - 닫기 준비 상태 차단 사유 처리 경로: [API 차단 사유 처리 경로](blocker-routing.md).
 - 저장 효과: [저장 효과](../storage-effects.md).

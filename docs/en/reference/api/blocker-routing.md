@@ -47,7 +47,7 @@ This page is not a full blocker taxonomy, schema field table, or close-task eval
 | Owner concern | Routing use | Boundary |
 |---|---|---|
 | Core state, terminal transition, baseline, recovery, and write compatibility | A category-bearing blocker can point readers to Core or method-owned state requirements. | Core meaning stays with [Core Model](../core-model.md); method behavior stays with [`volicord.close_task`](method-close-task.md). |
-| Scope, user-owned judgment, sensitive-action approval, and surface capability | A category-bearing blocker can show that close depends on a user, scope, approval, or surface-capability owner. | The blocker does not record the user decision, sensitive-action approval, scope change, or capability declaration. |
+| Scope, user-owned judgment, sensitive-action approval, and connection capability | A category-bearing blocker can show that close depends on a user, scope, approval, or connection-capability owner. | The blocker does not record the user decision, sensitive-action approval, scope change, or capability declaration. |
 | Evidence and artifact basis | A category-bearing blocker can show that close depends on evidence sufficiency or persistent artifact availability. | Evidence and artifact semantics stay with their owners; the route does not prove sufficiency or availability. |
 | Final acceptance and residual risk | A category-bearing blocker can show that close depends on final acceptance, residual-risk visibility, or residual-risk acceptance. | The blocker does not create acceptance or risk acceptance. |
 
@@ -79,7 +79,7 @@ This document only defines the boundary between the blocker data returned by tha
 Blocker routing classifies close-readiness blocker data. It does not create or replace:
 
 - final acceptance or residual-risk acceptance
-- user-owned judgment, sensitive-action approval, or `Write Authorization`
+- user-owned judgment, sensitive-action approval, or `Write Check`
 - evidence sufficiency or artifact availability
 - close completion or terminal `Task` state
 - blocker persistence or state-version increments

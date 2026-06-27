@@ -38,8 +38,8 @@ Adjacent owners:
 | `BASELINE_STALE` | [`BASELINE_STALE`](#errorcode-baseline-stale) |
 | `SCOPE_REQUIRED` | [`SCOPE_REQUIRED`](#errorcode-scope-required) |
 | `SCOPE_VIOLATION` | [`SCOPE_VIOLATION`](#errorcode-scope-violation) |
-| `WRITE_AUTHORIZATION_REQUIRED` | [`WRITE_AUTHORIZATION_REQUIRED`](#errorcode-write-authorization-required) |
-| `WRITE_AUTHORIZATION_INVALID` | [`WRITE_AUTHORIZATION_INVALID`](#errorcode-write-authorization-invalid) |
+| `WRITE_CHECK_REQUIRED` | [`WRITE_CHECK_REQUIRED`](#errorcode-write-check-required) |
+| `WRITE_CHECK_INVALID` | [`WRITE_CHECK_INVALID`](#errorcode-write-check-invalid) |
 | `APPROVAL_DENIED` | [`APPROVAL_DENIED`](#errorcode-approval-denied) |
 | `APPROVAL_EXPIRED` | [`APPROVAL_EXPIRED`](#errorcode-approval-expired) |
 | `APPROVAL_REQUIRED` | [`APPROVAL_REQUIRED`](#errorcode-approval-required) |
@@ -81,7 +81,7 @@ Condition:
 - A public freshness or idempotency conflict is present. Stale `expected_state_version` is the request-state form.
 
 Notes:
-- Stale `WriteAuthorization.basis_state_version` and idempotency request-hash conflicts are covered in [State version conflict](error-precedence.md#state-conflict-behavior).
+- Stale `WriteCheck.basis_state_version` and idempotency request-hash conflicts are covered in [State version conflict](error-precedence.md#state-conflict-behavior).
 
 <a id="errorcode-mcp-unavailable"></a>
 ### `MCP_UNAVAILABLE`
@@ -90,7 +90,7 @@ Used in:
 - `ToolRejectedResponse.errors[]`
 
 Condition:
-- Required Core, MCP, store, typed owner state, or surface reachability is unavailable. This includes corrupt or unreadable persisted typed owner state that a public method needs in order to evaluate authority, lifecycle, scope, evidence, completion, close readiness, or write compatibility.
+- Required Core, MCP, store, typed owner state, or Agent Connection reachability is unavailable. This includes corrupt or unreadable persisted typed owner state that a public method needs in order to evaluate authority, lifecycle, scope, evidence, completion, close readiness, or write compatibility.
 
 <a id="errorcode-local-access-mismatch"></a>
 ### `LOCAL_ACCESS_MISMATCH`
@@ -99,7 +99,7 @@ Used in:
 - `ToolRejectedResponse.errors[]`
 
 Condition:
-- Reachable local access does not match the registered transport, session, binding, project, or surface instance, or access was revoked.
+- The verified invocation context, connection binding, project routing, Product Repository path boundary, or actor-source/operation-category compatibility does not match the requested operation.
 
 <a id="errorcode-no-active-task"></a>
 ### `NO_ACTIVE_TASK`
@@ -150,27 +150,27 @@ Used in:
 Condition:
 - Intended or observed paths or sensitive categories exceed current scope or stored authorized scope.
 
-<a id="errorcode-write-authorization-required"></a>
-### `WRITE_AUTHORIZATION_REQUIRED`
+<a id="errorcode-write-check-required"></a>
+### `WRITE_CHECK_REQUIRED`
 
 Used in:
 - `ToolRejectedResponse.errors[]`
 
 Condition:
-- A write-capable Run lacks a required `Write Authorization`.
+- A write-capable Run lacks a required `Write Check`.
 
-<a id="errorcode-write-authorization-invalid"></a>
-### `WRITE_AUTHORIZATION_INVALID`
+<a id="errorcode-write-check-invalid"></a>
+### `WRITE_CHECK_INVALID`
 
 Used in:
 - `ToolRejectedResponse.errors[]`
 
 Condition:
-- Supplied `Write Authorization` is expired, revoked, consumed, or incompatible for a non-version reason.
+- Supplied `Write Check` is expired, revoked, consumed, or incompatible for a non-version reason.
 
 Notes:
-- Expired `Write Authorization` use stays on this code with `ToolError.details.authorization_reason=expired`.
-- Stale `WriteAuthorization.basis_state_version` is routed through `STATE_VERSION_CONFLICT`, not this code.
+- Expired `Write Check` use stays on this code with `ToolError.details.write_check_reason=expired`.
+- Stale `WriteCheck.basis_state_version` is routed through `STATE_VERSION_CONFLICT`, not this code.
 
 <a id="errorcode-approval-denied"></a>
 ### `APPROVAL_DENIED`
@@ -240,7 +240,7 @@ Used in:
 - Owner-defined result paths
 
 Condition:
-- The surface is recognized but lacks a required access class, observation, capture, guarantee support, or supported behavior.
+- The invocation context is recognized, but the requested operation, observation, capture, guarantee display, or supported behavior is not available for that context.
 
 <a id="errorcode-evidence-insufficient"></a>
 ### `EVIDENCE_INSUFFICIENT`

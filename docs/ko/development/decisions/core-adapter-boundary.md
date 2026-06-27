@@ -45,21 +45,21 @@ Core 쪽 동작은 `volicord-core`에 있고 공유 타입과 Store에 의존하
 - [`crates/volicord-core/src/pipeline.rs`](../../../../crates/volicord-core/src/pipeline.rs):
   `CoreService`, `MethodPolicy`, `OwnerPipelineBranch`, 공통 사전 점검.
 - [`crates/volicord-mcp/src/lib.rs`](../../../../crates/volicord-mcp/src/lib.rs):
-  `PUBLIC_METHOD_TOOL_NAMES`, `McpIntegrationStartupInspection`,
-  `McpIntegrationContext`, `McpAdapter`, `McpAdapter::call_tool`,
-  `prepare_integration_arguments`.
+  `PUBLIC_METHOD_TOOL_NAMES`, `McpConnectionStartupInspection`,
+  `McpConnectionContext`, `McpAdapter`, `McpAdapter::call_tool`,
+  `prepare_connection_arguments`.
 - [`crates/volicord-cli/src/agent_command.rs`](../../../../crates/volicord-cli/src/agent_command.rs):
   Core/MCP 어댑터 경로 밖의 관리 호스트 설정 오케스트레이션.
 - [`crates/volicord-cli/src/registration.rs`](../../../../crates/volicord-cli/src/registration.rs):
-  등록된 접점의 역량과 로컬 접근 메타데이터 도우미.
+  Agent Connection, Connection Project, 호출 출처 메타데이터 도우미.
 - `volicord-core`, `volicord-mcp`, `volicord-cli` Cargo manifest.
 
 ## 관련 테스트와 참조 담당 문서
 
 - [`crates/volicord-mcp/src/lib.rs`](../../../../crates/volicord-mcp/src/lib.rs)의
   `adapter_and_direct_core_status_have_equivalent_response_meaning`.
-- [`tests/integration/mcp_surface.rs`](../../../../tests/integration/mcp_surface.rs)의
-  `mcp_session_derives_access_per_method_call`,
-  `mcp_exposes_exactly_the_documented_public_methods`.
+- [`tests/integration/mcp_connection.rs`](../../../../tests/integration/mcp_connection.rs)의
+  `connection_invocation_is_injected_and_single_project_is_auto_selected`,
+  `read_only_mode_rejects_agent_workflow_methods_before_core`.
 - [API 메서드](../../reference/api/methods.md), [MCP 전송](../../reference/mcp-transport.md),
   [관리 CLI](../../reference/admin-cli.md), [에이전트 통합](../../reference/agent-integration.md).
