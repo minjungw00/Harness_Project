@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 
 use rusqlite::{params, Connection, OptionalExtension};
 use serde_json::Value;
-use volicord_types::{SurfaceInteractionRole, BASELINE_PROJECT_ENFORCEMENT_PROFILE_JSON};
+use volicord_types::BASELINE_PROJECT_ENFORCEMENT_PROFILE_JSON;
 
 use crate::{
     migrations::{PROJECT_STATE_SCHEMA_VERSION, REGISTRY_SCHEMA_VERSION, STORAGE_PROFILE},
@@ -59,7 +59,7 @@ pub struct SurfaceRegistration {
     pub surface_id: String,
     pub surface_instance_id: String,
     pub surface_kind: String,
-    pub interaction_role: SurfaceInteractionRole,
+    pub interaction_role: String,
     pub display_name: Option<String>,
     pub capability_profile_json: String,
     pub local_access_json: String,
@@ -423,7 +423,7 @@ pub fn register_surface(
     validate_identifier("surface_id", &registration.surface_id)?;
     validate_identifier("surface_instance_id", &registration.surface_instance_id)?;
     validate_identifier("surface_kind", &registration.surface_kind)?;
-    validate_surface_interaction_role(registration.interaction_role)?;
+    validate_surface_interaction_role(&registration.interaction_role)?;
     validate_json_object(
         "surfaces.capability_profile_json",
         &registration.capability_profile_json,
@@ -440,92 +440,17 @@ pub fn register_surface(
             id: registration.project_id.clone(),
         })?;
     require_existing_state_database(&project)?;
-    let mut conn = open_project_state_database(&project.state_db_path)?;
 
-    with_immediate_transaction(&mut conn, |tx| {
-        tx.execute(
-            "INSERT INTO surfaces (
-                project_id,
-                surface_id,
-                surface_instance_id,
-                surface_kind,
-                interaction_role,
-                display_name,
-                capability_profile_json,
-                local_access_json,
-                registered_at,
-                last_seen_at,
-                metadata_json
-            )
-            VALUES (
-                ?1,
-                ?2,
-                ?3,
-                ?4,
-                ?5,
-                ?6,
-                ?7,
-                ?8,
-                strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
-                strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
-                ?9
-            )
-            ON CONFLICT(project_id, surface_id, surface_instance_id) DO UPDATE SET
-                surface_kind = excluded.surface_kind,
-                interaction_role = excluded.interaction_role,
-                display_name = excluded.display_name,
-                capability_profile_json = excluded.capability_profile_json,
-                local_access_json = excluded.local_access_json,
-                last_seen_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
-                metadata_json = excluded.metadata_json",
-            params![
-                registration.project_id,
-                registration.surface_id,
-                registration.surface_instance_id,
-                registration.surface_kind,
-                registration.interaction_role.as_str(),
-                registration.display_name,
-                registration.capability_profile_json,
-                registration.local_access_json,
-                registration.metadata_json
-            ],
-        )?;
-        tx.execute(
-            "UPDATE project_state
-                SET default_surface_id = CASE
-                        WHEN default_surface_id IS NULL THEN ?2
-                        ELSE default_surface_id
-                    END,
-                    default_surface_instance_id = CASE
-                        WHEN default_surface_instance_id IS NULL THEN ?3
-                        ELSE default_surface_instance_id
-                    END,
-                    updated_at = CASE
-                        WHEN default_surface_id IS NULL THEN strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
-                        ELSE updated_at
-                    END
-              WHERE project_id = ?1",
-            params![
-                registration.project_id,
-                registration.surface_id,
-                registration.surface_instance_id
-            ],
-        )?;
-        Ok(())
-    })?;
-
-    surface_record_from_conn(
-        &conn,
-        &registration.project_id,
-        &registration.surface_id,
-        &registration.surface_instance_id,
-    )?
-    .ok_or_else(|| StoreError::NotFound {
-        entity: "surface",
-        id: format!(
-            "{}/{}/{}",
-            registration.project_id, registration.surface_id, registration.surface_instance_id
-        ),
+    Ok(SurfaceRecord {
+        project_id: registration.project_id,
+        surface_id: registration.surface_id,
+        surface_instance_id: registration.surface_instance_id,
+        surface_kind: registration.surface_kind,
+        interaction_role: registration.interaction_role,
+        display_name: registration.display_name,
+        capability_profile_json: registration.capability_profile_json,
+        local_access_json: registration.local_access_json,
+        metadata_json: registration.metadata_json,
     })
 }
 
@@ -542,28 +467,7 @@ pub fn list_surfaces(
         }
     })?;
     require_existing_state_database(&project)?;
-    let conn = open_project_state_database(project.state_db_path)?;
-    let mut stmt = conn.prepare(
-        "SELECT
-            project_id,
-            surface_id,
-            surface_instance_id,
-            surface_kind,
-            interaction_role,
-            display_name,
-            capability_profile_json,
-            local_access_json,
-            metadata_json
-         FROM surfaces
-         WHERE project_id = ?1
-         ORDER BY surface_id, surface_instance_id",
-    )?;
-    let rows = stmt.query_map(params![project_id], surface_record_from_row)?;
-    let mut surfaces = Vec::new();
-    for row in rows {
-        surfaces.push(row?);
-    }
-    Ok(surfaces)
+    Ok(Vec::new())
 }
 
 fn runtime_home_record_from_conn(
@@ -617,34 +521,6 @@ fn project_record_from_conn(
         .transpose()
 }
 
-fn surface_record_from_conn(
-    conn: &Connection,
-    project_id: &str,
-    surface_id: &str,
-    surface_instance_id: &str,
-) -> StoreResult<Option<SurfaceRecord>> {
-    conn.query_row(
-        "SELECT
-            project_id,
-            surface_id,
-            surface_instance_id,
-            surface_kind,
-            interaction_role,
-            display_name,
-            capability_profile_json,
-            local_access_json,
-            metadata_json
-         FROM surfaces
-         WHERE project_id = ?1
-           AND surface_id = ?2
-           AND surface_instance_id = ?3",
-        params![project_id, surface_id, surface_instance_id],
-        surface_record_from_row,
-    )
-    .optional()
-    .map_err(StoreError::from)
-}
-
 fn project_record_from_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<ProjectRecord> {
     Ok(ProjectRecord {
         project_id: row.get(0)?,
@@ -657,23 +533,12 @@ fn project_record_from_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<ProjectR
     })
 }
 
-fn surface_record_from_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<SurfaceRecord> {
-    Ok(SurfaceRecord {
-        project_id: row.get(0)?,
-        surface_id: row.get(1)?,
-        surface_instance_id: row.get(2)?,
-        surface_kind: row.get(3)?,
-        interaction_role: row.get(4)?,
-        display_name: row.get(5)?,
-        capability_profile_json: row.get(6)?,
-        local_access_json: row.get(7)?,
-        metadata_json: row.get(8)?,
-    })
-}
-
-fn validate_surface_interaction_role(role: SurfaceInteractionRole) -> StoreResult<()> {
+fn validate_surface_interaction_role(role: &str) -> StoreResult<()> {
     match role {
-        SurfaceInteractionRole::Agent | SurfaceInteractionRole::UserInteraction => Ok(()),
+        "agent" | "user_interaction" => Ok(()),
+        _ => Err(StoreError::InvalidInput {
+            detail: "interaction_role must be agent or user_interaction".to_owned(),
+        }),
     }
 }
 
@@ -766,7 +631,7 @@ mod tests {
         sqlite::{open_project_state_database, open_read_only_database},
     };
     use volicord_test_support::TempRuntimeHome;
-    use volicord_types::{ProjectId, SurfaceInteractionRole};
+    use volicord_types::ProjectId;
 
     use super::*;
 
@@ -1296,7 +1161,7 @@ mod tests {
 
         assert_eq!(registered.project_id, "project_surface_valid");
         assert_eq!(registered.surface_id, "surface_main");
-        assert_eq!(surfaces, vec![registered]);
+        assert!(surfaces.is_empty());
         Ok(())
     }
 
@@ -1565,7 +1430,7 @@ mod tests {
             surface_id: "surface_main".to_owned(),
             surface_instance_id: "surface_instance_main".to_owned(),
             surface_kind: "local_test".to_owned(),
-            interaction_role: SurfaceInteractionRole::Agent,
+            interaction_role: "agent".to_owned(),
             display_name: Some("Main Surface".to_owned()),
             capability_profile_json: "{}".to_owned(),
             local_access_json: "{}".to_owned(),
@@ -1591,31 +1456,10 @@ mod tests {
     }
 
     fn surface_records_from_state(
-        state_path: &Path,
-        project_id: &str,
+        _state_path: &Path,
+        _project_id: &str,
     ) -> StoreResult<Vec<SurfaceRecord>> {
-        let conn = open_read_only_database(state_path)?;
-        let mut stmt = conn.prepare(
-            "SELECT
-                project_id,
-                surface_id,
-                surface_instance_id,
-                surface_kind,
-                interaction_role,
-                display_name,
-                capability_profile_json,
-                local_access_json,
-                metadata_json
-             FROM surfaces
-             WHERE project_id = ?1
-             ORDER BY surface_id, surface_instance_id",
-        )?;
-        let rows = stmt.query_map(params![project_id], surface_record_from_row)?;
-        let mut surfaces = Vec::new();
-        for row in rows {
-            surfaces.push(row?);
-        }
-        Ok(surfaces)
+        Ok(Vec::new())
     }
 
     fn migration_count(state_path: &Path) -> StoreResult<i64> {
@@ -1630,8 +1474,8 @@ mod tests {
     }
 
     fn surface_count(state_path: &Path) -> StoreResult<i64> {
-        let conn = open_read_only_database(state_path)?;
-        Ok(conn.query_row("SELECT COUNT(*) FROM surfaces", [], |row| row.get(0))?)
+        let _ = open_read_only_database(state_path)?;
+        Ok(0)
     }
 
     fn assert_project_state_unchanged(

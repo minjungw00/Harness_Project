@@ -142,9 +142,8 @@ pub fn validate_registry_schema(conn: &Connection) -> StoreResult<()> {
             "schema_migrations",
             "runtime_home",
             "projects",
-            "agent_integrations",
-            "integration_projects",
-            "host_installations",
+            "agent_connections",
+            "connection_projects",
         ],
     )?;
     require_indexes(
@@ -153,16 +152,15 @@ pub fn validate_registry_schema(conn: &Connection) -> StoreResult<()> {
         &[
             "idx_projects_repo_root",
             "idx_projects_status",
-            "idx_integration_projects_project",
-            "idx_agent_integrations_enabled",
-            "idx_host_installations_integration",
-            "idx_host_installations_target",
+            "idx_connection_projects_project",
+            "idx_agent_connections_enabled",
+            "idx_agent_connections_target",
         ],
     )?;
     require_column_spec(
         conn,
         REGISTRY_DATABASE_KIND,
-        "agent_integrations",
+        "agent_connections",
         ColumnSpec {
             name: "enabled",
             type_name: "INTEGER",
@@ -174,7 +172,7 @@ pub fn validate_registry_schema(conn: &Connection) -> StoreResult<()> {
     require_column_spec(
         conn,
         REGISTRY_DATABASE_KIND,
-        "agent_integrations",
+        "agent_connections",
         ColumnSpec {
             name: "metadata_json",
             type_name: "TEXT",
@@ -186,9 +184,21 @@ pub fn validate_registry_schema(conn: &Connection) -> StoreResult<()> {
     require_column_spec(
         conn,
         REGISTRY_DATABASE_KIND,
-        "integration_projects",
+        "agent_connections",
         ColumnSpec {
-            name: "integration_id",
+            name: "mode",
+            type_name: "TEXT",
+            not_null: true,
+            default_value: None,
+            primary_key_position: 0,
+        },
+    )?;
+    require_column_spec(
+        conn,
+        REGISTRY_DATABASE_KIND,
+        "connection_projects",
+        ColumnSpec {
+            name: "connection_id",
             type_name: "TEXT",
             not_null: true,
             default_value: None,
@@ -198,7 +208,7 @@ pub fn validate_registry_schema(conn: &Connection) -> StoreResult<()> {
     require_column_spec(
         conn,
         REGISTRY_DATABASE_KIND,
-        "integration_projects",
+        "connection_projects",
         ColumnSpec {
             name: "project_id",
             type_name: "TEXT",
@@ -210,7 +220,7 @@ pub fn validate_registry_schema(conn: &Connection) -> StoreResult<()> {
     require_column_spec(
         conn,
         REGISTRY_DATABASE_KIND,
-        "host_installations",
+        "agent_connections",
         ColumnSpec {
             name: "last_verified_status",
             type_name: "TEXT",
@@ -222,7 +232,7 @@ pub fn validate_registry_schema(conn: &Connection) -> StoreResult<()> {
     require_column_spec(
         conn,
         REGISTRY_DATABASE_KIND,
-        "host_installations",
+        "agent_connections",
         ColumnSpec {
             name: "metadata_json",
             type_name: "TEXT",
@@ -255,12 +265,11 @@ pub fn validate_project_state_schema(conn: &Connection) -> StoreResult<()> {
         &[
             "schema_migrations",
             "project_state",
-            "surfaces",
             "tasks",
             "change_units",
             "user_judgments",
             "project_continuity_records",
-            "write_authorizations",
+            "write_checks",
             "runs",
             "artifact_staging",
             "artifacts",
@@ -277,22 +286,21 @@ pub fn validate_project_state_schema(conn: &Connection) -> StoreResult<()> {
         PROJECT_STATE_DATABASE_KIND,
         &[
             "idx_change_units_one_current_active",
-            "idx_write_authorizations_consumed_run",
-            "idx_runs_write_authorization",
+            "idx_write_checks_consumed_run",
+            "idx_runs_write_check",
             "idx_artifact_staging_promoted_artifact",
             "idx_artifacts_source_staging",
             "idx_project_state_active_task",
-            "idx_surfaces_last_seen",
             "idx_tasks_lifecycle",
             "idx_tasks_current_change_unit",
             "idx_change_units_task_status",
             "idx_user_judgments_task_status",
             "idx_project_continuity_records_status",
             "idx_project_continuity_records_source_task",
-            "idx_write_authorizations_task_status",
+            "idx_write_checks_task_status",
             "idx_runs_task_created",
             "idx_artifact_staging_task_status",
-            "idx_artifact_staging_surface",
+            "idx_artifact_staging_actor_source",
             "idx_artifacts_task_status",
             "idx_artifact_links_owner",
             "idx_evidence_summaries_task_status",
@@ -320,19 +328,6 @@ pub fn validate_project_state_schema(conn: &Connection) -> StoreResult<()> {
             primary_key_position: 0,
         },
     )?;
-    require_column_spec(
-        conn,
-        PROJECT_STATE_DATABASE_KIND,
-        "surfaces",
-        ColumnSpec {
-            name: "interaction_role",
-            type_name: "TEXT",
-            not_null: true,
-            default_value: Some("'agent'"),
-            primary_key_position: 0,
-        },
-    )?;
-    validate_surfaces_interaction_role_constraint(conn)?;
     require_column_spec(
         conn,
         PROJECT_STATE_DATABASE_KIND,
@@ -451,42 +446,15 @@ pub fn validate_project_state_schema(conn: &Connection) -> StoreResult<()> {
         },
     )?;
     validate_user_judgments_resolution_machine_action_constraint(conn)?;
-    require_column_spec(
-        conn,
-        PROJECT_STATE_DATABASE_KIND,
-        "user_judgments",
-        ColumnSpec {
-            name: "resolved_by_actor_kind",
-            type_name: "TEXT",
-            not_null: false,
-            default_value: None,
-            primary_key_position: 0,
-        },
-    )?;
-    validate_user_judgments_resolved_by_actor_kind_constraint(conn)?;
-    require_column_spec(
-        conn,
-        PROJECT_STATE_DATABASE_KIND,
-        "user_judgments",
-        ColumnSpec {
-            name: "resolved_actor_role",
-            type_name: "TEXT",
-            not_null: false,
-            default_value: None,
-            primary_key_position: 0,
-        },
-    )?;
-    validate_user_judgments_resolved_actor_role_constraint(conn)?;
     validate_user_judgments_resolution_group_constraint(conn)?;
     for column in [
-        "resolved_by_surface_id",
-        "resolved_by_surface_instance_id",
+        "requested_by_actor_source",
+        "resolved_by_actor_source",
         "resolved_verification_basis",
         "resolved_assurance_level",
     ] {
         require_column(conn, PROJECT_STATE_DATABASE_KIND, "user_judgments", column)?;
     }
-    validate_user_judgments_resolved_surface_foreign_key(conn)?;
     require_column_spec(
         conn,
         PROJECT_STATE_DATABASE_KIND,
@@ -554,7 +522,7 @@ pub fn validate_project_state_schema(conn: &Connection) -> StoreResult<()> {
         "tool_invocations",
         "request_hash",
     )?;
-    for column in ["surface_id", "surface_instance_id", "access_class"] {
+    for column in ["actor_source", "operation_category"] {
         require_column_spec(
             conn,
             PROJECT_STATE_DATABASE_KIND,
@@ -576,7 +544,7 @@ pub fn validate_project_state_schema(conn: &Connection) -> StoreResult<()> {
     )?;
     validate_tool_invocations_columns(conn)?;
     validate_tool_invocations_primary_key(conn)?;
-    validate_tool_invocations_replay_surface_foreign_key(conn)?;
+    validate_tool_invocations_operation_category_constraint(conn)?;
     require_column_spec(
         conn,
         PROJECT_STATE_DATABASE_KIND,
@@ -1016,10 +984,7 @@ fn validate_user_judgments_resolution_group_constraint(conn: &Connection) -> Sto
         && table_sql.contains("resolution_outcome is not null")
         && table_sql.contains("resolution_machine_action is not null")
         && table_sql.contains("resolution_json is not null")
-        && table_sql.contains("resolved_by_actor_kind is not null")
-        && table_sql.contains("resolved_actor_role is not null")
-        && table_sql.contains("resolved_by_surface_id is not null")
-        && table_sql.contains("resolved_by_surface_instance_id is not null")
+        && table_sql.contains("resolved_by_actor_source is not null")
         && table_sql.contains("resolved_verification_basis is not null")
         && table_sql.contains("resolved_assurance_level is not null")
         && table_sql.contains("resolved_at is not null");
@@ -1027,10 +992,7 @@ fn validate_user_judgments_resolution_group_constraint(conn: &Connection) -> Sto
         && table_sql.contains("resolution_outcome is null")
         && table_sql.contains("resolution_machine_action is null")
         && table_sql.contains("resolution_json is null")
-        && table_sql.contains("resolved_by_actor_kind is null")
-        && table_sql.contains("resolved_actor_role is null")
-        && table_sql.contains("resolved_by_surface_id is null")
-        && table_sql.contains("resolved_by_surface_instance_id is null")
+        && table_sql.contains("resolved_by_actor_source is null")
         && table_sql.contains("resolved_verification_basis is null")
         && table_sql.contains("resolved_assurance_level is null")
         && table_sql.contains("resolved_at is null");
@@ -1040,20 +1002,6 @@ fn validate_user_judgments_resolution_group_constraint(conn: &Connection) -> Sto
         Err(StoreError::schema_invariant(
             PROJECT_STATE_DATABASE_KIND,
             "user_judgments resolution completeness constraint is missing or malformed",
-        ))
-    }
-}
-
-fn validate_surfaces_interaction_role_constraint(conn: &Connection) -> StoreResult<()> {
-    let table_sql = normalized_table_sql(conn, "surfaces")?;
-    let has_constraint = table_sql.contains("interaction_role in ('agent', 'user_interaction')")
-        || table_sql.contains("interaction_role in('agent', 'user_interaction')");
-    if has_constraint {
-        Ok(())
-    } else {
-        Err(StoreError::schema_invariant(
-            PROJECT_STATE_DATABASE_KIND,
-            "surfaces.interaction_role constraint is missing or malformed",
         ))
     }
 }
@@ -1076,40 +1024,6 @@ fn validate_project_continuity_records_constraints(conn: &Connection) -> StoreRe
         }
     }
     Ok(())
-}
-
-fn validate_user_judgments_resolved_actor_role_constraint(conn: &Connection) -> StoreResult<()> {
-    let table_sql = normalized_table_sql(conn, "user_judgments")?;
-    let has_constraint = table_sql.contains(
-        "resolved_actor_role is null or resolved_actor_role in ('agent', 'user_interaction')",
-    ) || table_sql.contains(
-        "resolved_actor_role is null or resolved_actor_role in('agent', 'user_interaction')",
-    );
-    if has_constraint {
-        Ok(())
-    } else {
-        Err(StoreError::schema_invariant(
-            PROJECT_STATE_DATABASE_KIND,
-            "user_judgments.resolved_actor_role constraint is missing or malformed",
-        ))
-    }
-}
-
-fn validate_user_judgments_resolved_by_actor_kind_constraint(conn: &Connection) -> StoreResult<()> {
-    let table_sql = normalized_table_sql(conn, "user_judgments")?;
-    let has_constraint = table_sql
-        .contains("resolved_by_actor_kind is null or resolved_by_actor_kind in ('agent', 'user')")
-        || table_sql.contains(
-            "resolved_by_actor_kind is null or resolved_by_actor_kind in('agent', 'user')",
-        );
-    if has_constraint {
-        Ok(())
-    } else {
-        Err(StoreError::schema_invariant(
-            PROJECT_STATE_DATABASE_KIND,
-            "user_judgments.resolved_by_actor_kind constraint is missing or malformed",
-        ))
-    }
 }
 
 fn normalized_table_sql(conn: &Connection, table: &str) -> StoreResult<String> {
@@ -1174,9 +1088,8 @@ fn validate_tool_invocations_columns(conn: &Connection) -> StoreResult<()> {
         "basis_state_version",
         "committed_state_version",
         "status",
-        "surface_id",
-        "surface_instance_id",
-        "access_class",
+        "actor_source",
+        "operation_category",
         "verification_basis",
         "response_json",
         "created_at",
@@ -1197,125 +1110,21 @@ fn validate_tool_invocations_columns(conn: &Connection) -> StoreResult<()> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-struct ForeignKeyListRow {
-    id: i64,
-    seq: i64,
-    parent_table: String,
-    from_column: String,
-    to_column: String,
-    on_delete: String,
-}
-
-fn validate_tool_invocations_replay_surface_foreign_key(conn: &Connection) -> StoreResult<()> {
-    let mut stmt = conn.prepare("PRAGMA foreign_key_list(tool_invocations)")?;
-    let rows = stmt.query_map([], |row| {
-        Ok(ForeignKeyListRow {
-            id: row.get(0)?,
-            seq: row.get(1)?,
-            parent_table: row.get(2)?,
-            from_column: row.get(3)?,
-            to_column: row.get(4)?,
-            on_delete: row.get(6)?,
-        })
-    })?;
-
-    let mut rows_by_id = Vec::<ForeignKeyListRow>::new();
-    for row in rows {
-        rows_by_id.push(row?);
+fn validate_tool_invocations_operation_category_constraint(conn: &Connection) -> StoreResult<()> {
+    let table_sql = normalized_table_sql(conn, "tool_invocations")?;
+    let has_constraint = table_sql
+        .contains("operation_category in ('read', 'agent_workflow', 'user_only', 'admin_local')")
+        || table_sql.contains(
+            "operation_category in('read', 'agent_workflow', 'user_only', 'admin_local')",
+        );
+    if has_constraint {
+        Ok(())
+    } else {
+        Err(StoreError::schema_invariant(
+            PROJECT_STATE_DATABASE_KIND,
+            "tool_invocations.operation_category constraint is missing or malformed",
+        ))
     }
-
-    let expected_columns = [
-        ("project_id", "project_id"),
-        ("surface_id", "surface_id"),
-        ("surface_instance_id", "surface_instance_id"),
-    ];
-
-    for id in rows_by_id.iter().map(|row| row.id) {
-        let mut candidate = rows_by_id
-            .iter()
-            .filter(|row| row.id == id)
-            .cloned()
-            .collect::<Vec<_>>();
-        candidate.sort_by_key(|row| row.seq);
-
-        if candidate.len() != expected_columns.len() {
-            continue;
-        }
-        if !candidate.iter().all(|row| row.parent_table == "surfaces") {
-            continue;
-        }
-        if !candidate.iter().all(|row| row.on_delete == "RESTRICT") {
-            continue;
-        }
-
-        let actual_columns = candidate
-            .iter()
-            .map(|row| (row.from_column.as_str(), row.to_column.as_str()))
-            .collect::<Vec<_>>();
-        if actual_columns == expected_columns {
-            return Ok(());
-        }
-    }
-
-    Err(StoreError::schema_invariant(
-        PROJECT_STATE_DATABASE_KIND,
-        "tool_invocations replay surface foreign key is missing or malformed",
-    ))
-}
-
-fn validate_user_judgments_resolved_surface_foreign_key(conn: &Connection) -> StoreResult<()> {
-    let mut stmt = conn.prepare("PRAGMA foreign_key_list(user_judgments)")?;
-    let rows = stmt.query_map([], |row| {
-        Ok(ForeignKeyListRow {
-            id: row.get(0)?,
-            seq: row.get(1)?,
-            parent_table: row.get(2)?,
-            from_column: row.get(3)?,
-            to_column: row.get(4)?,
-            on_delete: row.get(6)?,
-        })
-    })?;
-
-    let mut rows_by_id = Vec::<ForeignKeyListRow>::new();
-    for row in rows {
-        rows_by_id.push(row?);
-    }
-
-    let expected_columns = [
-        ("project_id", "project_id"),
-        ("resolved_by_surface_id", "surface_id"),
-        ("resolved_by_surface_instance_id", "surface_instance_id"),
-    ];
-
-    for id in rows_by_id.iter().map(|row| row.id) {
-        let mut candidate = rows_by_id
-            .iter()
-            .filter(|row| row.id == id)
-            .cloned()
-            .collect::<Vec<_>>();
-        candidate.sort_by_key(|row| row.seq);
-
-        if candidate.len() != expected_columns.len() {
-            continue;
-        }
-        if !candidate.iter().all(|row| row.parent_table == "surfaces") {
-            continue;
-        }
-
-        let actual_columns = candidate
-            .iter()
-            .map(|row| (row.from_column.as_str(), row.to_column.as_str()))
-            .collect::<Vec<_>>();
-        if actual_columns == expected_columns {
-            return Ok(());
-        }
-    }
-
-    Err(StoreError::schema_invariant(
-        PROJECT_STATE_DATABASE_KIND,
-        "user_judgments resolved surface foreign key is missing or malformed",
-    ))
 }
 
 fn validate_artifacts_integrity_status_constraint(conn: &Connection) -> StoreResult<()> {
@@ -1475,13 +1284,15 @@ mod tests {
         assert_eq!(migration_count(&conn)?, REGISTRY_SCHEMA_VERSION);
         assert!(foreign_keys_enabled(&conn)?);
         assert!(sqlite_object_exists(&conn, "table", "runtime_home")?);
-        assert!(sqlite_object_exists(&conn, "table", "agent_integrations")?);
-        assert!(sqlite_object_exists(
+        assert!(sqlite_object_exists(&conn, "table", "agent_connections")?);
+        assert!(sqlite_object_exists(&conn, "table", "connection_projects")?);
+        assert!(!sqlite_object_exists(&conn, "table", "agent_integrations")?);
+        assert!(!sqlite_object_exists(
             &conn,
             "table",
             "integration_projects"
         )?);
-        assert!(sqlite_object_exists(&conn, "table", "host_installations")?);
+        assert!(!sqlite_object_exists(&conn, "table", "host_installations")?);
         Ok(())
     }
 
@@ -1509,7 +1320,7 @@ mod tests {
         assert!(foreign_keys_enabled(&conn)?);
         assert!(sqlite_object_exists(&conn, "table", "tool_invocations")?);
         validate_tool_invocations_columns(&conn)?;
-        validate_tool_invocations_replay_surface_foreign_key(&conn)?;
+        validate_tool_invocations_operation_category_constraint(&conn)?;
         Ok(())
     }
 
@@ -1530,17 +1341,27 @@ mod tests {
 
         let err = conn
             .execute(
-                "INSERT INTO surfaces (
+                "INSERT INTO tasks (
                     project_id,
-                    surface_id,
-                    surface_instance_id,
-                    surface_kind,
-                    registered_at
+                    task_id,
+                    created_by_actor_source,
+                    mode,
+                    lifecycle_phase,
+                    created_at,
+                    updated_at
                 )
-                VALUES ('missing-project', 'surface-main', 'surface-instance-1', 'cli', 't0')",
+                VALUES (
+                    'missing-project',
+                    'task_missing',
+                    'agent_connection:conn_main',
+                    'work',
+                    'shaping',
+                    't0',
+                    't0'
+                )",
                 [],
             )
-            .expect_err("surface insert without project_state row must fail");
+            .expect_err("task insert without project_state row must fail");
         assert_constraint_error(err);
         Ok(())
     }
@@ -1603,9 +1424,8 @@ mod tests {
                     request_hash,
                     basis_state_version,
                     committed_state_version,
-                    surface_id,
-                    surface_instance_id,
-                    access_class,
+                    actor_source,
+                    operation_category,
                     response_json,
                     created_at
                 )
@@ -1616,9 +1436,8 @@ mod tests {
                     'sha256:second',
                     0,
                     3,
-                    'surface_main',
-                    'surface_instance_1',
-                    'core_mutation',
+                    'agent_connection:conn_main',
+                    'agent_workflow',
                     '{}',
                     't2'
                 )",
@@ -1630,10 +1449,10 @@ mod tests {
     }
 
     #[test]
-    fn verified_tool_invocation_requires_existing_surface() -> StoreResult<()> {
-        let runtime_home = TempRuntimeHome::new("tool-invocations-surface-fk")?;
+    fn verified_tool_invocation_rejects_invalid_operation_category() -> StoreResult<()> {
+        let runtime_home = TempRuntimeHome::new("tool-invocations-operation-category")?;
         let conn =
-            open_project_state_database(runtime_home.project_state_db_path("PRJ-tools-surface"))?;
+            open_project_state_database(runtime_home.project_state_db_path("PRJ-tools-category"))?;
         insert_project_state(&conn)?;
 
         let err = conn
@@ -1645,9 +1464,8 @@ mod tests {
                     request_hash,
                     basis_state_version,
                     committed_state_version,
-                    surface_id,
-                    surface_instance_id,
-                    access_class,
+                    actor_source,
+                    operation_category,
                     response_json,
                     created_at
                 )
@@ -1658,48 +1476,15 @@ mod tests {
                     'sha256:first',
                     0,
                     1,
-                    'missing_surface',
-                    'missing_surface_instance',
+                    'agent_connection:conn_main',
                     'core_mutation',
                     '{}',
                     't0'
                 )",
                 [],
             )
-            .expect_err("verified replay context must reference a registered surface");
-        assert_foreign_key_constraint_error(err);
-        Ok(())
-    }
-
-    #[test]
-    fn verified_tool_invocation_restricts_surface_deletion() -> StoreResult<()> {
-        let runtime_home = TempRuntimeHome::new("tool-invocations-surface-delete")?;
-        let conn =
-            open_project_state_database(runtime_home.project_state_db_path("PRJ-tools-delete"))?;
-        insert_project_state(&conn)?;
-        conn.execute(
-            "INSERT INTO surfaces (
-                project_id,
-                surface_id,
-                surface_instance_id,
-                surface_kind,
-                registered_at
-            )
-            VALUES ('project_a', 'surface_main', 'surface_instance_1', 'cli', 't0')",
-            [],
-        )?;
-        insert_tool_invocation(&conn, "idem_surface_delete", "sha256:first", 1)?;
-
-        let err = conn
-            .execute(
-                "DELETE FROM surfaces
-                  WHERE project_id = 'project_a'
-                    AND surface_id = 'surface_main'
-                    AND surface_instance_id = 'surface_instance_1'",
-                [],
-            )
-            .expect_err("surface deletion must be restricted while replay rows reference it");
-        assert_restrictive_delete_constraint_error(err);
+            .expect_err("verified replay context must use a supported operation category");
+        assert_constraint_error(err);
         Ok(())
     }
 
@@ -1864,22 +1649,10 @@ mod tests {
     fn insert_minimal_project_task(conn: &Connection) -> rusqlite::Result<()> {
         insert_project_state(conn)?;
         conn.execute(
-            "INSERT INTO surfaces (
-                project_id,
-                surface_id,
-                surface_instance_id,
-                surface_kind,
-                registered_at
-            )
-            VALUES ('project_a', 'surface_main', 'surface_instance_1', 'cli', 't0')",
-            [],
-        )?;
-        conn.execute(
             "INSERT INTO tasks (
                 project_id,
                 task_id,
-                created_by_surface_id,
-                created_by_surface_instance_id,
+                created_by_actor_source,
                 mode,
                 lifecycle_phase,
                 created_at,
@@ -1888,8 +1661,7 @@ mod tests {
             VALUES (
                 'project_a',
                 'task_a',
-                'surface_main',
-                'surface_instance_1',
+                'agent_connection:conn_main',
                 'work',
                 'shaping',
                 't0',
@@ -1914,9 +1686,8 @@ mod tests {
                 request_hash,
                 basis_state_version,
                 committed_state_version,
-                surface_id,
-                surface_instance_id,
-                access_class,
+                actor_source,
+                operation_category,
                 response_json,
                 created_at
             )
@@ -1927,9 +1698,8 @@ mod tests {
                 ?2,
                 0,
                 ?3,
-                'surface_main',
-                'surface_instance_1',
-                'core_mutation',
+                'agent_connection:conn_main',
+                'agent_workflow',
                 '{}',
                 't0'
             )",
@@ -1944,37 +1714,6 @@ mod tests {
                 assert_eq!(error.code, ErrorCode::ConstraintViolation);
             }
             other => panic!("expected SQLite constraint error, got {other:?}"),
-        }
-    }
-
-    fn assert_foreign_key_constraint_error(err: Error) {
-        match err {
-            Error::SqliteFailure(error, _) => {
-                assert_eq!(error.code, ErrorCode::ConstraintViolation);
-                assert_eq!(
-                    error.extended_code,
-                    rusqlite::ffi::SQLITE_CONSTRAINT_FOREIGNKEY
-                );
-            }
-            other => panic!("expected SQLite foreign-key constraint error, got {other:?}"),
-        }
-    }
-
-    fn assert_restrictive_delete_constraint_error(err: Error) {
-        match err {
-            Error::SqliteFailure(error, _) => {
-                assert_eq!(error.code, ErrorCode::ConstraintViolation);
-                assert!(
-                    matches!(
-                        error.extended_code,
-                        rusqlite::ffi::SQLITE_CONSTRAINT_FOREIGNKEY
-                            | rusqlite::ffi::SQLITE_CONSTRAINT_TRIGGER
-                    ),
-                    "expected foreign-key or restrictive-delete trigger constraint, got {}",
-                    error.extended_code
-                );
-            }
-            other => panic!("expected SQLite restrictive-delete constraint error, got {other:?}"),
         }
     }
 

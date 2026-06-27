@@ -3,7 +3,7 @@ use rusqlite::{params, Connection, OptionalExtension, Transaction};
 use crate::{sqlite::begin_immediate_transaction, StoreError, StoreResult};
 
 /// Baseline storage profile recorded by schema migrations.
-pub const STORAGE_PROFILE: &str = "baseline_sqlite_v2";
+pub const STORAGE_PROFILE: &str = "baseline_sqlite_v3";
 
 pub(crate) const OLD_STORAGE_PROFILE: &str = "baseline_sqlite";
 
@@ -304,40 +304,14 @@ CREATE TABLE projects (
 CREATE INDEX idx_projects_repo_root ON projects (repo_root);
 CREATE INDEX idx_projects_status ON projects (status);
 
-CREATE TABLE agent_integrations (
-  integration_id TEXT PRIMARY KEY,
-  interaction_role TEXT NOT NULL CHECK (interaction_role = 'agent'),
-  surface_id TEXT NOT NULL,
-  surface_instance_id TEXT NOT NULL,
-  default_project_id TEXT,
-  enabled INTEGER NOT NULL DEFAULT 1 CHECK (enabled IN (0, 1)),
-  created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL,
-  metadata_json TEXT NOT NULL DEFAULT '{}',
-  FOREIGN KEY (integration_id, default_project_id)
-    REFERENCES integration_projects (integration_id, project_id)
-    DEFERRABLE INITIALLY DEFERRED
-);
-
-CREATE TABLE integration_projects (
-  integration_id TEXT NOT NULL,
-  project_id TEXT NOT NULL,
-  created_at TEXT NOT NULL,
-  PRIMARY KEY (integration_id, project_id),
-  FOREIGN KEY (integration_id)
-    REFERENCES agent_integrations (integration_id)
-    ON DELETE RESTRICT
-    DEFERRABLE INITIALLY DEFERRED,
-  FOREIGN KEY (project_id) REFERENCES projects (project_id) ON DELETE RESTRICT
-);
-
-CREATE TABLE host_installations (
-  installation_id TEXT PRIMARY KEY,
-  integration_id TEXT NOT NULL,
+CREATE TABLE agent_connections (
+  connection_id TEXT PRIMARY KEY,
   host_kind TEXT NOT NULL CHECK (host_kind IN ('codex', 'claude_code', 'generic')),
   host_scope TEXT NOT NULL CHECK (host_scope IN ('user', 'project', 'local', 'export')),
   server_name TEXT NOT NULL,
   config_target TEXT NOT NULL,
+  mode TEXT NOT NULL CHECK (mode IN ('read_only', 'workflow')),
+  enabled INTEGER NOT NULL DEFAULT 1 CHECK (enabled IN (0, 1)),
   managed_fingerprint TEXT NOT NULL,
   last_verified_status TEXT NOT NULL DEFAULT 'not_verified'
     CHECK (last_verified_status IN ('not_verified', 'complete', 'action_required', 'partial_failure', 'failed')),
@@ -348,18 +322,27 @@ CREATE TABLE host_installations (
     (host_kind = 'codex' AND host_scope IN ('user', 'project'))
     OR (host_kind = 'claude_code' AND host_scope IN ('local', 'project', 'user'))
     OR (host_kind = 'generic' AND host_scope = 'export')
-  ),
-  FOREIGN KEY (integration_id) REFERENCES agent_integrations (integration_id) ON DELETE RESTRICT
+  )
 );
 
-CREATE INDEX idx_integration_projects_project
-  ON integration_projects (project_id);
-CREATE INDEX idx_agent_integrations_enabled
-  ON agent_integrations (enabled);
-CREATE INDEX idx_host_installations_integration
-  ON host_installations (integration_id);
-CREATE UNIQUE INDEX idx_host_installations_target
-  ON host_installations (host_kind, host_scope, config_target, server_name);
+CREATE TABLE connection_projects (
+  connection_id TEXT NOT NULL,
+  project_id TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  PRIMARY KEY (connection_id, project_id),
+  FOREIGN KEY (connection_id)
+    REFERENCES agent_connections (connection_id)
+    ON DELETE RESTRICT
+    DEFERRABLE INITIALLY DEFERRED,
+  FOREIGN KEY (project_id) REFERENCES projects (project_id) ON DELETE RESTRICT
+);
+
+CREATE INDEX idx_connection_projects_project
+  ON connection_projects (project_id);
+CREATE INDEX idx_agent_connections_enabled
+  ON agent_connections (enabled);
+CREATE UNIQUE INDEX idx_agent_connections_target
+  ON agent_connections (host_kind, host_scope, config_target, server_name);
 "#;
 
 const PROJECT_STATE_INITIAL_SQL: &str = r#"
@@ -380,45 +363,19 @@ CREATE TABLE project_state (
   schema_version INTEGER NOT NULL CHECK (schema_version > 0),
   state_version INTEGER NOT NULL DEFAULT 0 CHECK (state_version >= 0),
   active_task_id TEXT,
-  default_surface_id TEXT,
-  default_surface_instance_id TEXT,
   enforcement_profile_json TEXT NOT NULL DEFAULT '{"profile_id":"baseline_cooperative","guarantee_level":"cooperative","enabled_mechanisms":[],"source":"baseline_scope","status":"active"}',
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   metadata_json TEXT NOT NULL DEFAULT '{}',
-  CHECK (
-    (default_surface_id IS NULL AND default_surface_instance_id IS NULL)
-    OR (default_surface_id IS NOT NULL AND default_surface_instance_id IS NOT NULL)
-  ),
   FOREIGN KEY (project_id, active_task_id)
     REFERENCES tasks (project_id, task_id)
-    DEFERRABLE INITIALLY DEFERRED,
-  FOREIGN KEY (project_id, default_surface_id, default_surface_instance_id)
-    REFERENCES surfaces (project_id, surface_id, surface_instance_id)
     DEFERRABLE INITIALLY DEFERRED
-);
-
-CREATE TABLE surfaces (
-  project_id TEXT NOT NULL,
-  surface_id TEXT NOT NULL,
-  surface_instance_id TEXT NOT NULL,
-  surface_kind TEXT NOT NULL,
-  interaction_role TEXT NOT NULL DEFAULT 'agent' CHECK (interaction_role IN ('agent', 'user_interaction')),
-  display_name TEXT,
-  capability_profile_json TEXT NOT NULL DEFAULT '{}',
-  local_access_json TEXT NOT NULL DEFAULT '{}',
-  registered_at TEXT NOT NULL,
-  last_seen_at TEXT,
-  metadata_json TEXT NOT NULL DEFAULT '{}',
-  PRIMARY KEY (project_id, surface_id, surface_instance_id),
-  FOREIGN KEY (project_id) REFERENCES project_state (project_id)
 );
 
 CREATE TABLE tasks (
   project_id TEXT NOT NULL,
   task_id TEXT NOT NULL,
-  created_by_surface_id TEXT NOT NULL,
-  created_by_surface_instance_id TEXT NOT NULL,
+  created_by_actor_source TEXT NOT NULL,
   mode TEXT NOT NULL,
   lifecycle_phase TEXT NOT NULL,
   result TEXT,
@@ -439,8 +396,6 @@ CREATE TABLE tasks (
   metadata_json TEXT NOT NULL DEFAULT '{}',
   PRIMARY KEY (project_id, task_id),
   FOREIGN KEY (project_id) REFERENCES project_state (project_id),
-  FOREIGN KEY (project_id, created_by_surface_id, created_by_surface_instance_id)
-    REFERENCES surfaces (project_id, surface_id, surface_instance_id),
   FOREIGN KEY (project_id, task_id, current_change_unit_id)
     REFERENCES change_units (project_id, task_id, change_unit_id)
     DEFERRABLE INITIALLY DEFERRED
@@ -493,12 +448,8 @@ CREATE TABLE user_judgments (
     CHECK (resolution_machine_action IS NULL OR resolution_machine_action IN ('accept', 'reject', 'defer')),
   resolution_json TEXT,
   resolution_rationale_json TEXT,
-  requested_by_surface_id TEXT NOT NULL,
-  requested_by_surface_instance_id TEXT NOT NULL,
-  resolved_by_actor_kind TEXT CHECK (resolved_by_actor_kind IS NULL OR resolved_by_actor_kind IN ('agent', 'user')),
-  resolved_actor_role TEXT CHECK (resolved_actor_role IS NULL OR resolved_actor_role IN ('agent', 'user_interaction')),
-  resolved_by_surface_id TEXT,
-  resolved_by_surface_instance_id TEXT,
+  requested_by_actor_source TEXT NOT NULL,
+  resolved_by_actor_source TEXT,
   resolved_verification_basis TEXT,
   resolved_assurance_level TEXT,
   requested_at TEXT NOT NULL,
@@ -512,10 +463,7 @@ CREATE TABLE user_judgments (
       AND resolution_machine_action IS NULL
       AND resolution_json IS NULL
       AND resolution_rationale_json IS NULL
-      AND resolved_by_actor_kind IS NULL
-      AND resolved_actor_role IS NULL
-      AND resolved_by_surface_id IS NULL
-      AND resolved_by_surface_instance_id IS NULL
+      AND resolved_by_actor_source IS NULL
       AND resolved_verification_basis IS NULL
       AND resolved_assurance_level IS NULL
       AND resolved_at IS NULL
@@ -526,10 +474,7 @@ CREATE TABLE user_judgments (
       AND resolution_machine_action IS NOT NULL
       AND resolution_json IS NOT NULL
       AND resolution_rationale_json IS NOT NULL
-      AND resolved_by_actor_kind IS NOT NULL
-      AND resolved_actor_role IS NOT NULL
-      AND resolved_by_surface_id IS NOT NULL
-      AND resolved_by_surface_instance_id IS NOT NULL
+      AND resolved_by_actor_source IS NOT NULL
       AND resolved_verification_basis IS NOT NULL
       AND resolved_assurance_level IS NOT NULL
       AND resolved_at IS NOT NULL
@@ -542,10 +487,7 @@ CREATE TABLE user_judgments (
           AND resolution_machine_action IS NULL
           AND resolution_json IS NULL
           AND resolution_rationale_json IS NULL
-          AND resolved_by_actor_kind IS NULL
-          AND resolved_actor_role IS NULL
-          AND resolved_by_surface_id IS NULL
-          AND resolved_by_surface_instance_id IS NULL
+          AND resolved_by_actor_source IS NULL
           AND resolved_verification_basis IS NULL
           AND resolved_assurance_level IS NULL
           AND resolved_at IS NULL
@@ -555,10 +497,7 @@ CREATE TABLE user_judgments (
           AND resolution_machine_action IS NOT NULL
           AND resolution_json IS NOT NULL
           AND resolution_rationale_json IS NOT NULL
-          AND resolved_by_actor_kind IS NOT NULL
-          AND resolved_actor_role IS NOT NULL
-          AND resolved_by_surface_id IS NOT NULL
-          AND resolved_by_surface_instance_id IS NOT NULL
+          AND resolved_by_actor_source IS NOT NULL
           AND resolved_verification_basis IS NOT NULL
           AND resolved_assurance_level IS NOT NULL
           AND resolved_at IS NOT NULL
@@ -576,11 +515,7 @@ CREATE TABLE user_judgments (
   ),
   FOREIGN KEY (project_id, task_id) REFERENCES tasks (project_id, task_id),
   FOREIGN KEY (project_id, task_id, change_unit_id)
-    REFERENCES change_units (project_id, task_id, change_unit_id),
-  FOREIGN KEY (project_id, requested_by_surface_id, requested_by_surface_instance_id)
-    REFERENCES surfaces (project_id, surface_id, surface_instance_id),
-  FOREIGN KEY (project_id, resolved_by_surface_id, resolved_by_surface_instance_id)
-    REFERENCES surfaces (project_id, surface_id, surface_instance_id)
+    REFERENCES change_units (project_id, task_id, change_unit_id)
 );
 
 CREATE TABLE project_continuity_records (
@@ -609,16 +544,15 @@ CREATE TABLE project_continuity_records (
     REFERENCES change_units (project_id, task_id, change_unit_id)
 );
 
-CREATE TABLE write_authorizations (
+CREATE TABLE write_checks (
   project_id TEXT NOT NULL,
-  write_authorization_id TEXT NOT NULL,
+  write_check_id TEXT NOT NULL,
   task_id TEXT NOT NULL,
   change_unit_id TEXT,
   basis_state_version INTEGER NOT NULL CHECK (basis_state_version > 0),
   status TEXT NOT NULL CHECK (status IN ('active', 'consumed', 'expired', 'stale', 'revoked')),
   attempt_scope_json TEXT NOT NULL DEFAULT '{}',
-  created_by_surface_id TEXT NOT NULL,
-  created_by_surface_instance_id TEXT NOT NULL,
+  created_by_actor_source TEXT NOT NULL,
   created_by_judgment_id TEXT,
   expires_at TEXT NOT NULL,
   consumed_by_run_id TEXT,
@@ -626,12 +560,10 @@ CREATE TABLE write_authorizations (
   revoked_at TEXT,
   created_at TEXT NOT NULL,
   metadata_json TEXT NOT NULL DEFAULT '{}',
-  PRIMARY KEY (project_id, write_authorization_id),
+  PRIMARY KEY (project_id, write_check_id),
   FOREIGN KEY (project_id, task_id) REFERENCES tasks (project_id, task_id),
   FOREIGN KEY (project_id, task_id, change_unit_id)
     REFERENCES change_units (project_id, task_id, change_unit_id),
-  FOREIGN KEY (project_id, created_by_surface_id, created_by_surface_instance_id)
-    REFERENCES surfaces (project_id, surface_id, surface_instance_id),
   FOREIGN KEY (project_id, created_by_judgment_id)
     REFERENCES user_judgments (project_id, judgment_id),
   FOREIGN KEY (project_id, consumed_by_run_id)
@@ -639,8 +571,8 @@ CREATE TABLE write_authorizations (
     DEFERRABLE INITIALLY DEFERRED
 );
 
-CREATE UNIQUE INDEX idx_write_authorizations_consumed_run
-  ON write_authorizations (project_id, consumed_by_run_id)
+CREATE UNIQUE INDEX idx_write_checks_consumed_run
+  ON write_checks (project_id, consumed_by_run_id)
   WHERE consumed_by_run_id IS NOT NULL;
 
 CREATE TABLE runs (
@@ -648,7 +580,7 @@ CREATE TABLE runs (
   run_id TEXT NOT NULL,
   task_id TEXT NOT NULL,
   change_unit_id TEXT,
-  write_authorization_id TEXT,
+  write_check_id TEXT,
   kind TEXT NOT NULL,
   status TEXT NOT NULL,
   summary_json TEXT NOT NULL DEFAULT '{}',
@@ -656,8 +588,7 @@ CREATE TABLE runs (
   evidence_updates_json TEXT NOT NULL DEFAULT '[]',
   authorization_effect_json TEXT NOT NULL DEFAULT '{}',
   scope_revision INTEGER NOT NULL CHECK (scope_revision >= 0),
-  created_by_surface_id TEXT NOT NULL,
-  created_by_surface_instance_id TEXT NOT NULL,
+  created_by_actor_source TEXT NOT NULL,
   started_at TEXT,
   completed_at TEXT,
   created_at TEXT NOT NULL,
@@ -666,23 +597,20 @@ CREATE TABLE runs (
   FOREIGN KEY (project_id, task_id) REFERENCES tasks (project_id, task_id),
   FOREIGN KEY (project_id, task_id, change_unit_id)
     REFERENCES change_units (project_id, task_id, change_unit_id),
-  FOREIGN KEY (project_id, write_authorization_id)
-    REFERENCES write_authorizations (project_id, write_authorization_id)
-    DEFERRABLE INITIALLY DEFERRED,
-  FOREIGN KEY (project_id, created_by_surface_id, created_by_surface_instance_id)
-    REFERENCES surfaces (project_id, surface_id, surface_instance_id)
+  FOREIGN KEY (project_id, write_check_id)
+    REFERENCES write_checks (project_id, write_check_id)
+    DEFERRABLE INITIALLY DEFERRED
 );
 
-CREATE UNIQUE INDEX idx_runs_write_authorization
-  ON runs (project_id, write_authorization_id)
-  WHERE write_authorization_id IS NOT NULL;
+CREATE UNIQUE INDEX idx_runs_write_check
+  ON runs (project_id, write_check_id)
+  WHERE write_check_id IS NOT NULL;
 
 CREATE TABLE artifact_staging (
   project_id TEXT NOT NULL,
   handle_id TEXT NOT NULL,
   task_id TEXT NOT NULL,
-  created_by_surface_id TEXT NOT NULL,
-  created_by_surface_instance_id TEXT NOT NULL,
+  created_by_actor_source TEXT NOT NULL,
   artifact_json TEXT NOT NULL DEFAULT '{}',
   safe_metadata_json TEXT NOT NULL DEFAULT '{}',
   tmp_path TEXT,
@@ -699,8 +627,6 @@ CREATE TABLE artifact_staging (
   metadata_json TEXT NOT NULL DEFAULT '{}',
   PRIMARY KEY (project_id, handle_id),
   FOREIGN KEY (project_id, task_id) REFERENCES tasks (project_id, task_id),
-  FOREIGN KEY (project_id, created_by_surface_id, created_by_surface_instance_id)
-    REFERENCES surfaces (project_id, surface_id, surface_instance_id),
   FOREIGN KEY (project_id, consumed_by_run_id)
     REFERENCES runs (project_id, run_id)
     DEFERRABLE INITIALLY DEFERRED,
@@ -820,14 +746,7 @@ CREATE TABLE evidence_observations (
   assurance_level TEXT NOT NULL CHECK (
     assurance_level IN ('cooperative_report', 'registered_surface_observed', 'external_tool_result', 'user_observed', 'unverified')
   ),
-  observed_by_actor_kind TEXT CHECK (
-    observed_by_actor_kind IS NULL OR observed_by_actor_kind IN ('agent', 'user')
-  ),
-  observed_actor_role TEXT CHECK (
-    observed_actor_role IS NULL OR observed_actor_role IN ('agent', 'user_interaction')
-  ),
-  observed_by_surface_id TEXT,
-  observed_by_surface_instance_id TEXT,
+  observed_by_actor_source TEXT,
   tool_name TEXT,
   tool_invocation_id TEXT,
   tool_metadata_json TEXT NOT NULL DEFAULT '{}',
@@ -838,18 +757,12 @@ CREATE TABLE evidence_observations (
   recorded_at TEXT NOT NULL,
   metadata_json TEXT NOT NULL DEFAULT '{}',
   PRIMARY KEY (project_id, evidence_observation_id),
-  CHECK (
-    (observed_by_surface_id IS NULL AND observed_by_surface_instance_id IS NULL)
-    OR (observed_by_surface_id IS NOT NULL AND observed_by_surface_instance_id IS NOT NULL)
-  ),
   FOREIGN KEY (project_id, task_id) REFERENCES tasks (project_id, task_id),
   FOREIGN KEY (project_id, task_id, change_unit_id)
     REFERENCES change_units (project_id, task_id, change_unit_id),
   FOREIGN KEY (project_id, run_id)
     REFERENCES runs (project_id, run_id)
-    DEFERRABLE INITIALLY DEFERRED,
-  FOREIGN KEY (project_id, observed_by_surface_id, observed_by_surface_instance_id)
-    REFERENCES surfaces (project_id, surface_id, surface_instance_id)
+    DEFERRABLE INITIALLY DEFERRED
 );
 
 CREATE TABLE blockers (
@@ -897,24 +810,17 @@ CREATE TABLE tool_invocations (
   basis_state_version INTEGER NOT NULL CHECK (basis_state_version >= 0),
   committed_state_version INTEGER NOT NULL CHECK (committed_state_version > basis_state_version),
   status TEXT NOT NULL DEFAULT 'committed' CHECK (status = 'committed'),
-  surface_id TEXT NOT NULL,
-  surface_instance_id TEXT NOT NULL,
-  access_class TEXT NOT NULL,
+  actor_source TEXT NOT NULL,
+  operation_category TEXT NOT NULL CHECK (operation_category IN ('read', 'agent_workflow', 'user_only', 'admin_local')),
   verification_basis TEXT,
   response_json TEXT NOT NULL,
   created_at TEXT NOT NULL,
   PRIMARY KEY (project_id, tool_name, idempotency_key),
-  FOREIGN KEY (project_id, surface_id, surface_instance_id)
-    REFERENCES surfaces (project_id, surface_id, surface_instance_id)
-    ON DELETE RESTRICT,
   FOREIGN KEY (project_id) REFERENCES project_state (project_id)
 );
 
 CREATE INDEX idx_project_state_active_task
   ON project_state (project_id, active_task_id);
-
-CREATE INDEX idx_surfaces_last_seen
-  ON surfaces (project_id, last_seen_at);
 
 CREATE INDEX idx_tasks_lifecycle
   ON tasks (project_id, lifecycle_phase, result);
@@ -934,8 +840,8 @@ CREATE INDEX idx_project_continuity_records_status
 CREATE INDEX idx_project_continuity_records_source_task
   ON project_continuity_records (project_id, source_task_id);
 
-CREATE INDEX idx_write_authorizations_task_status
-  ON write_authorizations (project_id, task_id, status);
+CREATE INDEX idx_write_checks_task_status
+  ON write_checks (project_id, task_id, status);
 
 CREATE INDEX idx_runs_task_created
   ON runs (project_id, task_id, created_at);
@@ -943,8 +849,8 @@ CREATE INDEX idx_runs_task_created
 CREATE INDEX idx_artifact_staging_task_status
   ON artifact_staging (project_id, task_id, status);
 
-CREATE INDEX idx_artifact_staging_surface
-  ON artifact_staging (project_id, created_by_surface_id, created_by_surface_instance_id);
+CREATE INDEX idx_artifact_staging_actor_source
+  ON artifact_staging (project_id, created_by_actor_source);
 
 CREATE INDEX idx_artifacts_task_status
   ON artifacts (project_id, task_id, status);
@@ -985,7 +891,7 @@ mod tests {
 
     #[test]
     fn expected_migration_catalogs_contain_only_initial_rows() {
-        assert_eq!(STORAGE_PROFILE, "baseline_sqlite_v2");
+        assert_eq!(STORAGE_PROFILE, "baseline_sqlite_v3");
         assert_eq!(REGISTRY_SCHEMA_VERSION, 1);
         assert_eq!(PROJECT_STATE_SCHEMA_VERSION, 1);
         assert_eq!(
@@ -1019,9 +925,11 @@ mod tests {
         let conn = open_registry_database(&path)?;
         validate_registry_schema(&conn)?;
         assert_single_migration(&conn, REGISTRY_DATABASE_KIND, "registry_initial_v1")?;
-        assert!(table_exists(&conn, "agent_integrations")?);
-        assert!(table_exists(&conn, "integration_projects")?);
-        assert!(table_exists(&conn, "host_installations")?);
+        assert!(table_exists(&conn, "agent_connections")?);
+        assert!(table_exists(&conn, "connection_projects")?);
+        assert!(!table_exists(&conn, "agent_integrations")?);
+        assert!(!table_exists(&conn, "integration_projects")?);
+        assert!(!table_exists(&conn, "host_installations")?);
         Ok(())
     }
 
@@ -1052,11 +960,23 @@ mod tests {
             "project_state",
             "enforcement_profile_json"
         )?);
-        assert!(column_exists(&conn, "surfaces", "interaction_role")?);
+        assert!(!table_exists(&conn, "surfaces")?);
+        assert!(table_exists(&conn, "write_checks")?);
+        assert!(column_exists(&conn, "tasks", "created_by_actor_source")?);
         assert!(column_exists(
             &conn,
             "user_judgments",
             "resolution_machine_action"
+        )?);
+        assert!(column_exists(
+            &conn,
+            "user_judgments",
+            "requested_by_actor_source"
+        )?);
+        assert!(column_exists(
+            &conn,
+            "tool_invocations",
+            "operation_category"
         )?);
         assert!(table_exists(&conn, "project_continuity_records")?);
         assert!(!column_exists(&conn, "tasks", "state_version")?);

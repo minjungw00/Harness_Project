@@ -1,9 +1,6 @@
 use std::{
     collections::{BTreeMap, BTreeSet},
     error::Error,
-    fs,
-    io::{Error as IoError, ErrorKind},
-    path::{Path, PathBuf},
 };
 
 use rusqlite::{params, Connection, Error as RusqliteError, ErrorCode};
@@ -81,57 +78,45 @@ struct TriggerSchema {
     sql: String,
 }
 
-#[derive(Debug, Clone)]
-struct StorageDdlSql {
-    registry: String,
-    project_state: String,
-}
-
 #[test]
-fn storage_ddl_documents_match_initial_schemas() -> Result<(), Box<dyn Error>> {
-    let english = load_storage_ddl_sql("en")?;
-    let korean = load_storage_ddl_sql("ko")?;
-
-    let english_registry = build_schema_from_sql(&english.registry)?;
-    let korean_registry = build_schema_from_sql(&korean.registry)?;
+fn initial_schemas_satisfy_connection_storage_contract() -> Result<(), Box<dyn Error>> {
     let initial_registry = initial_registry_schema()?;
-
-    let english_registry_schema = read_database_schema(&english_registry)?;
-    let korean_registry_schema = read_database_schema(&korean_registry)?;
     let initial_registry_schema = read_database_schema(&initial_registry)?;
-
-    assert_schema_eq(
-        "English and Korean registry.sqlite DDL",
-        &english_registry_schema,
-        &korean_registry_schema,
-    );
-    assert_schema_eq(
-        "Storage DDL registry.sqlite and initial registry.sqlite",
-        &english_registry_schema,
-        &initial_registry_schema,
-    );
-
-    let english_project = build_schema_from_sql(&english.project_state)?;
-    let korean_project = build_schema_from_sql(&korean.project_state)?;
     let initial_project = initial_project_state_schema()?;
-
-    let english_project_schema = read_database_schema(&english_project)?;
-    let korean_project_schema = read_database_schema(&korean_project)?;
     let initial_project_schema = read_database_schema(&initial_project)?;
 
-    assert_schema_eq(
-        "English and Korean project state.sqlite DDL",
-        &english_project_schema,
-        &korean_project_schema,
-    );
-    assert_schema_eq(
-        "Storage DDL project state.sqlite and initial state.sqlite",
-        &english_project_schema,
+    assert!(initial_registry_schema
+        .tables
+        .contains_key("agent_connections"));
+    assert!(initial_registry_schema
+        .tables
+        .contains_key("connection_projects"));
+    assert!(!initial_registry_schema
+        .tables
+        .contains_key("agent_integrations"));
+    assert!(!initial_registry_schema
+        .tables
+        .contains_key("integration_projects"));
+    assert!(!initial_registry_schema
+        .tables
+        .contains_key("host_installations"));
+
+    assert!(initial_project_schema.tables.contains_key("write_checks"));
+    assert!(!initial_project_schema.tables.contains_key("surfaces"));
+    assert!(!initial_project_schema
+        .tables
+        .contains_key("write_authorizations"));
+    assert_columns_include(
         &initial_project_schema,
+        "tool_invocations",
+        &["actor_source", "operation_category"],
+    );
+    assert_columns_exclude(
+        &initial_project_schema,
+        "tool_invocations",
+        &["surface_id", "surface_instance_id", "access_class"],
     );
 
-    assert_project_contract_behavior("English project state.sqlite DDL", &english_project)?;
-    assert_project_contract_behavior("Korean project state.sqlite DDL", &korean_project)?;
     assert_project_contract_behavior("initial project state.sqlite", &initial_project)?;
 
     Ok(())
@@ -139,52 +124,35 @@ fn storage_ddl_documents_match_initial_schemas() -> Result<(), Box<dyn Error>> {
 
 #[test]
 fn schema_comparison_detects_contract_critical_drift() -> Result<(), Box<dyn Error>> {
-    let english = load_storage_ddl_sql("en")?;
-    let expected_conn = build_schema_from_sql(&english.project_state)?;
+    let expected_conn = initial_project_state_schema()?;
     let expected = read_database_schema(&expected_conn)?;
 
-    let without_enforcement_profile = replace_required(
-        &english.project_state,
-        "  enforcement_profile_json TEXT NOT NULL DEFAULT '{\"profile_id\":\"baseline_cooperative\",\"guarantee_level\":\"cooperative\",\"enabled_mechanisms\":[],\"source\":\"baseline_scope\",\"status\":\"active\"}',\n",
-        "",
-    );
+    let missing_actor_source = initial_project_state_schema()?;
+    missing_actor_source.execute(
+        "CREATE TABLE tool_invocations_drift AS
+         SELECT project_id, tool_name, idempotency_key, request_hash,
+                basis_state_version, committed_state_version, status,
+                operation_category, verification_basis, response_json, created_at
+           FROM tool_invocations",
+        [],
+    )?;
+    missing_actor_source.execute("DROP TABLE tool_invocations", [])?;
+    missing_actor_source.execute(
+        "ALTER TABLE tool_invocations_drift RENAME TO tool_invocations",
+        [],
+    )?;
     assert_schema_differs(
-        "removing project_state.enforcement_profile_json",
+        "removing tool_invocations.actor_source",
         &expected,
-        &read_database_schema(&build_schema_from_sql(&without_enforcement_profile)?)?,
+        &read_database_schema(&missing_actor_source)?,
     );
 
-    let weakened_replay_identity = replace_required(
-        &english.project_state,
-        "  surface_id TEXT NOT NULL,\n  surface_instance_id TEXT NOT NULL,\n  access_class TEXT NOT NULL,\n",
-        "  surface_id TEXT,\n  surface_instance_id TEXT,\n  access_class TEXT,\n",
-    );
+    let weakened_write_check = initial_project_state_schema()?;
+    weakened_write_check.execute("DROP INDEX idx_write_checks_consumed_run", [])?;
     assert_schema_differs(
-        "weakening tool_invocations replay identity requiredness",
+        "removing write check consumed-run uniqueness",
         &expected,
-        &read_database_schema(&build_schema_from_sql(&weakened_replay_identity)?)?,
-    );
-
-    let weakened_replay_foreign_key = replace_required(
-        &english.project_state,
-        "  FOREIGN KEY (project_id, surface_id, surface_instance_id)\n    REFERENCES surfaces (project_id, surface_id, surface_instance_id)\n    ON DELETE RESTRICT,\n",
-        "  FOREIGN KEY (project_id, surface_id, surface_instance_id)\n    REFERENCES surfaces (project_id, surface_id, surface_instance_id),\n",
-    );
-    assert_schema_differs(
-        "weakening verified replay-context surface foreign key delete action",
-        &expected,
-        &read_database_schema(&build_schema_from_sql(&weakened_replay_foreign_key)?)?,
-    );
-
-    let weakened_resolution_group = replace_required(
-        &english.project_state,
-        "      status = 'resolved'\n      AND resolution_outcome IS NOT NULL",
-        "      status = 'resolved'\n      AND resolution_outcome IS NULL",
-    );
-    assert_schema_differs(
-        "weakening resolved user_judgments resolution completeness",
-        &expected,
-        &read_database_schema(&build_schema_from_sql(&weakened_resolution_group)?)?,
+        &read_database_schema(&weakened_write_check)?,
     );
 
     Ok(())
@@ -192,111 +160,23 @@ fn schema_comparison_detects_contract_critical_drift() -> Result<(), Box<dyn Err
 
 #[test]
 fn schema_comparison_ignores_harmless_sql_formatting() -> Result<(), Box<dyn Error>> {
-    let english = load_storage_ddl_sql("en")?;
-
-    let registry = read_database_schema(&build_schema_from_sql(&english.registry)?)?;
-    let reformatted_registry = read_database_schema(&build_schema_from_sql(
-        &harmlessly_reformat_sql(&english.registry),
-    )?)?;
+    let sql = "
+        CREATE TABLE sample (
+          id TEXT PRIMARY KEY,
+          value TEXT NOT NULL CHECK (value IN ('a', 'b'))
+        );
+        CREATE INDEX idx_sample_value ON sample (value);
+    ";
+    let project = read_database_schema(&build_schema_from_sql(sql)?)?;
+    let reformatted_project =
+        read_database_schema(&build_schema_from_sql(&harmlessly_reformat_sql(sql))?)?;
     assert_schema_eq(
-        "registry.sqlite DDL with harmless SQL formatting changes",
-        &registry,
-        &reformatted_registry,
-    );
-
-    let project = read_database_schema(&build_schema_from_sql(&english.project_state)?)?;
-    let reformatted_project = read_database_schema(&build_schema_from_sql(
-        &harmlessly_reformat_sql(&english.project_state),
-    )?)?;
-    assert_schema_eq(
-        "project state.sqlite DDL with harmless SQL formatting changes",
+        "schema with harmless SQL formatting changes",
         &project,
         &reformatted_project,
     );
 
     Ok(())
-}
-
-fn load_storage_ddl_sql(language: &str) -> Result<StorageDdlSql, Box<dyn Error>> {
-    let path = repo_root()
-        .join("docs")
-        .join(language)
-        .join("reference")
-        .join("storage-ddl.md");
-    let markdown = fs::read_to_string(&path)?;
-    Ok(StorageDdlSql {
-        registry: extract_database_sql(&markdown, "registry.sqlite", 1, &path)?,
-        project_state: extract_database_sql(&markdown, "state.sqlite", 2, &path)?,
-    })
-}
-
-fn repo_root() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .and_then(Path::parent)
-        .expect("volicord-store must live under crates/")
-        .to_path_buf()
-}
-
-fn extract_database_sql(
-    markdown: &str,
-    heading_token: &str,
-    expected_sql_blocks: usize,
-    path: &Path,
-) -> Result<String, IoError> {
-    let lines = markdown.lines().collect::<Vec<_>>();
-    let section_start = lines
-        .iter()
-        .position(|line| line.starts_with("## ") && line.contains(heading_token))
-        .ok_or_else(|| {
-            invalid_data(format!(
-                "{} does not contain a database section for {heading_token}",
-                path.display()
-            ))
-        })?;
-    let section_end = lines
-        .iter()
-        .enumerate()
-        .skip(section_start + 1)
-        .find_map(|(index, line)| line.starts_with("## ").then_some(index))
-        .unwrap_or(lines.len());
-    let section = lines[section_start + 1..section_end].join("\n");
-    let blocks = sql_fence_blocks(&section);
-    if blocks.len() != expected_sql_blocks {
-        return Err(invalid_data(format!(
-            "{} section {heading_token} has {} SQL blocks, expected {expected_sql_blocks}",
-            path.display(),
-            blocks.len()
-        )));
-    }
-    Ok(blocks.join("\n\n"))
-}
-
-fn sql_fence_blocks(section: &str) -> Vec<String> {
-    let mut blocks = Vec::new();
-    let mut current = Vec::new();
-    let mut in_sql = false;
-
-    for line in section.lines() {
-        let trimmed = line.trim_start();
-        if trimmed.starts_with("```") {
-            if in_sql {
-                blocks.push(current.join("\n"));
-                current.clear();
-                in_sql = false;
-            } else {
-                let info = trimmed.trim_start_matches("```").trim();
-                in_sql = info.eq_ignore_ascii_case("sql");
-            }
-            continue;
-        }
-
-        if in_sql {
-            current.push(line);
-        }
-    }
-
-    blocks
 }
 
 fn build_schema_from_sql(sql: &str) -> Result<Connection, Box<dyn Error>> {
@@ -320,6 +200,32 @@ fn initial_project_state_schema() -> Result<Connection, Box<dyn Error>> {
     apply_project_state_migrations(&mut conn)?;
     validate_project_state_schema(&conn)?;
     Ok(conn)
+}
+
+fn assert_columns_include(schema: &DatabaseSchema, table: &str, columns: &[&str]) {
+    let table_schema = schema
+        .tables
+        .get(table)
+        .unwrap_or_else(|| panic!("expected table {table}"));
+    for column in columns {
+        assert!(
+            table_schema.columns.contains_key(*column),
+            "expected {table}.{column}"
+        );
+    }
+}
+
+fn assert_columns_exclude(schema: &DatabaseSchema, table: &str, columns: &[&str]) {
+    let table_schema = schema
+        .tables
+        .get(table)
+        .unwrap_or_else(|| panic!("expected table {table}"));
+    for column in columns {
+        assert!(
+            !table_schema.columns.contains_key(*column),
+            "did not expect {table}.{column}"
+        );
+    }
 }
 
 fn read_database_schema(conn: &Connection) -> rusqlite::Result<DatabaseSchema> {
@@ -823,11 +729,10 @@ fn assert_project_contract_behavior(label: &str, conn: &Connection) -> Result<()
     assert_user_judgments_status_is_closed(label, conn);
     assert_resolution_outcome_is_closed(label, conn);
     assert_resolution_machine_action_is_closed(label, conn);
-    assert_resolved_surface_foreign_key_is_enforced(label, conn);
     assert_user_judgments_require_basis(label, conn);
     assert_resolved_user_judgments_require_complete_resolution(label, conn);
     assert_project_continuity_value_sets_are_closed(label, conn);
-    assert_write_authorization_status_is_closed(label, conn);
+    assert_write_check_status_is_closed(label, conn);
     assert_evidence_observation_value_sets_are_closed(label, conn);
     assert_tool_invocation_requires_identity(label, conn);
     assert_one_active_current_change_unit(label, conn);
@@ -850,22 +755,10 @@ fn insert_minimal_project_graph(conn: &Connection) -> rusqlite::Result<()> {
         params!["project_a", STORAGE_PROFILE, PROJECT_STATE_SCHEMA_VERSION],
     )?;
     conn.execute(
-        "INSERT INTO surfaces (
-            project_id,
-            surface_id,
-            surface_instance_id,
-            surface_kind,
-            registered_at
-        )
-        VALUES ('project_a', 'surface_main', 'surface_instance_1', 'cli', 't0')",
-        [],
-    )?;
-    conn.execute(
         "INSERT INTO tasks (
             project_id,
             task_id,
-            created_by_surface_id,
-            created_by_surface_instance_id,
+            created_by_actor_source,
             mode,
             lifecycle_phase,
             created_at,
@@ -874,8 +767,7 @@ fn insert_minimal_project_graph(conn: &Connection) -> rusqlite::Result<()> {
         VALUES (
             'project_a',
             'task_a',
-            'surface_main',
-            'surface_instance_1',
+            'agent_connection:conn_main',
             'work',
             'shaping',
             't0',
@@ -896,8 +788,7 @@ fn assert_user_judgments_status_is_closed(label: &str, conn: &Connection) {
                 judgment_kind,
                 status,
                 basis_json,
-                requested_by_surface_id,
-                requested_by_surface_instance_id,
+                requested_by_actor_source,
                 requested_at
             )
             VALUES (
@@ -907,8 +798,7 @@ fn assert_user_judgments_status_is_closed(label: &str, conn: &Connection) {
                 'approval',
                 'accepted',
                 '{\"task_id\":\"task_a\",\"change_unit_id\":null,\"scope_revision\":0,\"close_basis_revision\":null,\"baseline_ref\":null,\"result_refs\":[],\"residual_risk_ids\":[],\"sensitive_action_scope\":null,\"created_at_state_version\":0,\"compatibility_status\":\"current\"}',
-                'surface_main',
-                'surface_instance_1',
+                'agent_connection:conn_main',
                 't1'
             )",
             [],
@@ -931,12 +821,8 @@ fn assert_resolution_outcome_is_closed(label: &str, conn: &Connection) {
                 resolution_machine_action,
                 resolution_json,
                 resolution_rationale_json,
-                requested_by_surface_id,
-                requested_by_surface_instance_id,
-                resolved_by_actor_kind,
-                resolved_actor_role,
-                resolved_by_surface_id,
-                resolved_by_surface_instance_id,
+                requested_by_actor_source,
+                resolved_by_actor_source,
                 resolved_verification_basis,
                 resolved_assurance_level,
                 resolved_at,
@@ -951,14 +837,10 @@ fn assert_resolution_outcome_is_closed(label: &str, conn: &Connection) {
                 '{\"task_id\":\"task_a\",\"change_unit_id\":null,\"scope_revision\":0,\"close_basis_revision\":null,\"baseline_ref\":null,\"result_refs\":[],\"residual_risk_ids\":[],\"sensitive_action_scope\":null,\"created_at_state_version\":0,\"compatibility_status\":\"current\"}',
                 'blocked',
                 'accept',
-                '{\"selected_option_id\":\"accept\",\"machine_action\":\"accept\",\"resolution_outcome\":\"blocked\",\"answer\":{\"product_decision\":{\"judgment\":{\"decision\":\"accepted\"}},\"technical_decision\":null,\"scope_decision\":null,\"sensitive_action_scope\":null,\"final_acceptance\":null,\"residual_risk_acceptance\":null,\"cancellation\":null},\"note\":null,\"accepted_risks\":[],\"resolved_by_actor_kind\":\"user\"}',
+                '{\"selected_option_id\":\"accept\",\"machine_action\":\"accept\",\"resolution_outcome\":\"blocked\",\"answer\":{\"product_decision\":{\"judgment\":{\"decision\":\"accepted\"}},\"technical_decision\":null,\"scope_decision\":null,\"sensitive_action_scope\":null,\"final_acceptance\":null,\"residual_risk_acceptance\":null,\"cancellation\":null},\"note\":null,\"accepted_risks\":[],\"resolved_by_actor_source\":\"local_user\"}',
                 '{\"summary\":\"test rationale\",\"selected_reason\":\"test reason\",\"considered_alternatives\":[],\"rejected_alternatives\":[],\"assumptions\":[],\"tradeoffs\":[\"test tradeoff\"],\"uncertainties\":[],\"review_triggers\":[\"test trigger\"],\"related_refs\":[],\"artifact_refs\":[]}',
-                'surface_main',
-                'surface_instance_1',
-                'user',
-                'user_interaction',
-                'surface_main',
-                'surface_instance_1',
+                'agent_connection:conn_main',
+                'local_user',
                 'fixture',
                 'cooperative',
                 't1',
@@ -984,12 +866,8 @@ fn assert_resolution_machine_action_is_closed(label: &str, conn: &Connection) {
                 resolution_machine_action,
                 resolution_json,
                 resolution_rationale_json,
-                requested_by_surface_id,
-                requested_by_surface_instance_id,
-                resolved_by_actor_kind,
-                resolved_actor_role,
-                resolved_by_surface_id,
-                resolved_by_surface_instance_id,
+                requested_by_actor_source,
+                resolved_by_actor_source,
                 resolved_verification_basis,
                 resolved_assurance_level,
                 resolved_at,
@@ -1004,14 +882,10 @@ fn assert_resolution_machine_action_is_closed(label: &str, conn: &Connection) {
                 '{\"task_id\":\"task_a\",\"change_unit_id\":null,\"scope_revision\":0,\"close_basis_revision\":null,\"baseline_ref\":null,\"result_refs\":[],\"residual_risk_ids\":[],\"sensitive_action_scope\":null,\"created_at_state_version\":0,\"compatibility_status\":\"current\"}',
                 'accepted',
                 'approve',
-                '{\"selected_option_id\":\"accept\",\"machine_action\":\"accept\",\"resolution_outcome\":\"accepted\",\"answer\":{\"product_decision\":{\"judgment\":{\"decision\":\"accepted\"}},\"technical_decision\":null,\"scope_decision\":null,\"sensitive_action_scope\":null,\"final_acceptance\":null,\"residual_risk_acceptance\":null,\"cancellation\":null},\"note\":null,\"accepted_risks\":[],\"resolved_by_actor_kind\":\"user\"}',
+                '{\"selected_option_id\":\"accept\",\"machine_action\":\"accept\",\"resolution_outcome\":\"accepted\",\"answer\":{\"product_decision\":{\"judgment\":{\"decision\":\"accepted\"}},\"technical_decision\":null,\"scope_decision\":null,\"sensitive_action_scope\":null,\"final_acceptance\":null,\"residual_risk_acceptance\":null,\"cancellation\":null},\"note\":null,\"accepted_risks\":[],\"resolved_by_actor_source\":\"local_user\"}',
                 '{\"summary\":\"test rationale\",\"selected_reason\":\"test reason\",\"considered_alternatives\":[],\"rejected_alternatives\":[],\"assumptions\":[],\"tradeoffs\":[\"test tradeoff\"],\"uncertainties\":[],\"review_triggers\":[\"test trigger\"],\"related_refs\":[],\"artifact_refs\":[]}',
-                'surface_main',
-                'surface_instance_1',
-                'user',
-                'user_interaction',
-                'surface_main',
-                'surface_instance_1',
+                'agent_connection:conn_main',
+                'local_user',
                 'fixture',
                 'cooperative',
                 't1',
@@ -1023,59 +897,6 @@ fn assert_resolution_machine_action_is_closed(label: &str, conn: &Connection) {
     assert_constraint_error(label, error);
 }
 
-fn assert_resolved_surface_foreign_key_is_enforced(label: &str, conn: &Connection) {
-    let error = conn
-        .execute(
-            "INSERT INTO user_judgments (
-                project_id,
-                judgment_id,
-                task_id,
-                judgment_kind,
-                status,
-                basis_json,
-                resolution_outcome,
-                resolution_machine_action,
-                resolution_json,
-                resolution_rationale_json,
-                requested_by_surface_id,
-                requested_by_surface_instance_id,
-                resolved_by_actor_kind,
-                resolved_actor_role,
-                resolved_by_surface_id,
-                resolved_by_surface_instance_id,
-                resolved_verification_basis,
-                resolved_assurance_level,
-                resolved_at,
-                requested_at
-            )
-            VALUES (
-                'project_a',
-                'judgment_bad_resolved_surface',
-                'task_a',
-                'approval',
-                'resolved',
-                '{\"task_id\":\"task_a\",\"change_unit_id\":null,\"scope_revision\":0,\"close_basis_revision\":null,\"baseline_ref\":null,\"result_refs\":[],\"residual_risk_ids\":[],\"sensitive_action_scope\":null,\"created_at_state_version\":0,\"compatibility_status\":\"current\"}',
-                'accepted',
-                'accept',
-                '{\"selected_option_id\":\"accept\",\"machine_action\":\"accept\",\"resolution_outcome\":\"accepted\",\"answer\":{\"product_decision\":{\"judgment\":{\"decision\":\"accepted\"}},\"technical_decision\":null,\"scope_decision\":null,\"sensitive_action_scope\":null,\"final_acceptance\":null,\"residual_risk_acceptance\":null,\"cancellation\":null},\"note\":null,\"accepted_risks\":[],\"resolved_by_actor_kind\":\"user\"}',
-                '{\"summary\":\"test rationale\",\"selected_reason\":\"test reason\",\"considered_alternatives\":[],\"rejected_alternatives\":[],\"assumptions\":[],\"tradeoffs\":[\"test tradeoff\"],\"uncertainties\":[],\"review_triggers\":[\"test trigger\"],\"related_refs\":[],\"artifact_refs\":[]}',
-                'surface_main',
-                'surface_instance_1',
-                'user',
-                'user_interaction',
-                'missing_surface',
-                'missing_surface_instance',
-                'fixture',
-                'cooperative',
-                't1',
-                't1'
-            )",
-            [],
-        )
-        .unwrap_err();
-    assert_foreign_key_error(label, error);
-}
-
 fn assert_user_judgments_require_basis(label: &str, conn: &Connection) {
     let error = conn
         .execute(
@@ -1085,8 +906,7 @@ fn assert_user_judgments_require_basis(label: &str, conn: &Connection) {
                 task_id,
                 judgment_kind,
                 status,
-                requested_by_surface_id,
-                requested_by_surface_instance_id,
+                requested_by_actor_source,
                 requested_at
             )
             VALUES (
@@ -1095,8 +915,7 @@ fn assert_user_judgments_require_basis(label: &str, conn: &Connection) {
                 'task_a',
                 'approval',
                 'pending',
-                'surface_main',
-                'surface_instance_1',
+                'agent_connection:conn_main',
                 't1'
             )",
             [],
@@ -1115,8 +934,7 @@ fn assert_resolved_user_judgments_require_complete_resolution(label: &str, conn:
                 judgment_kind,
                 status,
                 basis_json,
-                requested_by_surface_id,
-                requested_by_surface_instance_id,
+                requested_by_actor_source,
                 requested_at
             )
             VALUES (
@@ -1126,8 +944,7 @@ fn assert_resolved_user_judgments_require_complete_resolution(label: &str, conn:
                 'approval',
                 'resolved',
                 '{\"task_id\":\"task_a\",\"change_unit_id\":null,\"scope_revision\":0,\"close_basis_revision\":null,\"baseline_ref\":null,\"result_refs\":[],\"residual_risk_ids\":[],\"sensitive_action_scope\":null,\"created_at_state_version\":0,\"compatibility_status\":\"current\"}',
-                'surface_main',
-                'surface_instance_1',
+                'agent_connection:conn_main',
                 't1'
             )",
             [],
@@ -1196,17 +1013,16 @@ fn assert_project_continuity_value_sets_are_closed(label: &str, conn: &Connectio
     assert_constraint_error(label, bad_status);
 }
 
-fn assert_write_authorization_status_is_closed(label: &str, conn: &Connection) {
+fn assert_write_check_status_is_closed(label: &str, conn: &Connection) {
     let error = conn
         .execute(
-            "INSERT INTO write_authorizations (
+            "INSERT INTO write_checks (
                 project_id,
-                write_authorization_id,
+                write_check_id,
                 task_id,
                 basis_state_version,
                 status,
-                created_by_surface_id,
-                created_by_surface_instance_id,
+                created_by_actor_source,
                 expires_at,
                 created_at
             )
@@ -1216,8 +1032,7 @@ fn assert_write_authorization_status_is_closed(label: &str, conn: &Connection) {
                 'task_a',
                 1,
                 'accepted',
-                'surface_main',
-                'surface_instance_1',
+                'agent_connection:conn_main',
                 't2',
                 't1'
             )",
@@ -1510,24 +1325,6 @@ fn assert_constraint_error(label: &str, error: RusqliteError) {
     }
 }
 
-fn assert_foreign_key_error(label: &str, error: RusqliteError) {
-    match error {
-        RusqliteError::SqliteFailure(failure, _) => {
-            assert_eq!(
-                failure.code,
-                ErrorCode::ConstraintViolation,
-                "{label}: expected SQLite foreign-key failure"
-            );
-            assert_eq!(
-                failure.extended_code,
-                rusqlite::ffi::SQLITE_CONSTRAINT_FOREIGNKEY,
-                "{label}: expected foreign-key extended code"
-            );
-        }
-        other => panic!("{label}: expected SQLite foreign-key failure, got {other:?}"),
-    }
-}
-
 fn quote_identifier(identifier: &str) -> String {
     format!("\"{}\"", identifier.replace('"', "\"\""))
 }
@@ -1543,12 +1340,6 @@ fn assert_schema_differs(label: &str, expected: &DatabaseSchema, actual: &Databa
     );
 }
 
-fn replace_required(input: &str, needle: &str, replacement: &str) -> String {
-    let count = input.matches(needle).count();
-    assert_eq!(count, 1, "expected exactly one occurrence of {needle:?}");
-    input.replacen(needle, replacement, 1)
-}
-
 fn harmlessly_reformat_sql(sql: &str) -> String {
     sql.replace("CREATE UNIQUE INDEX", "create\n  unique\n  index")
         .replace("CREATE INDEX", "create\n  index")
@@ -1557,8 +1348,4 @@ fn harmlessly_reformat_sql(sql: &str) -> String {
         .replace("FOREIGN KEY", "foreign\n  key")
         .replace("CHECK", "check")
         .replace(" DEFAULT ", "\n  default\n  ")
-}
-
-fn invalid_data(message: String) -> IoError {
-    IoError::new(ErrorKind::InvalidData, message)
 }

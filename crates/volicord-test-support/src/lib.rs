@@ -21,9 +21,7 @@ use volicord_store::{
     core_pipeline::{CoreProjectStore, StorageEffectCounts},
     sqlite::open_project_state_database,
 };
-use volicord_types::{
-    SurfaceInteractionRole, TypeBoundary, VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION,
-};
+use volicord_types::{TypeBoundary, VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION};
 
 pub mod fixtures {
     /// Placement marker for future shared fixtures.
@@ -114,8 +112,8 @@ pub mod core_fixtures {
 
     use volicord_store::StoreError;
     use volicord_types::{
-        AcceptedRiskInput, ActorKind, ArtifactInput, ArtifactInputId, ArtifactInputSourceKind,
-        BaselineRef, ChangeUnitId, ChangeUnitOperation, ChangeUnitUpdate, CloseIntent, CloseReason,
+        AcceptedRiskInput, ArtifactInput, ArtifactInputId, ArtifactInputSourceKind, BaselineRef,
+        ChangeUnitId, ChangeUnitOperation, ChangeUnitUpdate, CloseIntent, CloseReason,
         CloseTaskRequest, EvidenceAssuranceLevel, EvidenceCoverageItem, EvidenceCoverageState,
         EvidenceSourceKind, EvidenceUpdateProvenance, IdempotencyKey, InitialScope, IntakeRequest,
         JsonObject, JudgmentKind, JudgmentPresentation, JudgmentRationale, JudgmentRequiredFor,
@@ -123,9 +121,8 @@ pub mod core_fixtures {
         RecordUserJudgmentPayload, RecordUserJudgmentRequest, RedactionState, RequestId,
         RequestUserJudgmentRequest, RequestedMode, ResumePolicy, RunKind, ScopeUpdate,
         SensitiveActionScope, StageArtifactRequest, StagedArtifactHandle, StateRecordKind,
-        StateRecordRef, StatusInclude, StatusRequest, SurfaceId, TaskId, ToolEnvelope,
-        UpdateScopeRequest, UserJudgmentId, UserJudgmentOptionId, UserJudgmentOptionInput,
-        WriteAuthorizationId,
+        StateRecordRef, StatusInclude, StatusRequest, TaskId, ToolEnvelope, UpdateScopeRequest,
+        UserJudgmentId, UserJudgmentOptionId, UserJudgmentOptionInput, WriteCheckId,
     };
 
     use super::*;
@@ -185,7 +182,7 @@ pub mod core_fixtures {
                     surface_id: surface_id.clone(),
                     surface_instance_id: surface_instance_id.clone(),
                     surface_kind: "local_test".to_owned(),
-                    interaction_role: SurfaceInteractionRole::UserInteraction,
+                    interaction_role: "user_interaction".to_owned(),
                     display_name: Some("Shared Test Surface".to_owned()),
                     capability_profile_json: default_capability_profile().to_string(),
                     local_access_json: json!({
@@ -336,8 +333,6 @@ pub mod core_fixtures {
             ToolEnvelope {
                 project_id: ProjectId::new(&self.project_id),
                 task_id: task_id.map(TaskId::new).into(),
-                actor_kind: ActorKind::Agent,
-                surface_id: SurfaceId::new(&self.surface_id),
                 request_id: RequestId::new(request_id),
                 idempotency_key: idempotency_key.map(IdempotencyKey::new).into(),
                 expected_state_version: expected_state_version.into(),
@@ -501,7 +496,7 @@ pub mod core_fixtures {
                 kind: RunKind::Implementation,
                 run_id: None.into(),
                 baseline_ref: BaselineRef::new(DEFAULT_BASELINE_REF),
-                write_authorization_id: None.into(),
+                write_check_id: None.into(),
                 summary: "Recorded implementation run.".to_owned(),
                 observed_changes: ObservedChanges {
                     changed_paths: Vec::new(),
@@ -581,14 +576,13 @@ pub mod core_fixtures {
             &self,
             input: RecordJudgmentFixture<'_>,
         ) -> RecordUserJudgmentRequest {
-            let mut envelope = self.envelope(
+            let envelope = self.envelope(
                 input.request_id,
                 Some(input.idempotency_key),
                 false,
                 input.expected_state_version,
                 Some(input.task_id),
             );
-            envelope.actor_kind = ActorKind::User;
             RecordUserJudgmentRequest {
                 envelope,
                 user_judgment_id: UserJudgmentId::new(input.user_judgment_id),
@@ -1445,7 +1439,7 @@ pub mod core_fixtures {
         StatusInclude {
             task: true,
             pending_user_judgments: true,
-            write_authority: true,
+            write_check: true,
             evidence: true,
             close: true,
             guarantees: true,
@@ -1628,9 +1622,9 @@ pub mod core_fixtures {
         }
     }
 
-    /// Builds a `WriteAuthorizationId` for tests that need the typed wrapper.
-    pub fn write_authorization_id(value: &str) -> WriteAuthorizationId {
-        WriteAuthorizationId::new(value)
+    /// Builds a `WriteCheckId` for tests that need the typed wrapper.
+    pub fn write_check_id(value: &str) -> WriteCheckId {
+        WriteCheckId::new(value)
     }
 
     fn default_capability_profile() -> Value {
