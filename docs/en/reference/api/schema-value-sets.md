@@ -67,11 +67,11 @@ Actor provenance fields such as `UserJudgmentResolution.resolved_by_actor_source
 
 | Value | Used by | Owner route |
 |---|---|---|
-| `local_user` | User Channel invocation provenance and authority-bearing user-judgment resolution. | Invocation meaning: [Agent Integration](../agent-integration.md); resolution shape owner: [API Judgment Schemas](schema-judgment.md). |
-| `agent_connection:<connection_id>` | Agent Connection invocation provenance and agent-created or agent-observed state. | Invocation meaning: [Agent Integration](../agent-integration.md); nested shape owners define where the value appears. |
+| `local_user` | User Channel invocation provenance and authority-bearing user-judgment resolution. | Invocation meaning: [Agent Connection](../agent-connection.md); resolution shape owner: [API Judgment Schemas](schema-judgment.md). |
+| `agent_connection:<connection_id>` | Agent Connection invocation provenance and agent-created or agent-observed state. | Invocation meaning: [Agent Connection](../agent-connection.md); nested shape owners define where the value appears. |
 | `system` | Internal system provenance where an owner explicitly allows it. | Method and storage owners define where the value appears. |
 
-These values classify derived invocation or persisted actor provenance. They do not by themselves create user-owned judgment, approval, scope-decision authority, final acceptance, residual-risk acceptance, or `Write Check`. Authority-bearing user-judgment resolution requires `resolved_by_actor_source=local_user` with compatible User Channel provenance as defined by [Agent Integration](../agent-integration.md) and the method owner.
+These values classify derived invocation or persisted actor provenance. They do not by themselves create user-owned judgment, approval, scope-decision authority, final acceptance, residual-risk acceptance, or `Write Check`. Authority-bearing user-judgment resolution requires `resolved_by_actor_source=local_user` with compatible User Channel provenance as defined by [Agent Connection](../agent-connection.md) and the method owner.
 
 <a id="next-action-values"></a>
 ## Next-action values
@@ -136,7 +136,7 @@ Method-owned API compatibility checks use exactly one request-level operation ca
 | `user_only` | User Channel operation category for authority-bearing user actions. Agent Connections do not dispatch this category. |
 | `admin_local` | Local administrative operation category. Agent Connections do not dispatch this category. |
 
-Operation categories are Volicord API compatibility categories, not OS permission classes, filesystem ACLs, sandbox rules, network policy, or secret isolation. Method operation requirements stay with method owner documents routed from [API Methods](methods.md); Agent Connection invocation verification behavior stays with [Agent Integration](../agent-integration.md) and [Security](../security.md).
+Operation categories are Volicord API compatibility categories, not OS permission classes, filesystem ACLs, sandbox rules, network policy, or secret isolation. Method operation requirements stay with method owner documents routed from [API Methods](methods.md); Agent Connection invocation verification behavior stays with [Agent Connection](../agent-connection.md) and [Security](../security.md).
 
 <a id="record-and-reference-values"></a>
 ## Record and reference values

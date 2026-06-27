@@ -36,7 +36,7 @@ These names are related, but they are not interchangeable.
 | `volicord-mcp` | The stdio MCP adapter process that an MCP host starts as a child process with `--connection <connection_id>`. | [MCP Transport](../reference/mcp-transport.md) |
 | `Volicord Runtime Home` | The local runtime data space for Volicord operational data as storage/runtime owners define it. | [Runtime Boundaries](../reference/runtime-boundaries.md) |
 | `Product Repository` | The user's project workspace and product files. It may contain explicitly selected project-scoped host configuration, but it is not Core authority and is not a runtime home. | [Runtime Boundaries](../reference/runtime-boundaries.md) |
-| Agent Connection | A local MCP host connection unit. It binds one host configuration target to one `connection_id`, a mode, and explicitly connected Projects. | [Agent Connection Reference](../reference/agent-integration.md) |
+| Agent Connection | A local MCP host connection unit. It binds one host configuration target to one `connection_id`, a mode, and explicitly connected Projects. | [Agent Connection Reference](../reference/agent-connection.md) |
 | User Channel | The local user path for authority-bearing user judgments. Agent Connections do not record `user_only` judgments. | [Administrative CLI](../reference/admin-cli.md#user-channel-commands) |
 
 The current baseline agent host model is connection-based. One `volicord-mcp` process binds to one Agent Connection. The connection can access only Projects explicitly connected to it. When exactly one Project is connected, MCP calls may omit `project_id`; when multiple Projects are connected, MCP calls must include an explicit `project_id`.
@@ -95,7 +95,7 @@ Volicord does not turn a polished chat answer, generated summary, readable statu
 | First setup | [Installation](installation.md) -> [Quickstart](quickstart.md) |
 | Agent host operator | [Quickstart](quickstart.md) -> [Agent Host Setup](../guides/agent-host-setup.md) -> [Agent Host Troubleshooting](../guides/agent-host-troubleshooting.md) |
 | Multi-repository operator | [Multi-Repository Agent Setup](../guides/multi-repository-agent-setup.md) |
-| Agent author | [Agent Guide](../guides/agent-workflow.md) -> [Agent Connection Reference](../reference/agent-integration.md) |
+| Agent author | [Agent Guide](../guides/agent-workflow.md) -> [Agent Connection Reference](../reference/agent-connection.md) |
 | Source-code learner | [Implementation Guide](../development/change-guide.md) -> [Architecture](../development/architecture.md) |
 | Reference reader | [Reference Index](../reference/README.md), [Administrative CLI](../reference/admin-cli.md), [API Methods](../reference/api/methods.md) |
 

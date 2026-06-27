@@ -2,7 +2,7 @@
 
 This document owns environment applicability and prerequisites that a reader should check before installing Volicord executables or connecting an MCP host. It classifies operating environment, shell, toolchain, executable layout, filesystem access, Runtime Home, Product Repository, and MCP host prerequisites using evidence available in this repository.
 
-This document does not define administrative command behavior, MCP stdio behavior, storage effects, host trust, public API behavior, schemas, or security guarantees. Exact behavior remains with [Administrative CLI](admin-cli.md), [MCP Transport](mcp-transport.md), [Runtime Boundaries](runtime-boundaries.md), and [Agent Integration](agent-integration.md).
+This document does not define administrative command behavior, MCP stdio behavior, storage effects, host trust, public API behavior, schemas, or security guarantees. Exact behavior remains with [Administrative CLI](admin-cli.md), [MCP Transport](mcp-transport.md), [Runtime Boundaries](runtime-boundaries.md), and [Agent Connection](agent-connection.md).
 
 ## Status Vocabulary
 
@@ -119,7 +119,7 @@ Baseline host and scope requirements:
 | Claude Code | `project` | The `Product Repository` must be writable when applying `.mcp.json`; the future Claude Code host must find `volicord-mcp` on `PATH`; project MCP approval may still be required. |
 | Generic | `export` | A writable export target is needed only when writing an export file. The external host remains user-managed and unverified until loaded and checked by a host-specific mechanism. |
 
-Writing host configuration does not prove that the host trusted, approved, loaded, initialized, or exposed `volicord-mcp`. `managed host configuration state` meaning and host trust boundaries are owned by [Agent Integration](agent-integration.md).
+Writing host configuration does not prove that the host trusted, approved, loaded, initialized, or exposed `volicord-mcp`. `managed host configuration state` meaning and host trust boundaries are owned by [Agent Connection](agent-connection.md).
 
 ## MCP Host Environment Requirements
 

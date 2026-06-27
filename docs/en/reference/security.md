@@ -95,7 +95,7 @@ Volicord security claims assume local actors use the documented Volicord contrac
 May claim:
 - Local product files can be inputs to Volicord checks or user-owned judgments.
 - Local runtime data location can be defined by storage/runtime owners.
-- Agent Connections can provide `actor_source=agent_connection:<connection_id>` provenance when [Runtime Boundaries](runtime-boundaries.md), method owners, and this security owner allow the claim.
+- Agent Connections can provide `actor_source=agent_connection:<connection_id>` provenance when [Agent Connection Reference](agent-connection.md), method owners, and this security owner allow the claim.
 - The `User Channel` can provide `actor_source=local_user` provenance for authority-bearing user judgments when Core and method owners require it.
 - Connection Projects define the explicit `project_id` allowlist for an Agent Connection.
 - `operation_category` classifies an operation as `read`, `agent_workflow`, `user_only`, or `admin_local`.
@@ -234,7 +234,8 @@ Volicord does not allow readers or agents to infer authority from:
 ## Related owners
 
 - [Scope](scope.md): baseline inclusion, exclusions, and supported guarantee boundary.
-- [Runtime Boundaries](runtime-boundaries.md): Agent Connection, Connection Projects, User Channel, Volicord source repository/installation files, executable processes, `Product Repository`, `Volicord Runtime Home`, and external MCP host configuration boundaries.
+- [Agent Connection Reference](agent-connection.md): Agent Connection, Connection Projects, current connection context, and Agent Connection/User Channel authority boundaries.
+- [Runtime Boundaries](runtime-boundaries.md): User Channel location, Volicord source repository/installation files, executable processes, `Product Repository`, `Volicord Runtime Home`, and external MCP host configuration boundaries.
 - [API Value Sets](api/schema-value-sets.md): `GuaranteeDisplay.level`, `operation_category`, and other value names.
 - [API error routing](api/error-routing.md): public error routing.
 - [Core Model](core-model.md): user-owned judgment, `Write Check`, acceptance, residual risk, and non-substitution rules.

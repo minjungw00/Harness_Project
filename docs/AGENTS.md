@@ -82,7 +82,7 @@ substantial durable reader-facing content within that scope.
 - When reader-facing documentation mentions user-owned decisions, preserve the
   boundary that authority-bearing user judgments route through the supported
   `User Channel` while Agent Connections remain agent-side connection paths.
-  Link exact Core authority, administrative CLI, and agent-integration behavior
+  Link exact Core authority, administrative CLI, and Agent Connection behavior
   to their focused Reference owners instead of redefining it here.
 - Do not turn a guide, tutorial, how-to, explanation, index, README, Maintain
   page, or `AGENTS.md` into a second contract body for API behavior, storage

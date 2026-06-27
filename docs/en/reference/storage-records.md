@@ -225,7 +225,7 @@ Task and Change Unit shaping JSON stores compact summaries and bounded lists onl
 - [Storage DDL](storage-ddl.md) defines baseline SQLite table shape, indexes, foreign keys, migration tables, and constraints.
 - [Artifact Storage](storage-artifacts.md) defines artifact staging, promotion, linking, body reads, retention, and integrity lifecycle.
 - [Storage Versioning](storage-versioning.md) defines state versioning, idempotency, replay, events, locks, and migration contracts.
-- [Agent Integration](agent-integration.md) defines Agent Connections, Connection Projects, mode-gated MCP tool access, and User Channel boundaries.
+- [Agent Connection](agent-connection.md) defines Agent Connections, Connection Projects, mode-gated MCP tool access, and User Channel boundaries.
 - [API Schema Core](api/schema-core.md), [API State Schemas](api/schema-state.md), [API Artifact Schemas](api/schema-artifacts.md), [API Judgment Schemas](api/schema-judgment.md), and [API Value Sets](api/schema-value-sets.md) define API shape and public API values.
 - [API Methods](api/methods.md) and method owner documents define public method behavior that uses records.
 - [Runtime Boundaries](runtime-boundaries.md) defines `Product Repository`, Volicord installation or runtime process, and `Volicord Runtime Home` location boundaries.

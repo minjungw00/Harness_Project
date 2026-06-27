@@ -4,7 +4,7 @@ Use this guide when Codex, Claude Code, or a generic MCP host connection does no
 
 For the normal setup path, use [Agent Host Setup](agent-host-setup.md). For one user-scope connection serving multiple repositories, use [Multi-Repository Agent Setup](multi-repository-agent-setup.md).
 
-This guide helps you identify the observed state, check likely causes without making another change when possible, take a bounded recovery action, and verify the result. Exact behavior remains with [Administrative CLI](../reference/admin-cli.md), [MCP Transport](../reference/mcp-transport.md), [Runtime Boundaries](../reference/runtime-boundaries.md), [Agent Connection Reference](../reference/agent-integration.md), and storage owners routed from [Storage](../reference/storage.md).
+This guide helps you identify the observed state, check likely causes without making another change when possible, take a bounded recovery action, and verify the result. Exact behavior remains with [Administrative CLI](../reference/admin-cli.md), [MCP Transport](../reference/mcp-transport.md), [Runtime Boundaries](../reference/runtime-boundaries.md), [Agent Connection Reference](../reference/agent-connection.md), and storage owners routed from [Storage](../reference/storage.md).
 
 ## Before You Change Anything
 

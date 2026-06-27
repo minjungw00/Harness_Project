@@ -22,7 +22,7 @@ This document does not own:
 
 - the public Volicord method list or method owner table; see [API Methods](api/methods.md)
 - public Volicord request and response schemas; see [API Schema Core](api/schema-core.md)
-- Agent Connection, Connection Projects, project selection meaning, current connection context, and actor provenance; see [Agent Integration](agent-integration.md)
+- Agent Connection, Connection Projects, project selection meaning, current connection context, and actor provenance; see [Agent Connection](agent-connection.md)
 - administrative Runtime Home, Agent Connection setup, project membership, and verification commands; see [Administrative CLI](admin-cli.md)
 - storage layout, migrations, and storage effects; see the storage owners through [Storage](storage.md)
 
@@ -86,7 +86,7 @@ Startup validation requires:
 - the connected project rows are readable
 - registry JSON and metadata needed for startup are valid
 
-Startup validation does not select one project for all calls. Project availability, project status, path separation, and mode compatibility are verified per call as defined by [Agent Integration](agent-integration.md#current-connection-context).
+Startup validation does not select one project for all calls. Project availability, project status, path separation, and mode compatibility are verified per call as defined by [Agent Connection](agent-connection.md#current-connection-context).
 
 A stored Agent Connection can remain after it reaches zero connected projects. That persistence is not startup eligibility: a new stdio process and `volicord-mcp --check --connection <connection_id>` fail startup validation while there are no connected projects.
 
@@ -245,7 +245,7 @@ For a known public Volicord tool, object `arguments` that fail the tool input sc
 
 For `volicord.list_projects`, the adapter returns a read-only project list for the bound Agent Connection only. It must not enter Core, create storage effects, mutate project membership, or expose projects outside the connection allowlist. If a connected project has an invalid current registration, the adapter fails the utility call instead of returning that project as a normal available or unavailable entry.
 
-For a public Volicord tool call, the adapter first performs deterministic project selection and per-project validation owned by [Agent Integration](agent-integration.md#current-connection-context). Ambiguous project selection is rejected before Core execution and the actionable text must instruct the agent to call `volicord.list_projects`.
+For a public Volicord tool call, the adapter first performs deterministic project selection and per-project validation owned by [Agent Connection](agent-connection.md#current-connection-context). Ambiguous project selection is rejected before Core execution and the actionable text must instruct the agent to call `volicord.list_projects`.
 
 `volicord-mcp` does not advertise or implement MCP task-augmented tool execution. A `tools/call` request does not return `CreateTaskResult`, and a `task` parameter is not a supported baseline feature.
 

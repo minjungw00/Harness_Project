@@ -2,7 +2,7 @@
 
 Codex, Claude Code, 또는 일반 MCP 설정 export를 위한 Volicord MCP 호스트 connection을 연결, 검증, 조회, 제거해야 할 때 이 가이드를 사용합니다.
 
-먼저 [설치](../getting-started/installation.md)에서 `volicord`와 `volicord-mcp`를 빌드하거나 찾고, 가장 짧은 첫 setup은 [Quickstart](../getting-started/quickstart.md)를 봅니다. 정확한 명령 동작은 [관리 CLI](../reference/admin-cli.md)가 담당합니다. 정확한 Agent Connection 동작은 [Agent Connection Reference](../reference/agent-integration.md)가 담당합니다. 정확한 프로세스 동작은 [MCP 전송](../reference/mcp-transport.md)이 담당합니다.
+먼저 [설치](../getting-started/installation.md)에서 `volicord`와 `volicord-mcp`를 빌드하거나 찾고, 가장 짧은 첫 setup은 [Quickstart](../getting-started/quickstart.md)를 봅니다. 정확한 명령 동작은 [관리 CLI](../reference/admin-cli.md)가 담당합니다. 정확한 Agent Connection 동작은 [Agent Connection Reference](../reference/agent-connection.md)가 담당합니다. 정확한 프로세스 동작은 [MCP 전송](../reference/mcp-transport.md)이 담당합니다.
 
 Volicord는 OS 보안 제품이 아닙니다. Agent Connection, Write Check, 호스트 설정은 OS 샌드박싱, 파일시스템 ACL, 네트워크 정책, 비밀 격리를 제공하지 않습니다.
 

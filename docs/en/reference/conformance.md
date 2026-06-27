@@ -155,7 +155,7 @@ Purpose:
 - Routes exact values and meaning to their canonical owners.
 
 Owner links:
-- API, Core, Storage, Security, Agent Integration, artifact, and policy owners.
+- API, Core, Storage, Security, Agent Connection, artifact, and policy owners.
 
 A conformance criterion must use public owner schemas. It must not invent criterion-only enum values, pseudo-fields, localized display labels as state, prose-only expectations, or out-of-scope-only values.
 
@@ -249,7 +249,7 @@ Expected behavior:
 - Agent Connection mismatch before mutation.
 
 Owner links:
-- [Agent Integration](agent-integration.md)
+- [Agent Connection](agent-connection.md)
 - [API error codes](api/error-codes.md)
 - [API error routing](api/error-routing.md)
 - [Security](security.md)
@@ -261,7 +261,7 @@ Expected behavior:
 - Verified Agent Connection permits only owner-scoped mutation checks.
 
 Owner links:
-- [Agent Integration](agent-integration.md)
+- [Agent Connection](agent-connection.md)
 - [API method owner routing](api/methods.md#method-owner-routing-table)
 - [Storage Effects](storage-effects.md)
 
@@ -273,7 +273,7 @@ Expected behavior:
 
 Owner links:
 - [API Value Sets](api/schema-value-sets.md)
-- [Agent Integration](agent-integration.md)
+- [Agent Connection](agent-connection.md)
 - [Security](security.md)
 
 <a id="scenario-baseline-detective-display-capability-gated"></a>
@@ -284,7 +284,7 @@ Expected behavior:
 
 Owner links:
 - [Security](security.md)
-- [Agent Integration](agent-integration.md)
+- [Agent Connection](agent-connection.md)
 
 <a id="scenario-baseline-shaping-readiness-gap-blocks-or-asks"></a>
 ### `BASELINE-shaping-readiness-gap-blocks-or-asks`

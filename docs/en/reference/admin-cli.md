@@ -21,7 +21,7 @@ This document owns:
 This document does not own:
 
 - public Volicord API methods; see [API Methods](api/methods.md)
-- Agent Connection, Connection Projects, connection mode, and actor provenance meanings; see [Agent Integration](agent-integration.md)
+- Agent Connection, Connection Projects, connection mode, and actor provenance meanings; see [Agent Connection](agent-connection.md)
 - runtime data boundary meaning and `Product Repository` file-boundary exceptions; see [Runtime Boundaries](runtime-boundaries.md)
 - MCP process startup, stdio framing, wire behavior, response wrapping, preflight internals, and shutdown; see [MCP Transport](mcp-transport.md)
 - storage record layout, SQLite DDL, general storage migration definitions, Core authority semantics, and security guarantee meanings
@@ -391,6 +391,6 @@ Owner routes:
 
 - Public method list and method routing: [API Methods](api/methods.md).
 - Shared request and response schemas: [API Schema Core](api/schema-core.md).
-- Agent Connection, Connection Projects, and actor context meaning: [Agent Integration](agent-integration.md).
+- Agent Connection, Connection Projects, and actor context meaning: [Agent Connection](agent-connection.md).
 - MCP process behavior: [MCP Transport](mcp-transport.md).
 - Runtime location and repository write boundaries: [Runtime Boundaries](runtime-boundaries.md).

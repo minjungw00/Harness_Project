@@ -45,7 +45,7 @@ Volicord는 Agent Connection을 로컬 MCP 호스트 connection 하나의 지속
 
 참조 담당 문서:
 
-- [Agent Connection Reference](../../reference/agent-integration.md)
+- [Agent Connection Reference](../../reference/agent-connection.md)
 - [MCP 전송](../../reference/mcp-transport.md)
 - [관리 CLI](../../reference/admin-cli.md)
 - [런타임 경계](../../reference/runtime-boundaries.md)

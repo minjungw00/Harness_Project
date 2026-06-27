@@ -1,4 +1,4 @@
-# 에이전트 통합 참조
+# Agent Connection 참조
 
 이 문서는 로컬 MCP 호스트 통합을 위한 Agent Connection과 현재 연결 맥락의 경계를 담당합니다. 요청이 Core에 들어가기 전에 Agent Connection, 연결 프로젝트, 연결 모드, `actor_source`, `operation_category`를 어떻게 해석하는지 정의합니다.
 

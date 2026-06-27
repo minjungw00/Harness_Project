@@ -474,5 +474,5 @@ Use this table for owner routing. Do not copy the linked contracts into this pag
 | Security guarantees and access-boundary wording | [Security](security.md) |
 | Baseline and out-of-scope capability boundaries | [Scope](scope.md) |
 | Runtime and repository separation | [Runtime Boundaries](runtime-boundaries.md) |
-| Agent Connection, Connection Projects, and runtime connection boundaries | [Runtime Boundaries](runtime-boundaries.md) |
+| Agent Connection, Connection Projects, and current connection context boundaries | [Agent Connection Reference](agent-connection.md) |
 | `operation_category` and security non-guarantees for local connections | [Security](security.md) |

@@ -2,7 +2,7 @@
 
 Use this guide when you need to connect, verify, inspect, or remove a Volicord MCP host connection for Codex, Claude Code, or a generic MCP configuration export.
 
-Start with [Installation](../getting-started/installation.md) to build or locate `volicord` and `volicord-mcp`, then [Quickstart](../getting-started/quickstart.md) for the shortest first setup. Exact command behavior belongs to [Administrative CLI](../reference/admin-cli.md). Exact Agent Connection behavior belongs to [Agent Connection Reference](../reference/agent-integration.md). Exact process behavior belongs to [MCP Transport](../reference/mcp-transport.md).
+Start with [Installation](../getting-started/installation.md) to build or locate `volicord` and `volicord-mcp`, then [Quickstart](../getting-started/quickstart.md) for the shortest first setup. Exact command behavior belongs to [Administrative CLI](../reference/admin-cli.md). Exact Agent Connection behavior belongs to [Agent Connection Reference](../reference/agent-connection.md). Exact process behavior belongs to [MCP Transport](../reference/mcp-transport.md).
 
 Volicord is not an OS security product. Agent Connections, Write Checks, and host configuration do not provide OS sandboxing, filesystem ACLs, network policy, or secret isolation.
 

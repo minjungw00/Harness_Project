@@ -33,7 +33,7 @@ Neighboring owners stay authoritative:
 - blocker routing: [API blocker routing](api/blocker-routing.md)
 - `ToolError.details`: [API error details](api/error-details.md)
 - storage record layout, persistence, artifact lifecycle, and storage effects: storage owners through [Reference Index](README.md)
-- support boundaries, security guarantees, and connection context: [Scope Reference](scope.md), [Security](security.md), and [Agent Integration](agent-integration.md)
+- support boundaries, security guarantees, and connection context: [Scope Reference](scope.md), [Security](security.md), and [Agent Connection](agent-connection.md)
 
 ## Authority boundary
 
@@ -535,7 +535,7 @@ Avoid wording that presents the packet as a record, approval, or close result.
 
 ### Owner links
 
-- [Agent Integration](agent-integration.md) for current connection context and connection capability declarations.
+- [Agent Connection](agent-connection.md) for current connection context and connection capability declarations.
 - [Projection and template display boundaries](projection-and-templates.md) for read-only display and freshness boundaries.
 - [Core Model](core-model.md) for authority, user-owned judgment, close readiness, and residual-risk boundaries.
 - [API State Schemas](api/schema-state.md), [API Judgment Schemas](api/schema-judgment.md), and [API Artifact Schemas](api/schema-artifacts.md) for packet input shapes.

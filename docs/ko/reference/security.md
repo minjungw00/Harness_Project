@@ -95,7 +95,7 @@ Volicord 보안 주장은 로컬 행위자가 Volicord 상태, 기록, 아티팩
 주장할 수 있는 것:
 - 로컬 제품 파일은 Volicord 확인이나 사용자 소유 판단의 입력이 될 수 있습니다.
 - 로컬 런타임 데이터 위치는 저장소/런타임 담당 문서가 정의할 수 있습니다.
-- Agent Connection은 [런타임 경계](runtime-boundaries.md), 메서드 담당 문서, 이 보안 담당 문서가 허용할 때 `actor_source=agent_connection:<connection_id>` 출처를 제공할 수 있습니다.
+- Agent Connection은 [Agent Connection 참조](agent-connection.md), 메서드 담당 문서, 이 보안 담당 문서가 허용할 때 `actor_source=agent_connection:<connection_id>` 출처를 제공할 수 있습니다.
 - `User Channel`은 Core와 메서드 담당 문서가 요구할 때 권한을 지니는 사용자 판단에 대해 `actor_source=local_user` 출처를 제공할 수 있습니다.
 - Connection Projects는 Agent Connection에 명시적으로 허용된 `project_id` 목록을 정의합니다.
 - `operation_category`는 작업을 `read`, `agent_workflow`, `user_only`, `admin_local`로 분류합니다.
@@ -234,7 +234,8 @@ Volicord는 독자나 에이전트가 아래에서 권한을 추론하도록 허
 ## 관련 담당 문서
 
 - [범위](scope.md): 기준 범위 포함/제외와 지원되는 보장 경계.
-- [런타임 경계](runtime-boundaries.md): Agent Connection, Connection Projects, User Channel, Volicord 소스 저장소/설치 파일, 실행 파일 프로세스, `Product Repository`, `Volicord Runtime Home`, 외부 MCP 호스트 설정 경계.
+- [Agent Connection 참조](agent-connection.md): Agent Connection, Connection Projects, 현재 연결 맥락, Agent Connection/User Channel 권한 경계.
+- [런타임 경계](runtime-boundaries.md): User Channel 위치, Volicord 소스 저장소/설치 파일, 실행 파일 프로세스, `Product Repository`, `Volicord Runtime Home`, 외부 MCP 호스트 설정 경계.
 - [API 값 집합](api/schema-value-sets.md): `GuaranteeDisplay.level`, `operation_category`, 그 밖의 값 이름.
 - [API 오류 처리 경로](api/error-routing.md): 공개 오류 처리 경로.
 - [Core 모델](core-model.md): 사용자 소유 판단, `Write Check`, 수락, 잔여 위험, 비대체 규칙.

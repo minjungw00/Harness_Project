@@ -155,7 +155,7 @@ API 메서드 예시는 자신이 설명하는 개념을 밝히기 위해 적합
 - 정확한 값과 의미를 기준 담당 문서로 보냅니다.
 
 담당 문서 링크:
-- API, Core, 저장소, 보안, 에이전트 통합, 아티팩트, 정책 담당 문서.
+- API, Core, 저장소, 보안, Agent Connection, 아티팩트, 정책 담당 문서.
 
 적합성 기준은 공개 담당 스키마를 사용해야 합니다. 기준 전용 enum 값, 가짜 필드, 상태로 쓰는 지역화 표시 라벨, 글로만 된 기대값, 지원 범위 밖 기능 전용 값을 만들면 안 됩니다.
 
@@ -249,7 +249,7 @@ API 메서드 예시는 자신이 설명하는 개념을 밝히기 위해 적합
 - 상태 변경 전 로컬 Agent Connection이 등록 정보와 맞지 않습니다.
 
 담당 문서 링크:
-- [에이전트 통합](agent-integration.md)
+- [Agent Connection](agent-connection.md)
 - [API 오류 코드](api/error-codes.md)
 - [API 오류 처리 경로](api/error-routing.md)
 - [보안](security.md)
@@ -261,7 +261,7 @@ API 메서드 예시는 자신이 설명하는 개념을 밝히기 위해 적합
 - 확인된 Agent Connection은 담당 메서드 계약 안에서만 상태 변경 확인을 허용합니다.
 
 담당 문서 링크:
-- [에이전트 통합](agent-integration.md)
+- [Agent Connection](agent-connection.md)
 - [API 메서드 담당 문서 경로](api/methods.md#method-owner-routing-table)
 - [저장 효과](storage-effects.md)
 
@@ -273,7 +273,7 @@ API 메서드 예시는 자신이 설명하는 개념을 밝히기 위해 적합
 
 담당 문서 링크:
 - [API 값 집합](api/schema-value-sets.md)
-- [에이전트 통합](agent-integration.md)
+- [Agent Connection](agent-connection.md)
 - [보안](security.md)
 
 <a id="scenario-baseline-detective-display-capability-gated"></a>
@@ -284,7 +284,7 @@ API 메서드 예시는 자신이 설명하는 개념을 밝히기 위해 적합
 
 담당 문서 링크:
 - [보안](security.md)
-- [에이전트 통합](agent-integration.md)
+- [Agent Connection](agent-connection.md)
 
 <a id="scenario-baseline-shaping-readiness-gap-blocks-or-asks"></a>
 ### `BASELINE-shaping-readiness-gap-blocks-or-asks`

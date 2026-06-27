@@ -687,5 +687,5 @@ CREATE INDEX idx_task_events_task_seq
 - [저장소 기록](storage-records.md): 영속 기록 계열, 배치, 관계 배치, 저장소 소유 값, JSON 배치를 정의합니다.
 - [저장 효과](storage-effects.md): 어떤 메서드 분기가 기록을 만들거나, 바꾸거나, 관찰하거나, 건드리지 않는지 정의합니다.
 - [저장소 버전 관리](storage-versioning.md): 상태 버전, 멱등성, 재실행, 이벤트, 잠금, 마이그레이션 계약을 정의합니다.
-- [에이전트 통합](agent-integration.md): Agent Connection, Connection Projects, 현재 연결 맥락, 모드 게이트, Agent Connection과 User Channel의 경계를 정의합니다.
+- [Agent Connection](agent-connection.md): Agent Connection, Connection Projects, 현재 연결 맥락, 모드 게이트, Agent Connection과 User Channel의 경계를 정의합니다.
 - [보안](security.md): 보안 경계와 보장 수준을 정의합니다.

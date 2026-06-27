@@ -31,8 +31,8 @@ owner_areas:
     description: First-read, installation, and environment-orientation documentation maintenance.
   user_workflow:
     description: User-facing and agent-facing workflow guide maintenance.
-  agent_integration:
-    description: Agent host, MCP adapter, administrative setup, and connection-integration documentation
+  agent_connection:
+    description: Agent host, MCP adapter, administrative setup, and Agent Connection documentation
       maintenance.
   developer_documentation:
     description: Source-learning, implementation workflow, architecture, and test documentation maintenance.
@@ -304,7 +304,7 @@ documents:
   - reference.runtime-boundaries
   - reference.admin-cli
   - reference.mcp-transport
-  - reference.agent-integration
+  - reference.agent-connection
   - maintain.brand-guidelines
 - doc_id: docs.index
   path_en: docs/en/README.md
@@ -461,7 +461,7 @@ documents:
     agent host integrations.
   normative_level: guide
   translation_policy: semantic_parity
-  owner_area: agent_integration
+  owner_area: agent_connection
   created_on: '2026-06-22'
   last_updated_on: '2026-06-25'
   last_verified_on: '2026-06-25'
@@ -479,7 +479,7 @@ documents:
   - reference.admin-cli
   - reference.mcp-transport
   - reference.runtime-boundaries
-  - reference.agent-integration
+  - reference.agent-connection
   - reference.api.methods
   - use.agent-host-troubleshooting
 - doc_id: use.agent-host-troubleshooting
@@ -490,7 +490,7 @@ documents:
     failures.
   normative_level: guide
   translation_policy: semantic_parity
-  owner_area: agent_integration
+  owner_area: agent_connection
   created_on: '2026-06-23'
   last_updated_on: '2026-06-24'
   last_verified_on: '2026-06-24'
@@ -508,7 +508,7 @@ documents:
   - reference.admin-cli
   - reference.mcp-transport
   - reference.runtime-boundaries
-  - reference.agent-integration
+  - reference.agent-connection
   - reference.storage
   - reference.storage-records
   - reference.storage-versioning
@@ -520,7 +520,7 @@ documents:
     Repositories.
   normative_level: guide
   translation_policy: semantic_parity
-  owner_area: agent_integration
+  owner_area: agent_connection
   created_on: '2026-06-22'
   last_updated_on: '2026-06-25'
   last_verified_on: '2026-06-25'
@@ -539,7 +539,7 @@ documents:
   - reference.admin-cli
   - reference.mcp-transport
   - reference.runtime-boundaries
-  - reference.agent-integration
+  - reference.agent-connection
 - doc_id: development.index
   path_en: docs/en/development/README.md
   path_ko: docs/ko/development/README.md
@@ -768,7 +768,7 @@ documents:
   - reference.api.methods
   - reference.mcp-transport
   - reference.admin-cli
-  - reference.agent-integration
+  - reference.agent-connection
 - doc_id: development.decision.plan-and-atomic-commit
   path_en: docs/en/development/decisions/plan-and-atomic-commit.md
   path_ko: docs/ko/development/decisions/plan-and-atomic-commit.md
@@ -850,7 +850,7 @@ documents:
   depends_on:
   - development.design-patterns
   - build.architecture
-  - reference.agent-integration
+  - reference.agent-connection
   - reference.mcp-transport
   - reference.admin-cli
   - reference.runtime-boundaries
@@ -987,7 +987,7 @@ documents:
   - reference.runtime-boundaries
   - reference.admin-cli
   - reference.mcp-transport
-  - reference.agent-integration
+  - reference.agent-connection
 - doc_id: reference.scope
   path_en: docs/en/reference/scope.md
   path_ko: docs/ko/reference/scope.md
@@ -1084,7 +1084,7 @@ documents:
   summary: Reference contract for administrative CLI behavior and local bootstrap commands.
   normative_level: contract
   translation_policy: semantic_parity
-  owner_area: agent_integration
+  owner_area: agent_connection
   created_on: '2026-06-19'
   last_updated_on: '2026-06-26'
   last_verified_on: '2026-06-26'
@@ -1116,7 +1116,7 @@ documents:
   - administrative command boundary from public Volicord API methods
   depends_on:
   - reference.runtime-boundaries
-  - reference.agent-integration
+  - reference.agent-connection
   - reference.mcp-transport
   - reference.api.methods
   - reference.api.schema-value-sets
@@ -1127,7 +1127,7 @@ documents:
   summary: Reference contract for MCP transport startup, framing, and response wrapping.
   normative_level: contract
   translation_policy: semantic_parity
-  owner_area: agent_integration
+  owner_area: agent_connection
   created_on: '2026-06-19'
   last_updated_on: '2026-06-24'
   last_verified_on: '2026-06-24'
@@ -1155,7 +1155,7 @@ documents:
   - MCP process shutdown and reconnection behavior
   depends_on:
   - reference.admin-cli
-  - reference.agent-integration
+  - reference.agent-connection
   - reference.api.methods
   - reference.api.schema-core
   - reference.api.schema-value-sets
@@ -1904,14 +1904,14 @@ documents:
   - migration boundaries
   - supported storage profile migration semantics
   - baseline_sqlite_v3 initial migration boundary
-- doc_id: reference.agent-integration
-  path_en: docs/en/reference/agent-integration.md
-  path_ko: docs/ko/reference/agent-integration.md
+- doc_id: reference.agent-connection
+  path_en: docs/en/reference/agent-connection.md
+  path_ko: docs/ko/reference/agent-connection.md
   kind: reference
   summary: Reference contract for Agent Connection and context boundaries.
   normative_level: contract
   translation_policy: semantic_parity
-  owner_area: agent_integration
+  owner_area: agent_connection
   created_on: '2026-05-23'
   last_updated_on: '2026-06-26'
   last_verified_on: '2026-06-26'

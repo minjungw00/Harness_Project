@@ -18,7 +18,7 @@ This document does not own:
 - source-of-truth Core state, user-owned judgment, evidence, acceptance decisions, residual-risk decisions, or close-readiness state; see [Core Model](core-model.md)
 - storage records, artifact records, or storage effects; see storage owners through [Reference Index](README.md)
 - public API schemas or method behavior; see API owners through [Reference Index](README.md)
-- Agent Connection registration, current connection context, or connection capability declarations; see [Agent Integration](agent-integration.md)
+- Agent Connection registration, current connection context, or connection capability declarations; see [Agent Connection](agent-connection.md)
 
 ## Authority boundary
 
@@ -67,4 +67,4 @@ Rendered labels may refer to semantic owners to help readers understand owner re
 - [Template Bodies](template-bodies.md) owns current rendered body guidance, display phrasing, and user-facing labels.
 - [Core Model](core-model.md) owns Core authority, user-owned judgment, close readiness, final acceptance, and residual-risk boundaries.
 - [Reference Index](README.md) routes API, storage, artifact, and security owner questions.
-- [Agent Integration](agent-integration.md) owns Agent Connection registration, current connection context, and connection capability declarations.
+- [Agent Connection](agent-connection.md) owns Agent Connection registration, current connection context, and connection capability declarations.

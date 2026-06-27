@@ -47,13 +47,13 @@
 | close readiness | 닫기 준비 상태 | 현재 상태에서 `Task`를 닫을 준비가 되었는지를 나타내는 Core 개념입니다. | [Core 모델](core-model.md) |
 | close-readiness blocker | 닫기 차단 사유 | 닫기 준비 상태가 진행되지 못할 때 드러나는 닫기 관련 사유입니다. | [API 차단 사유 처리 경로](api/blocker-routing.md) |
 | `Projection` | 상태 보기 | 읽기 전용 상태 보기를 뜻하는 정확한 제품 라벨입니다. 상태 보기 출력은 표시이지 `Core` 권한이 아닙니다. | [상태 보기 권한 참조](projection-and-templates.md) |
-| `Agent Connection` | 에이전트 연결 | `connection_id`로 식별되는 로컬 MCP 호스트 연결 단위입니다. | [런타임 경계](runtime-boundaries.md) |
-| `connection.mode` | 연결 모드 | `read_only` 또는 `workflow`인 Agent Connection 모드입니다. | [런타임 경계](runtime-boundaries.md) |
-| `Connection Projects` | 연결 프로젝트 | Agent Connection에 명시적으로 허용된 `project_id` 목록입니다. | [런타임 경계](runtime-boundaries.md) |
+| `Agent Connection` | 에이전트 연결 | `connection_id`로 식별되는 로컬 MCP 호스트 연결 단위입니다. | [Agent Connection 참조](agent-connection.md) |
+| `connection.mode` | 연결 모드 | `read_only` 또는 `workflow`인 Agent Connection 모드입니다. | [Agent Connection 참조](agent-connection.md) |
+| `Connection Projects` | 연결 프로젝트 | Agent Connection에 명시적으로 허용된 `project_id` 목록입니다. | [Agent Connection 참조](agent-connection.md) |
 | `User Channel` | 사용자 채널 | 권한을 지니는 사용자 판단을 기록하는 로컬 사용자 경로입니다. | [Core 모델](core-model.md) |
 | `actor_source` | 행위자 출처 | `agent_connection:<connection_id>`, `local_user`, `system` 같은 지속 출처입니다. 등록된 연결이나 사용자 신원 증명이 아닙니다. | [Core 모델](core-model.md) |
 | `operation_category` | 작업 범주 | `read`, `agent_workflow`, `user_only`, `admin_local` 중 하나인 내부 API 작업 분류입니다. | [보안](security.md) |
-| `managed host configuration state` | 관리 호스트 설정 상태 | Agent Connection을 위해 관리되는 호스트 설정 인벤토리입니다. 외부 호스트가 서버를 신뢰하거나 로드했다는 증명은 아닙니다. | [관리 CLI](admin-cli.md) |
+| `managed host configuration state` | 관리 호스트 설정 상태 | Agent Connection을 위해 관리되는 호스트 설정 인벤토리입니다. 외부 호스트가 서버를 신뢰하거나 로드했다는 증명은 아닙니다. | [Agent Connection 참조](agent-connection.md) |
 | `volicord.list_projects` | `volicord.list_projects` | 묶인 Agent Connection에 허용된 프로젝트를 나열하는 MCP 어댑터 유틸리티입니다. 공개 Core API 메서드가 아닙니다. | [MCP 전송](mcp-transport.md) |
 | baseline guarantee | 기준 범위 보장 | 기준 범위에서 지원되는 보장을 말할 때 쓰는 보안 표현입니다. | [보안](security.md) |
 | `ErrorCode` | 공개 오류 코드 | 공개 API 오류 코드 식별자입니다. | [API 오류 코드](api/error-codes.md) |

@@ -142,9 +142,9 @@ volicord
 | `volicord-mcp` | AI 호스트가 시작하는 로컬 MCP stdio 실행 파일입니다. | [MCP 전송](docs/ko/reference/mcp-transport.md) |
 | `Volicord Runtime Home` | Volicord 기록과 운영 데이터를 위한 로컬 런타임 저장소입니다. | [런타임 경계](docs/ko/reference/runtime-boundaries.md) |
 | `Product Repository` | 사용자의 프로젝트 작업 공간과 제품 파일 경계입니다. | [런타임 경계](docs/ko/reference/runtime-boundaries.md) |
-| 에이전트 호스트 | `volicord-mcp`를 시작할 수 있는 Codex, Claude Code, 또는 사용자 관리 MCP 호스트입니다. | [에이전트 통합](docs/ko/reference/agent-integration.md) |
-| Agent Connection | `connection_id`로 선택되는 로컬 MCP 호스트 연결 단위입니다. | [에이전트 통합](docs/ko/reference/agent-integration.md) |
-| managed host configuration state | 호스트 설정과 마지막 검증 상태를 위한 Volicord 관리 인벤토리입니다. | [에이전트 통합](docs/ko/reference/agent-integration.md) |
+| 에이전트 호스트 | `volicord-mcp`를 시작할 수 있는 Codex, Claude Code, 또는 사용자 관리 MCP 호스트입니다. | [Agent Connection](docs/ko/reference/agent-connection.md) |
+| Agent Connection | `connection_id`로 선택되는 로컬 MCP 호스트 연결 단위입니다. | [Agent Connection](docs/ko/reference/agent-connection.md) |
+| managed host configuration state | 호스트 설정과 마지막 검증 상태를 위한 Volicord 관리 인벤토리입니다. | [Agent Connection](docs/ko/reference/agent-connection.md) |
 
 <a id="support"></a>
 ## 현재 기능과 경계

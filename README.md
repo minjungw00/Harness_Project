@@ -145,9 +145,9 @@ long-running server and is not a public Volicord API method set.
 | `volicord-mcp` | The local MCP stdio executable started by an AI host. | [MCP Transport](docs/en/reference/mcp-transport.md) |
 | `Volicord Runtime Home` | Local runtime storage for Volicord records and operational data. | [Runtime Boundaries](docs/en/reference/runtime-boundaries.md) |
 | `Product Repository` | Your project workspace and product-file boundary. | [Runtime Boundaries](docs/en/reference/runtime-boundaries.md) |
-| Agent host | Codex, Claude Code, or a user-managed MCP host that can start `volicord-mcp`. | [Agent Integration](docs/en/reference/agent-integration.md) |
-| Agent Connection | The local MCP host connection unit selected by `connection_id`. | [Agent Integration](docs/en/reference/agent-integration.md) |
-| managed host configuration state | Volicord-managed inventory for host configuration and last verification state. | [Agent Integration](docs/en/reference/agent-integration.md) |
+| Agent host | Codex, Claude Code, or a user-managed MCP host that can start `volicord-mcp`. | [Agent Connection](docs/en/reference/agent-connection.md) |
+| Agent Connection | The local MCP host connection unit selected by `connection_id`. | [Agent Connection](docs/en/reference/agent-connection.md) |
+| managed host configuration state | Volicord-managed inventory for host configuration and last verification state. | [Agent Connection](docs/en/reference/agent-connection.md) |
 
 <a id="support"></a>
 ## Current Capabilities And Boundaries

@@ -64,4 +64,4 @@ only the structure visible in the repository.
   [`tests/integration/mcp_connection.rs`](../../../../tests/integration/mcp_connection.rs).
 - [API Methods](../../reference/api/methods.md), [MCP Transport](../../reference/mcp-transport.md),
   [Administrative CLI](../../reference/admin-cli.md), and
-  [Agent Integration](../../reference/agent-integration.md).
+  [Agent Connection](../../reference/agent-connection.md).

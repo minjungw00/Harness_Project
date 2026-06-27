@@ -58,7 +58,7 @@
 | 범위 업데이트 | 지원되는 범위 업데이트 경로로 `Task`와 Change Unit 범위를 갱신할 수 있습니다. | [범위 업데이트 메서드](api/method-update-scope.md), [Core 모델](core-model.md) |
 | 상태와 닫기 준비 상태 확인 | 지원되는 읽기 경로로 상태, 증거 충분성, 알려진 차단 사유, 닫기 준비 상태를 읽을 수 있습니다. | [상태 메서드](api/method-status.md), [Task 닫기 메서드](api/method-close-task.md), [API 상태 스키마](api/schema-state.md), [Core 모델](core-model.md) |
 | Write Check | `volicord.prepare_write`는 호환되는 제품 파일 쓰기 시도 하나를 위해 담당 범위의 Core 상태 호환성을 만들 수 있습니다. | [쓰기 준비 메서드](api/method-prepare-write.md), [저장 효과](storage-effects.md), [보안](security.md) |
-| Agent Connection 맥락 | 등록된 Agent Connection은 범위 확인에 쓸 connection provenance, mode, 명시적으로 연결된 Project를 식별합니다. | [Agent Connection Reference](agent-integration.md), [보안](security.md) |
+| Agent Connection 맥락 | 등록된 Agent Connection은 범위 확인에 쓸 connection provenance, mode, 명시적으로 연결된 Project를 식별합니다. | [Agent Connection Reference](agent-connection.md), [보안](security.md) |
 | 아티팩트 스테이징과 호환되는 아티팩트 연결 | 새 아티팩트 바이트는 지원되는 스테이징 경로로 기준 범위에 들어올 수 있고, 호환되는 지속 아티팩트 참조는 아티팩트 담당 문서가 허용할 때 연결할 수 있습니다. | [아티팩트 스테이징 담당 문서](#artifact-staging-owners)를 봅니다. |
 | 실행 및 증거 기록 | 기준 범위 작업에 대해 실행 기록, 간결한 증거 요약, 출처를 가진 주장 단위 증거 관찰을 남길 수 있습니다. | [실행 기록 메서드](api/method-record-run.md), [저장 효과](storage-effects.md), [Core 모델](core-model.md) |
 | 집중된 사용자 소유 판단 기록 | 지원되는 판단 경로로 사용자 소유 판단을 요청하고 기록할 수 있습니다. 이 판단은 Core 소유 상태, 증거, 닫기 준비 상태 규칙을 대체하지 않습니다. | [사용자 소유 판단 담당 문서](#user-judgment-owners)를 봅니다. |

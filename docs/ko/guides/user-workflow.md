@@ -81,7 +81,7 @@ Volicord는 사용자가 평소 말로 일하면서도 판단 경계를 볼 수 
 로컬 파일 접근 부여를 요구하지 않습니다. 정확한 명령 동작은
 [관리 CLI](../reference/admin-cli.md#user-channel-commands)가 담당하고, 권한 의미는
 [Core 모델](../reference/core-model.md)이 담당하며, Agent Connection 경계는
-[에이전트 통합 참조](../reference/agent-integration.md)가 담당합니다.
+[Agent Connection 참조](../reference/agent-connection.md)가 담당합니다.
 
 작업에 대기 중인 판단이 있으면 아래 순서로 진행합니다.
 
@@ -202,7 +202,7 @@ Core 권한은 아닙니다. 상태 보기 경계는
 | Core 권한, 사용자 소유 판단, 닫기 준비 상태 의미 | [Core 모델](../reference/core-model.md) |
 | 보안 표현과 보장 수준 | [보안](../reference/security.md) |
 | API 메서드와 스키마 | [참조 색인](../reference/README.md) |
-| Agent Connection과 User Channel 동작 | [에이전트 통합 참조](../reference/agent-integration.md) |
+| Agent Connection과 User Channel 동작 | [Agent Connection 참조](../reference/agent-connection.md) |
 
 이 가이드를 API 계약처럼 다루거나 자세한 계약 규칙을 사용자 경로에 다시 복사하지 않습니다.
 
@@ -211,6 +211,6 @@ Core 권한은 아닙니다. 상태 보기 경계는
 | 독자 | 경로 |
 |---|---|
 | 작업 중인 사용자 | [판단 예시](judgment-examples.md) -> [기준 범위](../reference/scope.md) |
-| 에이전트 작성자·운영자 | [에이전트 가이드](agent-workflow.md) -> [에이전트 통합 참조](../reference/agent-integration.md) |
+| 에이전트 작성자·운영자 | [에이전트 가이드](agent-workflow.md) -> [Agent Connection 참조](../reference/agent-connection.md) |
 | 구현 담당자 | [참조 색인](../reference/README.md) -> 기준 범위 -> API 메서드 -> 스키마 담당 문서 -> 저장 효과 |
 | 문서 유지보수자 | [문서 정책](../maintain/documentation-policy.md) -> [번역 정책](../maintain/translation-policy.md) -> [검증](../maintain/validation.md) |

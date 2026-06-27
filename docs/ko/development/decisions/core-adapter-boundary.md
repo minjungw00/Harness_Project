@@ -62,4 +62,4 @@ Core 쪽 동작은 `volicord-core`에 있고 공유 타입과 Store에 의존하
   `connection_invocation_is_injected_and_single_project_is_auto_selected`,
   `read_only_mode_rejects_agent_workflow_methods_before_core`.
 - [API 메서드](../../reference/api/methods.md), [MCP 전송](../../reference/mcp-transport.md),
-  [관리 CLI](../../reference/admin-cli.md), [에이전트 통합](../../reference/agent-integration.md).
+  [관리 CLI](../../reference/admin-cli.md), [Agent Connection](../../reference/agent-connection.md).

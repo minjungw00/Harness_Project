@@ -18,7 +18,7 @@
 - 원천 Core 상태, 사용자 소유 판단, 증거, 수락 판단, 잔여 위험 판단, 닫기 준비 상태: [Core 모델](core-model.md)
 - 저장소 기록, 아티팩트 기록, 저장 효과: [참조 색인](README.md)에서 고르는 저장소 담당 문서
 - 공개 API 스키마나 메서드 동작: [참조 색인](README.md)에서 고르는 API 담당 문서
-- Agent Connection 등록, 현재 적용 연결 맥락, connection capability 선언: [에이전트 통합](agent-integration.md)
+- Agent Connection 등록, 현재 적용 연결 맥락, connection capability 선언: [Agent Connection](agent-connection.md)
 
 ## 권한 경계
 
@@ -67,4 +67,4 @@
 - [템플릿 본문](template-bodies.md)은 현재 렌더링 본문 지침, 표시 문구, 사용자 표시 라벨을 담당합니다.
 - [Core 모델](core-model.md)은 Core 권한, 사용자 소유 판단, 닫기 준비 상태, 최종 수락, 잔여 위험 경계를 담당합니다.
 - [참조 색인](README.md)은 API, 저장소, 아티팩트, 보안 담당 문서 질문을 안내합니다.
-- [에이전트 통합](agent-integration.md)은 Agent Connection 등록, 현재 적용 연결 맥락, connection capability 선언을 담당합니다.
+- [Agent Connection](agent-connection.md)은 Agent Connection 등록, 현재 적용 연결 맥락, connection capability 선언을 담당합니다.

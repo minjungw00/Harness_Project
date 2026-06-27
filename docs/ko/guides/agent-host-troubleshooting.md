@@ -4,7 +4,7 @@ Codex, Claude Code, 일반 MCP 호스트 connection이 `volicord agent connect`,
 
 일반 setup 경로는 [에이전트 호스트 Setup](agent-host-setup.md)을 사용합니다. 하나의 사용자 범위 connection이 여러 저장소를 섬기는 경우 [여러 저장소 Agent Setup](multi-repository-agent-setup.md)을 사용합니다.
 
-이 가이드는 관찰된 상태를 식별하고, 가능한 경우 추가 변경 없이 원인을 확인하고, 제한된 복구 동작을 수행한 뒤 결과를 검증하도록 돕습니다. 정확한 동작은 [관리 CLI](../reference/admin-cli.md), [MCP 전송](../reference/mcp-transport.md), [런타임 경계](../reference/runtime-boundaries.md), [Agent Connection Reference](../reference/agent-integration.md), [저장소](../reference/storage.md)가 안내하는 저장소 담당 문서에 남습니다.
+이 가이드는 관찰된 상태를 식별하고, 가능한 경우 추가 변경 없이 원인을 확인하고, 제한된 복구 동작을 수행한 뒤 결과를 검증하도록 돕습니다. 정확한 동작은 [관리 CLI](../reference/admin-cli.md), [MCP 전송](../reference/mcp-transport.md), [런타임 경계](../reference/runtime-boundaries.md), [Agent Connection Reference](../reference/agent-connection.md), [저장소](../reference/storage.md)가 안내하는 저장소 담당 문서에 남습니다.
 
 ## 변경 전에
 

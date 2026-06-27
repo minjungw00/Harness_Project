@@ -22,7 +22,7 @@
 
 - 공개 Volicord 메서드 목록이나 메서드 담당 표: [API 메서드](api/methods.md)
 - 공개 Volicord 요청/응답 스키마: [API 코어 스키마](api/schema-core.md)
-- Agent Connection, Connection Projects, 프로젝트 선택 의미, 현재 연결 맥락, 행위자 출처: [에이전트 통합](agent-integration.md)
+- Agent Connection, Connection Projects, 프로젝트 선택 의미, 현재 연결 맥락, 행위자 출처: [Agent Connection](agent-connection.md)
 - 관리 Runtime Home, Agent Connection 설정, 프로젝트 멤버십, 검증 명령: [관리 CLI](admin-cli.md)
 - 저장소 배치, 마이그레이션, 저장 효과: [저장소](storage.md)가 안내하는 저장소 담당 문서
 
@@ -87,7 +87,7 @@ stdio 프로세스와 `--check`는 시작 검증에 들어가기 전에 `VOLICOR
 - 연결 프로젝트 행을 읽을 수 있습니다.
 - 시작에 필요한 레지스트리 JSON과 메타데이터가 유효합니다.
 
-시작 검증은 모든 호출에 쓸 프로젝트 하나를 선택하지 않습니다. 프로젝트 가용성, 프로젝트 상태, 경로 분리, 모드 호환성은 [에이전트 통합](agent-integration.md#current-connection-context)이 정의한 대로 호출마다 검증합니다.
+시작 검증은 모든 호출에 쓸 프로젝트 하나를 선택하지 않습니다. 프로젝트 가용성, 프로젝트 상태, 경로 분리, 모드 호환성은 [Agent Connection](agent-connection.md#current-connection-context)이 정의한 대로 호출마다 검증합니다.
 
 Agent Connection은 연결 프로젝트가 하나도 없는 상태가 된 뒤에도 저장된 채 남을 수 있습니다. 이 지속 상태는 시작 가능성을 뜻하지 않습니다. 연결 프로젝트가 없으면 새 stdio 프로세스와 `volicord-mcp --check --connection <connection_id>`는 시작 검증에 실패합니다.
 
@@ -247,7 +247,7 @@ notification 분류는 MCP 메서드 파라미터 검증보다 먼저 JSON-RPC e
 
 `volicord.list_projects`에 대해 어댑터는 묶인 Agent Connection만을 위한 읽기 전용 프로젝트 목록을 반환합니다. 이 도구는 Core에 들어가거나, 저장 효과를 만들거나, 프로젝트 멤버십을 바꾸거나, 연결 허용 목록 밖의 프로젝트를 노출하면 안 됩니다. 연결 프로젝트의 현재 등록이 유효하지 않으면 어댑터는 그 프로젝트를 정상 available 또는 unavailable 항목으로 반환하지 않고 유틸리티 호출을 실패시킵니다.
 
-공개 Volicord 도구 호출에 대해 어댑터는 먼저 [에이전트 통합](agent-integration.md#current-connection-context)이 담당하는 결정적 프로젝트 선택과 프로젝트별 검증을 수행합니다. 모호한 프로젝트 선택은 Core 실행 전에 거절하고, 실행 가능한 텍스트는 에이전트에게 `volicord.list_projects`를 호출하라고 안내해야 합니다.
+공개 Volicord 도구 호출에 대해 어댑터는 먼저 [Agent Connection](agent-connection.md#current-connection-context)이 담당하는 결정적 프로젝트 선택과 프로젝트별 검증을 수행합니다. 모호한 프로젝트 선택은 Core 실행 전에 거절하고, 실행 가능한 텍스트는 에이전트에게 `volicord.list_projects`를 호출하라고 안내해야 합니다.
 
 `volicord-mcp`는 MCP 태스크 보강 도구 실행을 광고하거나 구현하지 않습니다. `tools/call` 요청은 `CreateTaskResult`를 반환하지 않으며, `task` 파라미터는 지원되는 기준 기능이 아닙니다.
 

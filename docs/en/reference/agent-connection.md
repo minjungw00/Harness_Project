@@ -1,4 +1,4 @@
-# Agent integration reference
+# Agent Connection Reference
 
 This document owns Agent Connection and current connection context boundaries for local MCP host integrations. It defines how an Agent Connection, its connected projects, connection mode, `actor_source`, and `operation_category` are interpreted before a request enters Core.
 

@@ -687,5 +687,5 @@ Project-state constraints:
 - [Storage Records](storage-records.md) defines persisted record families, placement, relationship layout, storage-owned values, and JSON placement.
 - [Storage Effects](storage-effects.md) defines which method branches create, update, observe, or leave records untouched.
 - [Storage Versioning](storage-versioning.md) defines state versioning, idempotency, replay, events, locks, and migration contracts.
-- [Agent Integration](agent-integration.md) defines Agent Connection, Connection Projects, current connection context, mode gating, and Agent Connection versus User Channel boundaries.
+- [Agent Connection](agent-connection.md) defines Agent Connection, Connection Projects, current connection context, mode gating, and Agent Connection versus User Channel boundaries.
 - [Security](security.md) defines security boundaries and guarantee levels.

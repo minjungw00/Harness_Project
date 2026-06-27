@@ -82,7 +82,7 @@ require user setup, adapter registration, or User Channel setup or Agent Connect
 behavior belongs to [Administrative CLI](../reference/admin-cli.md#user-channel-commands);
 authority meaning belongs to [Core Model](../reference/core-model.md), and
 Agent Connection boundaries belong to
-[Agent Integration Reference](../reference/agent-integration.md).
+[Agent Connection Reference](../reference/agent-connection.md).
 
 Then use this sequence when a task has a pending judgment:
 
@@ -204,7 +204,7 @@ Use guide pages for workflow. Use owner reference docs for exact contracts:
 | Core authority, user-owned judgment, close readiness meaning | [Core Model](../reference/core-model.md) |
 | Security wording and guarantee levels | [Security](../reference/security.md) |
 | API methods and schemas | [Reference Index](../reference/README.md) |
-| Agent Connection and User Channel behavior | [Agent Integration Reference](../reference/agent-integration.md) |
+| Agent Connection and User Channel behavior | [Agent Connection Reference](../reference/agent-connection.md) |
 
 Do not treat this guide as the API contract. Do not copy detailed contract rules back into the user-facing path.
 
@@ -213,6 +213,6 @@ Do not treat this guide as the API contract. Do not copy detailed contract rules
 | Reader | Path |
 |---|---|
 | Working user | [Judgment Examples](judgment-examples.md) -> [Scope](../reference/scope.md) |
-| Agent author or operator | [Agent Guide](agent-workflow.md) -> [Agent Integration Reference](../reference/agent-integration.md) |
+| Agent author or operator | [Agent Guide](agent-workflow.md) -> [Agent Connection Reference](../reference/agent-connection.md) |
 | Implementer | [Reference Index](../reference/README.md) -> baseline scope -> API methods -> schema owners -> storage effects |
 | Documentation maintainer | [Documentation Policy](../maintain/documentation-policy.md) -> [Translation Policy](../maintain/translation-policy.md) -> [Validation](../maintain/validation.md) |

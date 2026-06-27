@@ -13,7 +13,7 @@ This guide is workflow guidance. It is not a connector contract, API schema, tem
 
 Owner links:
 
-- Exact Agent Connection behavior: [Agent Connection Reference](../reference/agent-integration.md)
+- Exact Agent Connection behavior: [Agent Connection Reference](../reference/agent-connection.md)
 - Host setup and multi-repository operation: [Agent Host Setup](agent-host-setup.md) and [Multi-Repository Agent Setup](multi-repository-agent-setup.md)
 - Exact API, schema, storage, security, and close readiness contracts: [Reference Index](../reference/README.md)
 
@@ -308,7 +308,7 @@ When the task is Korean-facing, preserve exact identifiers such as API names, sc
 
 Agent authors and operators should use this path:
 
-[AGENTS.md](../../../AGENTS.md) -> [doc-index.yaml](../../doc-index.yaml) -> this guide -> [Agent Connection Reference](../reference/agent-integration.md)
+[AGENTS.md](../../../AGENTS.md) -> [doc-index.yaml](../../doc-index.yaml) -> this guide -> [Agent Connection Reference](../reference/agent-connection.md)
 
 Then use:
 

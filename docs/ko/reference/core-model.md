@@ -473,5 +473,5 @@ Change Unit 효과 계약은 권한 기록을 대신하지 않습니다.
 | 보안 보장과 접근 경계 표현 | [보안](security.md) |
 | 기준 범위와 지원 범위 밖 기능 경계 | [범위](scope.md) |
 | 런타임과 저장소 분리 | [런타임 경계](runtime-boundaries.md) |
-| Agent Connection, Connection Projects, 런타임 연결 경계 | [런타임 경계](runtime-boundaries.md) |
+| Agent Connection, Connection Projects, 현재 연결 맥락 경계 | [Agent Connection 참조](agent-connection.md) |
 | `operation_category`와 로컬 연결에 대한 보안 비보장 | [보안](security.md) |

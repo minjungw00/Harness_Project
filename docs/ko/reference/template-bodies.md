@@ -35,7 +35,7 @@
 - 차단 사유 처리 경로: [API 차단 사유 처리 경로](api/blocker-routing.md)
 - `ToolError.details`: [API 오류 세부사항](api/error-details.md)
 - 저장소 기록 구조, 지속성, 아티팩트 생명주기, 저장 효과: [참조 색인](README.md)에서 고르는 저장소 담당 문서
-- 지원 경계, 보안 보장, 연결 맥락: [범위 참조](scope.md), [보안](security.md), [에이전트 통합](agent-integration.md)
+- 지원 경계, 보안 보장, 연결 맥락: [범위 참조](scope.md), [보안](security.md), [Agent Connection](agent-connection.md)
 
 ## 권한 경계
 
@@ -539,7 +539,7 @@
 
 ### 담당 문서 링크
 
-- [에이전트 통합](agent-integration.md): 현재 적용 연결 맥락과 역량 선언.
+- [Agent Connection](agent-connection.md): 현재 적용 연결 맥락과 역량 선언.
 - [상태 보기와 템플릿 표시 경계](projection-and-templates.md): 읽기 전용 표시와 최신성 경계.
 - [Core 모델](core-model.md): 권한, 사용자 소유 판단, 닫기 준비 상태, 잔여 위험 경계.
 - [API 상태 스키마](api/schema-state.md), [API 판단 스키마](api/schema-judgment.md), [API 아티팩트 스키마](api/schema-artifacts.md): 패킷 입력 형태.

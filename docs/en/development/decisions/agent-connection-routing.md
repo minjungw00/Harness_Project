@@ -45,7 +45,7 @@ Tests for this design should cover startup validation, project selection, member
 
 Reference owners:
 
-- [Agent Connection Reference](../../reference/agent-integration.md)
+- [Agent Connection Reference](../../reference/agent-connection.md)
 - [MCP Transport](../../reference/mcp-transport.md)
 - [Administrative CLI](../../reference/admin-cli.md)
 - [Runtime Boundaries](../../reference/runtime-boundaries.md)

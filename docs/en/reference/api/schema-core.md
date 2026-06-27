@@ -88,7 +88,7 @@ Meaning:
 - `expected_state_version` is nullable; method and storage owners define when a non-null value is required.
 - `project_id`, `task_id`, `request_id`, and `idempotency_key` are opaque identifiers when non-null.
 - `locale` is a nullable locale tag string, not a Volicord-controlled value set.
-- Actor provenance and operation category are derived by adapter/Core logic described by [Agent Integration](../agent-integration.md), not by public request fields.
+- Actor provenance and operation category are derived by adapter/Core logic described by [Agent Connection](../agent-connection.md), not by public request fields.
 
 Does not imply:
 - This field list does not define conflict behavior, storage versioning, or method-specific selector precedence.

@@ -67,11 +67,11 @@ volicord.close_task
 
 | 값 | 사용하는 곳 | 담당 문서 경로 |
 |---|---|---|
-| `local_user` | User Channel 호출 출처와 권한을 지니는 사용자 판단 해결. | 호출 의미: [에이전트 통합](../agent-integration.md). 해결 형태 담당 문서: [API 판단 스키마](schema-judgment.md). |
-| `agent_connection:<connection_id>` | Agent Connection 호출 출처와 에이전트가 만들거나 관찰한 상태. | 호출 의미: [에이전트 통합](../agent-integration.md). 중첩 형태 담당 문서가 값이 나타나는 위치를 정의합니다. |
+| `local_user` | User Channel 호출 출처와 권한을 지니는 사용자 판단 해결. | 호출 의미: [Agent Connection](../agent-connection.md). 해결 형태 담당 문서: [API 판단 스키마](schema-judgment.md). |
+| `agent_connection:<connection_id>` | Agent Connection 호출 출처와 에이전트가 만들거나 관찰한 상태. | 호출 의미: [Agent Connection](../agent-connection.md). 중첩 형태 담당 문서가 값이 나타나는 위치를 정의합니다. |
 | `system` | 담당 문서가 명시적으로 허용하는 내부 시스템 출처. | 메서드와 저장소 담당 문서가 값이 나타나는 위치를 정의합니다. |
 
-이 값들은 파생된 호출 출처 또는 지속 행위자 출처를 분류합니다. 이 값만으로 사용자 소유 판단, 승인, 범위 결정 권한, 최종 수락, 잔여 위험 수락, `Write Check`이 생기지는 않습니다. 권한을 지니는 사용자 판단 해결은 [에이전트 통합](../agent-integration.md)과 메서드 담당 문서가 정의하는 호환 User Channel 출처와 함께 `resolved_by_actor_source=local_user`를 요구합니다.
+이 값들은 파생된 호출 출처 또는 지속 행위자 출처를 분류합니다. 이 값만으로 사용자 소유 판단, 승인, 범위 결정 권한, 최종 수락, 잔여 위험 수락, `Write Check`이 생기지는 않습니다. 권한을 지니는 사용자 판단 해결은 [Agent Connection](../agent-connection.md)과 메서드 담당 문서가 정의하는 호환 User Channel 출처와 함께 `resolved_by_actor_source=local_user`를 요구합니다.
 
 <a id="next-action-values"></a>
 ## 다음 행동 값
@@ -136,7 +136,7 @@ no_effect
 | `user_only` | 권한을 지니는 사용자 동작을 위한 User Channel operation category입니다. Agent Connection은 이 category를 실행하지 않습니다. |
 | `admin_local` | 로컬 관리 operation category입니다. Agent Connection은 이 category를 실행하지 않습니다. |
 
-Operation category는 Volicord API 호환성 분류이지 OS 권한, 파일시스템 ACL, 샌드박스 규칙, 네트워크 정책, 비밀 격리가 아닙니다. 메서드별 동작 요구사항은 [API 메서드](methods.md)가 안내하는 메서드 담당 문서가 담당하고, Agent Connection 호출 검증 동작은 [에이전트 통합](../agent-integration.md)과 [보안](../security.md)이 담당합니다.
+Operation category는 Volicord API 호환성 분류이지 OS 권한, 파일시스템 ACL, 샌드박스 규칙, 네트워크 정책, 비밀 격리가 아닙니다. 메서드별 동작 요구사항은 [API 메서드](methods.md)가 안내하는 메서드 담당 문서가 담당하고, Agent Connection 호출 검증 동작은 [Agent Connection](../agent-connection.md)과 [보안](../security.md)이 담당합니다.
 
 <a id="record-and-reference-values"></a>
 ## 기록과 참조 값

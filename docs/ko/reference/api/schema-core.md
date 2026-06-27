@@ -88,7 +88,7 @@ ToolEnvelope:
 - `expected_state_version`은 null 허용입니다. 메서드와 저장소 담당 문서가 null이 아닌 값이 필요한 때를 정의합니다.
 - `project_id`, `task_id`, `request_id`, `idempotency_key`는 null이 아닐 때 불투명 식별자입니다.
 - `locale`은 null 허용 로캘 태그 문자열이며 Volicord가 제어하는 값 집합이 아닙니다.
-- 행위자 출처와 동작 범주는 공개 요청 필드가 아니라 [에이전트 통합](../agent-integration.md)이 설명하는 어댑터/Core 로직에서 파생됩니다.
+- 행위자 출처와 동작 범주는 공개 요청 필드가 아니라 [Agent Connection](../agent-connection.md)이 설명하는 어댑터/Core 로직에서 파생됩니다.
 
 의미하지 않는 것:
 - 이 필드 목록은 충돌 동작, 저장소 버전 관리, 메서드별 선택자 우선순위를 정의하지 않습니다.
