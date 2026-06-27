@@ -63,14 +63,14 @@ decisions.
 ## Judgment And Authority Boundaries
 
 - Keep user-owned judgment, evidence, verification criteria, ordinary approval,
-  write approval, sensitive-action approval, `Write Authorization`, final
+  write approval, sensitive-action approval, `Write Check`, final
   acceptance, close readiness, and residual-risk acceptance distinct in code,
   tests, fixtures, and API examples.
-- Keep `agent` role surfaces and `user_interaction` surfaces distinct when
-  implementation examples, tests, fixtures, or CLI behavior touch
-  authority-bearing user judgments. Do not make an agent-role path record or
-  impersonate a user judgment; route exact behavior to the Core Model,
-  Administrative CLI, Agent Integration, and method owners.
+- Keep Agent Connections and `User Channel` paths distinct when implementation
+  examples, tests, fixtures, or CLI behavior touch authority-bearing user
+  judgments. Do not use an Agent Connection to record or impersonate a user
+  judgment; route exact behavior to the Core Model, Administrative CLI, Agent
+  Integration, and method owners.
 - Do not collapse evidence collection, verification criteria, QA, acceptance,
   waivers, close readiness, or residual-risk decisions into one broad approval
   path.

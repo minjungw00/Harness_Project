@@ -90,7 +90,7 @@ Apply the terminology map's distinctions, including:
   "현재 적용 범위" in Korean. Preserve exact identifiers and status values that
   contain `active`.
 - Keep the exact label `Write Check` distinct from ordinary write
-  approval. In Korean explanatory prose, use "쓰기 권한 부여" for
+  approval. In Korean explanatory prose, use "쓰기 확인" for
   `Write Check` and "쓰기 승인" for ordinary write approval.
 - In Korean reference prose, use "닫기 준비 상태" for close readiness.
 

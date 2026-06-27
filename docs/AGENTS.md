@@ -80,10 +80,10 @@ substantial durable reader-facing content within that scope.
   material for a reader, but they must link precisely to the applicable
   Reference owner when exact behavior matters.
 - When reader-facing documentation mentions user-owned decisions, preserve the
-  boundary that authority-bearing user judgments route through supported
-  `user_interaction` paths while `agent` role integrations remain agent
-  surfaces. Link exact Core authority, administrative CLI, and agent-integration
-  behavior to their focused Reference owners instead of redefining it here.
+  boundary that authority-bearing user judgments route through the supported
+  `User Channel` while Agent Connections remain agent-side connection paths.
+  Link exact Core authority, administrative CLI, and agent-integration behavior
+  to their focused Reference owners instead of redefining it here.
 - Do not turn a guide, tutorial, how-to, explanation, index, README, Maintain
   page, or `AGENTS.md` into a second contract body for API behavior, storage
   effects, schemas, security guarantees, Core authority semantics, or detailed

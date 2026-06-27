@@ -107,7 +107,7 @@ Noninteractive project-scoped host configuration or guidance writes require the 
 
 ## Host Configuration Requirements
 
-For direct host installation, the administrative process must be able to inspect the target host configuration and write managed configuration when the selected host and scope require it.
+For direct host configuration setup, the administrative process must be able to inspect the target host configuration and write managed configuration when the selected host and scope require it.
 
 Baseline host and scope requirements:
 
@@ -119,7 +119,7 @@ Baseline host and scope requirements:
 | Claude Code | `project` | The `Product Repository` must be writable when applying `.mcp.json`; the future Claude Code host must find `volicord-mcp` on `PATH`; project MCP approval may still be required. |
 | Generic | `export` | A writable export target is needed only when writing an export file. The external host remains user-managed and unverified until loaded and checked by a host-specific mechanism. |
 
-Installing host configuration does not prove that the host trusted, approved, loaded, initialized, or exposed `volicord-mcp`. managed host configuration state meaning and host trust boundaries are owned by [Agent Integration](agent-integration.md).
+Writing host configuration does not prove that the host trusted, approved, loaded, initialized, or exposed `volicord-mcp`. `managed host configuration state` meaning and host trust boundaries are owned by [Agent Integration](agent-integration.md).
 
 ## MCP Host Environment Requirements
 
