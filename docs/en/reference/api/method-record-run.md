@@ -130,20 +130,20 @@ The Run, current close basis, evidence updates, evidence observations, artifact 
 
 Product-write recording consumes the `Write Check` only when:
 
-- the authorization has `status=active` and has not already been consumed or revoked
+- the `Write Check` has `status=active` and has not already been consumed or revoked
 - the current `project_state.state_version` equals `WriteCheck.basis_state_version` immediately before consumption
-- the authorization is not expired under the effective expiration rule: the earlier of stored `expires_at` and `created_at + 15 minutes`
-- the authorization and its `WriteCheckAttemptScope` identify the same `task_id` and `change_unit_id` as the Run being recorded
-- the authorized attempt has `product_file_write_intended=true`
-- the authorized attempt `baseline_ref` matches the Run `baseline_ref`
-- observed sensitive categories match the authorized attempt's normalized `sensitive_categories`
-- observed changed paths, after Product Repository path normalization, are compatible with the authorized attempt
+- the `Write Check` is not expired under the effective expiration rule: the earlier of stored `expires_at` and `created_at + 15 minutes`
+- the `Write Check` and its `WriteCheckAttemptScope` identify the same `task_id` and `change_unit_id` as the Run being recorded
+- the checked attempt has `product_file_write_intended=true`
+- the checked attempt `baseline_ref` matches the Run `baseline_ref`
+- observed sensitive categories match the checked attempt's normalized `sensitive_categories`
+- observed changed paths, after Product Repository path normalization, are compatible with the checked attempt
 
-An authorization created by `volicord.prepare_write` is not stale immediately after creation when no intervening project state change has occurred. If `volicord.prepare_write` commits from version `19` to version `20`, `volicord.record_run` may consume that authorization while the current `project_state.state_version` and `WriteCheck.basis_state_version` are both `20`.
+A `Write Check` created by `volicord.prepare_write` is not stale immediately after creation when no intervening project state change has occurred. If `volicord.prepare_write` commits from version `19` to version `20`, `volicord.record_run` may consume that `Write Check` while the current `project_state.state_version` and `WriteCheck.basis_state_version` are both `20`.
 
-The method rejects stale `expected_state_version` and stale Write Check basis before consuming the `Write Check`. A stale `WriteCheck.basis_state_version` retains higher-priority `STATE_VERSION_CONFLICT` routing even if the same Write Check is also expired.
+The method rejects stale `expected_state_version` and stale `Write Check` basis before consuming the `Write Check`. A stale `WriteCheck.basis_state_version` retains higher-priority `STATE_VERSION_CONFLICT` routing even if the same `Write Check` is also expired.
 
-Expiration is calculated using parsed UTC timestamps, not lexical string comparison. An expired Write Check is never consumed. Expired Write Check use returns `WRITE_CHECK_INVALID` with `ToolError.details.write_check_reason=expired`.
+Expiration is calculated using parsed UTC timestamps, not lexical string comparison. An expired `Write Check` is never consumed. Expired `Write Check` use returns `WRITE_CHECK_INVALID` with `ToolError.details.write_check_reason=expired`.
 
 Compatibility mismatch rejections use `WRITE_CHECK_INVALID` with `ToolError.details.write_check_reason` values such as `task_mismatch`, `change_unit_mismatch`, `product_write_flag_mismatch`, `baseline_mismatch`, `sensitive_category_mismatch`, or `path_mismatch`.
 
@@ -224,7 +224,7 @@ For `dry_run=true`, a valid preview:
 
 ## Storage effect
 
-On commit, the method may persist run, current close-basis, evidence summary, evidence observation, blocker, authorization-consumption, and artifact-linking results. Exact storage effects and artifact promotion details are owned by the storage documents linked below.
+On commit, the method may persist run, current close-basis, evidence summary, evidence observation, blocker, `Write Check` consumption, and artifact-linking results. Exact storage effects and artifact promotion details are owned by the storage documents linked below.
 
 The examples are intentionally compact and method-local. The representative response is abbreviated to the fields needed to show the committed run, promoted artifact ref, updated evidence summary, evidence observation, blocker refs, state version, and current state snapshot.
 

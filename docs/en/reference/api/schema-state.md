@@ -279,7 +279,7 @@ Meaning:
 - A `next_actions` entry that uses stale `action` or `reason` fields is not a valid `NextActionSummary`.
 - `WriteCheckStateSummary.status` and `WriteCheckSummary.status` are controlled value strings.
 - `WriteCheckStateSummary.consumed_by_run_ref` is non-null only when the summarized `Write Check` has been consumed by a recorded Run.
-- `WriteCheckStateSummary.observation_refs` lists evidence observation refs created by that consuming Run when those refs are available; it is empty when the authorization is not consumed or the consuming Run created no observations.
+- `WriteCheckStateSummary.observation_refs` lists evidence observation refs created by that consuming Run when those refs are available; it is empty when the `Write Check` is not consumed or the consuming Run created no observations.
 - `WriteCheckAttemptScope` is the one-attempt boundary captured by a `Write Check`.
 - `WriteCheckAttemptScope` is not ordinary write approval, sensitive-action approval, final acceptance, residual-risk acceptance, or broad user approval.
 - `WriteDecisionReason` is used by `PrepareWriteResult.write_decision_reasons`.

@@ -126,7 +126,7 @@ Detail fields:
 ### Expired `Write Check`
 
 Condition:
-- Before consumption, the authorization is expired under the effective expiration rule owned by [`volicord.record_run`](method-record-run.md) and [`volicord.prepare_write`](method-prepare-write.md), and `WriteCheck.basis_state_version` is not stale.
+- Before consumption, the `Write Check` is expired under the effective expiration rule owned by [`volicord.record_run`](method-record-run.md) and [`volicord.prepare_write`](method-prepare-write.md), and `WriteCheck.basis_state_version` is not stale.
 
 Public code:
 - `WRITE_CHECK_INVALID`

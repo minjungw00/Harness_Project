@@ -130,20 +130,20 @@ ResidualRiskInput:
 
 제품 쓰기 기록이 `Write Check`을 소비하려면 아래 조건을 모두 만족해야 합니다.
 
-- 권한이 `status=active`이고 이미 소비되거나 철회되지 않았습니다.
+- `Write Check`이 `status=active`이고 이미 소비되거나 철회되지 않았습니다.
 - 소비 직전 현재 `project_state.state_version`이 `WriteCheck.basis_state_version`과 같습니다.
-- 권한이 유효 만료 규칙, 즉 저장된 `expires_at`과 `created_at + 15 minutes` 중 더 이른 시점에 따라 만료되지 않았습니다.
-- 권한과 그 `WriteCheckAttemptScope`가 기록하려는 Run과 같은 `task_id`와 `change_unit_id`를 식별합니다.
-- 권한 부여된 시도에 `product_file_write_intended=true`가 있습니다.
-- 권한 부여된 시도의 `baseline_ref`가 Run의 `baseline_ref`와 일치합니다.
-- 관찰된 민감 범주가 권한 부여된 시도의 정규화된 `sensitive_categories`와 일치합니다.
-- `Product Repository` 경로 정규화 뒤의 관찰된 변경 경로가 권한 부여된 시도와 호환됩니다.
+- `Write Check`이 유효 만료 규칙, 즉 저장된 `expires_at`과 `created_at + 15 minutes` 중 더 이른 시점에 따라 만료되지 않았습니다.
+- `Write Check`과 그 `WriteCheckAttemptScope`가 기록하려는 Run과 같은 `task_id`와 `change_unit_id`를 식별합니다.
+- `WriteCheckAttemptScope`가 포착한 시도에 `product_file_write_intended=true`가 있습니다.
+- `WriteCheckAttemptScope`가 포착한 시도의 `baseline_ref`가 Run의 `baseline_ref`와 일치합니다.
+- 관찰된 민감 범주가 포착한 시도의 정규화된 `sensitive_categories`와 일치합니다.
+- `Product Repository` 경로 정규화 뒤의 관찰된 변경 경로가 포착한 시도와 호환됩니다.
 
-`volicord.prepare_write`가 만든 `Write Check`은 사이에 다른 프로젝트 상태 변경이 없으면 생성 직후 오래되지 않습니다. 예를 들어 `volicord.prepare_write`가 버전 `19`에서 버전 `20`으로 커밋하면 현재 `project_state.state_version`과 `WriteCheck.basis_state_version`이 모두 `20`인 동안 `volicord.record_run`이 그 Write Check를 소비할 수 있습니다.
+`volicord.prepare_write`가 만든 `Write Check`은 사이에 다른 프로젝트 상태 변경이 없으면 생성 직후 오래되지 않습니다. 예를 들어 `volicord.prepare_write`가 버전 `19`에서 버전 `20`으로 커밋하면 현재 `project_state.state_version`과 `WriteCheck.basis_state_version`이 모두 `20`인 동안 `volicord.record_run`이 그 `Write Check`를 소비할 수 있습니다.
 
-오래된 `expected_state_version`과 오래된 `Write Check` 근거는 `Write Check`을 소비하기 전에 거절됩니다. 오래된 `WriteCheck.basis_state_version`은 같은 권한이 함께 만료되었더라도 더 높은 우선순위의 `STATE_VERSION_CONFLICT` 경로를 유지합니다.
+오래된 `expected_state_version`과 오래된 `Write Check` 근거는 `Write Check`을 소비하기 전에 거절됩니다. 오래된 `WriteCheck.basis_state_version`은 같은 `Write Check`이 함께 만료되었더라도 더 높은 우선순위의 `STATE_VERSION_CONFLICT` 경로를 유지합니다.
 
-만료는 문자열 사전식 비교가 아니라 파싱한 UTC 타임스탬프로 계산합니다. 만료된 Write Check는 절대 소비되지 않습니다. 만료된 Write Check 사용은 `ToolError.details.write_check_reason=expired`와 함께 `WRITE_CHECK_INVALID`를 반환합니다.
+만료는 문자열 사전식 비교가 아니라 파싱한 UTC 타임스탬프로 계산합니다. 만료된 `Write Check`는 절대 소비되지 않습니다. 만료된 `Write Check` 사용은 `ToolError.details.write_check_reason=expired`와 함께 `WRITE_CHECK_INVALID`를 반환합니다.
 
 호환성 불일치 거절은 `WRITE_CHECK_INVALID`를 사용하고 `ToolError.details.write_check_reason`에 `task_mismatch`, `change_unit_mismatch`, `product_write_flag_mismatch`, `baseline_mismatch`, `sensitive_category_mismatch`, `path_mismatch` 같은 값을 담습니다.
 

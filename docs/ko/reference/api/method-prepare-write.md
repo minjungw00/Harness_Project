@@ -90,9 +90,9 @@ PrepareWriteRequest:
 
 ## `Write Check` 수명과 ID 할당
 
-새로 만들어지는 `Write Check` 기록의 기본 수명은 15분입니다. `expires_at`은 표시 전용 메타데이터가 아니라 집행되는 권한 조건입니다. 유효 만료 시점은 저장된 `expires_at`과 `created_at + 15 minutes` 중 더 이른 시점입니다. 이 같은 유효 규칙은 먼 미래 만료 시각을 가진 이력 행도 제한합니다. 만료는 문자열 사전식 비교가 아니라 파싱한 UTC 타임스탬프로 계산합니다.
+새로 만들어지는 `Write Check` 기록의 기본 수명은 15분입니다. `expires_at`은 표시 전용 메타데이터가 아니라 집행되는 호환성 조건입니다. 유효 만료 시점은 저장된 `expires_at`과 `created_at + 15 minutes` 중 더 이른 시점입니다. 이 같은 유효 규칙은 먼 미래 만료 시각을 가진 이력 행도 제한합니다. 만료는 문자열 사전식 비교가 아니라 파싱한 UTC 타임스탬프로 계산합니다.
 
-새로 허용된 커밋 Write Check는 허용된 상태 변경이 커밋될 때만 지속 `write_check_id`를 받습니다. 차단, 승인 필요, 판단 필요, 거절, `dry_run` 경로는 지속 `Write Check` ID를 할당하지 않습니다.
+새로 허용되어 커밋된 `Write Check`는 허용된 상태 변경이 커밋될 때만 지속 `write_check_id`를 받습니다. 차단, 승인 필요, 판단 필요, 거절, `dry_run` 경로는 지속 `Write Check` ID를 할당하지 않습니다.
 
 ## 메서드 결과 필드
 
@@ -245,7 +245,7 @@ params:
 
 `uj_sensitive_pref_001`은 사용자가 `resolution_outcome=accepted`로 해결했고 프로필 환경설정 갱신에 맞는 `SensitiveActionScope`를 가진 현재 `judgment_kind=sensitive_approval`을 나타냅니다. 이는 일반 쓰기 승인, 최종 수락, 잔여 위험 수락, `Write Check`이 아닙니다.
 
-이 예시에서 요청은 `expected_state_version: 19`를 담습니다. 허용 커밋은 프로젝트 전체 상태를 `state_version: 20`으로 올리고, 권한 생성 커밋 뒤 결과 버전인 `basis_state_version: 20`을 가진 활성 `Write Check`을 만듭니다.
+이 예시에서 요청은 `expected_state_version: 19`를 담습니다. 허용 커밋은 프로젝트 전체 상태를 `state_version: 20`으로 올리고, `Write Check` 생성 커밋의 결과 버전인 `basis_state_version: 20`을 가진 활성 `Write Check`을 만듭니다.
 
 ```yaml
 base:

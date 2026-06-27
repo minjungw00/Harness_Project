@@ -82,7 +82,7 @@ UpdateScopeRequest:
 
 커밋된 `dry_run`이 아닌 결과는 `project_state.state_version`을 정확히 한 번 올립니다.
 
-기준이 아래 항목과 더 이상 맞지 않으면 Core는 `status=active`인 Write Check를 `status=stale`로 표시합니다.
+기준이 아래 항목과 더 이상 맞지 않으면 Core는 `status=active`인 `Write Check`을 `status=stale`로 표시합니다.
 
 - 현재 적용 범위
 - 기준선
@@ -92,7 +92,7 @@ UpdateScopeRequest:
 - 현재 적용 Change Unit
 - 프로젝트 상태
 
-비주장: `status=stale` 표시는 소비, 철회, 만료, 조용한 재사용이 아닙니다.
+비주장: `status=stale` 표시는 `Write Check`을 소비, 철회, 만료하거나 조용히 재사용하지 않습니다.
 
 ## 성공 결과
 

@@ -279,7 +279,7 @@ WriteDecisionReason:
 - 오래된 `action` 또는 `reason` 필드를 쓰는 `next_actions` 항목은 유효한 `NextActionSummary`가 아닙니다.
 - `WriteCheckStateSummary.status`와 `WriteCheckSummary.status`는 제어 값 문자열입니다.
 - `WriteCheckStateSummary.consumed_by_run_ref`는 요약된 `Write Check`이 기록된 Run에 의해 소비되었을 때만 `null`이 아닙니다.
-- `WriteCheckStateSummary.observation_refs`는 사용할 수 있을 때 그 소비 Run이 만든 증거 관찰 참조를 나열합니다. 권한이 소비되지 않았거나 소비 Run이 관찰을 만들지 않았다면 비어 있습니다.
+- `WriteCheckStateSummary.observation_refs`는 사용할 수 있을 때 그 소비 Run이 만든 증거 관찰 참조를 나열합니다. `Write Check`이 소비되지 않았거나 소비 Run이 관찰을 만들지 않았다면 비어 있습니다.
 - `WriteCheckAttemptScope`는 `Write Check`이 포착하는 한 번의 시도 경계입니다.
 - `WriteCheckAttemptScope`는 일반 쓰기 승인, 민감 동작 승인, 최종 수락, 잔여 위험 수락, 포괄적 사용자 승인이 아닙니다.
 - `WriteDecisionReason`은 `PrepareWriteResult.write_decision_reasons`에서 사용합니다.

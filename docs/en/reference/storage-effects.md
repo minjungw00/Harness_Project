@@ -349,7 +349,7 @@ No-effect branches:
 - valid dry-run previews
 - rejected attempts
 
-Valid dry-run previews only describe scope, Change Unit, blocker, and stale authorization effects.
+Valid dry-run previews only describe scope, Change Unit, blocker, and stale `Write Check` effects.
 
 Semantically identical normalized updates do not increment `tasks.scope_revision` or invalidate the current close basis.
 
@@ -508,7 +508,7 @@ Current close-basis persistence boundary:
 - Sensitive action requirements stored in that `CurrentCloseBasis` are derived by Core from the committed Run and any consumed Write Check, preserving operation, normalized paths, sensitive categories, baseline, Change Unit, source Run ref, and source Write Check ref through close.
 - Category-only caller input cannot establish, satisfy, or erase a sensitive action requirement.
 - `close_assessment=null` records that the committed Run does not establish a current close basis; any existing current basis becomes stale or absent.
-- Run, current close basis, evidence summary, evidence observation, artifact, authorization, replay, event, and revision effects commit atomically.
+- Run, current close basis, evidence summary, evidence observation, artifact, `Write Check` consumption, replay, event, and revision effects commit atomically.
 
 Owner links:
 

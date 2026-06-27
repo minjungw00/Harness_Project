@@ -209,13 +209,13 @@ Show the user:
 - scope match or mismatch
 - effect-contract match or mismatch when current state includes one
 - pending user judgments or sensitive approvals
-- stale state or unavailable authority
+- stale state or unavailable compatibility context
 - what Volicord can verify, or the capability limit
 - next action that would unblock the `Write Check`
 
 If scope changes, update the current scope before asking for a new `Write Check`. Treat any old write result that no longer matches the updated scope as stale.
 
-When current state includes a Change Unit effect contract, include whether the intended product-file effect and paths fit it. Treat that as Core authority context for authorization, not sandboxing, security enforcement, user-owned judgment, sensitive-action approval, or evidence that a write occurred.
+When current state includes a Change Unit effect contract, include whether the intended product-file effect and paths fit it. Treat that as Core state-compatibility context for `Write Check` evaluation, not sandboxing, security enforcement, user-owned judgment, sensitive-action approval, or evidence that a write occurred.
 
 <a id="record-evidence"></a>
 ## Record evidence after action

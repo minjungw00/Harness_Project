@@ -125,7 +125,7 @@
 ### 만료된 `Write Check`
 
 조건:
-- 소비 전에 권한이 [`volicord.record_run`](method-record-run.md)과 [`volicord.prepare_write`](method-prepare-write.md)가 담당하는 유효 만료 규칙에 따라 만료되었고, `WriteCheck.basis_state_version`은 오래되지 않았습니다.
+- 소비 전에 `Write Check`이 [`volicord.record_run`](method-record-run.md)과 [`volicord.prepare_write`](method-prepare-write.md)가 담당하는 유효 만료 규칙에 따라 만료되었고, `WriteCheck.basis_state_version`은 오래되지 않았습니다.
 
 공개 오류 코드:
 - `WRITE_CHECK_INVALID`

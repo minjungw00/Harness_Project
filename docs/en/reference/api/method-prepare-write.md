@@ -90,7 +90,7 @@ A separate sensitive-action approval satisfies this method only when the judgmen
 
 ## Write Check lifetime and ID allocation
 
-Newly created `Write Check` records have a default lifetime of 15 minutes. `expires_at` is an enforced authority condition, not display-only metadata. The effective expiration is the earlier of stored `expires_at` and `created_at + 15 minutes`; this same effective rule limits historical rows with far-future expiration timestamps. Expiration is calculated using parsed UTC timestamps, not lexical string comparison.
+Newly created `Write Check` records have a default lifetime of 15 minutes. `expires_at` is an enforced compatibility condition, not display-only metadata. The effective expiration is the earlier of stored `expires_at` and `created_at + 15 minutes`; this same effective rule limits historical rows with far-future expiration timestamps. Expiration is calculated using parsed UTC timestamps, not lexical string comparison.
 
 A newly allowed committed Write Check receives its durable `write_check_id` only when the allowed mutation is committed. Blocked, approval-required, decision-required, rejected, and `dry_run` paths do not allocate a durable `Write Check` ID.
 

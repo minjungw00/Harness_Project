@@ -92,7 +92,7 @@ Core marks a `status=active` `Write Check` `status=stale` when its basis no long
 - currently applied Change Unit
 - project state
 
-Non-claim: `status=stale` does not consume, revoke, expire, or silently reuse the authorization.
+Non-claim: `status=stale` does not consume, revoke, expire, or silently reuse the `Write Check`.
 
 ## Success result
 
@@ -170,7 +170,7 @@ For `dry_run=true`, a valid state-effecting preview:
 
 ## Storage effect
 
-On commit, the method may persist scope-owned current state and stale-authorization consequences. Exact storage effects are owned by the storage documents linked below.
+On commit, the method may persist scope-owned current state and stale `Write Check` consequences. Exact storage effects are owned by the storage documents linked below.
 
 The examples are intentionally compact and method-local. The representative response is abbreviated to the fields needed to show the update-scope branch, refs, state version, current scope, current Change Unit, lifecycle, and next action.
 
