@@ -139,7 +139,7 @@ fn plan_prepare_write(
                 request.envelope.dry_run,
                 Some(project_state.state_version),
                 vec![tool_error(
-                    ErrorCode::LocalAccessMismatch,
+                    ErrorCode::InvocationContextMismatch,
                     "intended_paths resolve outside the Product Repository",
                     false,
                     None,

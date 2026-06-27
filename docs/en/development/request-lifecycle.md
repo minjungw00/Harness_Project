@@ -385,7 +385,7 @@ Representative tests:
   [`crates/volicord-core/src/methods/tests.rs`](../../../crates/volicord-core/src/methods/tests.rs)
 - `prepare_write_dry_run_has_no_write_check_effect` in
   [`crates/volicord-core/src/methods/tests.rs`](../../../crates/volicord-core/src/methods/tests.rs)
-- `prepare_write_user_only_category_is_access_rejection` in
+- `prepare_write_user_only_category_is_invocation_context_rejection` in
   [`crates/volicord-core/src/methods/tests.rs`](../../../crates/volicord-core/src/methods/tests.rs)
 - `read_only_mode_rejects_agent_workflow_methods_before_core` in
   [`tests/integration/mcp_connection.rs`](../../../tests/integration/mcp_connection.rs)

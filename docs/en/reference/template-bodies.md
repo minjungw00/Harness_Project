@@ -127,18 +127,18 @@ Suggested label:
 Recovery cue:
 - Reconnect Core, MCP, or the selected Agent Connection, or show that the route is unavailable.
 
-<a id="label-local-access-mismatch"></a>
-### `LOCAL_ACCESS_MISMATCH`
+<a id="label-invocation-context-mismatch"></a>
+### `INVOCATION_CONTEXT_MISMATCH`
 
 Label-selection input:
-- `LOCAL_ACCESS_MISMATCH`.
+- `INVOCATION_CONTEXT_MISMATCH`.
 
 Suggested label:
 - invocation context mismatch
 
 Recovery cue:
-- Use the registered local transport, session, or binding.
-- Repair connection or project routing when needed.
+- Use the registered Agent Connection, User Channel, project routing, or method-compatible invocation context.
+- Repair connection binding or invocation context settings when needed.
 
 <a id="label-capability-insufficient"></a>
 ### `CAPABILITY_INSUFFICIENT`

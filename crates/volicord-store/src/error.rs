@@ -169,7 +169,7 @@ impl StoreError {
             Self::NotFound { entity, .. } => {
                 let (route, category, retryable, database_kind) = match *entity {
                     "project" => (
-                        StoreFailureRoute::LocalAccessMismatch,
+                        StoreFailureRoute::InvocationContextMismatch,
                         "project_binding_missing",
                         false,
                         None,
@@ -314,7 +314,7 @@ impl StoreError {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum StoreFailureRoute {
     OperationalUnavailable,
-    LocalAccessMismatch,
+    InvocationContextMismatch,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

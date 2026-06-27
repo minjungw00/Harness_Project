@@ -47,7 +47,7 @@ Replay eligibility:
 
 - 현재 호출에 verified invocation context가 생기기 전에는 stored response를 반환하면 안 됩니다.
 - Core는 request-hash compatibility보다 invocation-context compatibility를 먼저 확인합니다.
-- context가 호환되지 않으면 `LOCAL_ACCESS_MISMATCH`를 반환하고 stored response를 노출하면 안 됩니다.
+- context가 호환되지 않으면 `INVOCATION_CONTEXT_MISMATCH`를 반환하고 stored response를 노출하면 안 됩니다.
 - 호환되는 context와 같은 `idempotency_key`, 같은 `request_hash`는 저장된 원래 commit response를 그대로 반환합니다.
 - 호환되는 context와 같은 `idempotency_key`, 다른 `request_hash`는 `STATE_VERSION_CONFLICT`를 반환합니다.
 
@@ -81,5 +81,5 @@ Migration은 focused owner가 명시적으로 그 effect를 정의하지 않는 
 - SQLite DDL, constraint, index, foreign key, migration table shape: [저장소 DDL](storage-ddl.md)
 - Method storage effect: [저장 효과](storage-effects.md)
 - 공개 conflict 동작: [API 오류 우선순위](api/error-precedence.md#state-conflict-behavior)
-- 공개 invocation-context mismatch 코드: [API 오류 코드](api/error-codes.md#errorcode-local-access-mismatch)
+- 공개 invocation-context mismatch 코드: [API 오류 코드](api/error-codes.md#errorcode-invocation-context-mismatch)
 - Runtime Home 분리: [런타임 경계](runtime-boundaries.md)

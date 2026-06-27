@@ -150,7 +150,7 @@ fn plan_record_run(
                 request.envelope.dry_run,
                 Some(project_state.state_version),
                 vec![tool_error(
-                    ErrorCode::LocalAccessMismatch,
+                    ErrorCode::InvocationContextMismatch,
                     "changed_paths resolve outside the Product Repository",
                     false,
                     None,

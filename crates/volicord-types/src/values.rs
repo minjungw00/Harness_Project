@@ -823,7 +823,7 @@ pub enum ErrorCode {
     ValidationFailed,
     StateVersionConflict,
     McpUnavailable,
-    LocalAccessMismatch,
+    InvocationContextMismatch,
     NoActiveTask,
     NoActiveChangeUnit,
     BaselineStale,

@@ -1377,12 +1377,12 @@ pub(crate) fn store_failure_error(error: StoreError) -> ToolError {
     }
     let code = match classification.route {
         StoreFailureRoute::OperationalUnavailable => ErrorCode::McpUnavailable,
-        StoreFailureRoute::LocalAccessMismatch => ErrorCode::LocalAccessMismatch,
+        StoreFailureRoute::InvocationContextMismatch => ErrorCode::InvocationContextMismatch,
     };
     let message = match code {
         ErrorCode::McpUnavailable => "Core storage is unavailable",
-        ErrorCode::LocalAccessMismatch => {
-            "local project or invocation binding does not match registration"
+        ErrorCode::InvocationContextMismatch => {
+            "project binding or invocation context does not match registration"
         }
         _ => "Core storage is unavailable",
     };
@@ -1407,7 +1407,7 @@ fn error_precedence(code: ErrorCode) -> u8 {
         ErrorCode::ValidationFailed => 1,
         ErrorCode::StateVersionConflict => 2,
         ErrorCode::McpUnavailable => 3,
-        ErrorCode::LocalAccessMismatch => 4,
+        ErrorCode::InvocationContextMismatch => 4,
         ErrorCode::NoActiveTask => 5,
         ErrorCode::NoActiveChangeUnit => 6,
         ErrorCode::BaselineStale => 7,
@@ -1850,7 +1850,7 @@ mod tests {
         assert_eq!(mismatch.response_value["base"]["response_kind"], "rejected");
         assert_eq!(
             mismatch.response_value["errors"][0]["code"],
-            "LOCAL_ACCESS_MISMATCH"
+            "INVOCATION_CONTEXT_MISMATCH"
         );
         assert!(!mismatch.response_json.contains("connection-secret"));
         assert_ne!(mismatch.response_json, first.response_json);
@@ -1893,7 +1893,7 @@ mod tests {
 
         assert_eq!(
             mismatch.response_value["errors"][0]["code"],
-            "LOCAL_ACCESS_MISMATCH"
+            "INVOCATION_CONTEXT_MISMATCH"
         );
         assert!(!mismatch.response_json.contains("category-secret"));
         assert_eq!(harness.counts()?, after_first);
@@ -1943,7 +1943,7 @@ mod tests {
 
         assert_eq!(
             mismatch.response_value["errors"][0]["code"],
-            "LOCAL_ACCESS_MISMATCH"
+            "INVOCATION_CONTEXT_MISMATCH"
         );
         assert!(!mismatch.response_json.contains("stored-secret"));
         assert_eq!(harness.counts()?, after_first);
@@ -2130,7 +2130,7 @@ mod tests {
         assert_eq!(response.response_value["base"]["response_kind"], "rejected");
         assert_eq!(
             response.response_value["errors"][0]["code"],
-            "LOCAL_ACCESS_MISMATCH"
+            "INVOCATION_CONTEXT_MISMATCH"
         );
         assert_eq!(harness.counts()?, before);
         Ok(())
@@ -2161,7 +2161,7 @@ mod tests {
         assert_eq!(response.response_value["base"]["response_kind"], "rejected");
         assert_eq!(
             response.response_value["errors"][0]["code"],
-            "LOCAL_ACCESS_MISMATCH"
+            "INVOCATION_CONTEXT_MISMATCH"
         );
         assert_eq!(harness.counts()?, before);
         Ok(())

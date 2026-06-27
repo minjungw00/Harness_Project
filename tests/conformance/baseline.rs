@@ -158,7 +158,7 @@ fn idempotency_replay_rejects_actor_source_mismatch() -> Result<(), Box<dyn Erro
     )?;
 
     assert!(!mismatch.replayed);
-    assert_rejected_code(&mismatch.response_value, "LOCAL_ACCESS_MISMATCH");
+    assert_rejected_code(&mismatch.response_value, "INVOCATION_CONTEXT_MISMATCH");
     assert!(!mismatch.response_json.contains(&write_check_id));
     assert_eq!(fixture.counts()?, after_first);
     Ok(())
@@ -191,7 +191,7 @@ fn idempotency_replay_rejects_operation_category_mismatch() -> Result<(), Box<dy
     let mismatch = service.prepare_write(request, invocation(&fixture, OperationCategory::Read))?;
 
     assert!(!mismatch.replayed);
-    assert_rejected_code(&mismatch.response_value, "LOCAL_ACCESS_MISMATCH");
+    assert_rejected_code(&mismatch.response_value, "INVOCATION_CONTEXT_MISMATCH");
     assert!(!mismatch.response_json.contains(&write_check_id));
     assert_eq!(fixture.counts()?, after_first);
     Ok(())
@@ -324,7 +324,7 @@ fn committed_non_allow_prepare_write_audit_and_replay_are_exact() -> Result<(), 
         ),
     )?;
     assert!(!mismatch.replayed);
-    assert_rejected_code(&mismatch.response_value, "LOCAL_ACCESS_MISMATCH");
+    assert_rejected_code(&mismatch.response_value, "INVOCATION_CONTEXT_MISMATCH");
     assert!(mismatch
         .response_value
         .get("write_decision_reasons")
@@ -2087,7 +2087,10 @@ fn public_negative_authority_option_selection_remains_non_authoritative(
         agent_record,
         invocation(&actor_fixture, OperationCategory::AgentWorkflow),
     )?;
-    assert_rejected_code(&agent_rejected.response_value, "LOCAL_ACCESS_MISMATCH");
+    assert_rejected_code(
+        &agent_rejected.response_value,
+        "INVOCATION_CONTEXT_MISMATCH",
+    );
     assert_eq!(actor_fixture.counts()?, before_agent_record);
     assert_eq!(actor_fixture.user_judgment_status(&judgment_id)?, "pending");
     let actor_blocked = actor_service.close_task(

@@ -382,7 +382,7 @@ dry-run 미리보기로 효과가 없을 수 있고, `Write Check`을 만들지
 - [`crates/volicord-core/src/methods/tests.rs`](../../../crates/volicord-core/src/methods/tests.rs)의
   `prepare_write_dry_run_has_no_write_check_effect`
 - [`crates/volicord-core/src/methods/tests.rs`](../../../crates/volicord-core/src/methods/tests.rs)의
-  `prepare_write_user_only_category_is_access_rejection`
+  `prepare_write_user_only_category_is_invocation_context_rejection`
 - [`tests/integration/mcp_connection.rs`](../../../tests/integration/mcp_connection.rs)의
   `read_only_mode_rejects_agent_workflow_methods_before_core`
 - [`tests/conformance/baseline.rs`](../../../tests/conformance/baseline.rs)의

@@ -3067,14 +3067,15 @@ fn prepare_write_baseline_mismatch_blocks_write_check() -> Result<(), Box<dyn Er
 }
 
 #[test]
-fn prepare_write_user_only_category_is_access_rejection() -> Result<(), Box<dyn Error>> {
+fn prepare_write_user_only_category_is_invocation_context_rejection() -> Result<(), Box<dyn Error>>
+{
     let harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_binding")?;
     let before = harness.counts()?;
 
     let request = prepare_write_request(
-        "req_prepare_binding_access",
-        "idem_prepare_binding_access",
+        "req_prepare_invocation_context",
+        "idem_prepare_invocation_context",
         Some(2),
         Some(&task_id),
         Some(&change_unit_id),
@@ -3087,7 +3088,7 @@ fn prepare_write_user_only_category_is_access_rejection() -> Result<(), Box<dyn 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
         response.response_value["errors"][0]["code"],
-        "LOCAL_ACCESS_MISMATCH"
+        "INVOCATION_CONTEXT_MISMATCH"
     );
     assert!(response
         .response_value
@@ -3098,15 +3099,15 @@ fn prepare_write_user_only_category_is_access_rejection() -> Result<(), Box<dyn 
 }
 
 #[test]
-fn prepare_write_uses_agent_workflow_invocation_without_local_grant() -> Result<(), Box<dyn Error>>
+fn prepare_write_uses_agent_workflow_invocation_without_extra_binding() -> Result<(), Box<dyn Error>>
 {
     let harness = MethodHarness::new()?;
-    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_grant_fail")?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_binding_ok")?;
     let before = harness.counts()?;
 
     let request = prepare_write_request(
-        "req_prepare_grant_fail",
-        "idem_prepare_grant_fail",
+        "req_prepare_binding_ok",
+        "idem_prepare_binding_ok",
         Some(2),
         Some(&task_id),
         Some(&change_unit_id),
@@ -3407,7 +3408,7 @@ fn prepare_write_non_allow_replay_returns_original_response_without_effect(
     );
     assert_eq!(
         context_mismatch.response_value["errors"][0]["code"],
-        "LOCAL_ACCESS_MISMATCH"
+        "INVOCATION_CONTEXT_MISMATCH"
     );
     assert!(!context_mismatch.response_json.contains("path_out_of_scope"));
     assert!(context_mismatch
@@ -3419,7 +3420,7 @@ fn prepare_write_non_allow_replay_returns_original_response_without_effect(
 }
 
 #[test]
-fn prepare_write_replay_requires_current_verified_grant() -> Result<(), Box<dyn Error>> {
+fn prepare_write_replay_requires_current_invocation_context() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     let (task_id, change_unit_id) =
         create_task_with_change_unit(&harness, "prepare_replay_verify")?;
@@ -3448,7 +3449,7 @@ fn prepare_write_replay_requires_current_verified_grant() -> Result<(), Box<dyn 
     assert_eq!(second.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
         second.response_value["errors"][0]["code"],
-        "LOCAL_ACCESS_MISMATCH"
+        "INVOCATION_CONTEXT_MISMATCH"
     );
     assert_ne!(second.response_json, first.response_json);
     assert_eq!(harness.counts()?, after_first);
@@ -3742,15 +3743,16 @@ fn stage_artifact_dry_run_still_checks_stale_state() -> Result<(), Box<dyn Error
 }
 
 #[test]
-fn stage_artifact_invalid_input_does_not_bypass_access_preflight() -> Result<(), Box<dyn Error>> {
+fn stage_artifact_invalid_input_does_not_bypass_invocation_preflight() -> Result<(), Box<dyn Error>>
+{
     let harness = MethodHarness::new()?;
     enable_stage_artifact_capability(&harness)?;
-    let (task_id, _) = create_task_with_change_unit(&harness, "stage_access_first")?;
+    let (task_id, _) = create_task_with_change_unit(&harness, "stage_invocation_first")?;
     let before = harness.counts()?;
 
     let mut request = stage_artifact_request(
-        "req_stage_access_first",
-        Some("idem_stage_access_first"),
+        "req_stage_invocation_first",
+        Some("idem_stage_invocation_first"),
         true,
         Some(2),
         &task_id,
@@ -3763,7 +3765,7 @@ fn stage_artifact_invalid_input_does_not_bypass_access_preflight() -> Result<(),
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
         response.response_value["errors"][0]["code"],
-        "LOCAL_ACCESS_MISMATCH"
+        "INVOCATION_CONTEXT_MISMATCH"
     );
     assert_eq!(harness.counts()?, before);
     Ok(())
@@ -7855,7 +7857,7 @@ fn non_user_actor_cannot_resolve_authority_bearing_judgment() -> Result<(), Box<
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
         response.response_value["errors"][0]["code"],
-        "LOCAL_ACCESS_MISMATCH"
+        "INVOCATION_CONTEXT_MISMATCH"
     );
     assert_eq!(harness.counts()?, before);
     assert_eq!(
@@ -7990,7 +7992,7 @@ fn agent_actor_cannot_resolve_non_authority_judgment() -> Result<(), Box<dyn Err
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
         response.response_value["errors"][0]["code"],
-        "LOCAL_ACCESS_MISMATCH"
+        "INVOCATION_CONTEXT_MISMATCH"
     );
     assert_eq!(
         response.response_value["errors"][0]["details"]["field"],
@@ -9891,7 +9893,7 @@ fn agent_connection_cannot_record_authority_judgment() -> Result<(), Box<dyn Err
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
         response.response_value["errors"][0]["code"],
-        "LOCAL_ACCESS_MISMATCH"
+        "INVOCATION_CONTEXT_MISMATCH"
     );
     assert_eq!(
         response.response_value["errors"][0]["details"]["field"],

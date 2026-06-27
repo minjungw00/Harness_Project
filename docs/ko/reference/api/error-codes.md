@@ -31,7 +31,7 @@
 | `VALIDATION_FAILED` | [`VALIDATION_FAILED`](#errorcode-validation-failed) |
 | `STATE_VERSION_CONFLICT` | [`STATE_VERSION_CONFLICT`](#errorcode-state-version-conflict) |
 | `MCP_UNAVAILABLE` | [`MCP_UNAVAILABLE`](#errorcode-mcp-unavailable) |
-| `LOCAL_ACCESS_MISMATCH` | [`LOCAL_ACCESS_MISMATCH`](#errorcode-local-access-mismatch) |
+| `INVOCATION_CONTEXT_MISMATCH` | [`INVOCATION_CONTEXT_MISMATCH`](#errorcode-invocation-context-mismatch) |
 | `NO_ACTIVE_TASK` | [`NO_ACTIVE_TASK`](#errorcode-no-active-task) |
 | `NO_ACTIVE_CHANGE_UNIT` | [`NO_ACTIVE_CHANGE_UNIT`](#errorcode-no-active-change-unit) |
 | `BASELINE_STALE` | [`BASELINE_STALE`](#errorcode-baseline-stale) |
@@ -91,14 +91,14 @@
 조건:
 - 필요한 Core, MCP, 저장소, 타입이 지정된 담당 상태, Agent Connection 도달 가능성을 사용할 수 없습니다. 여기에는 공개 메서드가 권한, 생명주기, 범위, 증거, 완료, 닫기 준비 상태, 쓰기 호환성을 평가하는 데 필요한 지속 타입 지정 담당 상태가 손상되었거나 읽을 수 없는 경우가 포함됩니다.
 
-<a id="errorcode-local-access-mismatch"></a>
-### `LOCAL_ACCESS_MISMATCH`
+<a id="errorcode-invocation-context-mismatch"></a>
+### `INVOCATION_CONTEXT_MISMATCH`
 
 사용 위치:
 - `ToolRejectedResponse.errors[]`
 
 조건:
-- 확인된 호출 맥락, connection 바인딩, 프로젝트 라우팅, Product Repository 경로 경계, 또는 actor-source/operation-category 호환성이 요청 동작과 맞지 않습니다.
+- 호출 맥락이 요청한 메서드, 재실행 기록, `actor_source`, `operation_category` 또는 어댑터가 파생한 실행 맥락과 호환되지 않습니다.
 
 <a id="errorcode-no-active-task"></a>
 ### `NO_ACTIVE_TASK`

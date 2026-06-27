@@ -84,8 +84,8 @@ pub(crate) fn invocation_context_mismatch_error(field: &'static str) -> ToolErro
     let mut details = Map::new();
     details.insert("field".to_owned(), Value::String(field.to_owned()));
     tool_error(
-        ErrorCode::LocalAccessMismatch,
-        "local invocation context does not match Core preflight requirements",
+        ErrorCode::InvocationContextMismatch,
+        "invocation context does not match Core preflight requirements",
         false,
         Some(details),
     )
@@ -109,8 +109,8 @@ fn operation_category_mismatch_error(
         Value::String(actual_operation_category.as_str().to_owned()),
     );
     tool_error(
-        ErrorCode::LocalAccessMismatch,
-        "local invocation operation_category does not match the method operation category",
+        ErrorCode::InvocationContextMismatch,
+        "invocation operation_category does not match the method operation category",
         false,
         Some(details),
     )
@@ -132,7 +132,7 @@ fn actor_source_mismatch_error(
         Value::String(actor_source.to_canonical_string()),
     );
     tool_error(
-        ErrorCode::LocalAccessMismatch,
+        ErrorCode::InvocationContextMismatch,
         "actor_source is not allowed for the method operation category",
         false,
         Some(details),

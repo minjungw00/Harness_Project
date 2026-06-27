@@ -32,7 +32,7 @@ Adjacent owners:
 | `VALIDATION_FAILED` | [`VALIDATION_FAILED`](#errorcode-validation-failed) |
 | `STATE_VERSION_CONFLICT` | [`STATE_VERSION_CONFLICT`](#errorcode-state-version-conflict) |
 | `MCP_UNAVAILABLE` | [`MCP_UNAVAILABLE`](#errorcode-mcp-unavailable) |
-| `LOCAL_ACCESS_MISMATCH` | [`LOCAL_ACCESS_MISMATCH`](#errorcode-local-access-mismatch) |
+| `INVOCATION_CONTEXT_MISMATCH` | [`INVOCATION_CONTEXT_MISMATCH`](#errorcode-invocation-context-mismatch) |
 | `NO_ACTIVE_TASK` | [`NO_ACTIVE_TASK`](#errorcode-no-active-task) |
 | `NO_ACTIVE_CHANGE_UNIT` | [`NO_ACTIVE_CHANGE_UNIT`](#errorcode-no-active-change-unit) |
 | `BASELINE_STALE` | [`BASELINE_STALE`](#errorcode-baseline-stale) |
@@ -92,14 +92,14 @@ Used in:
 Condition:
 - Required Core, MCP, store, typed owner state, or Agent Connection reachability is unavailable. This includes corrupt or unreadable persisted typed owner state that a public method needs in order to evaluate authority, lifecycle, scope, evidence, completion, close readiness, or write compatibility.
 
-<a id="errorcode-local-access-mismatch"></a>
-### `LOCAL_ACCESS_MISMATCH`
+<a id="errorcode-invocation-context-mismatch"></a>
+### `INVOCATION_CONTEXT_MISMATCH`
 
 Used in:
 - `ToolRejectedResponse.errors[]`
 
 Condition:
-- The verified invocation context, connection binding, project routing, Product Repository path boundary, or actor-source/operation-category compatibility does not match the requested operation.
+- The invocation context is incompatible with the requested method, replay record, `actor_source`, `operation_category`, or adapter-derived execution context.
 
 <a id="errorcode-no-active-task"></a>
 ### `NO_ACTIVE_TASK`

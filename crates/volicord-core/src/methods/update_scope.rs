@@ -467,7 +467,7 @@ fn validate_requested_effect_contract(
                 request.envelope.dry_run,
                 Some(project_state.state_version),
                 vec![tool_error(
-                    ErrorCode::LocalAccessMismatch,
+                    ErrorCode::InvocationContextMismatch,
                     "effect_contract.allowed_paths resolve outside the Product Repository",
                     false,
                     None,

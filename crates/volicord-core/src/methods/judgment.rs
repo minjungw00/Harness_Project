@@ -579,7 +579,7 @@ fn build_request_judgment_basis(
                                 request.envelope.dry_run,
                                 Some(project_state.state_version),
                                 vec![tool_error(
-                                    ErrorCode::LocalAccessMismatch,
+                                    ErrorCode::InvocationContextMismatch,
                                     "sensitive action paths resolve outside the Product Repository",
                                     false,
                                     None,
@@ -837,7 +837,7 @@ fn validate_pending_judgment_basis_for_answer(
                             request.envelope.dry_run,
                             Some(project_state.state_version),
                             vec![tool_error(
-                                ErrorCode::LocalAccessMismatch,
+                                ErrorCode::InvocationContextMismatch,
                                 "sensitive action paths resolve outside the Product Repository",
                                 false,
                                 None,

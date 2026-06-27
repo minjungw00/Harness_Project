@@ -47,7 +47,7 @@ Replay eligibility:
 
 - a stored response must never be returned before the current invocation has a verified invocation context
 - Core checks invocation-context compatibility before request-hash compatibility
-- incompatible context returns `LOCAL_ACCESS_MISMATCH` and must not expose the stored response
+- incompatible context returns `INVOCATION_CONTEXT_MISMATCH` and must not expose the stored response
 - compatible context plus the same `idempotency_key` and same `request_hash` returns the stored original committed response exactly
 - compatible context plus the same `idempotency_key` and a different `request_hash` returns `STATE_VERSION_CONFLICT`
 
@@ -81,5 +81,5 @@ Migration does not create a public `project_state.state_version` increment, Core
 - SQLite DDL, constraints, indexes, foreign keys, and migration table shape: [Storage DDL](storage-ddl.md)
 - Method storage effects: [Storage Effects](storage-effects.md)
 - Public conflict behavior: [API error precedence](api/error-precedence.md#state-conflict-behavior)
-- Public invocation-context mismatch code: [API error codes](api/error-codes.md#errorcode-local-access-mismatch)
+- Public invocation-context mismatch code: [API error codes](api/error-codes.md#errorcode-invocation-context-mismatch)
 - Runtime Home separation: [Runtime Boundaries](runtime-boundaries.md)

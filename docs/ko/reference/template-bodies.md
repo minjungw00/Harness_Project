@@ -129,18 +129,18 @@
 해결 안내:
 - Core, MCP, 또는 선택된 연결을 다시 연결하거나 그 경로를 사용할 수 없다고 표시합니다.
 
-<a id="label-local-access-mismatch"></a>
-### `LOCAL_ACCESS_MISMATCH`
+<a id="label-invocation-context-mismatch"></a>
+### `INVOCATION_CONTEXT_MISMATCH`
 
 라벨 선택 입력:
-- `LOCAL_ACCESS_MISMATCH`.
+- `INVOCATION_CONTEXT_MISMATCH`.
 
 표시 라벨:
 - 호출 맥락 불일치
 
 해결 안내:
-- 등록된 Agent Connection, 프로젝트 라우팅, 또는 바인딩을 사용합니다.
-- 필요한 경우 연결 프로젝트나 호출 맥락 설정을 고칩니다.
+- 등록된 Agent Connection, User Channel, 프로젝트 라우팅 또는 메서드와 호환되는 호출 맥락을 사용합니다.
+- 필요한 경우 연결 바인딩이나 호출 맥락 설정을 고칩니다.
 
 <a id="label-capability-insufficient"></a>
 ### `CAPABILITY_INSUFFICIENT`
