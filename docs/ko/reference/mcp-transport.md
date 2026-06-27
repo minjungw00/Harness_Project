@@ -50,19 +50,13 @@
 <a id="process-environment"></a>
 ## 프로세스 환경
 
-선택:
+지원되는 선택 환경 입력:
 
 - `VOLICORD_HOME`
 
-stdio 프로세스와 `--check`는 시작 검증에 들어가기 전에 `VOLICORD_HOME`을 사용합니다. help와 version 모드는 이를 사용하지 않습니다.
+`VOLICORD_HOME`은 지원되는 MCP 프로세스 환경 입력의 전부입니다. 이 값은 프로세스의 Runtime Home을 선택하지만 프로젝트, 연결, 행위자 출처, 작업 범주, 연결 모드를 선택하지 않습니다. stdio 프로세스와 `--check`는 시작 검증에 들어가기 전에 `VOLICORD_HOME`을 사용합니다. help와 version 모드는 이를 사용하지 않습니다.
 
-`volicord-mcp` 시작은 고정 프로젝트 또는 출처 환경 입력을 읽거나 지원하지 않습니다.
-
-- `VOLICORD_PROJECT_ID`
-- `VOLICORD_SURFACE_ID`
-- `VOLICORD_SURFACE_INSTANCE_ID`
-
-이 변수들은 `volicord-mcp`의 프로젝트나 행위자 출처를 선택하지 않습니다. 선택된 Agent Connection이 프로세스 바인딩을 제공합니다. 선택 프로젝트는 공개 MCP 도구 호출마다 결정됩니다.
+연결 식별 정보는 `--connection <connection_id>`로 제공합니다. 묶인 Agent Connection과 Runtime Home 레지스트리 상태가 연결 모드, 연결 프로젝트, 어댑터가 파생하는 `actor_source`와 `operation_category`를 제공합니다. 프로젝트 접근은 Runtime Home 레지스트리 상태에 있는 선택된 Agent Connection의 연결 프로젝트로 제어됩니다. 선택 프로젝트는 공개 MCP 도구 호출마다 결정됩니다. Surface 식별 정보는 현재 공개 또는 내부 `volicord-mcp` 호출 계약의 일부가 아닙니다.
 
 현재 MCP Runtime Home 경로 해석:
 
@@ -106,6 +100,8 @@ Agent Connection이 제공하는 값:
 - 레지스트리를 통한 호스트 설정 인벤토리와 마지막 검증 상태
 
 프로세스 바인딩은 프로세스 수명 동안 고정됩니다. Agent Connection 식별 정보를 바꾸려면 다른 프로세스나 호스트 설정 갱신이 필요합니다. 프로젝트 멤버십, 모드, 활성화 상태 변경은 레지스트리 상태를 통해 효력을 가지며, 새 프로세스는 시작할 때마다 현재 레지스트리 상태로 시작 검증을 다시 실행합니다.
+
+MCP 호출 인자와 다른 MCP 요청 본문은 연결 식별 정보, `actor_source`, `operation_category`, 연결 모드를 설정할 수 없습니다.
 
 <a id="configuration-preflight"></a>
 ## 설정 사전 점검

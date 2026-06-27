@@ -49,19 +49,13 @@ Exit and stream behavior:
 
 ## Process Environment
 
-Optional:
+Supported optional environment input:
 
 - `VOLICORD_HOME`
 
-The stdio process and `--check` use `VOLICORD_HOME` before entering startup validation. Help and version modes do not use it.
+`VOLICORD_HOME` is the only supported MCP process environment input. It selects the Runtime Home for the process; it does not select a project, connection, actor provenance, operation category, or connection mode. The stdio process and `--check` use `VOLICORD_HOME` before entering startup validation. Help and version modes do not use it.
 
-`volicord-mcp` startup does not read or support fixed-project or provenance environment inputs:
-
-- `VOLICORD_PROJECT_ID`
-- `VOLICORD_SURFACE_ID`
-- `VOLICORD_SURFACE_INSTANCE_ID`
-
-Those variables do not select a project or actor provenance for `volicord-mcp`. The selected Agent Connection supplies the process binding. The selected project is determined per public MCP tool call.
+Connection identity is supplied by `--connection <connection_id>`. The bound Agent Connection and Runtime Home registry state supply the connection mode, connected Projects, and adapter-derived `actor_source` and `operation_category`. Project access is controlled by the selected Agent Connection's connected Projects in Runtime Home registry state. The selected project is determined per public MCP tool call. Surface identity is not part of the current public or internal `volicord-mcp` invocation contract.
 
 Current MCP Runtime Home resolution:
 
@@ -105,6 +99,8 @@ The Agent Connection supplies:
 - host configuration inventory and last verification state through the registry
 
 The process binding remains fixed for the process lifetime. Changing the Agent Connection identity requires another process or host configuration update. Changing project membership, mode, or enabled state takes effect through registry state; each new process reruns startup validation against the current registry state.
+
+MCP call arguments and other MCP request bodies cannot set connection identity, `actor_source`, `operation_category`, or connection mode.
 
 ## Configuration Preflight
 

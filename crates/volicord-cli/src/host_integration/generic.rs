@@ -303,7 +303,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn integration_specific_filename_and_command_shape() -> Result<(), Box<dyn std::error::Error>> {
+    fn integration_specific_filename_command_and_environment_contract(
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let dir = temp_dir("generic-file")?;
         let adapter = GenericAdapter;
 
@@ -315,12 +316,12 @@ mod tests {
         );
         assert_eq!(plan.entry.command, "/bin/volicord-mcp");
         assert_eq!(plan.entry.args, ["--connection", "int_alpha"]);
+        let expected_env =
+            std::collections::BTreeMap::from([("VOLICORD_HOME".to_owned(), "/runtime".to_owned())]);
         assert_eq!(
-            plan.entry.env.get("VOLICORD_HOME"),
-            Some(&"/runtime".to_owned())
+            plan.entry.env, expected_env,
+            "generic export environment should contain only the supported MCP process environment input"
         );
-        assert!(!plan.entry.env.contains_key("VOLICORD_PROJECT_ID"));
-        assert!(!plan.entry.env.contains_key("VOLICORD_SURFACE_ID"));
         Ok(())
     }
 
