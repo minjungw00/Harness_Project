@@ -41,7 +41,7 @@ impl CoreService {
             Err(response) => return Ok(response),
         };
         if request.intent != CloseIntent::Check {
-            if let Some(response) = reject_stale_close_write_authorization(
+            if let Some(response) = reject_stale_close_write_check(
                 &prepared.store,
                 &prepared.context.project_state,
                 &request,
@@ -65,7 +65,7 @@ impl CoreService {
             let plan = match plan_close_task(
                 &prepared.store,
                 &prepared.context.project_state,
-                Some(&prepared.context.verified_surface),
+                Some(&prepared.context.verified_invocation),
                 Some(&guarantee_profile),
                 request.clone(),
                 &plan_now,
@@ -109,7 +109,7 @@ impl CoreService {
         let mut plan = match plan_close_task(
             &prepared.store,
             &prepared.context.project_state,
-            Some(&prepared.context.verified_surface),
+            Some(&prepared.context.verified_invocation),
             Some(&guarantee_profile),
             request.clone(),
             &plan_now,
@@ -189,18 +189,14 @@ fn close_task_policy(request: &CloseTaskRequest) -> MethodPolicy {
     let task = TaskRequirement::Exact(request.task_id.clone());
     if request.intent == CloseIntent::Check {
         MethodPolicy::exact(
-            request.requested_access_class(),
+            request.operation_category(),
             task,
             ReplayPolicy::None,
             FreshnessPolicy::None,
             MethodEffectPolicy::ReadOnly,
         )
     } else {
-        mutation_method_policy(
-            request.requested_access_class(),
-            task,
-            request.envelope.dry_run,
-        )
+        mutation_method_policy(request.operation_category(), task, request.envelope.dry_run)
     }
 }
 
@@ -277,23 +273,19 @@ fn validate_close_intent_fields(
     Ok(None)
 }
 
-fn reject_stale_close_write_authorization(
+fn reject_stale_close_write_check(
     store: &CoreProjectStore,
     project_state: &ProjectStateHeader,
     request: &CloseTaskRequest,
 ) -> CoreResult<Option<PipelineResponse>> {
-    let active_write_authorizations = store
-        .active_write_authorizations(&request.task_id)
+    let active_write_checks = store
+        .active_write_checks(&request.task_id)
         .map_err(CorePipelineError::from)?;
-    Ok(active_write_authorizations
+    Ok(active_write_checks
         .iter()
         .find(|record| record.basis_state_version != project_state.state_version)
         .map(|record| {
-            stale_write_authorization_basis_response(
-                &request.envelope,
-                record,
-                project_state.state_version,
-            )
+            stale_write_check_basis_response(&request.envelope, record, project_state.state_version)
         }))
 }
 
@@ -322,7 +314,7 @@ fn close_task_dry_run_summary(intent: CloseIntent) -> DryRunSummary {
 pub(super) fn plan_close_task(
     store: &CoreProjectStore,
     project_state: &ProjectStateHeader,
-    verified_surface: Option<&VerifiedSurfaceContext>,
+    verified_invocation: Option<&VerifiedInvocationContext>,
     guarantee_profile: Option<&ProjectEnforcementProfile>,
     request: CloseTaskRequest,
     now: &UtcTimestamp,
@@ -331,7 +323,7 @@ pub(super) fn plan_close_task(
     plan_close_task_with_context(
         store,
         project_state,
-        verified_surface,
+        verified_invocation,
         guarantee_profile,
         request,
         now,
@@ -342,7 +334,7 @@ pub(super) fn plan_close_task(
 pub(super) fn plan_close_task_with_context(
     store: &CoreProjectStore,
     project_state: &ProjectStateHeader,
-    verified_surface: Option<&VerifiedSurfaceContext>,
+    verified_invocation: Option<&VerifiedInvocationContext>,
     guarantee_profile: Option<&ProjectEnforcementProfile>,
     request: CloseTaskRequest,
     now: &UtcTimestamp,
@@ -441,10 +433,10 @@ pub(super) fn plan_close_task_with_context(
         }))?;
     }
 
-    let guarantee_display = match (verified_surface, guarantee_profile) {
-        (Some(surface), Some(profile)) => Some(guarantee_display_from_profile(
+    let guarantee_display = match (verified_invocation, guarantee_profile) {
+        (Some(invocation), Some(profile)) => Some(guarantee_display_from_profile(
             profile,
-            surface,
+            invocation,
             response_state_version,
         )),
         _ => None,
@@ -457,7 +449,7 @@ pub(super) fn plan_close_task_with_context(
         current_change_unit: context.current_change_unit.as_ref(),
         pending_user_judgment_refs: context.pending_user_judgment_refs.clone(),
         blocker_refs: context.blocker_refs.clone(),
-        write_authority_summary: projected_write_authority_summary(
+        write_check_summary: projected_write_check_summary(
             store,
             &request.task_id,
             response_state_version,
@@ -1090,10 +1082,9 @@ fn cancellation_authority_blocker(
         if !judgment_has_current_basis(authority) || !current_basis_matches {
             stale_refs.push(judgment_ref);
         } else if authority.resolution_outcome == Some(JudgmentResolutionOutcome::Rejected)
-            && authority
-                .resolution
-                .as_ref()
-                .is_some_and(|resolution| resolution.resolved_by_actor_kind == ActorKind::User)
+            && authority.resolution.as_ref().is_some_and(|resolution| {
+                resolution.resolved_by_actor_source == ActorSource::LocalUser
+            })
             && verified_user_interaction_provenance(authority)
         {
             rejected_refs.push(judgment_ref);
@@ -1239,7 +1230,7 @@ fn completion_close_blockers(
     }
 
     for record in store
-        .active_write_authorizations(&request.task_id)
+        .active_write_checks(&request.task_id)
         .map_err(|error| {
             PlanError::Response(Box::new(store_error_response(
                 &request.envelope,
@@ -1252,9 +1243,9 @@ fn completion_close_blockers(
     {
         blockers.push(close_blocker(
             CloseReadinessBlockerCategory::WriteCompatibility,
-            "write_authorization_stale",
-            "An active Write Authorization is stale against the current state version.",
-            vec![write_authorization_ref(record, project_state.state_version)],
+            "write_check_stale",
+            "An active Write Check is stale against the current state version.",
+            vec![write_check_ref(record, project_state.state_version)],
             vec![NextActionSummary {
                 action_kind: NextActionKind::PrepareWrite,
                 owner_method: Some(MethodName::PrepareWrite),
@@ -1569,8 +1560,7 @@ fn unavailable_artifact_ref_from_raw(
         redaction_state: artifact_ref.redaction_state,
         availability,
         created_by_run_ref: artifact_ref.created_by_run_ref.clone(),
-        created_by_surface_id: artifact_ref.created_by_surface_id.clone(),
-        created_by_surface_instance_id: artifact_ref.created_by_surface_instance_id.clone(),
+        created_by_actor_source: artifact_ref.created_by_actor_source.clone(),
         storage_ref: artifact_ref.storage_ref.clone(),
     }
 }

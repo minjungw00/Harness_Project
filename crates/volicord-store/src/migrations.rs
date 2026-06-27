@@ -741,10 +741,10 @@ CREATE TABLE evidence_observations (
   run_id TEXT,
   claim TEXT NOT NULL,
   source_kind TEXT NOT NULL CHECK (
-    source_kind IN ('agent_report', 'surface_observation', 'external_tool', 'user_observation', 'reused_evidence', 'unverified_claim')
+    source_kind IN ('agent_report', 'connection_observation', 'external_tool', 'user_observation', 'reused_evidence', 'unverified_claim')
   ),
   assurance_level TEXT NOT NULL CHECK (
-    assurance_level IN ('cooperative_report', 'registered_surface_observed', 'external_tool_result', 'user_observed', 'unverified')
+    assurance_level IN ('cooperative_report', 'registered_connection_observed', 'external_tool_result', 'user_observed', 'unverified')
   ),
   observed_by_actor_source TEXT,
   tool_name TEXT,

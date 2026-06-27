@@ -20,7 +20,7 @@ impl CoreService {
         }
 
         let policy = MethodPolicy::exact(
-            request.requested_access_class(),
+            request.operation_category(),
             TaskRequirement::Exact(request.task_id.clone()),
             ReplayPolicy::None,
             FreshnessPolicy::IfPresent,
@@ -42,7 +42,7 @@ impl CoreService {
             Err(response) => return Ok(response),
         };
         let project_state = prepared.context.project_state.clone();
-        let verified_surface = prepared.context.verified_surface.clone();
+        let verified_invocation = prepared.context.verified_invocation.clone();
 
         let stage_input = match validate_stage_artifact_input(&request) {
             Ok(input) => input,
@@ -54,19 +54,6 @@ impl CoreService {
                 );
             }
         };
-        if !surface_supports_artifact_staging(&verified_surface.capability_profile) {
-            return rejected_pipeline_response(
-                request.envelope.dry_run,
-                Some(project_state.state_version),
-                vec![capability_error(
-                    "surface lacks manual artifact attachment support",
-                    Some(json!({
-                        "required_capability": "manual_artifact_attachment_supported"
-                    })),
-                )],
-            );
-        }
-
         if request.envelope.dry_run {
             let response = dry_run_response(
                 Some(project_state.state_version),
@@ -82,7 +69,7 @@ impl CoreService {
             return Ok(PipelineResponse {
                 response_json,
                 response_value,
-                verified_surface: Some(verified_surface),
+                verified_invocation: Some(verified_invocation),
                 resolved_task_id: Some(request.task_id),
                 replayed: false,
             });
@@ -105,11 +92,7 @@ impl CoreService {
             .create_artifact_staging(ArtifactStagingInsert {
                 handle_id: handle_id.into_inner(),
                 task_id: request.task_id.as_str().to_owned(),
-                created_by_surface_id: verified_surface.surface_id.as_str().to_owned(),
-                created_by_surface_instance_id: verified_surface
-                    .surface_instance_id
-                    .as_str()
-                    .to_owned(),
+                created_by_actor_source: verified_invocation.actor_source.to_canonical_string(),
                 display_name: request.display_name,
                 content_type: request.content_type,
                 sha256: stage_input.sha256.clone(),
@@ -147,14 +130,21 @@ impl CoreService {
         };
 
         let resolved_task_id = TaskId::new(staging_record.task_id.clone());
+        let staged_handle_id = staging_record.handle_id.clone();
         let handle = StagedArtifactHandle {
-            handle_id: StagedArtifactHandleId::new(staging_record.handle_id),
+            handle_id: StagedArtifactHandleId::new(staged_handle_id.clone()),
             project_id: request.envelope.project_id.clone(),
             task_id: resolved_task_id.clone(),
-            created_by_surface_id: SurfaceId::new(staging_record.created_by_surface_id),
-            created_by_surface_instance_id: SurfaceInstanceId::new(
-                staging_record.created_by_surface_instance_id,
-            ),
+            created_by_actor_source: staging_record
+                .created_by_actor_source
+                .parse::<ActorSource>()
+                .map_err(|_| {
+                    CorePipelineError::Store(StoreError::corrupt_owner_state_value(
+                        "artifact_staging",
+                        staged_handle_id.clone(),
+                        "created_by_actor_source",
+                    ))
+                })?,
             content_type: staging_record.content_type,
             sha256: staging_record.sha256,
             size_bytes: staging_record.size_bytes,
@@ -177,7 +167,7 @@ impl CoreService {
         Ok(PipelineResponse {
             response_json,
             response_value,
-            verified_surface: Some(verified_surface),
+            verified_invocation: Some(verified_invocation),
             resolved_task_id: Some(resolved_task_id),
             replayed: false,
         })
@@ -285,7 +275,6 @@ fn validate_stage_envelope(envelope: &ToolEnvelope, errors: &mut Vec<volicord_ty
     if let Some(task_id) = envelope.task_id.as_ref() {
         validate_stage_text_field("envelope.task_id", task_id.as_str(), errors);
     }
-    validate_stage_text_field("surface_id", envelope.surface_id.as_str(), errors);
     validate_stage_text_field("request_id", envelope.request_id.as_str(), errors);
     if let Some(idempotency_key) = envelope.idempotency_key.as_ref() {
         validate_stage_text_field("idempotency_key", idempotency_key.as_str(), errors);
@@ -390,50 +379,4 @@ fn stage_validation_error(field: &'static str, message: &'static str) -> volicor
     let mut details = Map::new();
     details.insert("field".to_owned(), Value::String(field.to_owned()));
     tool_error(ErrorCode::ValidationFailed, message, false, Some(details))
-}
-
-fn capability_error(message: &'static str, details: Option<Value>) -> volicord_types::ToolError {
-    let details = details.and_then(|value| match value {
-        Value::Object(object) => Some(object),
-        _ => None,
-    });
-    tool_error(ErrorCode::CapabilityInsufficient, message, false, details)
-}
-
-fn surface_supports_artifact_staging(capability_profile: &Value) -> bool {
-    surface_declares_artifact_registration(capability_profile)
-        && capability_profile
-            .get("manual_artifact_attachment_supported")
-            .and_then(Value::as_bool)
-            .or_else(|| {
-                capability_profile
-                    .pointer("/capabilities/manual_artifact_attachment_supported")
-                    .and_then(Value::as_bool)
-            })
-            == Some(true)
-}
-
-fn surface_declares_artifact_registration(capability_profile: &Value) -> bool {
-    if capability_profile
-        .get("supported_access_classes")
-        .and_then(Value::as_array)
-        .is_some_and(|values| {
-            values
-                .iter()
-                .any(|value| value.as_str() == Some("artifact_registration"))
-        })
-    {
-        return true;
-    }
-    if capability_profile
-        .get("access_class")
-        .and_then(Value::as_str)
-        == Some("artifact_registration")
-    {
-        return true;
-    }
-    capability_profile
-        .pointer("/capabilities/artifact_registration")
-        .and_then(Value::as_bool)
-        == Some(true)
 }

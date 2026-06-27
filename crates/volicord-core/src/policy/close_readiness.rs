@@ -3,13 +3,12 @@ use std::collections::BTreeSet;
 use serde_json::Value;
 use volicord_store::core_pipeline::RunRecord;
 use volicord_types::{
-    ActorKind, BaselineRef, ChangeUnitId, CloseReadinessBlocker, CloseReadinessBlockerCategory,
+    ActorSource, BaselineRef, ChangeUnitId, CloseReadinessBlocker, CloseReadinessBlockerCategory,
     CurrentCloseBasis, JsonObject, JudgmentBasis, JudgmentBasisCompatibilityStatus, JudgmentKind,
     JudgmentRequiredFor, JudgmentResolutionOutcome, MethodName, NextActionKind, NextActionSummary,
     ProjectId, RecordUserJudgmentPayload, RequiredNullable, RiskAcceptanceCoverage, RiskId,
-    StateRecordKind, StateRecordRef, SurfaceId, SurfaceInstanceId, SurfaceInteractionRole, TaskId,
-    UserJudgmentOptionAction, UserJudgmentResolution, UserJudgmentStatus, UtcTimestamp,
-    ACTOR_ASSURANCE_REGISTERED_SURFACE_COOPERATIVE,
+    StateRecordKind, StateRecordRef, TaskId, UserJudgmentOptionAction, UserJudgmentResolution,
+    UserJudgmentStatus, UtcTimestamp,
 };
 
 pub(crate) fn is_terminal_lifecycle(value: &str) -> bool {
@@ -55,9 +54,7 @@ pub(crate) struct JudgmentAuthority {
     pub(crate) affected_refs: Vec<StateRecordRef>,
     pub(crate) machine_action: Option<UserJudgmentOptionAction>,
     pub(crate) resolution_outcome: Option<JudgmentResolutionOutcome>,
-    pub(crate) resolved_actor_role: Option<SurfaceInteractionRole>,
-    pub(crate) resolved_by_surface_id: Option<SurfaceId>,
-    pub(crate) resolved_by_surface_instance_id: Option<SurfaceInstanceId>,
+    pub(crate) resolved_by_actor_source: Option<ActorSource>,
     pub(crate) resolved_verification_basis: Option<String>,
     pub(crate) resolved_assurance_level: Option<String>,
     pub(crate) basis_status: JudgmentBasisCompatibilityStatus,
@@ -359,21 +356,21 @@ pub(crate) fn accepted_current_user_authority(
     };
     resolution.machine_action == UserJudgmentOptionAction::Accept
         && resolution.resolution_outcome == JudgmentResolutionOutcome::Accepted
-        && resolution.resolved_by_actor_kind == ActorKind::User
+        && resolution.resolved_by_actor_source == ActorSource::LocalUser
         && verified_user_interaction_provenance(judgment)
         && resolution_answer_matches_kind(required_kind, &resolution.answer)
 }
 
 pub(crate) fn verified_user_interaction_provenance(judgment: &JudgmentAuthority) -> bool {
-    judgment.resolved_actor_role == Some(SurfaceInteractionRole::UserInteraction)
-        && judgment.resolved_by_surface_id.is_some()
-        && judgment.resolved_by_surface_instance_id.is_some()
+    judgment.resolved_by_actor_source == Some(ActorSource::LocalUser)
         && judgment
             .resolved_verification_basis
             .as_deref()
             .is_some_and(|value| !value.trim().is_empty())
-        && judgment.resolved_assurance_level.as_deref()
-            == Some(ACTOR_ASSURANCE_REGISTERED_SURFACE_COOPERATIVE)
+        && judgment
+            .resolved_assurance_level
+            .as_deref()
+            .is_some_and(|value| !value.trim().is_empty())
 }
 
 pub(crate) fn judgment_has_current_basis(judgment: &JudgmentAuthority) -> bool {

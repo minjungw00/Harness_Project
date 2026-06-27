@@ -69,8 +69,8 @@ pub(crate) fn evidence_assurance_matches_source(
         EvidenceSourceKind::AgentReport => {
             assurance_level == EvidenceAssuranceLevel::CooperativeReport
         }
-        EvidenceSourceKind::SurfaceObservation => {
-            assurance_level == EvidenceAssuranceLevel::RegisteredSurfaceObserved
+        EvidenceSourceKind::ConnectionObservation => {
+            assurance_level == EvidenceAssuranceLevel::RegisteredConnectionObserved
         }
         EvidenceSourceKind::ExternalTool => {
             assurance_level == EvidenceAssuranceLevel::ExternalToolResult
@@ -80,7 +80,7 @@ pub(crate) fn evidence_assurance_matches_source(
         }
         EvidenceSourceKind::ReusedEvidence => matches!(
             assurance_level,
-            EvidenceAssuranceLevel::RegisteredSurfaceObserved
+            EvidenceAssuranceLevel::RegisteredConnectionObserved
                 | EvidenceAssuranceLevel::ExternalToolResult
                 | EvidenceAssuranceLevel::UserObserved
         ),
@@ -97,14 +97,14 @@ pub(crate) fn evidence_provenance_class(
     match (source_kind, assurance_level) {
         (EvidenceSourceKind::ExternalTool, EvidenceAssuranceLevel::ExternalToolResult)
         | (
-            EvidenceSourceKind::SurfaceObservation,
-            EvidenceAssuranceLevel::RegisteredSurfaceObserved,
+            EvidenceSourceKind::ConnectionObservation,
+            EvidenceAssuranceLevel::RegisteredConnectionObserved,
         )
         | (EvidenceSourceKind::UserObservation, EvidenceAssuranceLevel::UserObserved)
         | (
             EvidenceSourceKind::ReusedEvidence,
             EvidenceAssuranceLevel::ExternalToolResult
-            | EvidenceAssuranceLevel::RegisteredSurfaceObserved
+            | EvidenceAssuranceLevel::RegisteredConnectionObserved
             | EvidenceAssuranceLevel::UserObserved,
         ) => EvidenceProvenanceClass::Strong,
         (EvidenceSourceKind::AgentReport, EvidenceAssuranceLevel::CooperativeReport) => {

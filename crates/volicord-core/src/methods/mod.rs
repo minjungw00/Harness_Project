@@ -17,15 +17,13 @@ use volicord_store::{
         RunInsert, RunRecord, StoredArtifactRecord, StoredArtifactStagingRecord, StoredRecordRef,
         TaskCloseBasisUpdate, TaskCloseUpdate, TaskInsert, TaskRecord, TaskScopeRevisionUpdate,
         TaskScopeUpdate, UserJudgmentInsert, UserJudgmentInvalidation, UserJudgmentRecord,
-        UserJudgmentResolutionUpdate, WriteAuthorizationConsumption, WriteAuthorizationInsert,
-        WriteAuthorizationRecord,
+        UserJudgmentResolutionUpdate, WriteCheckConsumption, WriteCheckInsert, WriteCheckRecord,
     },
     StoreError,
 };
 use volicord_types::{
-    AccessClass, ActorKind, ArtifactAvailability, ArtifactId, ArtifactInput,
-    ArtifactInputSourceKind, ArtifactIntegrityStatus, ArtifactRef, AuthorizationEffect,
-    AuthorizedAttemptScope, BaselineRef, ChangeUnitEffectContract, ChangeUnitId,
+    ActorSource, ArtifactAvailability, ArtifactId, ArtifactInput, ArtifactInputSourceKind,
+    ArtifactIntegrityStatus, ArtifactRef, BaselineRef, ChangeUnitEffectContract, ChangeUnitId,
     ChangeUnitOperation, CloseIntent, CloseReadinessBlocker, CloseReadinessBlockerCategory,
     CloseReason, CloseState, CloseTaskRequest, CloseTaskResult, CompletionPolicy,
     CurrentCloseBasis, DryRunSummary, DurableIdKind, EffectKind, ErrorCode, EvidenceAssuranceLevel,
@@ -33,8 +31,8 @@ use volicord_types::{
     EvidenceObservationInput, EvidenceSourceKind, EvidenceStatus, EvidenceSummary,
     EvidenceUpdateProvenance, GuaranteeDisplay, JsonObject, JudgmentBasis,
     JudgmentBasisCompatibilityStatus, JudgmentKind, JudgmentRationale, JudgmentRequiredFor,
-    JudgmentResolutionOutcome, MethodAccessClass, MethodName, NextActionKind, NextActionSummary,
-    ObservedChanges, PersistedEvidenceMetadata, PersistedJudgmentBasis,
+    JudgmentResolutionOutcome, MethodName, MethodOperationCategory, NextActionKind,
+    NextActionSummary, ObservedChanges, PersistedEvidenceMetadata, PersistedJudgmentBasis,
     PersistedUserJudgmentOptions, PersistedUserJudgmentRequest, PersistedUserJudgmentResolution,
     PlannedEffect, PrepareWriteRequest, PrepareWriteResult, ProjectContinuityKind,
     ProjectContinuityRecord, ProjectContinuityRecordId, ProjectContinuityStatus,
@@ -43,13 +41,12 @@ use volicord_types::{
     RequestedMode, RequiredNullable, ResidualRisk, ResumePolicy, RiskAcceptanceCoverage, RiskId,
     RunId, RunSummary, SensitiveActionRequirement, StageArtifactRequest, StageArtifactResult,
     StagedArtifactHandle, StagedArtifactHandleId, StateRecordKind, StateRecordRef,
-    StatusCloseState, StatusInclude, StatusRequest, StorageRef, SurfaceId, SurfaceInstanceId,
-    SurfaceInteractionRole, TaskId, TaskLifecyclePhase, TaskLifecycleState, TaskMode, TaskResult,
-    ToolEnvelope, ToolResultBase, UpdateScopeRequest, UserJudgment, UserJudgmentContext,
-    UserJudgmentOption, UserJudgmentOptionAction, UserJudgmentOptionId, UserJudgmentOptionInput,
-    UserJudgmentResolution, UserJudgmentStatus, UtcTimestamp, WriteAuthoritySummary,
-    WriteAuthorizationId, WriteAuthorizationStatus, WriteAuthorizationSummary,
-    WriteDecisionCategory, WriteDecisionReason,
+    StatusCloseState, StatusInclude, StatusRequest, StorageRef, TaskId, TaskLifecyclePhase,
+    TaskLifecycleState, TaskMode, TaskResult, ToolEnvelope, ToolResultBase, UpdateScopeRequest,
+    UserJudgment, UserJudgmentContext, UserJudgmentOption, UserJudgmentOptionAction,
+    UserJudgmentOptionId, UserJudgmentOptionInput, UserJudgmentResolution, UserJudgmentStatus,
+    UtcTimestamp, WriteCheckAttemptScope, WriteCheckEffect, WriteCheckId, WriteCheckStateSummary,
+    WriteCheckStatus, WriteCheckSummary, WriteDecisionCategory, WriteDecisionReason,
 };
 
 use crate::pipeline::{
@@ -57,7 +54,7 @@ use crate::pipeline::{
     CorePipelineError, CoreResult, CoreService, FreshnessPolicy, InvocationContext,
     MethodEffectPolicy, MethodPolicy, OwnerPipelineBranch, PipelinePreflightOutcome,
     PipelinePreflightRequest, PipelineResponse, PreparedRequest, ReplayPolicy, TaskRequirement,
-    VerifiedActorContext, VerifiedSurfaceContext,
+    VerifiedActorContext, VerifiedInvocationContext,
 };
 use crate::policy::{
     close_readiness::{
@@ -91,12 +88,11 @@ use crate::policy::{
     },
     path::{normalize_product_paths, path_is_within, ProductPathError},
     rationale::validate_judgment_rationale,
-    write_authorization::{
+    write_check::{
         current_sensitive_approval, normalize_sensitive_action_scope, normalized_string_set,
-        prepare_write_decision, prepare_write_dry_run_summary, run_write_authorization_mismatch,
-        sensitive_action_scope_matches_requirement, surface_supports_prepare_write,
-        write_authorization_expires_at, write_authorization_is_expired, write_decision_reason,
-        SensitiveApprovalRequirement,
+        prepare_write_decision, prepare_write_dry_run_summary, run_write_check_mismatch,
+        sensitive_action_scope_matches_requirement, write_check_expires_at, write_check_is_expired,
+        write_decision_reason, SensitiveApprovalRequirement,
     },
 };
 
@@ -249,18 +245,18 @@ fn allocate_user_judgment_id(
         .map(volicord_types::UserJudgmentId::new)
 }
 
-fn allocate_write_authorization_id(
+fn allocate_write_check_id(
     service: &CoreService,
     store: &CoreProjectStore,
-) -> CoreResult<WriteAuthorizationId> {
+) -> CoreResult<WriteCheckId> {
     service
-        .allocate_generated_id(DurableIdKind::WriteAuthorization, |candidate| {
+        .allocate_generated_id(DurableIdKind::WriteCheck, |candidate| {
             store
-                .write_authorization_record(candidate)
+                .write_check_record(candidate)
                 .map(|record| record.is_some())
                 .map_err(CorePipelineError::from)
         })
-        .map(WriteAuthorizationId::new)
+        .map(WriteCheckId::new)
 }
 
 fn allocate_run_id(service: &CoreService, store: &CoreProjectStore) -> CoreResult<RunId> {
@@ -510,11 +506,7 @@ fn artifact_ref_from_verified_record(
             created_by_run_state_version,
         ))
         .into(),
-        created_by_surface_id: Some(record.producer.created_by_surface_id.clone()).into(),
-        created_by_surface_instance_id: Some(
-            record.producer.created_by_surface_instance_id.clone(),
-        )
-        .into(),
+        created_by_actor_source: Some(record.producer.created_by_actor_source.clone()).into(),
         storage_ref: Some(StorageRef::new(record.uri.clone())).into(),
     })
 }
@@ -860,35 +852,37 @@ fn user_judgment_authority_from_record(
             ));
         }
     }
-    let resolved_by_actor_kind: Option<ActorKind> = record
-        .resolved_by_actor_kind
+    let resolved_by_actor_source: Option<ActorSource> = record
+        .resolved_by_actor_source
         .as_deref()
-        .map(|actor_kind| {
+        .map(|actor_source| {
             parse_owner_storage_value(
                 "user_judgments",
                 record.judgment_id.clone(),
-                "resolved_by_actor_kind",
-                actor_kind,
+                "resolved_by_actor_source",
+                actor_source,
             )
         })
         .transpose()?;
-    if let (Some(stored_actor), Some(resolution)) = (resolved_by_actor_kind, resolution.as_ref()) {
-        if stored_actor != resolution.resolved_by_actor_kind {
+    if let (Some(stored_actor), Some(resolution)) =
+        (resolved_by_actor_source.as_ref(), resolution.as_ref())
+    {
+        if stored_actor != &resolution.resolved_by_actor_source {
             return Err(CorePipelineError::Store(
                 StoreError::corrupt_owner_state_value(
                     "user_judgments",
                     record.judgment_id.clone(),
-                    "resolved_by_actor_kind",
+                    "resolved_by_actor_source",
                 ),
             ));
         }
     }
-    if resolution.is_some() && resolved_by_actor_kind.is_none() {
+    if resolution.is_some() && resolved_by_actor_source.is_none() {
         return Err(CorePipelineError::Store(
             StoreError::corrupt_owner_state_value(
                 "user_judgments",
                 record.judgment_id.clone(),
-                "resolved_by_actor_kind",
+                "resolved_by_actor_source",
             ),
         ));
     }
@@ -904,31 +898,8 @@ fn user_judgment_authority_from_record(
             ),
         ));
     }
-    let resolved_actor_role = record
-        .resolved_actor_role
-        .as_deref()
-        .map(|role| {
-            parse_owner_storage_value(
-                "user_judgments",
-                record.judgment_id.clone(),
-                "resolved_actor_role",
-                role,
-            )
-        })
-        .transpose()?;
-    let resolved_by_surface_id = record
-        .resolved_by_surface_id
-        .as_ref()
-        .map(|value| SurfaceId::new(value.clone()));
-    let resolved_by_surface_instance_id = record
-        .resolved_by_surface_instance_id
-        .as_ref()
-        .map(|value| SurfaceInstanceId::new(value.clone()));
     if resolution.is_some()
-        && (resolved_actor_role.is_none()
-            || resolved_by_surface_id.is_none()
-            || resolved_by_surface_instance_id.is_none()
-            || record.resolved_verification_basis.is_none()
+        && (record.resolved_verification_basis.is_none()
             || record.resolved_assurance_level.is_none())
     {
         return Err(CorePipelineError::Store(
@@ -948,9 +919,7 @@ fn user_judgment_authority_from_record(
         affected_refs,
         machine_action: authority_machine_action,
         resolution_outcome,
-        resolved_actor_role,
-        resolved_by_surface_id,
-        resolved_by_surface_instance_id,
+        resolved_by_actor_source,
         resolved_verification_basis: record.resolved_verification_basis.clone(),
         resolved_assurance_level: record.resolved_assurance_level.clone(),
         basis_status,
@@ -979,10 +948,7 @@ fn user_judgment_authority_from_state(
             .resolution
             .as_ref()
             .map(|resolution| resolution.resolution_outcome),
-        resolved_actor_role: actor_context.map(|context| context.role),
-        resolved_by_surface_id: actor_context.map(|context| context.surface_id.clone()),
-        resolved_by_surface_instance_id: actor_context
-            .map(|context| context.surface_instance_id.clone()),
+        resolved_by_actor_source: actor_context.map(|context| context.actor_source.clone()),
         resolved_verification_basis: actor_context
             .map(|context| context.verification_basis.clone()),
         resolved_assurance_level: actor_context.map(|context| context.assurance_level.clone()),
@@ -1088,13 +1054,13 @@ fn validation_plan_error(
 }
 
 fn mutation_method_policy(
-    access_class: AccessClass,
+    operation_category: volicord_types::OperationCategory,
     task: TaskRequirement,
     dry_run: bool,
 ) -> MethodPolicy {
     if dry_run {
         MethodPolicy::exact(
-            access_class,
+            operation_category,
             task,
             ReplayPolicy::None,
             FreshnessPolicy::IfPresent,
@@ -1102,7 +1068,7 @@ fn mutation_method_policy(
         )
     } else {
         MethodPolicy::exact(
-            access_class,
+            operation_category,
             task,
             ReplayPolicy::Committed,
             FreshnessPolicy::IfPresent,
@@ -1422,7 +1388,7 @@ fn artifact_missing_response(
     )
 }
 
-fn write_authorization_required_response(
+fn write_check_required_response(
     envelope: &ToolEnvelope,
     state_version: Option<u64>,
 ) -> PipelineResponse {
@@ -1434,15 +1400,15 @@ fn write_authorization_required_response(
         envelope.dry_run,
         state_version,
         vec![tool_error(
-            ErrorCode::WriteAuthorizationRequired,
-            "product-file write observations require a compatible active Write Authorization",
+            ErrorCode::WriteCheckRequired,
+            "product-file write observations require a compatible active Write Check",
             false,
             Some(details),
         )],
     )
 }
 
-fn write_authorization_invalid_response(
+fn write_check_invalid_response(
     envelope: &ToolEnvelope,
     state_version: Option<u64>,
     reason: &'static str,
@@ -1456,7 +1422,7 @@ fn write_authorization_invalid_response(
         envelope.dry_run,
         state_version,
         vec![tool_error(
-            ErrorCode::WriteAuthorizationInvalid,
+            ErrorCode::WriteCheckInvalid,
             message,
             false,
             Some(details),
@@ -1464,9 +1430,9 @@ fn write_authorization_invalid_response(
     )
 }
 
-fn stale_write_authorization_basis_response(
+fn stale_write_check_basis_response(
     envelope: &ToolEnvelope,
-    record: &WriteAuthorizationRecord,
+    record: &WriteCheckRecord,
     current_state_version: u64,
 ) -> PipelineResponse {
     let mut details = Map::new();
@@ -1479,12 +1445,12 @@ fn stale_write_authorization_basis_response(
         Value::from(current_state_version),
     );
     details.insert(
-        "write_authorization_basis_state_version".to_owned(),
+        "write_check_basis_state_version".to_owned(),
         Value::from(record.basis_state_version),
     );
     details.insert(
-        "write_authorization_id".to_owned(),
-        Value::String(record.write_authorization_id.clone()),
+        "write_check_id".to_owned(),
+        Value::String(record.write_check_id.clone()),
     );
     details.insert(
         "project_id".to_owned(),
@@ -1501,7 +1467,7 @@ fn stale_write_authorization_basis_response(
         Some(current_state_version),
         vec![tool_error(
             ErrorCode::StateVersionConflict,
-            "Write Authorization basis_state_version is stale",
+            "Write Check basis_state_version is stale",
             true,
             Some(details),
         )],
@@ -1671,7 +1637,7 @@ struct PersistedCompletionPolicy {
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
-struct PersistedAuthorizedAttemptScope {
+struct PersistedWriteCheckAttemptScope {
     task_id: TaskId,
     change_unit_id: ChangeUnitId,
     intended_operation: String,
@@ -1681,8 +1647,8 @@ struct PersistedAuthorizedAttemptScope {
     baseline_ref: Option<BaselineRef>,
 }
 
-impl From<PersistedAuthorizedAttemptScope> for AuthorizedAttemptScope {
-    fn from(scope: PersistedAuthorizedAttemptScope) -> Self {
+impl From<PersistedWriteCheckAttemptScope> for WriteCheckAttemptScope {
+    fn from(scope: PersistedWriteCheckAttemptScope) -> Self {
         Self {
             task_id: scope.task_id,
             change_unit_id: scope.change_unit_id,
@@ -1795,7 +1761,7 @@ struct SummaryBuild<'a> {
     current_change_unit: Option<&'a ChangeUnitRecord>,
     pending_user_judgment_refs: Vec<StateRecordRef>,
     blocker_refs: Vec<StateRecordRef>,
-    write_authority_summary: Option<WriteAuthoritySummary>,
+    write_check_summary: Option<WriteCheckStateSummary>,
     evidence_summary: Option<EvidenceSummary>,
     close_state: Option<CloseState>,
     close_blockers: Vec<CloseReadinessBlocker>,
@@ -1810,7 +1776,7 @@ fn build_state_summary(input: SummaryBuild<'_>) -> CoreResult<volicord_types::St
         current_change_unit,
         pending_user_judgment_refs,
         blocker_refs,
-        write_authority_summary,
+        write_check_summary,
         evidence_summary,
         close_state,
         close_blockers,
@@ -1878,7 +1844,7 @@ fn build_state_summary(input: SummaryBuild<'_>) -> CoreResult<volicord_types::St
         shaping_readiness: None,
         pending_user_judgment_refs,
         blocker_refs,
-        write_authority_summary,
+        write_check_summary,
         evidence_summary,
         close_state,
         close_blockers,
@@ -1886,17 +1852,17 @@ fn build_state_summary(input: SummaryBuild<'_>) -> CoreResult<volicord_types::St
     })
 }
 
-fn write_authority_summary_for_record(
+fn write_check_summary_for_record(
     store: Option<&CoreProjectStore>,
-    record: &WriteAuthorizationRecord,
+    record: &WriteCheckRecord,
     state_version: u64,
     now: Option<DateTime<Utc>>,
     observation_refs: Option<Vec<StateRecordRef>>,
     guarantee_display: Option<GuaranteeDisplay>,
-) -> CoreResult<WriteAuthoritySummary> {
-    let attempt_scope = decode_required_json::<PersistedAuthorizedAttemptScope>(
-        "write_authorizations",
-        record.write_authorization_id.clone(),
+) -> CoreResult<WriteCheckStateSummary> {
+    let attempt_scope = decode_required_json::<PersistedWriteCheckAttemptScope>(
+        "write_checks",
+        record.write_check_id.clone(),
         "attempt_scope_json",
         Some(&record.attempt_scope_json),
     )?;
@@ -1922,9 +1888,9 @@ fn write_authority_summary_for_record(
         ),
         _ => Vec::new(),
     };
-    Ok(WriteAuthoritySummary {
-        status: effective_write_authorization_status(record, state_version, now)?,
-        write_authorization_ref: Some(write_authorization_ref(record, state_version)),
+    Ok(WriteCheckStateSummary {
+        status: effective_write_check_status(record, state_version, now)?,
+        write_check_ref: Some(write_check_ref(record, state_version)),
         basis_state_version: Some(record.basis_state_version),
         intended_paths: attempt_scope.intended_paths,
         consumed_by_run_ref,
@@ -1933,33 +1899,33 @@ fn write_authority_summary_for_record(
     })
 }
 
-fn effective_write_authorization_status(
-    record: &WriteAuthorizationRecord,
+fn effective_write_check_status(
+    record: &WriteCheckRecord,
     state_version: u64,
     now: Option<DateTime<Utc>>,
-) -> CoreResult<WriteAuthorizationStatus> {
-    let stored_status = parse_storage_value("write_authorizations.status", &record.status)?;
-    if stored_status != WriteAuthorizationStatus::Active {
+) -> CoreResult<WriteCheckStatus> {
+    let stored_status = parse_storage_value("write_checks.status", &record.status)?;
+    if stored_status != WriteCheckStatus::Active {
         return Ok(stored_status);
     }
     if record.basis_state_version != state_version {
-        return Ok(WriteAuthorizationStatus::Stale);
+        return Ok(WriteCheckStatus::Stale);
     }
     if now
-        .map(|now| write_authorization_is_expired(record, now))
+        .map(|now| write_check_is_expired(record, now))
         .transpose()
         .map_err(CorePipelineError::from)?
         .unwrap_or(false)
     {
-        Ok(WriteAuthorizationStatus::Expired)
+        Ok(WriteCheckStatus::Expired)
     } else {
-        Ok(WriteAuthorizationStatus::Active)
+        Ok(WriteCheckStatus::Active)
     }
 }
 
-fn guarantee_display_for_surface(
+fn guarantee_display_for_invocation(
     store: &CoreProjectStore,
-    verified_surface: &VerifiedSurfaceContext,
+    verified_invocation: &VerifiedInvocationContext,
     state_version: u64,
 ) -> Result<GuaranteeDisplay, PlanError> {
     let profile = store
@@ -1968,66 +1934,73 @@ fn guarantee_display_for_surface(
         .profile;
     Ok(guarantee_display_from_profile(
         &profile,
-        verified_surface,
+        verified_invocation,
         state_version,
     ))
 }
 
 fn guarantee_display_from_profile(
     profile: &ProjectEnforcementProfile,
-    verified_surface: &VerifiedSurfaceContext,
+    verified_invocation: &VerifiedInvocationContext,
     state_version: u64,
 ) -> GuaranteeDisplay {
     GuaranteeDisplay {
         level: profile.guarantee_level,
         basis: format!(
-            "Project enforcement profile `{}` is active for registered surface `{}` instance `{}` role `{}` verified by `{}`; enabled mechanisms: none; no stronger enforcement is active.",
+            "Project enforcement profile `{}` is active for actor source `{}` operation category `{}` verified by `{}`; enabled mechanisms: none; no stronger enforcement is active.",
             profile.profile_id,
-            verified_surface.surface_id.as_str(),
-            verified_surface.surface_instance_id.as_str(),
-            verified_surface.interaction_role.as_str(),
-            verified_surface.verification_basis
+            verified_invocation.actor_source,
+            verified_invocation.operation_category.as_str(),
+            verified_invocation.verification_basis
         ),
-        capability_refs: vec![surface_registration_ref(verified_surface, state_version)],
+        capability_refs: vec![invocation_binding_ref(verified_invocation, state_version)],
     }
 }
 
-fn surface_registration_ref(
-    verified_surface: &VerifiedSurfaceContext,
+fn invocation_binding_ref(
+    verified_invocation: &VerifiedInvocationContext,
     state_version: u64,
 ) -> StateRecordRef {
-    state_ref(
-        StateRecordKind::LocalSurfaceRegistration,
-        &format!(
-            "{}/{}",
-            verified_surface.surface_id.as_str(),
-            verified_surface.surface_instance_id.as_str()
+    match &verified_invocation.actor_source {
+        ActorSource::AgentConnection(connection_id) => state_ref(
+            StateRecordKind::AgentConnection,
+            connection_id.as_str(),
+            &verified_invocation.project_id,
+            None,
+            Some(state_version),
         ),
-        &verified_surface.project_id,
-        None,
-        Some(state_version),
-    )
+        ActorSource::LocalUser | ActorSource::System => state_ref(
+            StateRecordKind::ProjectState,
+            verified_invocation
+                .actor_source
+                .to_canonical_string()
+                .as_str(),
+            &verified_invocation.project_id,
+            None,
+            Some(state_version),
+        ),
+    }
 }
 
-fn selected_write_authorization_for_projection(
+fn selected_write_check_for_projection(
     store: &CoreProjectStore,
     task_id: &TaskId,
     state_version: u64,
     now: DateTime<Utc>,
-) -> Result<Option<WriteAuthorizationRecord>, PlanError> {
+) -> Result<Option<WriteCheckRecord>, PlanError> {
     let records = store
-        .write_authorizations_for_task(task_id)
+        .write_checks_for_task(task_id)
         .map_err(CorePipelineError::from)?;
     let mut selected = None;
     let mut selected_priority = u8::MAX;
     for record in records {
-        let status = effective_write_authorization_status(&record, state_version, Some(now))?;
+        let status = effective_write_check_status(&record, state_version, Some(now))?;
         let priority = match status {
-            WriteAuthorizationStatus::Active => 0,
-            WriteAuthorizationStatus::Expired => 1,
-            WriteAuthorizationStatus::Stale => 2,
-            WriteAuthorizationStatus::Consumed => 3,
-            WriteAuthorizationStatus::Revoked => 4,
+            WriteCheckStatus::Active => 0,
+            WriteCheckStatus::Expired => 1,
+            WriteCheckStatus::Stale => 2,
+            WriteCheckStatus::Consumed => 3,
+            WriteCheckStatus::Revoked => 4,
         };
         if priority < selected_priority {
             selected_priority = priority;
@@ -2037,18 +2010,18 @@ fn selected_write_authorization_for_projection(
     Ok(selected)
 }
 
-fn projected_write_authority_summary(
+fn projected_write_check_summary(
     store: &CoreProjectStore,
     task_id: &TaskId,
     state_version: u64,
     now: DateTime<Utc>,
     guarantee_display: Option<GuaranteeDisplay>,
-) -> Result<Option<WriteAuthoritySummary>, PlanError> {
+) -> Result<Option<WriteCheckStateSummary>, PlanError> {
     Ok(
-        selected_write_authorization_for_projection(store, task_id, state_version, now)?
+        selected_write_check_for_projection(store, task_id, state_version, now)?
             .as_ref()
             .map(|record| {
-                write_authority_summary_for_record(
+                write_check_summary_for_record(
                     Some(store),
                     record,
                     state_version,
@@ -2124,8 +2097,6 @@ fn project_state_projection(
         project_id: project_state.project_id.clone(),
         state_version,
         active_task_id,
-        default_surface_id: project_state.default_surface_id.clone(),
-        default_surface_instance_id: project_state.default_surface_instance_id.clone(),
     }
 }
 
@@ -2173,7 +2144,7 @@ fn close_context_with_resolved_authorities(
 fn projected_close_check(
     store: &CoreProjectStore,
     project_state: &ProjectStateHeader,
-    verified_surface: &VerifiedSurfaceContext,
+    verified_invocation: &VerifiedInvocationContext,
     envelope: &ToolEnvelope,
     task_id: &TaskId,
     context: CloseTaskContext,
@@ -2182,7 +2153,7 @@ fn projected_close_check(
     close_task::plan_close_task_with_context(
         store,
         project_state,
-        Some(verified_surface),
+        Some(verified_invocation),
         None,
         CloseTaskRequest {
             envelope: ToolEnvelope {
@@ -2327,13 +2298,10 @@ fn state_ref(
     }
 }
 
-fn write_authorization_ref(
-    record: &WriteAuthorizationRecord,
-    state_version: u64,
-) -> StateRecordRef {
+fn write_check_ref(record: &WriteCheckRecord, state_version: u64) -> StateRecordRef {
     state_ref(
-        StateRecordKind::WriteAuthorization,
-        &record.write_authorization_id,
+        StateRecordKind::WriteCheck,
+        &record.write_check_id,
         &ProjectId::new(record.project_id.clone()),
         Some(&TaskId::new(record.task_id.clone())),
         Some(state_version),
@@ -2474,7 +2442,7 @@ fn state_ref_from_stored(record: StoredRecordRef) -> StateRecordRef {
     let kind = match record.record_kind.as_str() {
         "user_judgment" => StateRecordKind::UserJudgment,
         "blocker" => StateRecordKind::Blocker,
-        "write_authorization" => StateRecordKind::WriteAuthorization,
+        "write_check" => StateRecordKind::WriteCheck,
         "change_unit" => StateRecordKind::ChangeUnit,
         "task" => StateRecordKind::Task,
         "evidence_observation" => StateRecordKind::EvidenceObservation,
@@ -2544,7 +2512,7 @@ fn rejected_pipeline_response(
     Ok(PipelineResponse {
         response_json,
         response_value,
-        verified_surface: None,
+        verified_invocation: None,
         resolved_task_id: None,
         replayed: false,
     })

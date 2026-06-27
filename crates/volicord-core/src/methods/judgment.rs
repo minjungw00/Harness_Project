@@ -25,7 +25,7 @@ impl CoreService {
             request_json,
             invocation,
             mutation_method_policy(
-                request.requested_access_class(),
+                request.operation_category(),
                 TaskRequirement::Exact(request.task_id.clone()),
                 request.envelope.dry_run,
             ),
@@ -38,7 +38,7 @@ impl CoreService {
             &prepared.store,
             &prepared.context.project_state,
             request.clone(),
-            &prepared.context.verified_surface,
+            &prepared.context.verified_invocation,
         ) {
             Ok(plan) => plan,
             Err(error) => {
@@ -98,7 +98,7 @@ impl CoreService {
             request_json,
             invocation,
             mutation_method_policy(
-                request.requested_access_class(),
+                request.operation_category(),
                 task_requirement,
                 request.envelope.dry_run,
             ),
@@ -111,7 +111,7 @@ impl CoreService {
             &prepared.store,
             &prepared.context.project_state,
             request.clone(),
-            &prepared.context.verified_surface,
+            &prepared.context.verified_invocation,
             &prepared.context.verified_actor,
         ) {
             Ok(plan) => plan,
@@ -157,7 +157,7 @@ fn plan_request_user_judgment(
     store: &CoreProjectStore,
     project_state: &ProjectStateHeader,
     request: volicord_types::RequestUserJudgmentRequest,
-    verified_surface: &VerifiedSurfaceContext,
+    verified_invocation: &VerifiedInvocationContext,
 ) -> Result<MethodPlan, PlanError> {
     let requested_at = utc_timestamp(service.now());
     let caller_options = request.options.as_ref().map(Vec::as_slice).unwrap_or(&[]);
@@ -323,8 +323,8 @@ fn plan_request_user_judgment(
     });
     let next_actions = next_actions_for_state(&task_ref, change_unit_ref.as_ref());
     let guarantee_display =
-        guarantee_display_for_surface(store, verified_surface, planned_state_version)?;
-    let write_authority_summary = projected_write_authority_summary(
+        guarantee_display_for_invocation(store, verified_invocation, planned_state_version)?;
+    let write_check_summary = projected_write_check_summary(
         store,
         &request.task_id,
         planned_state_version,
@@ -355,7 +355,7 @@ fn plan_request_user_judgment(
     let close_plan = projected_close_check(
         store,
         &projected_project_state,
-        verified_surface,
+        verified_invocation,
         &request.envelope,
         &request.task_id,
         close_context_with_pending_authorities(
@@ -378,7 +378,7 @@ fn plan_request_user_judgment(
         current_change_unit: current_change_unit.as_ref(),
         pending_user_judgment_refs: pending_refs,
         blocker_refs: blocker_refs.clone(),
-        write_authority_summary,
+        write_check_summary,
         evidence_summary,
         close_state: Some(close_plan.close_state),
         close_blockers: close_plan.blockers,
@@ -414,15 +414,9 @@ fn plan_request_user_judgment(
             sensitive_action_scope_json: stored_sensitive_action_scope_json,
             basis_json: serde_json::to_string(&basis)?,
             basis_status: volicord_types::JudgmentBasisCompatibilityStatus::Current,
-            requested_by_surface_id: verified_surface.surface_id.as_str().to_owned(),
-            requested_by_surface_instance_id: verified_surface
-                .surface_instance_id
-                .as_str()
-                .to_owned(),
+            requested_by_actor_source: verified_invocation.actor_source.to_canonical_string(),
             requested_at: requested_at.to_string(),
-            metadata_json: serde_json::to_string(&json!({
-                "requested_by_actor_kind": request.envelope.actor_kind
-            }))?,
+            metadata_json: serde_json::to_string(&json!({}))?,
         },
     )];
     let event_payload = object_from_value(json!({
@@ -961,7 +955,7 @@ fn plan_record_user_judgment(
     store: &CoreProjectStore,
     project_state: &ProjectStateHeader,
     request: RecordUserJudgmentRequest,
-    verified_surface: &VerifiedSurfaceContext,
+    verified_invocation: &VerifiedInvocationContext,
     verified_actor: &VerifiedActorContext,
 ) -> Result<MethodPlan, PlanError> {
     let planned_state_version = project_state.state_version + 1;
@@ -1067,24 +1061,13 @@ fn plan_record_user_judgment(
         )));
     }
     if is_authority_bearing_judgment(request.judgment_kind)
-        && request.envelope.actor_kind != ActorKind::User
-    {
-        return validation_plan_error(
-            request.envelope.dry_run,
-            Some(project_state.state_version),
-            "envelope.actor_kind",
-            "authority-bearing judgments must be resolved by actor_kind=user",
-        )
-        .map(|()| unreachable!());
-    }
-    if is_authority_bearing_judgment(request.judgment_kind)
-        && verified_actor.role != SurfaceInteractionRole::UserInteraction
+        && verified_actor.actor_source != ActorSource::LocalUser
     {
         let response = rejected_pipeline_response(
             request.envelope.dry_run,
             Some(project_state.state_version),
-            vec![crate::policy::access::local_access_mismatch_error(
-                "surfaces.interaction_role",
+            vec![crate::policy::access::invocation_context_mismatch_error(
+                "invocation.actor_source",
             )],
         )
         .map_err(PlanError::Core)?;
@@ -1157,7 +1140,7 @@ fn plan_record_user_judgment(
         rationale: request.rationale.clone(),
         note: request.note.clone(),
         accepted_risks: request.accepted_risks.clone(),
-        resolved_by_actor_kind: request.envelope.actor_kind,
+        resolved_by_actor_source: verified_actor.actor_source.clone(),
     };
     user_judgment.status = UserJudgmentStatus::Resolved;
     user_judgment.resolution = Some(resolution.clone());
@@ -1213,8 +1196,8 @@ fn plan_record_user_judgment(
     });
     let next_actions = next_actions_for_state(&task_ref, change_unit_ref.as_ref());
     let guarantee_display =
-        guarantee_display_for_surface(store, verified_surface, planned_state_version)?;
-    let write_authority_summary = projected_write_authority_summary(
+        guarantee_display_for_invocation(store, verified_invocation, planned_state_version)?;
+    let write_check_summary = projected_write_check_summary(
         store,
         &task_id,
         planned_state_version,
@@ -1253,7 +1236,7 @@ fn plan_record_user_judgment(
     let close_plan = projected_close_check(
         store,
         &projected_project_state,
-        verified_surface,
+        verified_invocation,
         &request.envelope,
         &task_id,
         close_context_with_resolved_authorities(
@@ -1279,7 +1262,7 @@ fn plan_record_user_judgment(
         current_change_unit: current_change_unit.as_ref(),
         pending_user_judgment_refs: pending_refs,
         blocker_refs,
-        write_authority_summary,
+        write_check_summary,
         evidence_summary,
         close_state: Some(close_plan.close_state),
         close_blockers: close_plan.blockers,
@@ -1334,10 +1317,7 @@ fn plan_record_user_judgment(
             ))?,
             resolution_rationale_json: serde_json::to_string(&resolution.rationale)?,
             sensitive_action_scope_json,
-            resolved_by_actor_kind: storage_value(request.envelope.actor_kind)?,
-            resolved_actor_role: storage_value(verified_actor.role)?,
-            resolved_by_surface_id: verified_actor.surface_id.as_str().to_owned(),
-            resolved_by_surface_instance_id: verified_actor.surface_instance_id.as_str().to_owned(),
+            resolved_by_actor_source: verified_actor.actor_source.to_canonical_string(),
             resolved_verification_basis: verified_actor.verification_basis.clone(),
             resolved_assurance_level: verified_actor.assurance_level.clone(),
             resolved_at: now.to_string(),

@@ -19,7 +19,7 @@ impl CoreService {
             }
         }
         let policy = mutation_method_policy(
-            request.requested_access_class(),
+            request.operation_category(),
             TaskRequirement::Exact(request.task_id.clone()),
             request.envelope.dry_run,
         );
@@ -39,7 +39,7 @@ impl CoreService {
             &prepared.store,
             &prepared.context.project_state,
             request.clone(),
-            &prepared.context.verified_surface,
+            &prepared.context.verified_invocation,
         ) {
             Ok(plan) => plan,
             Err(error) => {
@@ -84,7 +84,7 @@ fn plan_update_scope(
     store: &CoreProjectStore,
     project_state: &ProjectStateHeader,
     request: UpdateScopeRequest,
-    verified_surface: &VerifiedSurfaceContext,
+    verified_invocation: &VerifiedInvocationContext,
 ) -> Result<MethodPlan, PlanError> {
     let planned_state_version = project_state.state_version + 1;
     let plan_now = utc_timestamp(service.now());
@@ -138,8 +138,8 @@ fn plan_update_scope(
         task.close_basis_revision
     };
 
-    let active_write_authorizations = store
-        .active_write_authorizations(&request.task_id)
+    let active_write_checks = store
+        .active_write_checks(&request.task_id)
         .map_err(|error| {
             PlanError::Response(Box::new(store_error_response(
                 &request.envelope,
@@ -147,10 +147,10 @@ fn plan_update_scope(
                 error,
             )))
         })?;
-    let stale_write_authorization_refs = if scope_changed {
-        active_write_authorizations
+    let stale_write_check_refs = if scope_changed {
+        active_write_checks
             .iter()
-            .map(|record| write_authorization_ref(record, planned_state_version))
+            .map(|record| write_check_ref(record, planned_state_version))
             .collect::<Vec<_>>()
     } else {
         Vec::new()
@@ -289,8 +289,8 @@ fn plan_update_scope(
             }
         };
 
-    if scope_changed && !active_write_authorizations.is_empty() {
-        storage_mutations.push(CoreStorageMutation::MarkActiveWriteAuthorizationsStale {
+    if scope_changed && !active_write_checks.is_empty() {
+        storage_mutations.push(CoreStorageMutation::MarkActiveWriteChecksStale {
             task_id: request.task_id.as_str().to_owned(),
         });
     }
@@ -340,8 +340,8 @@ fn plan_update_scope(
     );
     let next_actions = next_actions_for_state(&task_ref, change_unit_ref.as_ref());
     let guarantee_display =
-        guarantee_display_for_surface(store, verified_surface, planned_state_version)?;
-    let write_authority_summary = projected_write_authority_summary(
+        guarantee_display_for_invocation(store, verified_invocation, planned_state_version)?;
+    let write_check_summary = projected_write_check_summary(
         store,
         &request.task_id,
         planned_state_version,
@@ -365,7 +365,7 @@ fn plan_update_scope(
     let close_plan = projected_close_check(
         store,
         &projected_project_state,
-        verified_surface,
+        verified_invocation,
         &request.envelope,
         &request.task_id,
         close_context_from_projection(
@@ -389,7 +389,7 @@ fn plan_update_scope(
         current_change_unit: synthetic_change_unit.as_ref(),
         pending_user_judgment_refs: pending_refs,
         blocker_refs: blocker_refs.clone(),
-        write_authority_summary,
+        write_check_summary,
         evidence_summary,
         close_state: Some(close_plan.close_state),
         close_blockers: close_plan.blockers,
@@ -400,7 +400,7 @@ fn plan_update_scope(
         task_ref,
         change_unit_ref,
         linked_scope_decision_refs,
-        stale_write_authorization_refs,
+        stale_write_check_refs,
         blocker_refs,
         state,
         next_actions: next_actions.clone(),

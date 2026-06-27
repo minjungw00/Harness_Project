@@ -16,17 +16,16 @@ use volicord_store::{
     StoreError, StoreFailureRoute,
 };
 use volicord_types::{
-    canonical_request_hash, AccessClass, ChangeUnitId, DryRunSummary, DurableIdError,
+    canonical_request_hash, ActorSource, ChangeUnitId, DryRunSummary, DurableIdError,
     DurableIdGenerator, DurableIdKind, EffectKind, ErrorCode, EventId, EventRef, IdempotencyKey,
-    JsonObject, MethodName, ProjectId, RandomDurableIdGenerator, RequestHash, ResponseKind,
-    SurfaceId, SurfaceInstanceId, SurfaceInteractionRole, TaskId, ToolDryRunResponse, ToolEnvelope,
-    ToolError, ToolRejectedResponse, ToolResultBase,
-    ACTOR_ASSURANCE_REGISTERED_SURFACE_COOPERATIVE, DURABLE_ID_RETRY_LIMIT,
+    JsonObject, MethodName, OperationCategory, ProjectId, RandomDurableIdGenerator, RequestHash,
+    ResponseKind, TaskId, ToolDryRunResponse, ToolEnvelope, ToolError, ToolRejectedResponse,
+    ToolResultBase, DURABLE_ID_RETRY_LIMIT,
 };
 
 use crate::policy::{
-    access::{derive_verified_surface, method_access_error},
-    replay::{replay_context_from_verified_surface, replay_context_mismatch_response},
+    access::derive_verified_invocation,
+    replay::{replay_context_from_verified_invocation, replay_context_mismatch_response},
 };
 
 /// Result type for Core pipeline execution errors.
@@ -93,70 +92,57 @@ impl From<DurableIdError> for CorePipelineError {
     }
 }
 
-/// Trusted adapter/session binding supplied outside `ToolEnvelope`.
+/// Local invocation facts supplied by an adapter outside `ToolEnvelope`.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct AdapterSessionBinding {
+pub struct InvocationContext {
     pub project_id: ProjectId,
-    pub surface_id: SurfaceId,
-    pub surface_instance_id: SurfaceInstanceId,
+    pub actor_source: ActorSource,
+    pub operation_category: OperationCategory,
     pub invocation_binding_basis: String,
 }
 
-impl AdapterSessionBinding {
-    /// Creates a trusted adapter/session binding for one local surface instance.
+impl InvocationContext {
+    /// Creates typed adapter-derived invocation facts for Core preflight.
     pub fn new(
         project_id: ProjectId,
-        surface_id: SurfaceId,
-        surface_instance_id: SurfaceInstanceId,
+        actor_source: ActorSource,
+        operation_category: OperationCategory,
         invocation_binding_basis: impl Into<String>,
     ) -> Self {
         Self {
             project_id,
-            surface_id,
-            surface_instance_id,
+            actor_source,
+            operation_category,
             invocation_binding_basis: invocation_binding_basis.into(),
         }
     }
 }
 
-/// Local invocation facts supplied by an adapter outside `ToolEnvelope`.
+/// Internal verified invocation context derived for one Core call.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct InvocationContext {
-    pub binding: AdapterSessionBinding,
-    pub requested_access_class: AccessClass,
-}
-
-/// Internal verified surface context derived for one invocation.
-#[derive(Debug, Clone, PartialEq)]
-pub struct VerifiedSurfaceContext {
+pub struct VerifiedInvocationContext {
     pub project_id: ProjectId,
-    pub surface_id: SurfaceId,
-    pub surface_instance_id: SurfaceInstanceId,
-    pub access_class: AccessClass,
-    pub capability_profile: Value,
+    pub actor_source: ActorSource,
+    pub operation_category: OperationCategory,
     pub verification_basis: String,
-    pub interaction_role: SurfaceInteractionRole,
+    pub assurance_level: String,
 }
 
 /// Internal verified actor-provenance context derived for authority-bearing resolution.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VerifiedActorContext {
-    pub role: SurfaceInteractionRole,
-    pub surface_id: SurfaceId,
-    pub surface_instance_id: SurfaceInstanceId,
+    pub actor_source: ActorSource,
     pub verification_basis: String,
     pub assurance_level: String,
 }
 
 impl VerifiedActorContext {
-    /// Derives actor provenance from the verified registered surface context.
-    pub fn from_verified_surface(surface: &VerifiedSurfaceContext) -> Self {
+    /// Derives actor provenance from the verified invocation context.
+    pub fn from_verified_invocation(invocation: &VerifiedInvocationContext) -> Self {
         Self {
-            role: surface.interaction_role,
-            surface_id: surface.surface_id.clone(),
-            surface_instance_id: surface.surface_instance_id.clone(),
-            verification_basis: surface.verification_basis.clone(),
-            assurance_level: ACTOR_ASSURANCE_REGISTERED_SURFACE_COOPERATIVE.to_owned(),
+            actor_source: invocation.actor_source.clone(),
+            verification_basis: invocation.verification_basis.clone(),
+            assurance_level: invocation.assurance_level.clone(),
         }
     }
 }
@@ -184,12 +170,6 @@ pub(crate) enum FreshnessPolicy {
     IfPresent,
 }
 
-/// Method access behavior after the invocation has a verified registered grant.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum MethodAccessPolicy {
-    Exact(AccessClass),
-}
-
 /// Storage/effect family selected before method-specific planning runs.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum MethodEffectPolicy {
@@ -204,7 +184,7 @@ pub(crate) enum MethodEffectPolicy {
 /// Authoritative preflight policy for a public method branch.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct MethodPolicy {
-    pub(crate) access: MethodAccessPolicy,
+    pub(crate) operation_category: OperationCategory,
     pub(crate) task: TaskRequirement,
     pub(crate) replay: ReplayPolicy,
     pub(crate) freshness: FreshnessPolicy,
@@ -213,14 +193,14 @@ pub(crate) struct MethodPolicy {
 
 impl MethodPolicy {
     pub(crate) fn exact(
-        access_class: AccessClass,
+        operation_category: OperationCategory,
         task: TaskRequirement,
         replay: ReplayPolicy,
         freshness: FreshnessPolicy,
         effect: MethodEffectPolicy,
     ) -> Self {
         Self {
-            access: MethodAccessPolicy::Exact(access_class),
+            operation_category,
             task,
             replay,
             freshness,
@@ -230,34 +210,34 @@ impl MethodPolicy {
 
     #[cfg(test)]
     fn for_branch(
-        access_class: AccessClass,
+        operation_category: OperationCategory,
         task: TaskRequirement,
         branch: &OwnerPipelineBranch,
     ) -> Self {
         match branch {
             OwnerPipelineBranch::ReadOnly { .. } => Self::exact(
-                access_class,
+                operation_category,
                 task,
                 ReplayPolicy::None,
                 FreshnessPolicy::None,
                 MethodEffectPolicy::ReadOnly,
             ),
             OwnerPipelineBranch::NoEffectResult { .. } => Self::exact(
-                access_class,
+                operation_category,
                 task,
                 ReplayPolicy::None,
                 FreshnessPolicy::IfPresent,
                 MethodEffectPolicy::NoEffect,
             ),
             OwnerPipelineBranch::DryRunPreview { .. } => Self::exact(
-                access_class,
+                operation_category,
                 task,
                 ReplayPolicy::None,
                 FreshnessPolicy::IfPresent,
                 MethodEffectPolicy::DryRunPreview,
             ),
             OwnerPipelineBranch::CommitMutation { .. } => Self::exact(
-                access_class,
+                operation_category,
                 task,
                 ReplayPolicy::Committed,
                 FreshnessPolicy::IfPresent,
@@ -297,7 +277,7 @@ pub(crate) struct PipelineRequest {
     pub envelope: ToolEnvelope,
     pub request_json: Value,
     pub invocation: InvocationContext,
-    pub required_access_class: AccessClass,
+    pub operation_category: OperationCategory,
     pub task_requirement: TaskRequirement,
     pub branch: OwnerPipelineBranch,
 }
@@ -316,7 +296,7 @@ pub(crate) struct PipelinePreflightRequest {
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct VerifiedRequestContext {
     pub project_state: ProjectStateHeader,
-    pub verified_surface: VerifiedSurfaceContext,
+    pub verified_invocation: VerifiedInvocationContext,
     pub verified_actor: VerifiedActorContext,
     pub resolved_task_id: Option<TaskId>,
 }
@@ -341,7 +321,7 @@ pub(crate) enum PipelinePreflightOutcome {
 pub struct PipelineResponse {
     pub response_json: String,
     pub response_value: Value,
-    pub verified_surface: Option<VerifiedSurfaceContext>,
+    pub verified_invocation: Option<VerifiedInvocationContext>,
     pub resolved_task_id: Option<TaskId>,
     pub replayed: bool,
 }
@@ -435,7 +415,7 @@ impl CoreService {
     ) -> CoreResult<PipelineResponse> {
         validate_branch_shape(&request.branch, request.envelope.dry_run)?;
         let policy = MethodPolicy::for_branch(
-            request.required_access_class,
+            request.operation_category,
             request.task_requirement,
             &request.branch,
         );
@@ -468,15 +448,6 @@ impl CoreService {
             );
         }
 
-        if let Some(error) = adapter_binding_mismatch_error(&request.envelope, &request.invocation)
-        {
-            return response_outcome_from_rejected(
-                rejected_response(request.envelope.dry_run, None, vec![error]),
-                None,
-                None,
-            );
-        }
-
         let committed_envelope_errors =
             validate_committed_effect_envelope(&request.envelope, &request.policy);
         if !committed_envelope_errors.is_empty() {
@@ -489,10 +460,8 @@ impl CoreService {
 
         let request_hash = canonical_request_hash(&request.request_json)?;
 
-        let store = match CoreProjectStore::open(
-            &self.runtime_home,
-            &request.invocation.binding.project_id,
-        ) {
+        let store = match CoreProjectStore::open(&self.runtime_home, &request.invocation.project_id)
+        {
             Ok(store) => store,
             Err(error) => {
                 return response_outcome_from_rejected(
@@ -522,11 +491,11 @@ impl CoreService {
             }
         };
 
-        let verified_surface = match derive_verified_surface(
-            &store,
+        let verified_invocation = match derive_verified_invocation(
             &project_state,
             &request.envelope,
             &request.invocation,
+            &request.policy,
         ) {
             Ok(context) => context,
             Err(error) => {
@@ -547,7 +516,7 @@ impl CoreService {
             &request,
             &request_hash,
             &project_state,
-            &verified_surface,
+            &verified_invocation,
         ) {
             Ok(response) => response,
             Err(CorePipelineError::Store(error)) => {
@@ -557,7 +526,7 @@ impl CoreService {
                         Some(project_state.state_version),
                         vec![store_failure_error(error)],
                     ),
-                    Some(verified_surface),
+                    Some(verified_invocation),
                     None,
                 );
             }
@@ -583,7 +552,7 @@ impl CoreService {
                         Some(project_state.state_version),
                         vec![error],
                     ),
-                    Some(verified_surface),
+                    Some(verified_invocation),
                     None,
                 );
             }
@@ -592,7 +561,7 @@ impl CoreService {
         if let Some(freshness_response) = freshness_preflight_response(
             &request,
             &project_state,
-            Some(verified_surface.clone()),
+            Some(verified_invocation.clone()),
             resolved_task_id.clone(),
         )? {
             return Ok(PipelinePreflightOutcome::Response(Box::new(
@@ -600,19 +569,7 @@ impl CoreService {
             )));
         }
 
-        if let Some(error) = method_access_error(request.policy.access, &verified_surface) {
-            return response_outcome_from_rejected(
-                rejected_response(
-                    request.envelope.dry_run,
-                    Some(project_state.state_version),
-                    vec![error],
-                ),
-                Some(verified_surface),
-                resolved_task_id,
-            );
-        }
-
-        let verified_actor = VerifiedActorContext::from_verified_surface(&verified_surface);
+        let verified_actor = VerifiedActorContext::from_verified_invocation(&verified_invocation);
 
         Ok(PipelinePreflightOutcome::Prepared(Box::new(
             PreparedRequest {
@@ -622,7 +579,7 @@ impl CoreService {
                 store,
                 context: VerifiedRequestContext {
                     project_state,
-                    verified_surface,
+                    verified_invocation,
                     verified_actor,
                     resolved_task_id,
                 },
@@ -638,7 +595,7 @@ impl CoreService {
     ) -> CoreResult<PipelineResponse> {
         validate_branch_shape(&branch, prepared.envelope.dry_run)?;
         let project_state = prepared.context.project_state.clone();
-        let verified_surface = prepared.context.verified_surface.clone();
+        let verified_invocation = prepared.context.verified_invocation.clone();
         let resolved_task_id = prepared.context.resolved_task_id.clone();
 
         match branch {
@@ -651,7 +608,7 @@ impl CoreService {
                 );
                 response_from_value(
                     method_result_value(base, result_fields)?,
-                    Some(verified_surface),
+                    Some(verified_invocation),
                     resolved_task_id,
                     false,
                 )
@@ -665,14 +622,14 @@ impl CoreService {
                 );
                 response_from_value(
                     method_result_value(base, result_fields)?,
-                    Some(verified_surface),
+                    Some(verified_invocation),
                     resolved_task_id,
                     false,
                 )
             }
             OwnerPipelineBranch::DryRunPreview { dry_run_summary } => response_from_dry_run(
                 dry_run_response(Some(project_state.state_version), dry_run_summary),
-                Some(verified_surface),
+                Some(verified_invocation),
                 resolved_task_id,
             ),
             OwnerPipelineBranch::CommitMutation {
@@ -692,7 +649,7 @@ impl CoreService {
                                 Some(project_state.state_version),
                                 vec![no_active_task_error()],
                             ),
-                            Some(verified_surface),
+                            Some(verified_invocation),
                             None,
                         );
                     }
@@ -711,7 +668,7 @@ impl CoreService {
                                 Some(project_state.state_version),
                                 vec![store_failure_error(error)],
                             ),
-                            Some(verified_surface),
+                            Some(verified_invocation),
                             Some(task_id),
                         );
                     }
@@ -730,7 +687,7 @@ impl CoreService {
                         change_unit_id,
                         storage_mutations,
                         task_id: &task_id,
-                        verified_surface: verified_surface.clone(),
+                        verified_invocation: verified_invocation.clone(),
                     },
                 ) {
                     Ok(response) => Ok(response),
@@ -740,7 +697,7 @@ impl CoreService {
                             Some(project_state.state_version),
                             vec![store_failure_error(error)],
                         ),
-                        Some(verified_surface),
+                        Some(verified_invocation),
                         Some(task_id),
                     ),
                     Err(error) => Err(error),
@@ -866,12 +823,6 @@ fn validate_envelope(envelope: &ToolEnvelope, request_json: &Value) -> Vec<ToolE
             errors.push(validation_error("task_id", "task_id must not be empty"));
         }
     }
-    if envelope.surface_id.as_str().trim().is_empty() {
-        errors.push(validation_error(
-            "surface_id",
-            "surface_id must not be empty",
-        ));
-    }
     if envelope.request_id.as_str().trim().is_empty() {
         errors.push(validation_error(
             "request_id",
@@ -909,23 +860,6 @@ fn validate_committed_effect_envelope(
         )];
     }
     Vec::new()
-}
-
-fn adapter_binding_mismatch_error(
-    envelope: &ToolEnvelope,
-    invocation: &InvocationContext,
-) -> Option<ToolError> {
-    if envelope.project_id != invocation.binding.project_id {
-        Some(crate::policy::access::local_access_mismatch_error(
-            "envelope.project_id",
-        ))
-    } else if envelope.surface_id != invocation.binding.surface_id {
-        Some(crate::policy::access::local_access_mismatch_error(
-            "envelope.surface_id",
-        ))
-    } else {
-        None
-    }
 }
 
 fn validate_branch_shape(branch: &OwnerPipelineBranch, dry_run: bool) -> CoreResult<()> {
@@ -984,7 +918,7 @@ fn replay_preflight_response(
     request: &PipelinePreflightRequest,
     request_hash: &RequestHash,
     project_state: &ProjectStateHeader,
-    verified_surface: &VerifiedSurfaceContext,
+    verified_invocation: &VerifiedInvocationContext,
 ) -> CoreResult<Option<PipelineResponse>> {
     if request.policy.replay != ReplayPolicy::Committed || request.envelope.dry_run {
         return Ok(None);
@@ -996,18 +930,18 @@ fn replay_preflight_response(
         return Ok(None);
     };
 
-    let replay_context = replay_context_from_verified_surface(verified_surface);
+    let replay_context = replay_context_from_verified_invocation(verified_invocation);
     if !record.matches_verified_replay_context(&replay_context) {
         return Ok(Some(response_from_rejected(
             replay_context_mismatch_response(request.envelope.dry_run, project_state.state_version),
-            Some(verified_surface.clone()),
+            Some(verified_invocation.clone()),
             None,
         )?));
     }
     if record.request_hash == request_hash.as_str() {
         return Ok(Some(response_from_json_string(
             record.response_json,
-            Some(verified_surface.clone()),
+            Some(verified_invocation.clone()),
             None,
             true,
         )?));
@@ -1025,7 +959,7 @@ fn replay_preflight_response(
                 request_hash.as_str(),
             )],
         ),
-        Some(verified_surface.clone()),
+        Some(verified_invocation.clone()),
         None,
     )?))
 }
@@ -1033,7 +967,7 @@ fn replay_preflight_response(
 fn freshness_preflight_response(
     request: &PipelinePreflightRequest,
     project_state: &ProjectStateHeader,
-    verified_surface: Option<VerifiedSurfaceContext>,
+    verified_invocation: Option<VerifiedInvocationContext>,
     resolved_task_id: Option<TaskId>,
 ) -> CoreResult<Option<PipelineResponse>> {
     if request.policy.freshness == FreshnessPolicy::None {
@@ -1058,7 +992,7 @@ fn freshness_preflight_response(
                 request.envelope.task_id.as_ref(),
             )],
         ),
-        verified_surface,
+        verified_invocation,
         resolved_task_id,
     )?))
 }
@@ -1110,7 +1044,7 @@ struct CommitPipelineArgs<'a> {
     change_unit_id: Option<ChangeUnitId>,
     storage_mutations: Vec<CoreStorageMutation>,
     task_id: &'a TaskId,
-    verified_surface: VerifiedSurfaceContext,
+    verified_invocation: VerifiedInvocationContext,
 }
 
 fn commit_mutation(
@@ -1128,7 +1062,7 @@ fn commit_mutation(
         change_unit_id,
         storage_mutations,
         task_id,
-        verified_surface,
+        verified_invocation,
     } = args;
 
     let input = commit_input(
@@ -1139,7 +1073,7 @@ fn commit_mutation(
         envelope
             .idempotency_key
             .as_ref()
-            .map(|_| replay_context_from_verified_surface(&verified_surface)),
+            .map(|_| replay_context_from_verified_invocation(&verified_invocation)),
         envelope.expected_state_version.as_ref().copied(),
         vec![PendingTaskEvent {
             event_id,
@@ -1167,7 +1101,7 @@ fn commit_mutation(
     match outcome {
         MutationCommitOutcome::Replayed { response_json, .. } => response_from_json_string(
             response_json,
-            Some(verified_surface),
+            Some(verified_invocation),
             Some(task_id.clone()),
             true,
         ),
@@ -1176,7 +1110,7 @@ fn commit_mutation(
             ..
         } => response_from_rejected(
             replay_context_mismatch_response(false, current_state_version),
-            Some(verified_surface),
+            Some(verified_invocation),
             Some(task_id.clone()),
         ),
         MutationCommitOutcome::IdempotencyConflict {
@@ -1197,7 +1131,7 @@ fn commit_mutation(
                     &attempted_request_hash,
                 )],
             ),
-            Some(verified_surface),
+            Some(verified_invocation),
             Some(task_id.clone()),
         ),
         MutationCommitOutcome::StaleExpectedState {
@@ -1214,12 +1148,12 @@ fn commit_mutation(
                     envelope.task_id.as_ref(),
                 )],
             ),
-            Some(verified_surface),
+            Some(verified_invocation),
             Some(task_id.clone()),
         ),
         MutationCommitOutcome::Committed { response_json, .. } => response_from_json_string(
             response_json,
-            Some(verified_surface),
+            Some(verified_invocation),
             Some(task_id.clone()),
             false,
         ),
@@ -1250,12 +1184,12 @@ fn committed_response_json(
 
 fn response_from_rejected(
     response: ToolRejectedResponse,
-    verified_surface: Option<VerifiedSurfaceContext>,
+    verified_invocation: Option<VerifiedInvocationContext>,
     resolved_task_id: Option<TaskId>,
 ) -> CoreResult<PipelineResponse> {
     response_from_value(
         serde_json::to_value(response)?,
-        verified_surface,
+        verified_invocation,
         resolved_task_id,
         false,
     )
@@ -1263,21 +1197,21 @@ fn response_from_rejected(
 
 fn response_outcome_from_rejected(
     response: ToolRejectedResponse,
-    verified_surface: Option<VerifiedSurfaceContext>,
+    verified_invocation: Option<VerifiedInvocationContext>,
     resolved_task_id: Option<TaskId>,
 ) -> CoreResult<PipelinePreflightOutcome> {
-    response_from_rejected(response, verified_surface, resolved_task_id)
+    response_from_rejected(response, verified_invocation, resolved_task_id)
         .map(|response| PipelinePreflightOutcome::Response(Box::new(response)))
 }
 
 fn response_from_dry_run(
     response: ToolDryRunResponse,
-    verified_surface: Option<VerifiedSurfaceContext>,
+    verified_invocation: Option<VerifiedInvocationContext>,
     resolved_task_id: Option<TaskId>,
 ) -> CoreResult<PipelineResponse> {
     response_from_value(
         serde_json::to_value(response)?,
-        verified_surface,
+        verified_invocation,
         resolved_task_id,
         false,
     )
@@ -1285,7 +1219,7 @@ fn response_from_dry_run(
 
 fn response_from_value(
     response_value: Value,
-    verified_surface: Option<VerifiedSurfaceContext>,
+    verified_invocation: Option<VerifiedInvocationContext>,
     resolved_task_id: Option<TaskId>,
     replayed: bool,
 ) -> CoreResult<PipelineResponse> {
@@ -1293,7 +1227,7 @@ fn response_from_value(
     Ok(PipelineResponse {
         response_json,
         response_value,
-        verified_surface,
+        verified_invocation,
         resolved_task_id,
         replayed,
     })
@@ -1301,7 +1235,7 @@ fn response_from_value(
 
 fn response_from_json_string(
     response_json: String,
-    verified_surface: Option<VerifiedSurfaceContext>,
+    verified_invocation: Option<VerifiedInvocationContext>,
     resolved_task_id: Option<TaskId>,
     replayed: bool,
 ) -> CoreResult<PipelineResponse> {
@@ -1309,7 +1243,7 @@ fn response_from_json_string(
     Ok(PipelineResponse {
         response_json,
         response_value,
-        verified_surface,
+        verified_invocation,
         resolved_task_id,
         replayed,
     })
@@ -1448,7 +1382,7 @@ pub(crate) fn store_failure_error(error: StoreError) -> ToolError {
     let message = match code {
         ErrorCode::McpUnavailable => "Core storage is unavailable",
         ErrorCode::LocalAccessMismatch => {
-            "local project or surface binding does not match registration"
+            "local project or invocation binding does not match registration"
         }
         _ => "Core storage is unavailable",
     };
@@ -1479,8 +1413,8 @@ fn error_precedence(code: ErrorCode) -> u8 {
         ErrorCode::BaselineStale => 7,
         ErrorCode::ScopeRequired => 8,
         ErrorCode::ScopeViolation => 9,
-        ErrorCode::WriteAuthorizationRequired => 10,
-        ErrorCode::WriteAuthorizationInvalid => 11,
+        ErrorCode::WriteCheckRequired => 10,
+        ErrorCode::WriteCheckInvalid => 11,
         ErrorCode::ApprovalDenied => 12,
         ErrorCode::ApprovalExpired => 13,
         ErrorCode::ApprovalRequired => 14,
@@ -1517,16 +1451,14 @@ mod tests {
     use serde_json::{json, Map, Value};
     use volicord_store::{
         bootstrap::{
-            initialize_runtime_home, register_project, register_surface, ProjectRegistration,
-            SurfaceRegistration, ACTIVE_PROJECT_STATUS,
+            initialize_runtime_home, register_project, ProjectRegistration, ACTIVE_PROJECT_STATUS,
         },
         core_pipeline::{ChangeUnitInsert, CoreProjectStore, StorageEffectCounts},
         sqlite::{open_project_state_database, open_registry_database, registry_db_path},
     };
     use volicord_test_support::TempRuntimeHome;
     use volicord_types::{
-        ActorKind, IdempotencyKey, PlannedEffect, ProjectId, RequestId, SurfaceId,
-        SurfaceInstanceId, SurfaceInteractionRole, VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION,
+        ActorSource, IdempotencyKey, OperationCategory, PlannedEffect, ProjectId, RequestId,
         VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
     };
 
@@ -1534,8 +1466,7 @@ mod tests {
 
     const PROJECT_ID: &str = "project_a";
     const TASK_ID: &str = "task_a";
-    const SURFACE_ID: &str = "surface_main";
-    const SURFACE_INSTANCE_ID: &str = "surface_instance_1";
+    const CONNECTION_ID: &str = "connection_main";
 
     struct PipelineHarness {
         _runtime_home: TempRuntimeHome,
@@ -1557,32 +1488,13 @@ mod tests {
                     metadata_json: "{}".to_owned(),
                 },
             )?;
-            register_surface(
-                runtime_home.path(),
-                SurfaceRegistration {
-                    project_id: PROJECT_ID.to_owned(),
-                    surface_id: SURFACE_ID.to_owned(),
-                    surface_instance_id: SURFACE_INSTANCE_ID.to_owned(),
-                    surface_kind: "local_test".to_owned(),
-                    interaction_role: SurfaceInteractionRole::Agent,
-                    display_name: Some("Pipeline Test Surface".to_owned()),
-                    capability_profile_json: "{}".to_owned(),
-                    local_access_json: json!({
-                        "authorized_access_classes": ["read_status", "core_mutation"],
-                        "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
-                    })
-                    .to_string(),
-                    metadata_json: "{}".to_owned(),
-                },
-            )?;
 
             let conn = open_project_state_database(runtime_home.project_state_db_path(PROJECT_ID))?;
             conn.execute(
                 "INSERT INTO tasks (
                     project_id,
                     task_id,
-                    created_by_surface_id,
-                    created_by_surface_instance_id,
+                    created_by_actor_source,
                     mode,
                     lifecycle_phase,
                     created_at,
@@ -1591,8 +1503,7 @@ mod tests {
                 VALUES (
                     'project_a',
                     'task_a',
-                    'surface_main',
-                    'surface_instance_1',
+                    'agent_connection:connection_main',
                     'work',
                     'shaping',
                     't0',
@@ -1620,32 +1531,6 @@ mod tests {
             let store =
                 CoreProjectStore::open(&self.runtime_home_path, &ProjectId::new(PROJECT_ID))?;
             Ok(store.effect_counts()?)
-        }
-
-        fn register_surface_instance(
-            &self,
-            surface_instance_id: &str,
-            authorized_access_classes: Vec<&str>,
-        ) -> Result<(), Box<dyn Error>> {
-            register_surface(
-                &self.runtime_home_path,
-                SurfaceRegistration {
-                    project_id: PROJECT_ID.to_owned(),
-                    surface_id: SURFACE_ID.to_owned(),
-                    surface_instance_id: surface_instance_id.to_owned(),
-                    surface_kind: "local_test".to_owned(),
-                    interaction_role: SurfaceInteractionRole::Agent,
-                    display_name: Some(format!("Pipeline Test Surface {surface_instance_id}")),
-                    capability_profile_json: "{}".to_owned(),
-                    local_access_json: json!({
-                        "authorized_access_classes": authorized_access_classes,
-                        "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
-                    })
-                    .to_string(),
-                    metadata_json: "{}".to_owned(),
-                },
-            )?;
-            Ok(())
         }
 
         fn conn(&self) -> Result<rusqlite::Connection, StoreError> {
@@ -1694,8 +1579,8 @@ mod tests {
             method_name: MethodName::UpdateScope,
             request_json: request_json(MethodName::UpdateScope, &envelope, "missing-task"),
             envelope,
-            invocation: invocation(AccessClass::CoreMutation, Some(SURFACE_INSTANCE_ID)),
-            required_access_class: AccessClass::CoreMutation,
+            invocation: invocation(OperationCategory::AgentWorkflow, Some(CONNECTION_ID)),
+            operation_category: OperationCategory::AgentWorkflow,
             task_requirement: TaskRequirement::Required,
             branch: commit_branch("missing-task"),
         })?;
@@ -1725,8 +1610,8 @@ mod tests {
             method_name: MethodName::UpdateScope,
             request_json: request_json(MethodName::UpdateScope, &envelope, "dry-run"),
             envelope,
-            invocation: invocation(AccessClass::CoreMutation, Some(SURFACE_INSTANCE_ID)),
-            required_access_class: AccessClass::CoreMutation,
+            invocation: invocation(OperationCategory::AgentWorkflow, Some(CONNECTION_ID)),
+            operation_category: OperationCategory::AgentWorkflow,
             task_requirement: TaskRequirement::Required,
             branch: OwnerPipelineBranch::DryRunPreview {
                 dry_run_summary: dry_run_summary(),
@@ -1749,8 +1634,8 @@ mod tests {
             method_name: MethodName::Status,
             request_json: request_json(MethodName::Status, &envelope, "read-only"),
             envelope,
-            invocation: invocation(AccessClass::ReadStatus, Some(SURFACE_INSTANCE_ID)),
-            required_access_class: AccessClass::ReadStatus,
+            invocation: invocation(OperationCategory::Read, Some(CONNECTION_ID)),
+            operation_category: OperationCategory::Read,
             task_requirement: TaskRequirement::Optional,
             branch: OwnerPipelineBranch::ReadOnly {
                 result_fields: result_fields("read_only"),
@@ -1773,8 +1658,8 @@ mod tests {
             method_name: MethodName::Status,
             request_json: request_json(MethodName::Status, &envelope, "invalid-project-path"),
             envelope,
-            invocation: invocation(AccessClass::ReadStatus, Some(SURFACE_INSTANCE_ID)),
-            required_access_class: AccessClass::ReadStatus,
+            invocation: invocation(OperationCategory::Read, Some(CONNECTION_ID)),
+            operation_category: OperationCategory::Read,
             task_requirement: TaskRequirement::Optional,
             branch: OwnerPipelineBranch::ReadOnly {
                 result_fields: result_fields("invalid_project_path"),
@@ -1803,8 +1688,8 @@ mod tests {
                 "missing-db",
             ),
             envelope: envelope("req_missing_db", None, false, None, None),
-            invocation: invocation(AccessClass::ReadStatus, Some(SURFACE_INSTANCE_ID)),
-            required_access_class: AccessClass::ReadStatus,
+            invocation: invocation(OperationCategory::Read, Some(CONNECTION_ID)),
+            operation_category: OperationCategory::Read,
             task_requirement: TaskRequirement::Optional,
             branch: OwnerPipelineBranch::ReadOnly {
                 result_fields: result_fields("missing_db"),
@@ -1839,8 +1724,8 @@ mod tests {
                 "migration-conflict",
             ),
             envelope: envelope("req_migration_conflict", None, false, None, None),
-            invocation: invocation(AccessClass::ReadStatus, Some(SURFACE_INSTANCE_ID)),
-            required_access_class: AccessClass::ReadStatus,
+            invocation: invocation(OperationCategory::Read, Some(CONNECTION_ID)),
+            operation_category: OperationCategory::Read,
             task_requirement: TaskRequirement::Optional,
             branch: OwnerPipelineBranch::ReadOnly {
                 result_fields: result_fields("migration_conflict"),
@@ -1848,82 +1733,6 @@ mod tests {
         })?;
 
         assert_store_rejection(&response, "MCP_UNAVAILABLE", "migration_conflict");
-        assert_public_response_has_no_internal_leak(&response, &harness.runtime_home_path);
-        Ok(())
-    }
-
-    #[test]
-    fn invalid_stored_capability_profile_json_routes_to_structured_unavailability(
-    ) -> Result<(), Box<dyn Error>> {
-        let harness = PipelineHarness::new()?;
-        harness.conn()?.execute(
-            "UPDATE surfaces
-                SET capability_profile_json = '{not-json'
-              WHERE project_id = ?1
-                AND surface_id = ?2
-                AND surface_instance_id = ?3",
-            rusqlite::params![PROJECT_ID, SURFACE_ID, SURFACE_INSTANCE_ID],
-        )?;
-
-        let response = harness.execute(PipelineRequest {
-            method_name: MethodName::Status,
-            request_json: request_json(
-                MethodName::Status,
-                &envelope("req_bad_capability_json", None, false, None, None),
-                "bad-capability",
-            ),
-            envelope: envelope("req_bad_capability_json", None, false, None, None),
-            invocation: invocation(AccessClass::ReadStatus, Some(SURFACE_INSTANCE_ID)),
-            required_access_class: AccessClass::ReadStatus,
-            task_requirement: TaskRequirement::Optional,
-            branch: OwnerPipelineBranch::ReadOnly {
-                result_fields: result_fields("bad_capability"),
-            },
-        })?;
-
-        assert_store_rejection(&response, "MCP_UNAVAILABLE", "corrupt_stored_json");
-        assert_eq!(
-            response.response_value["errors"][0]["details"]["field"],
-            "surfaces.capability_profile_json"
-        );
-        assert_public_response_has_no_internal_leak(&response, &harness.runtime_home_path);
-        Ok(())
-    }
-
-    #[test]
-    fn invalid_stored_local_access_json_routes_to_structured_unavailability(
-    ) -> Result<(), Box<dyn Error>> {
-        let harness = PipelineHarness::new()?;
-        harness.conn()?.execute(
-            "UPDATE surfaces
-                SET local_access_json = '{not-json'
-              WHERE project_id = ?1
-                AND surface_id = ?2
-                AND surface_instance_id = ?3",
-            rusqlite::params![PROJECT_ID, SURFACE_ID, SURFACE_INSTANCE_ID],
-        )?;
-
-        let response = harness.execute(PipelineRequest {
-            method_name: MethodName::Status,
-            request_json: request_json(
-                MethodName::Status,
-                &envelope("req_bad_access_json", None, false, None, None),
-                "bad-access",
-            ),
-            envelope: envelope("req_bad_access_json", None, false, None, None),
-            invocation: invocation(AccessClass::ReadStatus, Some(SURFACE_INSTANCE_ID)),
-            required_access_class: AccessClass::ReadStatus,
-            task_requirement: TaskRequirement::Optional,
-            branch: OwnerPipelineBranch::ReadOnly {
-                result_fields: result_fields("bad_access"),
-            },
-        })?;
-
-        assert_store_rejection(&response, "MCP_UNAVAILABLE", "corrupt_stored_json");
-        assert_eq!(
-            response.response_value["errors"][0]["details"]["field"],
-            "surfaces.local_access_json"
-        );
         assert_public_response_has_no_internal_leak(&response, &harness.runtime_home_path);
         Ok(())
     }
@@ -1944,8 +1753,8 @@ mod tests {
             method_name: MethodName::UpdateScope,
             request_json: request_json(MethodName::UpdateScope, &envelope, "commit"),
             envelope,
-            invocation: invocation(AccessClass::CoreMutation, Some(SURFACE_INSTANCE_ID)),
-            required_access_class: AccessClass::CoreMutation,
+            invocation: invocation(OperationCategory::AgentWorkflow, Some(CONNECTION_ID)),
+            operation_category: OperationCategory::AgentWorkflow,
             task_requirement: TaskRequirement::Required,
             branch: commit_branch("commit"),
         })?;
@@ -1986,8 +1795,8 @@ mod tests {
             method_name: MethodName::UpdateScope,
             request_json: request_json.clone(),
             envelope: envelope.clone(),
-            invocation: invocation(AccessClass::CoreMutation, Some(SURFACE_INSTANCE_ID)),
-            required_access_class: AccessClass::CoreMutation,
+            invocation: invocation(OperationCategory::AgentWorkflow, Some(CONNECTION_ID)),
+            operation_category: OperationCategory::AgentWorkflow,
             task_requirement: TaskRequirement::Required,
             branch: commit_branch("replay"),
         };
@@ -2004,29 +1813,25 @@ mod tests {
     }
 
     #[test]
-    fn idempotency_replay_rejects_other_surface_instance_without_stored_response(
+    fn idempotency_replay_rejects_other_agent_connection_without_stored_response(
     ) -> Result<(), Box<dyn Error>> {
         let harness = PipelineHarness::new()?;
-        harness.register_surface_instance(
-            "surface_instance_other",
-            vec!["read_status", "core_mutation"],
-        )?;
         let envelope = envelope(
-            "req_replay_surface",
-            Some("idem_replay_surface"),
+            "req_replay_connection",
+            Some("idem_replay_connection"),
             false,
             Some(0),
             Some(TASK_ID),
         );
-        let request_json = request_json(MethodName::UpdateScope, &envelope, "surface-secret");
+        let request_json = request_json(MethodName::UpdateScope, &envelope, "connection-secret");
         let first_request = PipelineRequest {
             method_name: MethodName::UpdateScope,
             request_json: request_json.clone(),
             envelope: envelope.clone(),
-            invocation: invocation(AccessClass::CoreMutation, Some(SURFACE_INSTANCE_ID)),
-            required_access_class: AccessClass::CoreMutation,
+            invocation: invocation(OperationCategory::AgentWorkflow, Some(CONNECTION_ID)),
+            operation_category: OperationCategory::AgentWorkflow,
             task_requirement: TaskRequirement::Required,
-            branch: commit_branch("surface-secret"),
+            branch: commit_branch("connection-secret"),
         };
         let first = harness.execute(first_request)?;
         let after_first = harness.counts()?;
@@ -2035,10 +1840,10 @@ mod tests {
             method_name: MethodName::UpdateScope,
             request_json,
             envelope,
-            invocation: invocation(AccessClass::CoreMutation, Some("surface_instance_other")),
-            required_access_class: AccessClass::CoreMutation,
+            invocation: invocation(OperationCategory::AgentWorkflow, Some("connection_other")),
+            operation_category: OperationCategory::AgentWorkflow,
             task_requirement: TaskRequirement::Required,
-            branch: commit_branch("surface-secret"),
+            branch: commit_branch("connection-secret"),
         })?;
 
         assert!(!mismatch.replayed);
@@ -2047,31 +1852,31 @@ mod tests {
             mismatch.response_value["errors"][0]["code"],
             "LOCAL_ACCESS_MISMATCH"
         );
-        assert!(!mismatch.response_json.contains("surface-secret"));
+        assert!(!mismatch.response_json.contains("connection-secret"));
         assert_ne!(mismatch.response_json, first.response_json);
         assert_eq!(harness.counts()?, after_first);
         Ok(())
     }
 
     #[test]
-    fn idempotency_replay_rejects_other_access_class() -> Result<(), Box<dyn Error>> {
+    fn idempotency_replay_rejects_other_operation_category() -> Result<(), Box<dyn Error>> {
         let harness = PipelineHarness::new()?;
         let envelope = envelope(
-            "req_replay_access",
-            Some("idem_replay_access"),
+            "req_replay_category",
+            Some("idem_replay_category"),
             false,
             Some(0),
             Some(TASK_ID),
         );
-        let request_json = request_json(MethodName::UpdateScope, &envelope, "access-secret");
+        let request_json = request_json(MethodName::UpdateScope, &envelope, "category-secret");
         let first_request = PipelineRequest {
             method_name: MethodName::UpdateScope,
             request_json: request_json.clone(),
             envelope: envelope.clone(),
-            invocation: invocation(AccessClass::CoreMutation, Some(SURFACE_INSTANCE_ID)),
-            required_access_class: AccessClass::CoreMutation,
+            invocation: invocation(OperationCategory::AgentWorkflow, Some(CONNECTION_ID)),
+            operation_category: OperationCategory::AgentWorkflow,
             task_requirement: TaskRequirement::Required,
-            branch: commit_branch("access-secret"),
+            branch: commit_branch("category-secret"),
         };
         harness.execute(first_request)?;
         let after_first = harness.counts()?;
@@ -2080,8 +1885,8 @@ mod tests {
             method_name: MethodName::UpdateScope,
             request_json,
             envelope,
-            invocation: invocation(AccessClass::ReadStatus, Some(SURFACE_INSTANCE_ID)),
-            required_access_class: AccessClass::CoreMutation,
+            invocation: invocation(OperationCategory::Read, Some(CONNECTION_ID)),
+            operation_category: OperationCategory::AgentWorkflow,
             task_requirement: TaskRequirement::Required,
             branch: commit_branch("access-secret"),
         })?;
@@ -2090,7 +1895,7 @@ mod tests {
             mismatch.response_value["errors"][0]["code"],
             "LOCAL_ACCESS_MISMATCH"
         );
-        assert!(!mismatch.response_json.contains("access-secret"));
+        assert!(!mismatch.response_json.contains("category-secret"));
         assert_eq!(harness.counts()?, after_first);
         Ok(())
     }
@@ -2098,10 +1903,6 @@ mod tests {
     #[test]
     fn replay_context_mismatch_precedes_request_hash_conflict() -> Result<(), Box<dyn Error>> {
         let harness = PipelineHarness::new()?;
-        harness.register_surface_instance(
-            "surface_instance_hash_mismatch",
-            vec!["read_status", "core_mutation"],
-        )?;
         let first_envelope = envelope(
             "req_context_precedence_first",
             Some("idem_context_precedence"),
@@ -2113,8 +1914,8 @@ mod tests {
             method_name: MethodName::UpdateScope,
             request_json: request_json(MethodName::UpdateScope, &first_envelope, "stored-secret"),
             envelope: first_envelope,
-            invocation: invocation(AccessClass::CoreMutation, Some(SURFACE_INSTANCE_ID)),
-            required_access_class: AccessClass::CoreMutation,
+            invocation: invocation(OperationCategory::AgentWorkflow, Some(CONNECTION_ID)),
+            operation_category: OperationCategory::AgentWorkflow,
             task_requirement: TaskRequirement::Required,
             branch: commit_branch("stored-secret"),
         })?;
@@ -2132,10 +1933,10 @@ mod tests {
             request_json: request_json(MethodName::UpdateScope, &second_envelope, "different"),
             envelope: second_envelope,
             invocation: invocation(
-                AccessClass::CoreMutation,
-                Some("surface_instance_hash_mismatch"),
+                OperationCategory::AgentWorkflow,
+                Some("connection_hash_mismatch"),
             ),
-            required_access_class: AccessClass::CoreMutation,
+            operation_category: OperationCategory::AgentWorkflow,
             task_requirement: TaskRequirement::Required,
             branch: commit_branch("different"),
         })?;
@@ -2177,7 +1978,7 @@ mod tests {
             )",
                 rusqlite::params![PROJECT_ID],
             )
-            .expect_err("replay rows require surface identity");
+            .expect_err("replay rows require invocation context identity");
         assert_constraint_error(error);
         Ok(())
     }
@@ -2196,8 +1997,8 @@ mod tests {
             method_name: MethodName::UpdateScope,
             request_json: request_json(MethodName::UpdateScope, &first_envelope, "first"),
             envelope: first_envelope,
-            invocation: invocation(AccessClass::CoreMutation, Some(SURFACE_INSTANCE_ID)),
-            required_access_class: AccessClass::CoreMutation,
+            invocation: invocation(OperationCategory::AgentWorkflow, Some(CONNECTION_ID)),
+            operation_category: OperationCategory::AgentWorkflow,
             task_requirement: TaskRequirement::Required,
             branch: commit_branch("first"),
         };
@@ -2215,8 +2016,8 @@ mod tests {
             method_name: MethodName::UpdateScope,
             request_json: request_json(MethodName::UpdateScope, &second_envelope, "second"),
             envelope: second_envelope,
-            invocation: invocation(AccessClass::CoreMutation, Some(SURFACE_INSTANCE_ID)),
-            required_access_class: AccessClass::CoreMutation,
+            invocation: invocation(OperationCategory::AgentWorkflow, Some(CONNECTION_ID)),
+            operation_category: OperationCategory::AgentWorkflow,
             task_requirement: TaskRequirement::Required,
             branch: commit_branch("second"),
         };
@@ -2247,8 +2048,8 @@ mod tests {
             method_name: MethodName::UpdateScope,
             request_json: request_json(MethodName::UpdateScope, &first_envelope, "unique-first"),
             envelope: first_envelope,
-            invocation: invocation(AccessClass::CoreMutation, Some(SURFACE_INSTANCE_ID)),
-            required_access_class: AccessClass::CoreMutation,
+            invocation: invocation(OperationCategory::AgentWorkflow, Some(CONNECTION_ID)),
+            operation_category: OperationCategory::AgentWorkflow,
             task_requirement: TaskRequirement::Required,
             branch: change_unit_commit_branch("change_unit_unique_first", "unique_first"),
         })?;
@@ -2265,8 +2066,8 @@ mod tests {
             method_name: MethodName::UpdateScope,
             request_json: request_json(MethodName::UpdateScope, &second_envelope, "unique-second"),
             envelope: second_envelope,
-            invocation: invocation(AccessClass::CoreMutation, Some(SURFACE_INSTANCE_ID)),
-            required_access_class: AccessClass::CoreMutation,
+            invocation: invocation(OperationCategory::AgentWorkflow, Some(CONNECTION_ID)),
+            operation_category: OperationCategory::AgentWorkflow,
             task_requirement: TaskRequirement::Required,
             branch: change_unit_commit_branch("change_unit_unique_second", "unique_second"),
         })?;
@@ -2293,8 +2094,8 @@ mod tests {
             method_name: MethodName::UpdateScope,
             request_json: request_json(MethodName::UpdateScope, &envelope, "stale"),
             envelope,
-            invocation: invocation(AccessClass::CoreMutation, Some(SURFACE_INSTANCE_ID)),
-            required_access_class: AccessClass::CoreMutation,
+            invocation: invocation(OperationCategory::AgentWorkflow, Some(CONNECTION_ID)),
+            operation_category: OperationCategory::AgentWorkflow,
             task_requirement: TaskRequirement::Required,
             branch: commit_branch("stale"),
         })?;
@@ -2309,20 +2110,20 @@ mod tests {
     }
 
     #[test]
-    fn surface_instance_mismatch_is_rejected_without_effect() -> Result<(), Box<dyn Error>> {
+    fn unsupported_actor_source_is_rejected_without_effect() -> Result<(), Box<dyn Error>> {
         let harness = PipelineHarness::new()?;
         let before = harness.counts()?;
-        let envelope = envelope("req_surface", None, false, None, Some(TASK_ID));
+        let envelope = envelope("req_actor_source", None, false, None, Some(TASK_ID));
 
         let response = harness.execute(PipelineRequest {
             method_name: MethodName::Status,
-            request_json: request_json(MethodName::Status, &envelope, "surface-mismatch"),
+            request_json: request_json(MethodName::Status, &envelope, "actor-source-mismatch"),
             envelope,
-            invocation: invocation(AccessClass::ReadStatus, Some("unknown_surface_instance")),
-            required_access_class: AccessClass::ReadStatus,
+            invocation: invocation_with_actor(ActorSource::System, OperationCategory::Read),
+            operation_category: OperationCategory::Read,
             task_requirement: TaskRequirement::Optional,
             branch: OwnerPipelineBranch::ReadOnly {
-                result_fields: result_fields("surface_mismatch"),
+                result_fields: result_fields("actor_source_mismatch"),
             },
         })?;
 
@@ -2336,7 +2137,7 @@ mod tests {
     }
 
     #[test]
-    fn access_class_mismatch_is_rejected_without_effect() -> Result<(), Box<dyn Error>> {
+    fn operation_category_mismatch_is_rejected_without_effect() -> Result<(), Box<dyn Error>> {
         let harness = PipelineHarness::new()?;
         let before = harness.counts()?;
         let envelope = envelope(
@@ -2351,8 +2152,8 @@ mod tests {
             method_name: MethodName::UpdateScope,
             request_json: request_json(MethodName::UpdateScope, &envelope, "access-mismatch"),
             envelope,
-            invocation: invocation(AccessClass::ReadStatus, Some(SURFACE_INSTANCE_ID)),
-            required_access_class: AccessClass::CoreMutation,
+            invocation: invocation(OperationCategory::Read, Some(CONNECTION_ID)),
+            operation_category: OperationCategory::AgentWorkflow,
             task_requirement: TaskRequirement::Required,
             branch: commit_branch("access_mismatch"),
         })?;
@@ -2376,8 +2177,6 @@ mod tests {
         ToolEnvelope {
             project_id: ProjectId::new(PROJECT_ID),
             task_id: task_id.map(TaskId::new).into(),
-            actor_kind: ActorKind::Agent,
-            surface_id: SurfaceId::new(SURFACE_ID),
             request_id: RequestId::new(request_id),
             idempotency_key: idempotency_key.map(IdempotencyKey::new).into(),
             expected_state_version: expected_state_version.into(),
@@ -2387,20 +2186,25 @@ mod tests {
     }
 
     fn invocation(
-        access_class: AccessClass,
-        surface_instance_id: Option<&str>,
+        operation_category: OperationCategory,
+        connection_id: Option<&str>,
     ) -> InvocationContext {
-        let surface_instance_id =
-            SurfaceInstanceId::new(surface_instance_id.unwrap_or(SURFACE_INSTANCE_ID));
-        InvocationContext {
-            binding: AdapterSessionBinding::new(
-                ProjectId::new(PROJECT_ID),
-                SurfaceId::new(SURFACE_ID),
-                surface_instance_id,
-                VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
-            ),
-            requested_access_class: access_class,
-        }
+        invocation_with_actor(
+            ActorSource::agent_connection(connection_id.unwrap_or(CONNECTION_ID)),
+            operation_category,
+        )
+    }
+
+    fn invocation_with_actor(
+        actor_source: ActorSource,
+        operation_category: OperationCategory,
+    ) -> InvocationContext {
+        InvocationContext::new(
+            ProjectId::new(PROJECT_ID),
+            actor_source,
+            operation_category,
+            VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
+        )
     }
 
     fn request_json(method_name: MethodName, envelope: &ToolEnvelope, marker: &str) -> Value {

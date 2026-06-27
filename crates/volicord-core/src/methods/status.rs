@@ -17,7 +17,7 @@ impl CoreService {
             request_json,
             invocation,
             MethodPolicy::exact(
-                request.requested_access_class(),
+                request.operation_category(),
                 TaskRequirement::Optional,
                 ReplayPolicy::None,
                 FreshnessPolicy::None,
@@ -43,7 +43,7 @@ impl CoreService {
             &prepared.store,
             &request.envelope,
             &prepared.context.project_state,
-            &prepared.context.verified_surface,
+            &prepared.context.verified_invocation,
             task.as_ref(),
             &request.include,
             self.now(),
@@ -82,7 +82,7 @@ fn status_result_fields(
     store: &CoreProjectStore,
     envelope: &ToolEnvelope,
     project_state: &ProjectStateHeader,
-    verified_surface: &VerifiedSurfaceContext,
+    verified_invocation: &VerifiedInvocationContext,
     task: Option<&TaskRecord>,
     include: &StatusInclude,
     now: DateTime<Utc>,
@@ -92,7 +92,7 @@ fn status_result_fields(
     let mut active_task = None;
     let mut pending_user_judgments = Vec::new();
     let mut blocker_refs = Vec::new();
-    let mut write_authority_summary = None;
+    let mut write_check_summary = None;
     let mut evidence_summary = None;
     let mut close_state = None;
     let mut current_close_basis = None;
@@ -112,7 +112,7 @@ fn status_result_fields(
     };
     let guarantee_projection = guarantee_profile
         .as_ref()
-        .map(|profile| guarantee_display_from_profile(profile, verified_surface, state_version));
+        .map(|profile| guarantee_display_from_profile(profile, verified_invocation, state_version));
 
     if let Some(task) = task {
         let task_id = TaskId::new(task.task_id.clone());
@@ -125,8 +125,8 @@ fn status_result_fields(
             pending_user_judgments = all_pending_user_judgments.clone();
         }
         blocker_refs = projected_blocker_refs(store, &task_id, state_version)?;
-        let projected_write_authority = if include.write_authority {
-            projected_write_authority_summary(
+        let projected_write_check = if include.write_check {
+            projected_write_check_summary(
                 store,
                 &task_id,
                 state_version,
@@ -136,7 +136,7 @@ fn status_result_fields(
         } else {
             None
         };
-        write_authority_summary = projected_write_authority.clone();
+        write_check_summary = projected_write_check.clone();
         let projected_evidence = if include.evidence {
             projected_evidence_summary(store, project_id, state_version, task)?
         } else {
@@ -149,7 +149,7 @@ fn status_result_fields(
             let plan = close_task::plan_close_task(
                 store,
                 project_state,
-                Some(verified_surface),
+                Some(verified_invocation),
                 guarantee_profile.as_ref(),
                 CloseTaskRequest {
                     envelope: ToolEnvelope {
@@ -181,7 +181,7 @@ fn status_result_fields(
                 current_change_unit: current_change_unit.as_ref(),
                 pending_user_judgment_refs: all_pending_user_judgments,
                 blocker_refs: blocker_refs.clone(),
-                write_authority_summary: projected_write_authority,
+                write_check_summary: projected_write_check,
                 evidence_summary: projected_evidence,
                 close_state: close_plan.as_ref().map(|plan| plan.close_state),
                 close_blockers: close_plan
@@ -215,7 +215,7 @@ fn status_result_fields(
         next_actions,
         pending_user_judgments,
         blocker_refs,
-        write_authority_summary,
+        write_check_summary,
         evidence_summary: include.evidence.then(|| evidence_summary.into()),
         close_state,
         current_close_basis: include.close.then(|| current_close_basis.into()),
@@ -307,8 +307,8 @@ fn status_state_summary_value(
         .ok_or_else(|| CorePipelineError::InvalidDispatch {
             detail: "state summary must serialize to a JSON object".to_owned(),
         })?;
-    if !include.write_authority {
-        object.remove("write_authority_summary");
+    if !include.write_check {
+        object.remove("write_check_summary");
     }
     if !include.evidence {
         object.remove("evidence_summary");

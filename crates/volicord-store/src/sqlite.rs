@@ -1472,7 +1472,7 @@ mod tests {
                 VALUES (
                     'project_a',
                     'volicord.intake',
-                    'idem_missing_surface',
+                    'idem_invalid_category',
                     'sha256:first',
                     0,
                     1,

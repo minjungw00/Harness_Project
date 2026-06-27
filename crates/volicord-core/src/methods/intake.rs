@@ -9,7 +9,7 @@ impl CoreService {
     ) -> CoreResult<PipelineResponse> {
         let request_json = serde_json::to_value(&request)?;
         let policy = mutation_method_policy(
-            request.requested_access_class(),
+            request.operation_category(),
             TaskRequirement::None,
             request.envelope.dry_run,
         );
@@ -42,7 +42,7 @@ impl CoreService {
             store,
             project_state,
             request.clone(),
-            &prepared.context.verified_surface,
+            &prepared.context.verified_invocation,
         ) {
             Ok(plan) => plan,
             Err(error) => return plan_error_response(&request.envelope, project_state, error),
@@ -81,7 +81,7 @@ fn plan_intake(
     store: &CoreProjectStore,
     project_state: &ProjectStateHeader,
     request: volicord_types::IntakeRequest,
-    verified_surface: &VerifiedSurfaceContext,
+    verified_invocation: &VerifiedInvocationContext,
 ) -> Result<MethodPlan, PlanError> {
     let planned_state_version = project_state.state_version + 1;
     let mode = resolve_requested_mode(request.requested_mode);
@@ -155,11 +155,7 @@ fn plan_intake(
         };
         storage_mutations.push(CoreStorageMutation::InsertTask(TaskInsert {
             task_id: task.task_id.clone(),
-            created_by_surface_id: verified_surface.surface_id.as_str().to_owned(),
-            created_by_surface_instance_id: verified_surface
-                .surface_instance_id
-                .as_str()
-                .to_owned(),
+            created_by_actor_source: verified_invocation.actor_source.to_canonical_string(),
             mode: task.mode.clone(),
             lifecycle_phase: task.lifecycle_phase.clone(),
             result: task.result.clone(),
@@ -232,7 +228,7 @@ fn plan_intake(
     let close_plan = projected_close_check(
         store,
         &projected_project_state,
-        verified_surface,
+        verified_invocation,
         &request.envelope,
         &task_id,
         close_context_from_projection(
@@ -250,11 +246,11 @@ fn plan_intake(
         service.now(),
     )?;
     let guarantee_display =
-        guarantee_display_for_surface(store, verified_surface, planned_state_version)?;
-    let write_authority_summary = if create_new {
+        guarantee_display_for_invocation(store, verified_invocation, planned_state_version)?;
+    let write_check_summary = if create_new {
         None
     } else {
-        projected_write_authority_summary(
+        projected_write_check_summary(
             store,
             &task_id,
             planned_state_version,
@@ -269,7 +265,7 @@ fn plan_intake(
         current_change_unit: current_change_unit.as_ref(),
         pending_user_judgment_refs: pending_refs,
         blocker_refs,
-        write_authority_summary,
+        write_check_summary,
         evidence_summary,
         close_state: Some(close_plan.close_state),
         close_blockers: close_plan.blockers,

@@ -25,7 +25,7 @@ impl CoreService {
             request_json,
             invocation,
             mutation_method_policy(
-                request.requested_access_class(),
+                request.operation_category(),
                 TaskRequirement::Exact(request.task_id.clone()),
                 request.envelope.dry_run,
             ),
@@ -38,7 +38,7 @@ impl CoreService {
             &prepared.store,
             &prepared.context.project_state,
             request.clone(),
-            &prepared.context.verified_surface,
+            &prepared.context.verified_invocation,
         ) {
             Ok(plan) => plan,
             Err(error) => {
@@ -95,7 +95,7 @@ struct RecordRunArtifactContext<'a> {
     store: &'a CoreProjectStore,
     project_state: &'a ProjectStateHeader,
     request: &'a RecordRunRequest,
-    verified_surface: &'a VerifiedSurfaceContext,
+    verified_invocation: &'a VerifiedInvocationContext,
     run_id: &'a RunId,
     run_ref: &'a StateRecordRef,
     now: &'a UtcTimestamp,
@@ -106,7 +106,7 @@ fn plan_record_run(
     store: &CoreProjectStore,
     project_state: &ProjectStateHeader,
     request: RecordRunRequest,
-    verified_surface: &VerifiedSurfaceContext,
+    verified_invocation: &VerifiedInvocationContext,
 ) -> Result<MethodPlan, PlanError> {
     if request.summary.trim().is_empty() {
         validation_plan_error(
@@ -284,7 +284,7 @@ fn plan_record_run(
         store,
         project_state,
         request: &request,
-        verified_surface,
+        verified_invocation,
         run_id: &run_id,
         run_ref: &run_ref,
         now: &plan_now,
@@ -299,7 +299,7 @@ fn plan_record_run(
         store,
         project_state,
         request: &request,
-        verified_surface,
+        verified_invocation,
         run_id: &run_id,
         run_ref: &run_ref,
         registered_artifacts: &registered_artifacts,
@@ -314,16 +314,13 @@ fn plan_record_run(
     let observation_refs_by_claim = observation_refs_by_claim(&observation_plans);
 
     let authorization_scope = if request.observed_changes.product_file_write_observed {
-        let Some(write_authorization_id) = request.write_authorization_id.as_ref() else {
+        let Some(write_check_id) = request.write_check_id.as_ref() else {
             return Err(PlanError::Response(Box::new(
-                write_authorization_required_response(
-                    &request.envelope,
-                    Some(project_state.state_version),
-                ),
+                write_check_required_response(&request.envelope, Some(project_state.state_version)),
             )));
         };
         let record = store
-            .write_authorization_record(write_authorization_id.as_str())
+            .write_check_record(write_check_id.as_str())
             .map_err(|error| {
                 PlanError::Response(Box::new(store_error_response(
                     &request.envelope,
@@ -332,14 +329,14 @@ fn plan_record_run(
                 )))
             })?
             .ok_or_else(|| {
-                PlanError::Response(Box::new(write_authorization_invalid_response(
+                PlanError::Response(Box::new(write_check_invalid_response(
                     &request.envelope,
                     Some(project_state.state_version),
                     "missing",
-                    "write_authorization_id does not identify a Write Authorization",
+                    "write_check_id does not identify a Write Check",
                 )))
             })?;
-        let scope = validate_write_authorization_for_run(
+        let scope = validate_write_check_for_run(
             store,
             project_state,
             &request,
@@ -349,15 +346,13 @@ fn plan_record_run(
         )?;
         Some((record, scope))
     } else {
-        if request.write_authorization_id.is_some() {
-            return Err(PlanError::Response(Box::new(
-                write_authorization_invalid_response(
-                    &request.envelope,
-                    Some(project_state.state_version),
-                    "incompatible",
-                    "write_authorization_id is only consumed for observed product-file writes",
-                ),
-            )));
+        if request.write_check_id.is_some() {
+            return Err(PlanError::Response(Box::new(write_check_invalid_response(
+                &request.envelope,
+                Some(project_state.state_version),
+                "incompatible",
+                "write_check_id is only consumed for observed product-file writes",
+            ))));
         }
         None
     };
@@ -422,17 +417,17 @@ fn plan_record_run(
         planned_state_version,
     )?;
     let guarantee_display =
-        guarantee_display_for_surface(store, verified_surface, planned_state_version)?;
-    let write_authority_summary = if let Some((record, _scope)) = &authorization_scope {
+        guarantee_display_for_invocation(store, verified_invocation, planned_state_version)?;
+    let write_check_summary = if let Some((record, _scope)) = &authorization_scope {
         let mut consumed_record = record.clone();
-        consumed_record.status = storage_value(WriteAuthorizationStatus::Consumed)?;
+        consumed_record.status = storage_value(WriteCheckStatus::Consumed)?;
         consumed_record.consumed_by_run_id = Some(run_id.as_str().to_owned());
         consumed_record.consumed_at = Some(plan_now.to_string());
         let observation_refs = observation_plans
             .iter()
             .map(|plan| plan.observation_ref.clone())
             .collect::<Vec<_>>();
-        Some(write_authority_summary_for_record(
+        Some(write_check_summary_for_record(
             None,
             &consumed_record,
             planned_state_version,
@@ -441,7 +436,7 @@ fn plan_record_run(
             Some(guarantee_display.clone()),
         )?)
     } else {
-        projected_write_authority_summary(
+        projected_write_check_summary(
             store,
             &request.task_id,
             planned_state_version,
@@ -460,7 +455,7 @@ fn plan_record_run(
     let close_plan = projected_close_check(
         store,
         &projected_project_state,
-        verified_surface,
+        verified_invocation,
         &request.envelope,
         &request.task_id,
         close_context_from_projection(
@@ -480,7 +475,7 @@ fn plan_record_run(
         current_change_unit: Some(&change_unit),
         pending_user_judgment_refs,
         blocker_refs: blocker_refs.clone(),
-        write_authority_summary,
+        write_check_summary,
         evidence_summary: evidence_summary.clone(),
         close_state: Some(close_plan.close_state),
         close_blockers: close_plan.blockers,
@@ -510,8 +505,8 @@ fn plan_record_run(
         task_id: request.task_id.as_str().to_owned(),
         change_unit_id: Some(request.change_unit_id.as_str().to_owned()),
         scope_revision: task.scope_revision,
-        write_authorization_id: request
-            .write_authorization_id
+        write_check_id: request
+            .write_check_id
             .as_ref()
             .map(|id| id.as_str().to_owned()),
         kind: storage_value(request.kind)?,
@@ -522,13 +517,12 @@ fn plan_record_run(
         observed_changes_json: serde_json::to_string(&normalized_observed_changes)?,
         evidence_updates_json: serde_json::to_string(&request.evidence_updates)?,
         authorization_effect_json: serde_json::to_string(&json!({
-            "write_authorization_id": request.write_authorization_id,
+            "write_check_id": request.write_check_id,
             "effect": if authorization_scope.is_some() { "consumed" } else { "none" }
         }))?,
-        created_by_surface_id: verified_surface.surface_id.as_str().to_owned(),
-        created_by_surface_instance_id: verified_surface.surface_instance_id.as_str().to_owned(),
+        created_by_actor_source: verified_invocation.actor_source.to_canonical_string(),
         metadata_json: serde_json::to_string(&json!({
-            "verification_basis": verified_surface.verification_basis.clone()
+            "verification_basis": verified_invocation.verification_basis.clone()
         }))?,
     })];
     storage_mutations.push(CoreStorageMutation::UpdateTaskCloseBasis(
@@ -548,9 +542,9 @@ fn plan_record_run(
         },
     ));
     if let Some((record, _scope)) = &authorization_scope {
-        storage_mutations.push(CoreStorageMutation::ConsumeWriteAuthorization(
-            WriteAuthorizationConsumption {
-                write_authorization_id: record.write_authorization_id.clone(),
+        storage_mutations.push(CoreStorageMutation::ConsumeWriteCheck(
+            WriteCheckConsumption {
+                write_check_id: record.write_check_id.clone(),
                 run_id: run_id.as_str().to_owned(),
                 expected_basis_state_version: record.basis_state_version,
             },
@@ -640,9 +634,9 @@ fn plan_record_run(
         "residual_risk_ids": residual_risk_ids,
         "kind": request.kind,
         "product_file_write_observed": normalized_observed_changes.product_file_write_observed,
-        "write_authorization_id": authorization_scope
+        "write_check_id": authorization_scope
             .as_ref()
-            .map(|(record, _scope)| record.write_authorization_id.clone()),
+            .map(|(record, _scope)| record.write_check_id.clone()),
         "artifact_ids": registered_artifacts
             .iter()
             .map(|artifact| artifact.artifact_id.as_str().to_owned())
@@ -710,7 +704,7 @@ struct RecordRunObservationContext<'a> {
     store: &'a CoreProjectStore,
     project_state: &'a ProjectStateHeader,
     request: &'a RecordRunRequest,
-    verified_surface: &'a VerifiedSurfaceContext,
+    verified_invocation: &'a VerifiedInvocationContext,
     run_id: &'a RunId,
     run_ref: &'a StateRecordRef,
     registered_artifacts: &'a [ArtifactRef],
@@ -772,21 +766,6 @@ fn plan_record_run_observation(
         &input.input_refs,
     )?;
     validate_evidence_observation_artifact_refs(context, &input.output_artifact_refs)?;
-    match (
-        input.observed_by_surface_id.as_ref(),
-        input.observed_by_surface_instance_id.as_ref(),
-    ) {
-        (Some(_), Some(_)) | (None, None) => {}
-        _ => {
-            validation_plan_error(
-                context.request.envelope.dry_run,
-                Some(context.project_state.state_version),
-                "evidence_observations[].observed_by_surface_id",
-                "observed surface id and instance id must be both null or both non-null",
-            )?;
-            unreachable!("validation_plan_error always returns Err");
-        }
-    }
     if input
         .tool_name
         .as_ref()
@@ -823,26 +802,11 @@ fn plan_record_run_observation(
         Some(&context.request.task_id),
         Some(context.planned_state_version),
     );
-    let observed_by_actor_kind = input
-        .observed_by_actor_kind
-        .as_ref()
-        .copied()
-        .unwrap_or(context.request.envelope.actor_kind);
-    let observed_actor_role = input
-        .observed_actor_role
-        .as_ref()
-        .copied()
-        .unwrap_or(context.verified_surface.interaction_role);
-    let observed_by_surface_id = input
-        .observed_by_surface_id
+    let observed_by_actor_source = input
+        .observed_by_actor_source
         .as_ref()
         .cloned()
-        .unwrap_or_else(|| context.verified_surface.surface_id.clone());
-    let observed_by_surface_instance_id = input
-        .observed_by_surface_instance_id
-        .as_ref()
-        .cloned()
-        .unwrap_or_else(|| context.verified_surface.surface_instance_id.clone());
+        .unwrap_or_else(|| context.verified_invocation.actor_source.clone());
     let claim = normalize_display_text(&input.claim);
     let output_artifact_refs =
         unique_artifact_refs(output_artifact_refs_for_observation(context, input));
@@ -856,10 +820,7 @@ fn plan_record_run_observation(
         claim,
         source_kind: input.source_kind,
         assurance_level: input.assurance_level,
-        observed_by_actor_kind: Some(observed_by_actor_kind).into(),
-        observed_actor_role: Some(observed_actor_role).into(),
-        observed_by_surface_id: Some(observed_by_surface_id).into(),
-        observed_by_surface_instance_id: Some(observed_by_surface_instance_id).into(),
+        observed_by_actor_source: Some(observed_by_actor_source).into(),
         tool_name: input.tool_name.clone(),
         tool_invocation_id: input.tool_invocation_id.clone(),
         tool_metadata: input.tool_metadata.clone(),
@@ -880,24 +841,10 @@ fn plan_record_run_observation(
         claim: observation.claim.clone(),
         source_kind: storage_value(observation.source_kind)?,
         assurance_level: storage_value(observation.assurance_level)?,
-        observed_by_actor_kind: observation
-            .observed_by_actor_kind
+        observed_by_actor_source: observation
+            .observed_by_actor_source
             .as_ref()
-            .map(|value| storage_value(*value))
-            .transpose()?,
-        observed_actor_role: observation
-            .observed_actor_role
-            .as_ref()
-            .map(|value| storage_value(*value))
-            .transpose()?,
-        observed_by_surface_id: observation
-            .observed_by_surface_id
-            .as_ref()
-            .map(|id| id.as_str().to_owned()),
-        observed_by_surface_instance_id: observation
-            .observed_by_surface_instance_id
-            .as_ref()
-            .map(|id| id.as_str().to_owned()),
+            .map(ActorSource::to_canonical_string),
         tool_name: observation.tool_name.as_ref().cloned(),
         tool_invocation_id: observation.tool_invocation_id.as_ref().cloned(),
         tool_metadata_json: serde_json::to_string(&observation.tool_metadata)?,
@@ -908,7 +855,7 @@ fn plan_record_run_observation(
         recorded_at: observation.recorded_at.to_canonical_string(),
         metadata_json: serde_json::to_string(&json!({
             "recorded_by_run_id": context.run_id.as_str(),
-            "verification_basis": context.verified_surface.verification_basis.clone()
+            "verification_basis": context.verified_invocation.verification_basis.clone()
         }))?,
     });
     Ok(RecordRunObservationPlan {
@@ -999,10 +946,7 @@ fn observation_input_from_evidence_update(
         claim: normalize_display_text(&update.claim),
         source_kind: provenance.source_kind,
         assurance_level: provenance.assurance_level,
-        observed_by_actor_kind: None.into(),
-        observed_actor_role: None.into(),
-        observed_by_surface_id: None.into(),
-        observed_by_surface_instance_id: None.into(),
+        observed_by_actor_source: None.into(),
         tool_name: provenance.tool_name.clone(),
         tool_invocation_id: provenance.tool_invocation_id.clone(),
         tool_metadata: provenance.tool_metadata.clone(),
@@ -1160,7 +1104,7 @@ struct RecordRunCloseBasisContext<'a> {
     request: &'a RecordRunRequest,
     task: &'a TaskRecord,
     run_ref: &'a StateRecordRef,
-    authorization_scope: Option<&'a (WriteAuthorizationRecord, AuthorizedAttemptScope)>,
+    authorization_scope: Option<&'a (WriteCheckRecord, WriteCheckAttemptScope)>,
     evidence_summary_ref: Option<StateRecordRef>,
     registered_artifacts: &'a [ArtifactRef],
     close_basis_revision: u64,
@@ -1327,7 +1271,7 @@ fn current_sensitive_action_requirements(
     request: &RecordRunRequest,
     task: &TaskRecord,
     run_ref: &StateRecordRef,
-    authorization_scope: Option<&(WriteAuthorizationRecord, AuthorizedAttemptScope)>,
+    authorization_scope: Option<&(WriteCheckRecord, WriteCheckAttemptScope)>,
 ) -> Result<Vec<SensitiveActionRequirement>, PlanError> {
     let mut requirements =
         previous_current_sensitive_action_requirements(store, project_state, request, task)?;
@@ -1374,8 +1318,8 @@ fn previous_current_sensitive_action_requirements(
 fn sensitive_action_requirement_from_authorization(
     store: &CoreProjectStore,
     run_ref: &StateRecordRef,
-    record: &WriteAuthorizationRecord,
-    scope: &AuthorizedAttemptScope,
+    record: &WriteCheckRecord,
+    scope: &WriteCheckAttemptScope,
 ) -> Result<Option<SensitiveActionRequirement>, PlanError> {
     let sensitive_categories = normalized_string_set(&scope.sensitive_categories);
     if sensitive_categories.is_empty() {
@@ -1385,8 +1329,8 @@ fn sensitive_action_requirement_from_authorization(
     if action_kind.is_empty() {
         return Err(PlanError::Core(CorePipelineError::Store(
             StoreError::corrupt_owner_state_json(
-                "write_authorizations",
-                record.write_authorization_id.clone(),
+                "write_checks",
+                record.write_check_id.clone(),
                 "attempt_scope_json",
             ),
         )));
@@ -1396,8 +1340,8 @@ fn sensitive_action_requirement_from_authorization(
             |_| {
                 PlanError::Core(CorePipelineError::Store(
                     StoreError::corrupt_owner_state_json(
-                        "write_authorizations",
-                        record.write_authorization_id.clone(),
+                        "write_checks",
+                        record.write_check_id.clone(),
                         "attempt_scope_json",
                     ),
                 ))
@@ -1406,8 +1350,8 @@ fn sensitive_action_requirement_from_authorization(
     if normalized_paths.is_empty() {
         return Err(PlanError::Core(CorePipelineError::Store(
             StoreError::corrupt_owner_state_json(
-                "write_authorizations",
-                record.write_authorization_id.clone(),
+                "write_checks",
+                record.write_check_id.clone(),
                 "attempt_scope_json",
             ),
         )));
@@ -1419,7 +1363,7 @@ fn sensitive_action_requirement_from_authorization(
         baseline_ref: scope.baseline_ref.clone().into(),
         change_unit_id: scope.change_unit_id.clone(),
         source_run_ref: run_ref.clone(),
-        source_write_authorization_ref: write_authorization_ref(
+        source_write_check_ref: write_check_ref(
             record,
             run_ref
                 .state_version
@@ -1950,7 +1894,7 @@ fn plan_staged_artifact_input(
     let store = context.store;
     let project_state = context.project_state;
     let request = context.request;
-    let verified_surface = context.verified_surface;
+    let verified_invocation = context.verified_invocation;
     let run_id = context.run_id;
     let run_ref = context.run_ref;
     if handle.project_id != request.envelope.project_id {
@@ -2002,7 +1946,7 @@ fn plan_staged_artifact_input(
     let stored_expires_at = validate_staged_artifact_record(
         project_state,
         request,
-        verified_surface,
+        verified_invocation,
         input,
         handle,
         &record,
@@ -2041,10 +1985,18 @@ fn plan_staged_artifact_input(
         redaction_state,
         availability: ArtifactAvailability::Available,
         created_by_run_ref: Some(run_ref.clone()).into(),
-        created_by_surface_id: Some(SurfaceId::new(record.created_by_surface_id.clone())).into(),
-        created_by_surface_instance_id: Some(SurfaceInstanceId::new(
-            record.created_by_surface_instance_id.clone(),
-        ))
+        created_by_actor_source: Some(
+            record
+                .created_by_actor_source
+                .parse::<ActorSource>()
+                .map_err(|_| {
+                    CorePipelineError::Store(StoreError::corrupt_owner_state_value(
+                        "artifact_staging",
+                        handle.handle_id.as_str(),
+                        "created_by_actor_source",
+                    ))
+                })?,
+        )
         .into(),
         storage_ref: Some(StorageRef::new(uri.clone())).into(),
     };
@@ -2054,11 +2006,9 @@ fn plan_staged_artifact_input(
             artifact_id: artifact_id.as_str().to_owned(),
             task_id: request.task_id.as_str().to_owned(),
             run_id: run_id.as_str().to_owned(),
-            expected_created_by_surface_id: verified_surface.surface_id.as_str().to_owned(),
-            expected_created_by_surface_instance_id: verified_surface
-                .surface_instance_id
-                .as_str()
-                .to_owned(),
+            expected_created_by_actor_source: verified_invocation
+                .actor_source
+                .to_canonical_string(),
             expected_sha256: sha256,
             expected_size_bytes: size_bytes,
             expected_redaction_state: record.redaction_state.clone(),
@@ -2068,8 +2018,7 @@ fn plan_staged_artifact_input(
             producer_json: serde_json::to_string(&json!({
                 "display_name": display_name,
                 "content_type": content_type,
-                "created_by_surface_id": verified_surface.surface_id.as_str(),
-                "created_by_surface_instance_id": verified_surface.surface_instance_id.as_str(),
+                "created_by_actor_source": verified_invocation.actor_source,
                 "artifact_input_id": input.artifact_input_id.as_str(),
                 "relation_hint": input.relation_hint,
                 "claim": input.claim
@@ -2099,7 +2048,7 @@ fn plan_staged_artifact_input(
 fn validate_staged_artifact_record(
     project_state: &ProjectStateHeader,
     request: &RecordRunRequest,
-    verified_surface: &VerifiedSurfaceContext,
+    verified_invocation: &VerifiedInvocationContext,
     input: &ArtifactInput,
     handle: &StagedArtifactHandle,
     record: &StoredArtifactStagingRecord,
@@ -2123,17 +2072,16 @@ fn validate_staged_artifact_record(
             "stored staged artifact belongs to a different Task",
         );
     }
-    if record.created_by_surface_id != verified_surface.surface_id.as_str()
-        || record.created_by_surface_instance_id != verified_surface.surface_instance_id.as_str()
-        || handle.created_by_surface_id.as_str() != record.created_by_surface_id
-        || handle.created_by_surface_instance_id.as_str() != record.created_by_surface_instance_id
+    let verified_actor_source = verified_invocation.actor_source.to_canonical_string();
+    if record.created_by_actor_source != verified_actor_source
+        || handle.created_by_actor_source.to_canonical_string() != record.created_by_actor_source
     {
         return artifact_input_validation_plan_error(
             request,
             project_state,
             input,
-            "staged_handle_surface_mismatch",
-            "staged artifact provenance does not match the verified surface",
+            "staged_handle_actor_source_mismatch",
+            "staged artifact provenance does not match the verified actor source",
         );
     }
     if record.status == "consumed" {
@@ -2402,32 +2350,30 @@ fn plan_existing_artifact_input(
     })
 }
 
-fn validate_write_authorization_for_run(
+fn validate_write_check_for_run(
     store: &CoreProjectStore,
     project_state: &ProjectStateHeader,
     request: &RecordRunRequest,
-    record: &WriteAuthorizationRecord,
+    record: &WriteCheckRecord,
     observed_changes: &ObservedChanges,
     now: DateTime<Utc>,
-) -> Result<AuthorizedAttemptScope, PlanError> {
+) -> Result<WriteCheckAttemptScope, PlanError> {
     if record.status == "consumed" || record.status == "revoked" {
         let reason = if record.status == "consumed" {
             "consumed"
         } else {
             "revoked"
         };
-        return Err(PlanError::Response(Box::new(
-            write_authorization_invalid_response(
-                &request.envelope,
-                Some(project_state.state_version),
-                reason,
-                "Write Authorization is not active",
-            ),
-        )));
+        return Err(PlanError::Response(Box::new(write_check_invalid_response(
+            &request.envelope,
+            Some(project_state.state_version),
+            reason,
+            "Write Check is not active",
+        ))));
     }
     if record.basis_state_version != project_state.state_version {
         return Err(PlanError::Response(Box::new(
-            stale_write_authorization_basis_response(
+            stale_write_check_basis_response(
                 &request.envelope,
                 record,
                 project_state.state_version,
@@ -2442,28 +2388,24 @@ fn validate_write_authorization_for_run(
             "revoked" => "revoked",
             _ => "incompatible",
         };
-        return Err(PlanError::Response(Box::new(
-            write_authorization_invalid_response(
-                &request.envelope,
-                Some(project_state.state_version),
-                reason,
-                "Write Authorization is not active",
-            ),
-        )));
+        return Err(PlanError::Response(Box::new(write_check_invalid_response(
+            &request.envelope,
+            Some(project_state.state_version),
+            reason,
+            "Write Check is not active",
+        ))));
     }
-    if write_authorization_is_expired(record, now).map_err(CorePipelineError::from)? {
-        return Err(PlanError::Response(Box::new(
-            write_authorization_invalid_response(
-                &request.envelope,
-                Some(project_state.state_version),
-                "expired",
-                "Write Authorization is expired",
-            ),
-        )));
+    if write_check_is_expired(record, now).map_err(CorePipelineError::from)? {
+        return Err(PlanError::Response(Box::new(write_check_invalid_response(
+            &request.envelope,
+            Some(project_state.state_version),
+            "expired",
+            "Write Check is expired",
+        ))));
     }
-    let scope: AuthorizedAttemptScope = decode_required_json::<PersistedAuthorizedAttemptScope>(
-        "write_authorizations",
-        record.write_authorization_id.clone(),
+    let scope: WriteCheckAttemptScope = decode_required_json::<PersistedWriteCheckAttemptScope>(
+        "write_checks",
+        record.write_check_id.clone(),
         "attempt_scope_json",
         Some(&record.attempt_scope_json),
     )?
@@ -2473,14 +2415,14 @@ fn validate_write_authorization_for_run(
             |_| {
                 PlanError::Core(CorePipelineError::Store(
                     StoreError::corrupt_owner_state_json(
-                        "write_authorizations",
-                        record.write_authorization_id.clone(),
+                        "write_checks",
+                        record.write_check_id.clone(),
                         "attempt_scope_json",
                     ),
                 ))
             },
         )?;
-    if let Some(mismatch) = run_write_authorization_mismatch(
+    if let Some(mismatch) = run_write_check_mismatch(
         record,
         &scope,
         &request.task_id,
@@ -2489,30 +2431,23 @@ fn validate_write_authorization_for_run(
         observed_changes,
         &scope_paths,
     ) {
-        return write_authorization_mismatch(
-            request,
-            project_state,
-            mismatch.reason,
-            mismatch.message,
-        );
+        return write_check_mismatch(request, project_state, mismatch.reason, mismatch.message);
     }
     Ok(scope)
 }
 
-fn write_authorization_mismatch(
+fn write_check_mismatch(
     request: &RecordRunRequest,
     project_state: &ProjectStateHeader,
     reason: &'static str,
     message: &'static str,
-) -> Result<AuthorizedAttemptScope, PlanError> {
-    Err(PlanError::Response(Box::new(
-        write_authorization_invalid_response(
-            &request.envelope,
-            Some(project_state.state_version),
-            reason,
-            message,
-        ),
-    )))
+) -> Result<WriteCheckAttemptScope, PlanError> {
+    Err(PlanError::Response(Box::new(write_check_invalid_response(
+        &request.envelope,
+        Some(project_state.state_version),
+        reason,
+        message,
+    ))))
 }
 
 fn build_record_run_evidence_summary(

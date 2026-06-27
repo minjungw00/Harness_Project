@@ -39,7 +39,7 @@ impl CoreService {
             &prepared.store,
             &prepared.context.project_state,
             request.clone(),
-            &prepared.context.verified_surface,
+            &prepared.context.verified_invocation,
         ) {
             Ok(plan) => plan,
             Err(error) => {
@@ -84,7 +84,7 @@ fn prepare_write_policy(request: &PrepareWriteRequest) -> MethodPolicy {
 
     if request.envelope.dry_run {
         MethodPolicy::exact(
-            request.requested_access_class(),
+            request.operation_category(),
             task,
             ReplayPolicy::None,
             FreshnessPolicy::IfPresent,
@@ -92,7 +92,7 @@ fn prepare_write_policy(request: &PrepareWriteRequest) -> MethodPolicy {
         )
     } else {
         MethodPolicy::exact(
-            request.requested_access_class(),
+            request.operation_category(),
             task,
             ReplayPolicy::Committed,
             FreshnessPolicy::IfPresent,
@@ -106,7 +106,7 @@ fn plan_prepare_write(
     store: &CoreProjectStore,
     project_state: &ProjectStateHeader,
     request: PrepareWriteRequest,
-    verified_surface: &VerifiedSurfaceContext,
+    verified_invocation: &VerifiedInvocationContext,
 ) -> Result<PrepareWritePlan, PlanError> {
     if request.intended_operation.trim().is_empty() {
         validation_plan_error(
@@ -332,32 +332,15 @@ fn plan_prepare_write(
             reasons.push(write_decision_reason(
                 WriteDecisionCategory::SensitiveApproval,
                 "sensitive_approval_missing",
-                "A matching sensitive-action approval is required before Write Authorization.",
+                "A matching sensitive-action approval is required before Write Check.",
                 Vec::new(),
             ));
         }
     }
 
-    if verified_surface.access_class != AccessClass::WriteAuthorization {
-        reasons.push(write_decision_reason(
-            WriteDecisionCategory::SurfaceCapability,
-            "surface_access_class_mismatch",
-            "The verified surface access class is incompatible with Write Authorization.",
-            Vec::new(),
-        ));
-    }
-    if !surface_supports_prepare_write(&verified_surface.capability_profile) {
-        reasons.push(write_decision_reason(
-            WriteDecisionCategory::SurfaceCapability,
-            "surface_capability_insufficient",
-            "The verified surface lacks the write-authorization capability declaration.",
-            Vec::new(),
-        ));
-    }
-
-    let guarantee_display = Some(guarantee_display_for_surface(
+    let guarantee_display = Some(guarantee_display_for_invocation(
         store,
-        verified_surface,
+        verified_invocation,
         planned_state_version,
     )?);
     let branch_change_unit_id =
@@ -370,13 +353,13 @@ fn plan_prepare_write(
     });
     let decision = prepare_write_decision(&reasons);
     let allowed = reasons.is_empty();
-    let create_write_authorization = allowed && !request.envelope.dry_run;
-    let write_authorization_id = if create_write_authorization {
-        Some(allocate_write_authorization_id(service, store).map_err(PlanError::Core)?)
+    let create_write_check = allowed && !request.envelope.dry_run;
+    let write_check_id = if create_write_check {
+        Some(allocate_write_check_id(service, store).map_err(PlanError::Core)?)
     } else {
         None
     };
-    let authorized_attempt_scope = AuthorizedAttemptScope {
+    let attempt_scope = WriteCheckAttemptScope {
         task_id: task_id.clone(),
         change_unit_id: scope_change_unit_id.clone(),
         intended_operation: normalized_operation,
@@ -385,47 +368,43 @@ fn plan_prepare_write(
         sensitive_categories: normalized_sensitive_categories,
         baseline_ref: Some(request.baseline_ref.clone()),
     };
-    let attempt_scope_json = serde_json::to_string(&authorized_attempt_scope)?;
+    let attempt_scope_json = serde_json::to_string(&attempt_scope)?;
     let created_at = plan_now.to_string();
-    let expires_at_timestamp =
-        utc_timestamp(write_authorization_expires_at(*plan_now.as_datetime()));
+    let expires_at_timestamp = utc_timestamp(write_check_expires_at(*plan_now.as_datetime()));
     let expires_at = expires_at_timestamp.to_string();
-    let write_authorization_ref = write_authorization_id
+    let write_check_ref = write_check_id.as_ref().map(|write_check_id| {
+        state_ref(
+            StateRecordKind::WriteCheck,
+            write_check_id.as_str(),
+            &request.envelope.project_id,
+            Some(&task_id),
+            Some(planned_state_version),
+        )
+    });
+    let write_check = write_check_ref
         .as_ref()
-        .map(|write_authorization_id| {
-            state_ref(
-                StateRecordKind::WriteAuthorization,
-                write_authorization_id.as_str(),
-                &request.envelope.project_id,
-                Some(&task_id),
-                Some(planned_state_version),
-            )
-        });
-    let write_authorization = write_authorization_ref
-        .as_ref()
-        .map(|write_authorization_ref| WriteAuthorizationSummary {
-            write_authorization_ref: write_authorization_ref.clone(),
-            status: WriteAuthorizationStatus::Active,
-            authorized_attempt_scope: authorized_attempt_scope.clone(),
+        .map(|write_check_ref| WriteCheckSummary {
+            write_check_ref: write_check_ref.clone(),
+            status: WriteCheckStatus::Active,
+            attempt_scope: attempt_scope.clone(),
             basis_state_version: planned_state_version,
             expires_at: Some(expires_at_timestamp.clone()),
         });
-    let synthetic_write_authorization =
-        write_authorization_id
-            .as_ref()
-            .map(|write_authorization_id| WriteAuthorizationRecord {
-                project_id: request.envelope.project_id.as_str().to_owned(),
-                write_authorization_id: write_authorization_id.as_str().to_owned(),
-                task_id: task_id.as_str().to_owned(),
-                change_unit_id: Some(scope_change_unit_id.as_str().to_owned()),
-                basis_state_version: planned_state_version,
-                status: "active".to_owned(),
-                attempt_scope_json: attempt_scope_json.clone(),
-                expires_at: expires_at.clone(),
-                created_at: created_at.clone(),
-                consumed_by_run_id: None,
-                consumed_at: None,
-            });
+    let synthetic_write_check = write_check_id
+        .as_ref()
+        .map(|write_check_id| WriteCheckRecord {
+            project_id: request.envelope.project_id.as_str().to_owned(),
+            write_check_id: write_check_id.as_str().to_owned(),
+            task_id: task_id.as_str().to_owned(),
+            change_unit_id: Some(scope_change_unit_id.as_str().to_owned()),
+            basis_state_version: planned_state_version,
+            status: "active".to_owned(),
+            attempt_scope_json: attempt_scope_json.clone(),
+            expires_at: expires_at.clone(),
+            created_at: created_at.clone(),
+            consumed_by_run_id: None,
+            consumed_at: None,
+        });
 
     let blocker_refs = store
         .active_blocker_refs(&task_id, planned_state_version)
@@ -456,7 +435,7 @@ fn plan_prepare_write(
     let close_plan = projected_close_check(
         store,
         &projected_project_state,
-        verified_surface,
+        verified_invocation,
         &request.envelope,
         &task_id,
         close_context_from_projection(
@@ -476,10 +455,10 @@ fn plan_prepare_write(
         current_change_unit: change_unit,
         pending_user_judgment_refs,
         blocker_refs,
-        write_authority_summary: synthetic_write_authorization
+        write_check_summary: synthetic_write_check
             .as_ref()
             .map(|record| {
-                write_authority_summary_for_record(
+                write_check_summary_for_record(
                     None,
                     record,
                     planned_state_version,
@@ -498,12 +477,12 @@ fn plan_prepare_write(
         base: placeholder_base(),
         decision,
         state: Some(state),
-        write_authorization_ref: write_authorization_ref.clone(),
-        write_authorization,
-        authorization_effect: if create_write_authorization {
-            AuthorizationEffect::Created
+        write_check_ref: write_check_ref.clone(),
+        write_check,
+        write_check_effect: if create_write_check {
+            WriteCheckEffect::Created
         } else {
-            AuthorizationEffect::None
+            WriteCheckEffect::None
         },
         active_user_judgment_refs,
         write_decision_reasons: reasons.clone(),
@@ -511,31 +490,25 @@ fn plan_prepare_write(
         guarantee_display: guarantee_display.clone(),
     };
 
-    let storage_mutations = if let Some(write_authorization_id) = &write_authorization_id {
-        vec![CoreStorageMutation::InsertWriteAuthorization(
-            WriteAuthorizationInsert {
-                write_authorization_id: write_authorization_id.as_str().to_owned(),
-                task_id: task_id.as_str().to_owned(),
-                change_unit_id: scope_change_unit_id.as_str().to_owned(),
-                attempt_scope_json,
-                created_by_surface_id: verified_surface.surface_id.as_str().to_owned(),
-                created_by_surface_instance_id: verified_surface
-                    .surface_instance_id
-                    .as_str()
-                    .to_owned(),
-                created_by_judgment_id: None,
-                expires_at,
-                created_at,
-                metadata_json: serde_json::to_string(&json!({
-                    "verification_basis": verified_surface.verification_basis.clone()
-                }))?,
-            },
-        )]
+    let storage_mutations = if let Some(write_check_id) = &write_check_id {
+        vec![CoreStorageMutation::InsertWriteCheck(WriteCheckInsert {
+            write_check_id: write_check_id.as_str().to_owned(),
+            task_id: task_id.as_str().to_owned(),
+            change_unit_id: scope_change_unit_id.as_str().to_owned(),
+            attempt_scope_json,
+            created_by_actor_source: verified_invocation.actor_source.to_canonical_string(),
+            created_by_judgment_id: None,
+            expires_at,
+            created_at,
+            metadata_json: serde_json::to_string(&json!({
+                "verification_basis": verified_invocation.verification_basis.clone()
+            }))?,
+        })]
     } else {
         Vec::new()
     };
     let event_kind = if allowed {
-        "write_authorization_created"
+        "write_check_created"
     } else {
         "write_decision_recorded"
     }
@@ -544,7 +517,7 @@ fn plan_prepare_write(
         "task_id": task_id.clone(),
         "change_unit_id": branch_change_unit_id.clone(),
         "decision": decision,
-        "write_authorization_id": write_authorization_id
+        "write_check_id": write_check_id
             .as_ref()
             .map(|id| id.as_str().to_owned())
     }))?;
@@ -565,7 +538,7 @@ fn plan_prepare_write(
         dry_run_summary: prepare_write_dry_run_summary(
             allowed,
             &reasons,
-            write_authorization_ref,
+            write_check_ref,
             guarantee_display,
         ),
     })

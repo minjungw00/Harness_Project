@@ -1,13 +1,12 @@
 use std::{collections::BTreeSet, path::Path};
 
 use chrono::{DateTime, Duration, Utc};
-use serde_json::Value;
-use volicord_store::{core_pipeline::WriteAuthorizationRecord, StoreError};
+use volicord_store::{core_pipeline::WriteCheckRecord, StoreError};
 use volicord_types::{
-    AuthorizedAttemptScope, BaselineRef, ChangeUnitId, DryRunSummary, GuaranteeDisplay,
-    JudgmentKind, JudgmentRequiredFor, ObservedChanges, PlannedBlocker, PlannedBlockerSourceKind,
-    PlannedEffect, PrepareWriteDecision, SensitiveActionScope, StateRecordRef, TaskId,
-    UtcTimestamp, WriteDecisionCategory, WriteDecisionReason,
+    BaselineRef, ChangeUnitId, DryRunSummary, GuaranteeDisplay, JudgmentKind, JudgmentRequiredFor,
+    ObservedChanges, PlannedBlocker, PlannedBlockerSourceKind, PlannedEffect, PrepareWriteDecision,
+    SensitiveActionScope, StateRecordRef, TaskId, UtcTimestamp, WriteCheckAttemptScope,
+    WriteDecisionCategory, WriteDecisionReason,
 };
 
 use crate::policy::{
@@ -15,32 +14,32 @@ use crate::policy::{
     path::{normalize_product_paths, path_is_within, paths_are_authorized, ProductPathError},
 };
 
-const WRITE_AUTHORIZATION_LIFETIME_MINUTES: i64 = 15;
+const WRITE_CHECK_LIFETIME_MINUTES: i64 = 15;
 
-pub(crate) fn write_authorization_expires_at(created_at: DateTime<Utc>) -> DateTime<Utc> {
-    created_at + Duration::minutes(WRITE_AUTHORIZATION_LIFETIME_MINUTES)
+pub(crate) fn write_check_expires_at(created_at: DateTime<Utc>) -> DateTime<Utc> {
+    created_at + Duration::minutes(WRITE_CHECK_LIFETIME_MINUTES)
 }
 
-pub(crate) fn write_authorization_is_expired(
-    record: &WriteAuthorizationRecord,
+pub(crate) fn write_check_is_expired(
+    record: &WriteCheckRecord,
     now: DateTime<Utc>,
 ) -> Result<bool, StoreError> {
-    Ok(UtcTimestamp::from_datetime(now) >= effective_write_authorization_expiration(record)?)
+    Ok(UtcTimestamp::from_datetime(now) >= effective_write_check_expiration(record)?)
 }
 
-pub(crate) fn effective_write_authorization_expiration(
-    record: &WriteAuthorizationRecord,
+pub(crate) fn effective_write_check_expiration(
+    record: &WriteCheckRecord,
 ) -> Result<UtcTimestamp, StoreError> {
-    let stored_expires_at = parse_write_authorization_timestamp(record, "expires_at")?;
-    let created_at = parse_write_authorization_timestamp(record, "created_at")?;
+    let stored_expires_at = parse_write_check_timestamp(record, "expires_at")?;
+    let created_at = parse_write_check_timestamp(record, "created_at")?;
     Ok(std::cmp::min(
         stored_expires_at,
-        UtcTimestamp::from_datetime(write_authorization_expires_at(*created_at.as_datetime())),
+        UtcTimestamp::from_datetime(write_check_expires_at(*created_at.as_datetime())),
     ))
 }
 
-fn parse_write_authorization_timestamp(
-    record: &WriteAuthorizationRecord,
+fn parse_write_check_timestamp(
+    record: &WriteCheckRecord,
     logical_column: &'static str,
 ) -> Result<UtcTimestamp, StoreError> {
     let raw = match logical_column {
@@ -48,51 +47,19 @@ fn parse_write_authorization_timestamp(
         "expires_at" => &record.expires_at,
         _ => {
             return Err(StoreError::corrupt_owner_state_value(
-                "write_authorizations",
-                record.write_authorization_id.clone(),
+                "write_checks",
+                record.write_check_id.clone(),
                 logical_column,
             ));
         }
     };
     UtcTimestamp::parse(raw).map_err(|_| {
         StoreError::corrupt_owner_state_value(
-            "write_authorizations",
-            record.write_authorization_id.clone(),
+            "write_checks",
+            record.write_check_id.clone(),
             logical_column,
         )
     })
-}
-
-pub(crate) fn surface_supports_prepare_write(capability_profile: &Value) -> bool {
-    if capability_profile
-        .get("supported_access_classes")
-        .and_then(Value::as_array)
-        .is_some_and(|values| {
-            values
-                .iter()
-                .any(|value| value.as_str() == Some("write_authorization"))
-        })
-    {
-        return true;
-    }
-    if capability_profile
-        .get("access_class")
-        .and_then(Value::as_str)
-        == Some("write_authorization")
-    {
-        return true;
-    }
-    if capability_profile
-        .get("write_authorization")
-        .and_then(Value::as_bool)
-        == Some(true)
-    {
-        return true;
-    }
-    capability_profile
-        .pointer("/capabilities/write_authorization")
-        .and_then(Value::as_bool)
-        == Some(true)
 }
 
 pub(crate) fn prepare_write_decision(reasons: &[WriteDecisionReason]) -> PrepareWriteDecision {
@@ -116,16 +83,15 @@ pub(crate) fn prepare_write_decision(reasons: &[WriteDecisionReason]) -> Prepare
 pub(crate) fn prepare_write_dry_run_summary(
     allowed: bool,
     reasons: &[WriteDecisionReason],
-    _write_authorization_ref: Option<StateRecordRef>,
+    _write_check_ref: Option<StateRecordRef>,
     _guarantee_display: Option<GuaranteeDisplay>,
 ) -> DryRunSummary {
     DryRunSummary {
         planned_effects: if allowed {
             vec![PlannedEffect {
-                target_kind: "write_authorization".to_owned(),
+                target_kind: "write_check".to_owned(),
                 action: "would_create".to_owned(),
-                description: "Prepare write would create one active Write Authorization."
-                    .to_owned(),
+                description: "Prepare write would create one active Write Check.".to_owned(),
             }]
         } else {
             Vec::new()
@@ -147,24 +113,24 @@ pub(crate) fn prepare_write_dry_run_summary(
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) struct RunWriteAuthorizationMismatch {
+pub(crate) struct RunWriteCheckMismatch {
     pub(crate) reason: &'static str,
     pub(crate) message: &'static str,
 }
 
-pub(crate) fn run_write_authorization_mismatch(
-    record: &WriteAuthorizationRecord,
-    scope: &AuthorizedAttemptScope,
+pub(crate) fn run_write_check_mismatch(
+    record: &WriteCheckRecord,
+    scope: &WriteCheckAttemptScope,
     task_id: &TaskId,
     change_unit_id: &ChangeUnitId,
     baseline_ref: &BaselineRef,
     observed_changes: &ObservedChanges,
     normalized_scope_paths: &[String],
-) -> Option<RunWriteAuthorizationMismatch> {
+) -> Option<RunWriteCheckMismatch> {
     if record.task_id != task_id.as_str() || scope.task_id != *task_id {
         return Some(run_mismatch(
             "task_mismatch",
-            "Write Authorization task is not compatible with the recorded run",
+            "Write Check task is not compatible with the recorded run",
         ));
     }
     if record.change_unit_id.as_deref() != Some(change_unit_id.as_str())
@@ -172,19 +138,19 @@ pub(crate) fn run_write_authorization_mismatch(
     {
         return Some(run_mismatch(
             "change_unit_mismatch",
-            "Write Authorization Change Unit is not compatible with the recorded run",
+            "Write Check Change Unit is not compatible with the recorded run",
         ));
     }
     if !scope.product_file_write_intended {
         return Some(run_mismatch(
             "product_write_flag_mismatch",
-            "Write Authorization did not authorize a product-file write attempt",
+            "Write Check did not authorize a product-file write attempt",
         ));
     }
     if scope.baseline_ref.as_ref() != Some(baseline_ref) {
         return Some(run_mismatch(
             "baseline_mismatch",
-            "Write Authorization baseline is not compatible with the recorded run",
+            "Write Check baseline is not compatible with the recorded run",
         ));
     }
     if category_set(&normalized_string_set(&scope.sensitive_categories))
@@ -192,20 +158,20 @@ pub(crate) fn run_write_authorization_mismatch(
     {
         return Some(run_mismatch(
             "sensitive_category_mismatch",
-            "Write Authorization sensitive categories are not compatible with the recorded run",
+            "Write Check sensitive categories are not compatible with the recorded run",
         ));
     }
     if !paths_are_authorized(&observed_changes.changed_paths, normalized_scope_paths) {
         return Some(run_mismatch(
             "path_mismatch",
-            "Write Authorization paths are not compatible with the recorded run",
+            "Write Check paths are not compatible with the recorded run",
         ));
     }
     None
 }
 
-fn run_mismatch(reason: &'static str, message: &'static str) -> RunWriteAuthorizationMismatch {
-    RunWriteAuthorizationMismatch { reason, message }
+fn run_mismatch(reason: &'static str, message: &'static str) -> RunWriteCheckMismatch {
+    RunWriteCheckMismatch { reason, message }
 }
 
 pub(crate) fn write_decision_reason(
@@ -230,7 +196,7 @@ fn write_decision_category_value(category: WriteDecisionCategory) -> &'static st
         WriteDecisionCategory::WriteCompatibility => "write_compatibility",
         WriteDecisionCategory::Baseline => "baseline",
         WriteDecisionCategory::EffectContract => "effect_contract",
-        WriteDecisionCategory::SurfaceCapability => "surface_capability",
+        WriteDecisionCategory::ConnectionCapability => "connection_capability",
     }
 }
 

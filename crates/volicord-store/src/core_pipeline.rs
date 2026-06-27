@@ -3419,7 +3419,6 @@ fn artifact_staging_record_tx(
             handle_id,
             task_id,
             created_by_actor_source,
-            '',
             artifact_json,
             tmp_path,
             sha256,
@@ -5906,7 +5905,7 @@ mod tests {
             sensitive_action_scope_json: None,
             resolved_by_actor_source: "local_user".to_owned(),
             resolved_verification_basis: "store_test_registration".to_owned(),
-            resolved_assurance_level: "registered_surface_cooperative".to_owned(),
+            resolved_assurance_level: "local_user_channel".to_owned(),
             resolved_at: "t1".to_owned(),
         }
     }

@@ -8,28 +8,32 @@ use std::{
 use chrono::{DateTime, Duration, Utc};
 use serde_json::{json, Map, Value};
 use volicord_store::{
+    agent_connections::{
+        add_connection_project, ensure_agent_connection, AgentConnectionRegistration,
+        ConnectionProjectRegistration, CONNECTION_MODE_WORKFLOW, HOST_KIND_CODEX,
+        HOST_SCOPE_PROJECT, VERIFIED_STATUS_COMPLETE,
+    },
     bootstrap::{
-        initialize_runtime_home, register_project, register_surface, ProjectRegistration,
-        SurfaceRegistration, ACTIVE_PROJECT_STATUS,
+        initialize_runtime_home, register_project, ProjectRegistration, ACTIVE_PROJECT_STATUS,
     },
     core_pipeline::{CoreProjectStore, StorageEffectCounts, TaskRevisionRecord},
     sqlite::open_project_state_database,
 };
 use volicord_test_support::TempRuntimeHome;
 use volicord_types::{
-    prefixed_durable_id, ActorKind, ChangeUnitEffectContract, ChangeUnitEffectKind,
+    prefixed_durable_id, ActorSource, ChangeUnitEffectContract, ChangeUnitEffectKind,
     ChangeUnitUpdate, DurableIdError, DurableIdGenerator, DurableIdKind, EvidenceAssuranceLevel,
-    EvidenceSourceKind, EvidenceUpdateProvenance, IdempotencyKey, InitialScope, RequestId,
-    ScopeUpdate, SequenceDurableIdGenerator, SurfaceId, SurfaceInteractionRole,
-    ACTOR_ASSURANCE_REGISTERED_SURFACE_COOPERATIVE, BASELINE_PROJECT_ENFORCEMENT_PROFILE_JSON,
-    VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION, VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
+    EvidenceSourceKind, EvidenceUpdateProvenance, IdempotencyKey, InitialScope, OperationCategory,
+    RequestId, ScopeUpdate, SequenceDurableIdGenerator, BASELINE_PROJECT_ENFORCEMENT_PROFILE_JSON,
+    VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
 };
 
 use super::*;
 
 const PROJECT_ID: &str = "project_methods";
-const SURFACE_ID: &str = "surface_methods";
-const SURFACE_INSTANCE_ID: &str = "surface_instance_methods";
+const CONNECTION_ID: &str = "connection_methods";
+const AGENT_ACTOR_SOURCE: &str = "agent_connection:connection_methods";
+const LOCAL_USER_ACTOR_SOURCE: &str = "local_user";
 
 #[derive(Debug, Clone)]
 struct ManualClock {
@@ -141,33 +145,31 @@ impl MethodHarness {
                 metadata_json: "{}".to_owned(),
             },
         )?;
-        register_surface(
+        ensure_agent_connection(
             runtime_home.path(),
-            SurfaceRegistration {
-                project_id: PROJECT_ID.to_owned(),
-                surface_id: SURFACE_ID.to_owned(),
-                surface_instance_id: SURFACE_INSTANCE_ID.to_owned(),
-                surface_kind: "local_test".to_owned(),
-                interaction_role: SurfaceInteractionRole::UserInteraction,
-                display_name: Some("Method Test Surface".to_owned()),
-                capability_profile_json: json!({
-                    "access_class": "write_authorization",
-                    "supported_access_classes": ["write_authorization"]
-                })
-                .to_string(),
-                local_access_json: json!({
-                    "authorized_access_classes": [
-                        "read_status",
-                        "core_mutation",
-                        "write_authorization",
-                        "run_recording",
-                        "artifact_registration",
-                        "artifact_read"
-                    ],
-                    "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
-                })
-                .to_string(),
+            AgentConnectionRegistration {
+                connection_id: CONNECTION_ID.to_owned(),
+                host_kind: HOST_KIND_CODEX.to_owned(),
+                host_scope: HOST_SCOPE_PROJECT.to_owned(),
+                server_name: "volicord-method-test".to_owned(),
+                config_target: runtime_home
+                    .path()
+                    .join("agent-connections")
+                    .join(CONNECTION_ID)
+                    .to_string_lossy()
+                    .into_owned(),
+                mode: CONNECTION_MODE_WORKFLOW.to_owned(),
+                enabled: true,
+                managed_fingerprint: "fixture:methods".to_owned(),
+                last_verified_status: VERIFIED_STATUS_COMPLETE.to_owned(),
                 metadata_json: "{}".to_owned(),
+            },
+        )?;
+        add_connection_project(
+            runtime_home.path(),
+            ConnectionProjectRegistration {
+                connection_id: CONNECTION_ID.to_owned(),
+                project_id: PROJECT_ID.to_owned(),
             },
         )?;
 
@@ -266,10 +268,7 @@ impl MethodHarness {
 
 #[derive(Debug, PartialEq, Eq)]
 struct UserJudgmentActorProvenance {
-    resolved_by_actor_kind: Option<String>,
-    resolved_actor_role: Option<String>,
-    resolved_by_surface_id: Option<String>,
-    resolved_by_surface_instance_id: Option<String>,
+    resolved_by_actor_source: Option<String>,
     resolved_verification_basis: Option<String>,
     resolved_assurance_level: Option<String>,
 }
@@ -287,7 +286,7 @@ fn reused_request_id_does_not_collide_for_core_generated_records() -> Result<(),
             Some(0),
             RequestedMode::Work,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let first_task_id = response_record_id(&first_intake.response_value, "task_ref");
     let first_event_id = response_event_id(&first_intake.response_value);
@@ -300,7 +299,7 @@ fn reused_request_id_does_not_collide_for_core_generated_records() -> Result<(),
             Some(1),
             RequestedMode::Work,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let second_task_id = response_record_id(&second_intake.response_value, "task_ref");
     let second_event_id = response_event_id(&second_intake.response_value);
@@ -317,7 +316,7 @@ fn reused_request_id_does_not_collide_for_core_generated_records() -> Result<(),
             ChangeUnitOperation::CreateCurrent,
             "First reused request scope.",
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let first_change_unit_id = response_record_id(&first_scope.response_value, "change_unit_ref");
     let first_scope_event_id = response_event_id(&first_scope.response_value);
@@ -332,7 +331,7 @@ fn reused_request_id_does_not_collide_for_core_generated_records() -> Result<(),
             ChangeUnitOperation::ReplaceCurrent,
             "Second reused request scope.",
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let second_change_unit_id = response_record_id(&second_scope.response_value, "change_unit_ref");
     let second_scope_event_id = response_event_id(&second_scope.response_value);
@@ -347,9 +346,9 @@ fn reused_request_id_does_not_collide_for_core_generated_records() -> Result<(),
             Some(&second_task_id),
             Some(&second_change_unit_id),
         ),
-        invocation(AccessClass::WriteAuthorization),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
-    let first_write_id = response_record_id(&first_write.response_value, "write_authorization_ref");
+    let first_write_id = response_record_id(&first_write.response_value, "write_check_ref");
     let first_write_event_id = response_event_id(&first_write.response_value);
 
     let second_write = harness.service.prepare_write(
@@ -360,10 +359,9 @@ fn reused_request_id_does_not_collide_for_core_generated_records() -> Result<(),
             Some(&second_task_id),
             Some(&second_change_unit_id),
         ),
-        invocation(AccessClass::WriteAuthorization),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
-    let second_write_id =
-        response_record_id(&second_write.response_value, "write_authorization_ref");
+    let second_write_id = response_record_id(&second_write.response_value, "write_check_ref");
     let second_write_event_id = response_event_id(&second_write.response_value);
     assert_ne!(first_write_id, second_write_id);
     assert_ne!(first_write_event_id, second_write_event_id);
@@ -378,7 +376,7 @@ fn reused_request_id_does_not_collide_for_core_generated_records() -> Result<(),
             Some(&second_change_unit_id),
             JudgmentKind::ProductDecision,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let first_judgment_id = response_record_id(&first_judgment.response_value, "user_judgment_ref");
     let first_judgment_event_id = response_event_id(&first_judgment.response_value);
@@ -393,7 +391,7 @@ fn reused_request_id_does_not_collide_for_core_generated_records() -> Result<(),
             Some(&second_change_unit_id),
             JudgmentKind::TechnicalDecision,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let second_judgment_id =
         response_record_id(&second_judgment.response_value, "user_judgment_ref");
@@ -412,11 +410,11 @@ fn reused_request_id_stage_artifact_returns_distinct_handles() -> Result<(), Box
 
     let first = harness.service.stage_artifact(
         stage_artifact_request("req_stage_reused", None, false, None, &task_id),
-        invocation(AccessClass::ArtifactRegistration),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let second = harness.service.stage_artifact(
         stage_artifact_request("req_stage_reused", None, false, None, &task_id),
-        invocation(AccessClass::ArtifactRegistration),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     let first_handle = first.response_value["staged_artifact_handle"]["handle_id"]
@@ -441,12 +439,13 @@ fn idempotent_replay_returns_original_generated_ids() -> Result<(), Box<dyn Erro
         RequestedMode::Work,
     );
 
-    let first = harness
-        .service
-        .intake(request.clone(), invocation(AccessClass::CoreMutation))?;
+    let first = harness.service.intake(
+        request.clone(),
+        invocation(OperationCategory::AgentWorkflow),
+    )?;
     let second = harness
         .service
-        .intake(request, invocation(AccessClass::CoreMutation))?;
+        .intake(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert!(second.replayed);
     assert_eq!(
@@ -479,7 +478,7 @@ fn deterministic_generated_id_collision_retries_bounded_candidates() -> Result<(
             Some(0),
             RequestedMode::Work,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(
@@ -531,7 +530,7 @@ fn status_is_read_only_including_dry_run() -> Result<(), Box<dyn Error>> {
             envelope: envelope("req_status", None, false, None, None),
             include: status_include(),
         },
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "result");
@@ -551,7 +550,7 @@ fn status_is_read_only_including_dry_run() -> Result<(), Box<dyn Error>> {
             ),
             include: status_include(),
         },
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     assert_eq!(dry_run.response_value["base"]["response_kind"], "result");
@@ -566,7 +565,7 @@ fn status_renders_effective_authorization_expiration_without_mutating_row(
 ) -> Result<(), Box<dyn Error>> {
     let mut harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "status_auth_expired")?;
-    insert_active_write_authorization_with_timestamps(
+    insert_active_write_check_with_timestamps(
         &harness,
         &task_id,
         &change_unit_id,
@@ -585,22 +584,19 @@ fn status_renders_effective_authorization_expiration_without_mutating_row(
             envelope: envelope("req_status_auth_expired", None, false, None, Some(&task_id)),
             include: status_include(),
         },
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "result");
     assert_eq!(
-        response.response_value["write_authority_summary"]["status"],
+        response.response_value["write_check_summary"]["status"],
         "expired"
     );
     assert_eq!(
-        response.response_value["active_task"]["write_authority_summary"]["status"],
+        response.response_value["active_task"]["write_check_summary"]["status"],
         "expired"
     );
-    assert_eq!(
-        write_authorization_status(&harness, "wa_status_future")?,
-        "active"
-    );
+    assert_eq!(write_check_status(&harness, "wa_status_future")?, "active");
     assert_eq!(harness.counts()?, before);
     Ok(())
 }
@@ -625,14 +621,14 @@ fn status_include_evidence_returns_current_coverage() -> Result<(), Box<dyn Erro
             include: StatusInclude {
                 task: true,
                 pending_user_judgments: false,
-                write_authority: false,
+                write_check: false,
                 evidence: true,
                 close: false,
                 guarantees: false,
                 continuity: false,
             },
         },
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     assert_eq!(
@@ -670,14 +666,14 @@ fn status_close_include_matches_close_task_check_blockers() -> Result<(), Box<dy
             include: StatusInclude {
                 task: true,
                 pending_user_judgments: true,
-                write_authority: false,
+                write_check: false,
                 evidence: true,
                 close: true,
                 guarantees: true,
                 continuity: false,
             },
         },
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
     let check = harness.service.close_task(
         close_task_request(CloseTaskFixture {
@@ -690,7 +686,7 @@ fn status_close_include_matches_close_task_check_blockers() -> Result<(), Box<dy
             close_reason: None,
             superseding_task_id: None,
         }),
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     assert_eq!(status.response_value["close_state"], "blocked");
@@ -742,7 +738,7 @@ fn status_ready_close_uses_empty_blockers_only_after_computation() -> Result<(),
             envelope: envelope("req_status_ready_empty", None, false, None, Some(&task_id)),
             include: status_include(),
         },
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     assert_eq!(status.response_value["close_state"], "ready");
@@ -770,18 +766,18 @@ fn status_include_false_omits_optional_sections_without_effect() -> Result<(), B
             include: StatusInclude {
                 task: false,
                 pending_user_judgments: false,
-                write_authority: false,
+                write_check: false,
                 evidence: false,
                 close: false,
                 guarantees: false,
                 continuity: false,
             },
         },
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     assert!(none.response_value["active_task"].is_null());
-    assert!(none.response_value["write_authority_summary"].is_null());
+    assert!(none.response_value["write_check_summary"].is_null());
     assert_field_absent(&none.response_value, "evidence_summary");
     assert_field_absent(&none.response_value, "close_state");
     assert_field_absent(&none.response_value, "current_close_basis");
@@ -802,14 +798,14 @@ fn status_include_false_omits_optional_sections_without_effect() -> Result<(), B
             include: StatusInclude {
                 task: false,
                 pending_user_judgments: false,
-                write_authority: false,
+                write_check: false,
                 evidence: true,
                 close: false,
                 guarantees: false,
                 continuity: false,
             },
         },
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
     assert!(evidence_only.response_value["active_task"].is_null());
     assert_eq!(
@@ -827,14 +823,14 @@ fn status_include_false_omits_optional_sections_without_effect() -> Result<(), B
             include: StatusInclude {
                 task: false,
                 pending_user_judgments: false,
-                write_authority: false,
+                write_check: false,
                 evidence: false,
                 close: true,
                 guarantees: false,
                 continuity: false,
             },
         },
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
     assert!(close_only.response_value["active_task"].is_null());
     assert_field_absent(&close_only.response_value, "evidence_summary");
@@ -853,14 +849,14 @@ fn status_include_false_omits_optional_sections_without_effect() -> Result<(), B
             include: StatusInclude {
                 task: false,
                 pending_user_judgments: false,
-                write_authority: false,
+                write_check: false,
                 evidence: false,
                 close: false,
                 guarantees: true,
                 continuity: false,
             },
         },
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
     assert!(guarantees_only.response_value["active_task"].is_null());
     assert_field_absent(&guarantees_only.response_value, "evidence_summary");
@@ -898,14 +894,14 @@ fn status_close_false_does_not_read_corrupt_close_basis() -> Result<(), Box<dyn 
             include: StatusInclude {
                 task: true,
                 pending_user_judgments: false,
-                write_authority: false,
+                write_check: false,
                 evidence: false,
                 close: false,
                 guarantees: false,
                 continuity: false,
             },
         },
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     assert_eq!(excluded.response_value["base"]["response_kind"], "result");
@@ -929,14 +925,14 @@ fn status_close_false_does_not_read_corrupt_close_basis() -> Result<(), Box<dyn 
             include: StatusInclude {
                 task: false,
                 pending_user_judgments: false,
-                write_authority: false,
+                write_check: false,
                 evidence: false,
                 close: true,
                 guarantees: false,
                 continuity: false,
             },
         },
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     assert_owner_state_rejection(
@@ -991,14 +987,14 @@ fn status_guarantee_include_false_does_not_read_corrupt_profile() -> Result<(), 
             include: StatusInclude {
                 task: true,
                 pending_user_judgments: false,
-                write_authority: false,
+                write_check: false,
                 evidence: false,
                 close: true,
                 guarantees: false,
                 continuity: false,
             },
         },
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     assert_eq!(excluded.response_value["base"]["response_kind"], "result");
@@ -1018,14 +1014,14 @@ fn status_guarantee_include_false_does_not_read_corrupt_profile() -> Result<(), 
             include: StatusInclude {
                 task: false,
                 pending_user_judgments: false,
-                write_authority: false,
+                write_check: false,
                 evidence: false,
                 close: false,
                 guarantees: true,
                 continuity: false,
             },
         },
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     assert_owner_state_rejection(
@@ -1060,14 +1056,14 @@ fn status_guarantee_include_true_rejects_unsupported_profile_state() -> Result<(
             include: StatusInclude {
                 task: false,
                 pending_user_judgments: false,
-                write_authority: false,
+                write_check: false,
                 evidence: false,
                 close: false,
                 guarantees: true,
                 continuity: false,
             },
         },
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     assert_owner_state_value_rejection(
@@ -1101,14 +1097,14 @@ fn status_guarantee_include_true_rejects_missing_profile_fields() -> Result<(), 
             include: StatusInclude {
                 task: false,
                 pending_user_judgments: false,
-                write_authority: false,
+                write_check: false,
                 evidence: false,
                 close: false,
                 guarantees: true,
                 continuity: false,
             },
         },
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     assert_owner_state_rejection(
@@ -1123,37 +1119,25 @@ fn status_guarantee_include_true_rejects_missing_profile_fields() -> Result<(), 
 }
 
 #[test]
-fn guarantee_display_uses_verified_surface_without_profile_elevation() -> Result<(), Box<dyn Error>>
-{
+fn guarantee_display_uses_verified_invocation_without_profile_elevation(
+) -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
-    set_surface_capability(
-        &harness,
-        &json!({
-            "access_class": "read_status",
-            "supported_access_classes": ["read_status"],
-            "guarantee_level": "detective",
-            "capabilities": {
-                "detective": true
-            }
-        })
-        .to_string(),
-    )?;
     let before = harness.counts()?;
 
     let status = harness.service.status(
         StatusRequest {
-            envelope: envelope("req_status_guarantee_surface", None, false, None, None),
+            envelope: envelope("req_status_guarantee_invocation", None, false, None, None),
             include: StatusInclude {
                 task: false,
                 pending_user_judgments: false,
-                write_authority: false,
+                write_check: false,
                 evidence: false,
                 close: false,
                 guarantees: true,
                 continuity: false,
             },
         },
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     assert_eq!(
@@ -1167,19 +1151,19 @@ fn guarantee_display_uses_verified_surface_without_profile_elevation() -> Result
     assert!(status.response_value["guarantee_display"]["basis"]
         .as_str()
         .is_some_and(|basis| {
-            basis.contains(SURFACE_ID)
-                && basis.contains(SURFACE_INSTANCE_ID)
+            basis.contains(AGENT_ACTOR_SOURCE)
                 && basis.contains("baseline_cooperative")
+                && basis.contains("read")
                 && basis.contains("enabled mechanisms: none")
                 && basis.contains("no stronger enforcement")
         }));
     assert_eq!(
         status.response_value["guarantee_display"]["capability_refs"][0]["record_kind"],
-        "local_surface_registration"
+        "agent_connection"
     );
     assert_eq!(
         status.response_value["guarantee_display"]["capability_refs"][0]["record_id"],
-        format!("{SURFACE_ID}/{SURFACE_INSTANCE_ID}")
+        CONNECTION_ID
     );
     assert_eq!(harness.counts()?, before);
     Ok(())
@@ -1214,7 +1198,7 @@ fn status_close_reports_exact_missing_residual_risk_coverage() -> Result<(), Box
             envelope: envelope("req_status_risk", None, false, None, Some(&task_id)),
             include: status_include(),
         },
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     let coverage = response.response_value["risk_acceptance_coverage"]
@@ -1268,7 +1252,7 @@ fn status_close_shows_stale_final_acceptance_blocker_context() -> Result<(), Box
             envelope: envelope("req_status_stale_final", None, false, None, Some(&task_id)),
             include: status_include(),
         },
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     assert_eq!(user_judgment_status(&harness, &final_judgment_id)?, "stale");
@@ -1303,7 +1287,7 @@ fn invalid_stored_method_owned_json_routes_to_structured_unavailability(
             Some(&change_unit_id),
             JudgmentKind::ProductDecision,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
     harness.conn()?.execute(
@@ -1325,7 +1309,7 @@ fn invalid_stored_method_owned_json_routes_to_structured_unavailability(
             JudgmentKind::ProductDecision,
             answer_payload(JudgmentKind::ProductDecision),
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::UserOnly),
     )?;
 
     assert_owner_state_rejection(
@@ -1369,7 +1353,7 @@ fn authority_owner_json_decode_paths_do_not_reintroduce_fail_open_patterns() {
 }
 
 #[test]
-fn public_methods_use_same_verified_surface_context() -> Result<(), Box<dyn Error>> {
+fn public_methods_use_same_verified_invocation_context() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     enable_record_run_capabilities(&harness)?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "verified_context")?;
@@ -1379,9 +1363,9 @@ fn public_methods_use_same_verified_surface_context() -> Result<(), Box<dyn Erro
             envelope: envelope("req_verified_status", None, false, None, Some(&task_id)),
             include: status_include(),
         },
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
-    assert_verified_surface(&status, AccessClass::ReadStatus);
+    assert_verified_invocation(&status, OperationCategory::Read);
 
     let intake = harness.service.intake(
         intake_request(
@@ -1391,9 +1375,9 @@ fn public_methods_use_same_verified_surface_context() -> Result<(), Box<dyn Erro
             Some(2),
             RequestedMode::Work,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
-    assert_verified_surface(&intake, AccessClass::CoreMutation);
+    assert_verified_invocation(&intake, OperationCategory::AgentWorkflow);
 
     let update_scope = harness.service.update_scope(
         update_scope_request(
@@ -1405,9 +1389,9 @@ fn public_methods_use_same_verified_surface_context() -> Result<(), Box<dyn Erro
             ChangeUnitOperation::KeepCurrent,
             "Initial current scope.",
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
-    assert_verified_surface(&update_scope, AccessClass::CoreMutation);
+    assert_verified_invocation(&update_scope, OperationCategory::AgentWorkflow);
 
     let mut prepare_write = prepare_write_request(
         "req_verified_prepare",
@@ -1419,8 +1403,8 @@ fn public_methods_use_same_verified_surface_context() -> Result<(), Box<dyn Erro
     prepare_write.envelope.dry_run = true;
     let prepare_write = harness
         .service
-        .prepare_write(prepare_write, invocation(AccessClass::WriteAuthorization))?;
-    assert_verified_surface(&prepare_write, AccessClass::WriteAuthorization);
+        .prepare_write(prepare_write, invocation(OperationCategory::AgentWorkflow))?;
+    assert_verified_invocation(&prepare_write, OperationCategory::AgentWorkflow);
 
     let stage_artifact = harness.service.stage_artifact(
         stage_artifact_request(
@@ -1430,9 +1414,9 @@ fn public_methods_use_same_verified_surface_context() -> Result<(), Box<dyn Erro
             Some(2),
             &task_id,
         ),
-        invocation(AccessClass::ArtifactRegistration),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
-    assert_verified_surface(&stage_artifact, AccessClass::ArtifactRegistration);
+    assert_verified_invocation(&stage_artifact, OperationCategory::AgentWorkflow);
 
     let record_run = harness.service.record_run(
         record_run_request(
@@ -1443,9 +1427,9 @@ fn public_methods_use_same_verified_surface_context() -> Result<(), Box<dyn Erro
             &task_id,
             &change_unit_id,
         ),
-        invocation(AccessClass::RunRecording),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
-    assert_verified_surface(&record_run, AccessClass::RunRecording);
+    assert_verified_invocation(&record_run, OperationCategory::AgentWorkflow);
 
     let request_judgment = harness.service.request_user_judgment(
         user_judgment_request(
@@ -1457,9 +1441,9 @@ fn public_methods_use_same_verified_surface_context() -> Result<(), Box<dyn Erro
             Some(&change_unit_id),
             JudgmentKind::ProductDecision,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
-    assert_verified_surface(&request_judgment, AccessClass::CoreMutation);
+    assert_verified_invocation(&request_judgment, OperationCategory::AgentWorkflow);
 
     let pending_judgment = harness.service.request_user_judgment(
         user_judgment_request(
@@ -1471,7 +1455,7 @@ fn public_methods_use_same_verified_surface_context() -> Result<(), Box<dyn Erro
             Some(&change_unit_id),
             JudgmentKind::ProductDecision,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let pending_judgment_id =
         response_record_id(&pending_judgment.response_value, "user_judgment_ref");
@@ -1487,8 +1471,8 @@ fn public_methods_use_same_verified_surface_context() -> Result<(), Box<dyn Erro
     record_judgment.envelope.dry_run = true;
     let record_judgment = harness
         .service
-        .record_user_judgment(record_judgment, invocation(AccessClass::CoreMutation))?;
-    assert_verified_surface(&record_judgment, AccessClass::CoreMutation);
+        .record_user_judgment(record_judgment, invocation(OperationCategory::UserOnly))?;
+    assert_verified_invocation(&record_judgment, OperationCategory::UserOnly);
 
     let close_check = harness.service.close_task(
         close_task_request(CloseTaskFixture {
@@ -1501,9 +1485,9 @@ fn public_methods_use_same_verified_surface_context() -> Result<(), Box<dyn Erro
             close_reason: None,
             superseding_task_id: None,
         }),
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
-    assert_verified_surface(&close_check, AccessClass::ReadStatus);
+    assert_verified_invocation(&close_check, OperationCategory::Read);
 
     Ok(())
 }
@@ -1520,9 +1504,10 @@ fn intake_commits_once_and_replays_without_effect() -> Result<(), Box<dyn Error>
         RequestedMode::Auto,
     );
 
-    let first = harness
-        .service
-        .intake(request.clone(), invocation(AccessClass::CoreMutation))?;
+    let first = harness.service.intake(
+        request.clone(),
+        invocation(OperationCategory::AgentWorkflow),
+    )?;
     let after_first = harness.counts()?;
 
     assert_eq!(first.response_value["base"]["response_kind"], "result");
@@ -1539,7 +1524,7 @@ fn intake_commits_once_and_replays_without_effect() -> Result<(), Box<dyn Error>
 
     let second = harness
         .service
-        .intake(request, invocation(AccessClass::CoreMutation))?;
+        .intake(request, invocation(OperationCategory::AgentWorkflow))?;
     assert!(second.replayed);
     assert_eq!(second.response_json, first.response_json);
     assert_eq!(harness.counts()?, after_first);
@@ -1558,7 +1543,7 @@ fn intake_dry_run_has_no_storage_effect() -> Result<(), Box<dyn Error>> {
             Some(0),
             RequestedMode::Work,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "dry_run");
@@ -1578,7 +1563,7 @@ fn update_scope_commits_once_and_creates_one_current_change_unit() -> Result<(),
             Some(0),
             RequestedMode::Work,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let task_id = intake.response_value["task_ref"]["record_id"]
         .as_str()
@@ -1596,7 +1581,7 @@ fn update_scope_commits_once_and_creates_one_current_change_unit() -> Result<(),
             ChangeUnitOperation::CreateCurrent,
             "Create current export scope.",
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let after = harness.counts()?;
 
@@ -1616,8 +1601,7 @@ fn update_scope_commits_once_and_creates_one_current_change_unit() -> Result<(),
 }
 
 #[test]
-fn update_scope_replaces_current_and_marks_write_authorization_stale() -> Result<(), Box<dyn Error>>
-{
+fn update_scope_replaces_current_and_marks_write_check_stale() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     let intake = harness.service.intake(
         intake_request(
@@ -1627,7 +1611,7 @@ fn update_scope_replaces_current_and_marks_write_authorization_stale() -> Result
             Some(0),
             RequestedMode::Work,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let task_id = intake.response_value["task_ref"]["record_id"]
         .as_str()
@@ -1643,13 +1627,13 @@ fn update_scope_replaces_current_and_marks_write_authorization_stale() -> Result
             ChangeUnitOperation::CreateCurrent,
             "Initial current scope.",
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let change_unit_id = create.response_value["change_unit_ref"]["record_id"]
         .as_str()
         .expect("change unit ref should be present")
         .to_owned();
-    insert_active_write_authorization(&harness, &task_id, &change_unit_id)?;
+    insert_active_write_check(&harness, &task_id, &change_unit_id)?;
     let before = harness.counts()?;
 
     let response = harness.service.update_scope(
@@ -1662,13 +1646,13 @@ fn update_scope_replaces_current_and_marks_write_authorization_stale() -> Result
             ChangeUnitOperation::ReplaceCurrent,
             "Replacement current scope.",
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let after = harness.counts()?;
 
     assert_eq!(response.response_value["base"]["state_version"], 3);
     assert_eq!(
-        response.response_value["stale_write_authorization_refs"]
+        response.response_value["stale_write_check_refs"]
             .as_array()
             .expect("stale refs should be an array")
             .len(),
@@ -1677,7 +1661,7 @@ fn update_scope_replaces_current_and_marks_write_authorization_stale() -> Result
     assert_eq!(after.state_version, before.state_version + 1);
     assert_eq!(after.change_units, before.change_units + 1);
     assert_eq!(active_current_change_units(&harness, &task_id)?, 1);
-    assert_eq!(write_authorization_status(&harness, "wa_replace")?, "stale");
+    assert_eq!(write_check_status(&harness, "wa_replace")?, "stale");
     Ok(())
 }
 
@@ -1701,7 +1685,7 @@ fn material_scope_change_increments_revision_and_invalidates_basis() -> Result<(
     .into();
     harness
         .service
-        .record_run(record, invocation(AccessClass::RunRecording))?;
+        .record_run(record, invocation(OperationCategory::AgentWorkflow))?;
     let before = task_revision(&harness, &task_id)?;
     assert!(before.current_close_basis.is_some());
 
@@ -1715,7 +1699,7 @@ fn material_scope_change_increments_revision_and_invalidates_basis() -> Result<(
             ChangeUnitOperation::KeepCurrent,
             "Materially changed current scope.",
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let after = task_revision(&harness, &task_id)?;
     let (_, event_payload, _) = latest_task_event(&harness)?;
@@ -1754,7 +1738,7 @@ fn semantic_noop_scope_update_does_not_increment_revisions() -> Result<(), Box<d
             ChangeUnitOperation::KeepCurrent,
             "  Initial current scope.  ",
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let after = task_revision(&harness, &task_id)?;
     let (_, event_payload, _) = latest_task_event(&harness)?;
@@ -1778,7 +1762,7 @@ fn update_scope_dry_run_has_no_storage_effect() -> Result<(), Box<dyn Error>> {
             Some(0),
             RequestedMode::Work,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let task_id = intake.response_value["task_ref"]["record_id"]
         .as_str()
@@ -1796,7 +1780,7 @@ fn update_scope_dry_run_has_no_storage_effect() -> Result<(), Box<dyn Error>> {
             ChangeUnitOperation::CreateCurrent,
             "Dry-run scope.",
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "dry_run");
@@ -1816,7 +1800,7 @@ fn scope_decision_ref_alone_does_not_change_current_scope() -> Result<(), Box<dy
             Some(0),
             RequestedMode::Work,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let task_id = intake.response_value["task_ref"]["record_id"]
         .as_str()
@@ -1832,7 +1816,7 @@ fn scope_decision_ref_alone_does_not_change_current_scope() -> Result<(), Box<dy
             None,
             JudgmentKind::ScopeDecision,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let decision_ref: StateRecordRef =
         serde_json::from_value(decision.response_value["user_judgment_ref"].clone())?;
@@ -1847,7 +1831,7 @@ fn scope_decision_ref_alone_does_not_change_current_scope() -> Result<(), Box<dy
             JudgmentKind::ScopeDecision,
             answer_payload(JudgmentKind::ScopeDecision),
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::UserOnly),
     )?;
 
     let response = harness.service.update_scope(
@@ -1874,7 +1858,7 @@ fn scope_decision_ref_alone_does_not_change_current_scope() -> Result<(), Box<dy
             },
             related_scope_decision_refs: vec![decision_ref],
         },
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(
@@ -1916,7 +1900,7 @@ fn accepted_current_user_scope_decision_links_scope_update() -> Result<(), Box<d
     request.related_scope_decision_refs = vec![decision_ref.clone()];
     let response = harness
         .service
-        .update_scope(request, invocation(AccessClass::CoreMutation))?;
+        .update_scope(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "result");
     assert_eq!(
@@ -1949,7 +1933,7 @@ fn rejected_scope_decision_cannot_be_linked() -> Result<(), Box<dyn Error>> {
 
     let response = harness
         .service
-        .update_scope(request, invocation(AccessClass::CoreMutation))?;
+        .update_scope(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
@@ -1967,16 +1951,18 @@ fn rejected_scope_decision_cannot_be_linked() -> Result<(), Box<dyn Error>> {
 
 #[test]
 fn agent_or_unverified_scope_decision_cannot_be_linked() -> Result<(), Box<dyn Error>> {
-    for case in ["agent_actor", "agent_surface", "missing_provenance"] {
+    for case in ["agent_actor", "agent_source", "missing_provenance"] {
         let harness = MethodHarness::new()?;
         let (task_id, change_unit_id) =
             create_task_with_change_unit(&harness, &format!("scope_{case}"))?;
         let (state_version, decision_ref, decision_id) =
             record_scope_decision_authority(&harness, &task_id, &change_unit_id, 2, case, true)?;
         match case {
-            "agent_actor" => set_user_judgment_resolution_actor(&harness, &decision_id, "agent")?,
-            "agent_surface" => {
-                set_user_judgment_resolved_actor_role(&harness, &decision_id, "agent")?;
+            "agent_actor" => {
+                set_user_judgment_resolution_actor(&harness, &decision_id, AGENT_ACTOR_SOURCE)?
+            }
+            "agent_source" => {
+                set_user_judgment_resolved_by_actor_source(&harness, &decision_id, "agent")?;
             }
             "missing_provenance" => {
                 clear_user_judgment_actor_provenance(&harness, &decision_id)?;
@@ -1997,7 +1983,7 @@ fn agent_or_unverified_scope_decision_cannot_be_linked() -> Result<(), Box<dyn E
 
         let response = harness
             .service
-            .update_scope(request, invocation(AccessClass::CoreMutation))?;
+            .update_scope(request, invocation(OperationCategory::AgentWorkflow))?;
 
         assert_eq!(response.response_value["base"]["response_kind"], "rejected");
         assert_eq!(harness.counts()?, before);
@@ -2038,7 +2024,7 @@ fn scope_decision_for_other_operation_cannot_authorize_scope_update() -> Result<
 
     let response = harness
         .service
-        .update_scope(request, invocation(AccessClass::CoreMutation))?;
+        .update_scope(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(harness.counts()?, before);
@@ -2068,7 +2054,7 @@ fn old_revision_scope_decision_cannot_be_reused() -> Result<(), Box<dyn Error>> 
             ChangeUnitOperation::KeepCurrent,
             "Autonomous material scope change before reuse.",
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let next_state_version = autonomous.response_value["base"]["state_version"]
         .as_u64()
@@ -2088,7 +2074,7 @@ fn old_revision_scope_decision_cannot_be_reused() -> Result<(), Box<dyn Error>> 
     request.related_scope_decision_refs = vec![decision_ref];
     let response = harness
         .service
-        .update_scope(request, invocation(AccessClass::CoreMutation))?;
+        .update_scope(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(harness.counts()?, before);
@@ -2118,7 +2104,7 @@ fn scope_decision_for_another_change_unit_cannot_be_linked() -> Result<(), Box<d
 
     let response = harness
         .service
-        .update_scope(request, invocation(AccessClass::CoreMutation))?;
+        .update_scope(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(harness.counts()?, before);
@@ -2160,7 +2146,7 @@ fn scope_decision_with_incompatible_affected_refs_cannot_be_linked() -> Result<(
 
     let response = harness
         .service
-        .update_scope(request, invocation(AccessClass::CoreMutation))?;
+        .update_scope(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(harness.counts()?, before);
@@ -2188,7 +2174,7 @@ fn expired_scope_decision_cannot_be_linked() -> Result<(), Box<dyn Error>> {
 
     let response = harness
         .service
-        .update_scope(request, invocation(AccessClass::CoreMutation))?;
+        .update_scope(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(harness.counts()?, before);
@@ -2220,7 +2206,7 @@ fn invalid_related_scope_decision_ref_has_no_update_scope_effect() -> Result<(),
 
     let response = harness
         .service
-        .update_scope(request, invocation(AccessClass::CoreMutation))?;
+        .update_scope(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(harness.counts()?, before);
@@ -2247,7 +2233,7 @@ fn autonomous_scope_update_still_succeeds_without_scope_decision() -> Result<(),
             ChangeUnitOperation::KeepCurrent,
             "Autonomous scope update with no decision ref.",
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "result");
@@ -2282,7 +2268,7 @@ fn material_scope_update_invalidates_scope_decisions_atomically() -> Result<(), 
             Some(&change_unit_id),
             JudgmentKind::ScopeDecision,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let pending_decision_id = response_record_id(&pending.response_value, "user_judgment_ref");
     let response = harness.service.update_scope(
@@ -2295,7 +2281,7 @@ fn material_scope_update_invalidates_scope_decisions_atomically() -> Result<(), 
             ChangeUnitOperation::KeepCurrent,
             "Material scope change invalidates scope decisions.",
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "result");
@@ -2333,7 +2319,7 @@ fn prepare_write_allowed_creates_one_authorization_with_post_commit_basis(
             Some(&change_unit_id),
             JudgmentKind::SensitiveApproval,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let sensitive_judgment_id =
         response_record_id(&sensitive_judgment.response_value, "user_judgment_ref");
@@ -2347,7 +2333,7 @@ fn prepare_write_allowed_creates_one_authorization_with_post_commit_basis(
             JudgmentKind::SensitiveApproval,
             answer_payload(JudgmentKind::SensitiveApproval),
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::UserOnly),
     )?;
     let id_generator =
         CountingDurableIdGenerator::new(["prepare_allowed_auth", "prepare_allowed_event"]);
@@ -2365,19 +2351,18 @@ fn prepare_write_allowed_creates_one_authorization_with_post_commit_basis(
     request.sensitive_categories = vec!["network".to_owned()];
     let response = harness
         .service
-        .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+        .prepare_write(request, invocation(OperationCategory::AgentWorkflow))?;
     let after = harness.counts()?;
 
     assert_eq!(response.response_value["decision"], "allowed");
-    assert_eq!(response.response_value["authorization_effect"], "created");
+    assert_eq!(response.response_value["write_check_effect"], "created");
     assert_eq!(response.response_value["base"]["state_version"], 5);
     assert_eq!(
-        response.response_value["write_authorization"]["basis_state_version"],
+        response.response_value["write_check"]["basis_state_version"],
         5
     );
     assert_eq!(
-        response.response_value["write_authorization"]["authorized_attempt_scope"]
-            ["intended_paths"],
+        response.response_value["write_check"]["attempt_scope"]["intended_paths"],
         json!(["src/export.rs"])
     );
     assert_eq!(
@@ -2388,21 +2373,16 @@ fn prepare_write_allowed_creates_one_authorization_with_post_commit_basis(
         1
     );
     assert_eq!(after.state_version, before.state_version + 1);
-    assert_eq!(after.write_authorizations, before.write_authorizations + 1);
+    assert_eq!(after.write_checks, before.write_checks + 1);
     assert_eq!(after.task_events, before.task_events + 1);
     assert_eq!(after.tool_invocations, before.tool_invocations + 1);
-    let write_authorization_id =
-        response_record_id(&response.response_value, "write_authorization_ref");
-    assert_eq!(
-        write_authorization_basis(&harness, &write_authorization_id)?,
-        5
-    );
-    let (created_at, expires_at) =
-        write_authorization_timestamps(&harness, &write_authorization_id)?;
+    let write_check_id = response_record_id(&response.response_value, "write_check_ref");
+    assert_eq!(write_check_basis(&harness, &write_check_id)?, 5);
+    let (created_at, expires_at) = write_check_timestamps(&harness, &write_check_id)?;
     assert_eq!(created_at, "2026-06-18T00:00:00Z");
     assert_eq!(expires_at, "2026-06-18T00:15:00Z");
     assert_eq!(
-        response.response_value["write_authorization"]["expires_at"],
+        response.response_value["write_check"]["expires_at"],
         expires_at
     );
     let status = harness.service.status(
@@ -2416,14 +2396,16 @@ fn prepare_write_allowed_creates_one_authorization_with_post_commit_basis(
             ),
             include: status_include(),
         },
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
     assert_eq!(status.response_value["base"]["state_version"], 5);
-    assert_eq!(
-        response.response_value["state"],
-        status.response_value["active_task"]
-    );
-    assert_eq!(id_generator.count(DurableIdKind::WriteAuthorization), 1);
+    let mut response_state = response.response_value["state"].clone();
+    let status_state = status.response_value["active_task"].clone();
+    response_state["guarantee_display"] = status_state["guarantee_display"].clone();
+    response_state["write_check_summary"]["guarantee_display"] =
+        status_state["write_check_summary"]["guarantee_display"].clone();
+    assert_eq!(response_state, status_state);
+    assert_eq!(id_generator.count(DurableIdKind::WriteCheck), 1);
     Ok(())
 }
 
@@ -2438,7 +2420,7 @@ fn change_unit_effect_contract_is_stored_and_returned() -> Result<(), Box<dyn Er
             Some(0),
             RequestedMode::Work,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let task_id = response_record_id(&intake.response_value, "task_ref");
     let contract = ChangeUnitEffectContract {
@@ -2463,7 +2445,7 @@ fn change_unit_effect_contract_is_stored_and_returned() -> Result<(), Box<dyn Er
 
     let response = harness
         .service
-        .update_scope(request, invocation(AccessClass::CoreMutation))?;
+        .update_scope(request, invocation(OperationCategory::AgentWorkflow))?;
     let status = harness.service.status(
         StatusRequest {
             envelope: envelope(
@@ -2475,7 +2457,7 @@ fn change_unit_effect_contract_is_stored_and_returned() -> Result<(), Box<dyn Er
             ),
             include: status_include(),
         },
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     let expected = serde_json::to_value(contract)?;
@@ -2506,7 +2488,7 @@ fn state_summary_reports_absent_effect_contract_as_null() -> Result<(), Box<dyn 
             ),
             include: status_include(),
         },
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
     let response = harness.service.prepare_write(
         prepare_write_request(
@@ -2516,7 +2498,7 @@ fn state_summary_reports_absent_effect_contract_as_null() -> Result<(), Box<dyn 
             Some(&task_id),
             Some(&change_unit_id),
         ),
-        invocation(AccessClass::WriteAuthorization),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert!(status.response_value["active_task"]["effect_contract"].is_null());
@@ -2547,7 +2529,7 @@ fn prepare_write_rejects_product_write_forbidden_by_effect_contract() -> Result<
             Some(&task_id),
             Some(&change_unit_id),
         ),
-        invocation(AccessClass::WriteAuthorization),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(response.response_value["decision"], "blocked");
@@ -2559,11 +2541,8 @@ fn prepare_write_rejects_product_write_forbidden_by_effect_contract() -> Result<
         response.response_value["write_decision_reasons"][0]["category"],
         "effect_contract"
     );
-    assert!(response.response_value["write_authorization"].is_null());
-    assert_eq!(
-        harness.counts()?.write_authorizations,
-        before.write_authorizations
-    );
+    assert!(response.response_value["write_check"].is_null());
+    assert_eq!(harness.counts()?.write_checks, before.write_checks);
     Ok(())
 }
 
@@ -2590,16 +2569,13 @@ fn prepare_write_rejects_paths_outside_effect_contract_allowed_paths() -> Result
             Some(&task_id),
             Some(&change_unit_id),
         ),
-        invocation(AccessClass::WriteAuthorization),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(response.response_value["decision"], "blocked");
     assert_prepare_reason(&response.response_value, "effect_contract_path_not_allowed");
-    assert!(response.response_value["write_authorization"].is_null());
-    assert_eq!(
-        harness.counts()?.write_authorizations,
-        before.write_authorizations
-    );
+    assert!(response.response_value["write_check"].is_null());
+    assert_eq!(harness.counts()?.write_checks, before.write_checks);
     Ok(())
 }
 
@@ -2627,7 +2603,7 @@ fn effect_contract_does_not_create_final_acceptance() -> Result<(), Box<dyn Erro
             close_reason: None,
             superseding_task_id: None,
         }),
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     assert_close_blocker(&response.response_value, "missing_final_acceptance");
@@ -2661,15 +2637,12 @@ fn effect_contract_does_not_replace_sensitive_approval() -> Result<(), Box<dyn E
     request.sensitive_categories = vec!["network".to_owned()];
     let response = harness
         .service
-        .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+        .prepare_write(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["decision"], "approval_required");
     assert_prepare_reason(&response.response_value, "sensitive_approval_missing");
-    assert!(response.response_value["write_authorization"].is_null());
-    assert_eq!(
-        harness.counts()?.write_authorizations,
-        before.write_authorizations
-    );
+    assert!(response.response_value["write_check"].is_null());
+    assert_eq!(harness.counts()?.write_checks, before.write_checks);
     Ok(())
 }
 
@@ -2692,16 +2665,16 @@ fn prepare_write_blocked_path_creates_no_authorization() -> Result<(), Box<dyn E
     request.intended_paths = vec!["src/other.rs".to_owned()];
     let response = harness
         .service
-        .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+        .prepare_write(request, invocation(OperationCategory::AgentWorkflow))?;
     let after = harness.counts()?;
 
     assert_eq!(response.response_value["decision"], "blocked");
     assert_prepare_reason(&response.response_value, "path_out_of_scope");
-    assert!(response.response_value["write_authorization"].is_null());
-    assert!(response.response_value["write_authorization_ref"].is_null());
-    assert_eq!(response.response_value["authorization_effect"], "none");
+    assert!(response.response_value["write_check"].is_null());
+    assert!(response.response_value["write_check_ref"].is_null());
+    assert_eq!(response.response_value["write_check_effect"], "none");
     assert_eq!(after.state_version, before.state_version + 1);
-    assert_eq!(after.write_authorizations, before.write_authorizations);
+    assert_eq!(after.write_checks, before.write_checks);
     assert_eq!(after.task_events, before.task_events + 1);
     assert_eq!(after.tool_invocations, before.tool_invocations + 1);
     assert_eq!(after.artifact_staging, before.artifact_staging);
@@ -2710,7 +2683,7 @@ fn prepare_write_blocked_path_creates_no_authorization() -> Result<(), Box<dyn E
     assert_eq!(after.evidence_summaries, before.evidence_summaries);
     assert_eq!(after.blockers, before.blockers);
     assert_eq!(after.runs, before.runs);
-    assert_eq!(id_generator.count(DurableIdKind::WriteAuthorization), 0);
+    assert_eq!(id_generator.count(DurableIdKind::WriteCheck), 0);
     let event_payload = assert_latest_prepare_write_event(
         &harness,
         &response.response_value,
@@ -2744,7 +2717,7 @@ fn prepare_write_missing_change_unit_returns_decision_reason() -> Result<(), Box
             Some(0),
             RequestedMode::Work,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let task_id = intake.response_value["task_ref"]["record_id"]
         .as_str()
@@ -2761,12 +2734,12 @@ fn prepare_write_missing_change_unit_returns_decision_reason() -> Result<(), Box
     );
     let response = harness
         .service
-        .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+        .prepare_write(request, invocation(OperationCategory::AgentWorkflow))?;
     let after = harness.counts()?;
 
     assert_eq!(response.response_value["decision"], "blocked");
     assert_prepare_reason(&response.response_value, "no_current_change_unit");
-    assert_eq!(after.write_authorizations, before.write_authorizations);
+    assert_eq!(after.write_checks, before.write_checks);
     Ok(())
 }
 
@@ -2784,9 +2757,10 @@ fn prepare_write_unresolved_user_judgment_requires_decision() -> Result<(), Box<
         JudgmentKind::ProductDecision,
     );
     judgment_request.required_for = vec![volicord_types::JudgmentRequiredFor::PrepareWrite];
-    harness
-        .service
-        .request_user_judgment(judgment_request, invocation(AccessClass::CoreMutation))?;
+    harness.service.request_user_judgment(
+        judgment_request,
+        invocation(OperationCategory::AgentWorkflow),
+    )?;
     let id_generator = CountingDurableIdGenerator::new(["prepare_decision_event"]);
     let clock = ManualClock::at("2026-06-18T00:00:00Z");
     harness.use_generator_and_clock(id_generator.clone(), clock);
@@ -2801,16 +2775,16 @@ fn prepare_write_unresolved_user_judgment_requires_decision() -> Result<(), Box<
     );
     let response = harness
         .service
-        .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+        .prepare_write(request, invocation(OperationCategory::AgentWorkflow))?;
     let after = harness.counts()?;
 
     assert_eq!(response.response_value["decision"], "decision_required");
     assert_prepare_reason(&response.response_value, "user_judgment_unresolved");
-    assert_eq!(after.write_authorizations, before.write_authorizations);
+    assert_eq!(after.write_checks, before.write_checks);
     assert_eq!(after.state_version, before.state_version + 1);
     assert_eq!(after.task_events, before.task_events + 1);
     assert_eq!(after.tool_invocations, before.tool_invocations + 1);
-    assert_eq!(id_generator.count(DurableIdKind::WriteAuthorization), 0);
+    assert_eq!(id_generator.count(DurableIdKind::WriteCheck), 0);
     let event_payload = assert_latest_prepare_write_event(
         &harness,
         &response.response_value,
@@ -2853,7 +2827,7 @@ fn prepare_write_ignores_pending_final_acceptance() -> Result<(), Box<dyn Error>
             Some(&change_unit_id),
             JudgmentKind::FinalAcceptance,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let before = harness.counts()?;
 
@@ -2865,7 +2839,7 @@ fn prepare_write_ignores_pending_final_acceptance() -> Result<(), Box<dyn Error>
             Some(&task_id),
             Some(&change_unit_id),
         ),
-        invocation(AccessClass::WriteAuthorization),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(response.response_value["decision"], "allowed");
@@ -2873,10 +2847,7 @@ fn prepare_write_ignores_pending_final_acceptance() -> Result<(), Box<dyn Error>
         .as_array()
         .expect("write_decision_reasons should be an array")
         .is_empty());
-    assert_eq!(
-        harness.counts()?.write_authorizations,
-        before.write_authorizations + 1
-    );
+    assert_eq!(harness.counts()?.write_checks, before.write_checks + 1);
     Ok(())
 }
 
@@ -2896,9 +2867,10 @@ fn informational_judgment_does_not_block_prepare_write_or_close_check() -> Resul
         JudgmentKind::TechnicalDecision,
     );
     judgment_request.required_for = vec![volicord_types::JudgmentRequiredFor::Informational];
-    harness
-        .service
-        .request_user_judgment(judgment_request, invocation(AccessClass::CoreMutation))?;
+    harness.service.request_user_judgment(
+        judgment_request,
+        invocation(OperationCategory::AgentWorkflow),
+    )?;
 
     let prepare = harness.service.prepare_write(
         prepare_write_request(
@@ -2908,7 +2880,7 @@ fn informational_judgment_does_not_block_prepare_write_or_close_check() -> Resul
             Some(&task_id),
             Some(&change_unit_id),
         ),
-        invocation(AccessClass::WriteAuthorization),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     assert_eq!(prepare.response_value["decision"], "allowed");
 
@@ -2923,7 +2895,7 @@ fn informational_judgment_does_not_block_prepare_write_or_close_check() -> Resul
             close_reason: None,
             superseding_task_id: None,
         }),
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
     assert_no_close_blocker(&close.response_value, "pending_user_judgment");
     Ok(())
@@ -2943,9 +2915,10 @@ fn prepare_write_ignores_another_change_unit_pending_judgment() -> Result<(), Bo
         JudgmentKind::ProductDecision,
     );
     judgment_request.required_for = vec![volicord_types::JudgmentRequiredFor::PrepareWrite];
-    let judgment = harness
-        .service
-        .request_user_judgment(judgment_request, invocation(AccessClass::CoreMutation))?;
+    let judgment = harness.service.request_user_judgment(
+        judgment_request,
+        invocation(OperationCategory::AgentWorkflow),
+    )?;
     let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
     mutate_user_judgment_basis_json(&harness, &judgment_id, |basis| {
         basis["change_unit_id"] = json!("cu_unrelated");
@@ -2960,15 +2933,12 @@ fn prepare_write_ignores_another_change_unit_pending_judgment() -> Result<(), Bo
             Some(&task_id),
             Some(&change_unit_id),
         ),
-        invocation(AccessClass::WriteAuthorization),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(response.response_value["decision"], "allowed");
     assert_no_prepare_reason(&response.response_value, "user_judgment_unresolved");
-    assert_eq!(
-        harness.counts()?.write_authorizations,
-        before.write_authorizations + 1
-    );
+    assert_eq!(harness.counts()?.write_checks, before.write_checks + 1);
     Ok(())
 }
 
@@ -2987,7 +2957,7 @@ fn malformed_stored_required_for_rejects_prepare_write_without_effect() -> Resul
             Some(&change_unit_id),
             JudgmentKind::ProductDecision,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
     set_user_judgment_owner_json(
@@ -3008,7 +2978,7 @@ fn malformed_stored_required_for_rejects_prepare_write_without_effect() -> Resul
             Some(&task_id),
             Some(&change_unit_id),
         ),
-        invocation(AccessClass::WriteAuthorization),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_owner_state_rejection(
@@ -3041,16 +3011,16 @@ fn prepare_write_missing_sensitive_approval_requires_approval() -> Result<(), Bo
     request.sensitive_categories = vec!["network".to_owned()];
     let response = harness
         .service
-        .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+        .prepare_write(request, invocation(OperationCategory::AgentWorkflow))?;
     let after = harness.counts()?;
 
     assert_eq!(response.response_value["decision"], "approval_required");
     assert_prepare_reason(&response.response_value, "sensitive_approval_missing");
-    assert_eq!(after.write_authorizations, before.write_authorizations);
+    assert_eq!(after.write_checks, before.write_checks);
     assert_eq!(after.state_version, before.state_version + 1);
     assert_eq!(after.task_events, before.task_events + 1);
     assert_eq!(after.tool_invocations, before.tool_invocations + 1);
-    assert_eq!(id_generator.count(DurableIdKind::WriteAuthorization), 0);
+    assert_eq!(id_generator.count(DurableIdKind::WriteCheck), 0);
     let event_payload = assert_latest_prepare_write_event(
         &harness,
         &response.response_value,
@@ -3087,31 +3057,31 @@ fn prepare_write_baseline_mismatch_blocks_authorization() -> Result<(), Box<dyn 
     request.baseline_ref = BaselineRef::new("baseline_other");
     let response = harness
         .service
-        .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+        .prepare_write(request, invocation(OperationCategory::AgentWorkflow))?;
     let after = harness.counts()?;
 
     assert_eq!(response.response_value["decision"], "blocked");
     assert_prepare_reason(&response.response_value, "baseline_mismatch");
-    assert_eq!(after.write_authorizations, before.write_authorizations);
+    assert_eq!(after.write_checks, before.write_checks);
     Ok(())
 }
 
 #[test]
-fn prepare_write_surface_access_mismatch_is_access_rejection() -> Result<(), Box<dyn Error>> {
+fn prepare_write_user_only_category_is_access_rejection() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
-    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_surface")?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_binding")?;
     let before = harness.counts()?;
 
     let request = prepare_write_request(
-        "req_prepare_surface_access",
-        "idem_prepare_surface_access",
+        "req_prepare_binding_access",
+        "idem_prepare_binding_access",
         Some(2),
         Some(&task_id),
         Some(&change_unit_id),
     );
     let response = harness
         .service
-        .prepare_write(request, invocation(AccessClass::CoreMutation))?;
+        .prepare_write(request, invocation(OperationCategory::UserOnly))?;
     let after = harness.counts()?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
@@ -3123,21 +3093,15 @@ fn prepare_write_surface_access_mismatch_is_access_rejection() -> Result<(), Box
         .response_value
         .get("write_decision_reasons")
         .is_none());
-    assert_eq!(after.write_authorizations, before.write_authorizations);
+    assert_eq!(after.write_checks, before.write_checks);
     Ok(())
 }
 
 #[test]
-fn prepare_write_unregistered_grant_fails_before_method_decision() -> Result<(), Box<dyn Error>> {
+fn prepare_write_uses_agent_workflow_invocation_without_local_grant() -> Result<(), Box<dyn Error>>
+{
     let harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_grant_fail")?;
-    set_surface_local_access(
-        &harness,
-        json!({
-            "authorized_access_classes": ["core_mutation"],
-            "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
-        }),
-    )?;
     let before = harness.counts()?;
 
     let request = prepare_write_request(
@@ -3149,27 +3113,19 @@ fn prepare_write_unregistered_grant_fails_before_method_decision() -> Result<(),
     );
     let response = harness
         .service
-        .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+        .prepare_write(request, invocation(OperationCategory::AgentWorkflow))?;
 
-    assert_eq!(response.response_value["base"]["response_kind"], "rejected");
-    assert_eq!(
-        response.response_value["errors"][0]["code"],
-        "LOCAL_ACCESS_MISMATCH"
-    );
-    assert!(response
-        .response_value
-        .get("write_decision_reasons")
-        .is_none());
-    assert_eq!(harness.counts()?, before);
+    assert_eq!(response.response_value["base"]["response_kind"], "result");
+    assert_eq!(response.response_value["decision"], "allowed");
+    assert_eq!(harness.counts()?.write_checks, before.write_checks + 1);
     Ok(())
 }
 
 #[test]
-fn prepare_write_surface_capability_insufficient_is_method_decision() -> Result<(), Box<dyn Error>>
+fn prepare_write_uses_agent_workflow_invocation_without_extra_profile() -> Result<(), Box<dyn Error>>
 {
     let harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_cap")?;
-    set_surface_capability(&harness, "{}")?;
     let before = harness.counts()?;
 
     let request = prepare_write_request(
@@ -3181,12 +3137,11 @@ fn prepare_write_surface_capability_insufficient_is_method_decision() -> Result<
     );
     let response = harness
         .service
-        .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+        .prepare_write(request, invocation(OperationCategory::AgentWorkflow))?;
     let after = harness.counts()?;
 
-    assert_eq!(response.response_value["decision"], "blocked");
-    assert_prepare_reason(&response.response_value, "surface_capability_insufficient");
-    assert_eq!(after.write_authorizations, before.write_authorizations);
+    assert_eq!(response.response_value["decision"], "allowed");
+    assert_eq!(after.write_checks, before.write_checks + 1);
     Ok(())
 }
 
@@ -3206,17 +3161,17 @@ fn prepare_write_product_write_flag_mismatch_blocks_authorization() -> Result<()
     request.product_file_write_intended = false;
     let response = harness
         .service
-        .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+        .prepare_write(request, invocation(OperationCategory::AgentWorkflow))?;
     let after = harness.counts()?;
 
     assert_eq!(response.response_value["decision"], "blocked");
     assert_prepare_reason(&response.response_value, "product_write_flag_mismatch");
-    assert_eq!(after.write_authorizations, before.write_authorizations);
+    assert_eq!(after.write_checks, before.write_checks);
     Ok(())
 }
 
 #[test]
-fn prepare_write_dry_run_has_no_authorization_effect() -> Result<(), Box<dyn Error>> {
+fn prepare_write_dry_run_has_no_write_check_effect() -> Result<(), Box<dyn Error>> {
     let mut harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_dry")?;
     let id_generator = CountingDurableIdGenerator::new(Vec::<&str>::new());
@@ -3235,7 +3190,7 @@ fn prepare_write_dry_run_has_no_authorization_effect() -> Result<(), Box<dyn Err
     request.envelope.dry_run = true;
     let response = harness
         .service
-        .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+        .prepare_write(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "dry_run");
     assert_eq!(
@@ -3247,7 +3202,7 @@ fn prepare_write_dry_run_has_no_authorization_effect() -> Result<(), Box<dyn Err
         write_decision_event_count(&harness)?,
         before_decision_events
     );
-    assert_eq!(id_generator.count(DurableIdKind::WriteAuthorization), 0);
+    assert_eq!(id_generator.count(DurableIdKind::WriteCheck), 0);
 
     let mut blocked_preview = prepare_write_request(
         "req_prepare_dry_blocked",
@@ -3258,9 +3213,10 @@ fn prepare_write_dry_run_has_no_authorization_effect() -> Result<(), Box<dyn Err
     );
     blocked_preview.envelope.dry_run = true;
     blocked_preview.intended_paths = vec!["src/other.rs".to_owned()];
-    let blocked_preview = harness
-        .service
-        .prepare_write(blocked_preview, invocation(AccessClass::WriteAuthorization))?;
+    let blocked_preview = harness.service.prepare_write(
+        blocked_preview,
+        invocation(OperationCategory::AgentWorkflow),
+    )?;
     assert_eq!(
         blocked_preview.response_value["base"]["response_kind"],
         "dry_run"
@@ -3274,7 +3230,7 @@ fn prepare_write_dry_run_has_no_authorization_effect() -> Result<(), Box<dyn Err
         write_decision_event_count(&harness)?,
         before_decision_events
     );
-    assert_eq!(id_generator.count(DurableIdKind::WriteAuthorization), 0);
+    assert_eq!(id_generator.count(DurableIdKind::WriteCheck), 0);
     Ok(())
 }
 
@@ -3295,7 +3251,7 @@ fn prepare_write_rejects_escaping_product_path_without_effect() -> Result<(), Bo
     request.intended_paths = vec!["../outside.rs".to_owned()];
     let response = harness
         .service
-        .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+        .prepare_write(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
@@ -3333,7 +3289,7 @@ fn prepare_write_stale_state_rejects_without_effect() -> Result<(), Box<dyn Erro
     );
     let response = harness
         .service
-        .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+        .prepare_write(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
@@ -3353,7 +3309,7 @@ fn prepare_write_stale_state_rejects_without_effect() -> Result<(), Box<dyn Erro
         write_decision_event_count(&harness)?,
         before_decision_events
     );
-    assert_eq!(id_generator.count(DurableIdKind::WriteAuthorization), 0);
+    assert_eq!(id_generator.count(DurableIdKind::WriteCheck), 0);
     Ok(())
 }
 
@@ -3373,24 +3329,25 @@ fn prepare_write_idempotency_replays_without_second_authorization() -> Result<()
         Some(&change_unit_id),
     );
 
-    let first = harness
-        .service
-        .prepare_write(request.clone(), invocation(AccessClass::WriteAuthorization))?;
+    let first = harness.service.prepare_write(
+        request.clone(),
+        invocation(OperationCategory::AgentWorkflow),
+    )?;
     let after_first = harness.counts()?;
     clock.advance(Duration::minutes(5));
     let second = harness
         .service
-        .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+        .prepare_write(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(first.response_value["decision"], "allowed");
     assert!(second.replayed);
     assert_eq!(second.response_json, first.response_json);
     assert_eq!(harness.counts()?, after_first);
-    assert_eq!(write_authorization_count(&harness)?, 1);
-    assert_eq!(id_generator.count(DurableIdKind::WriteAuthorization), 1);
+    assert_eq!(write_check_count(&harness)?, 1);
+    assert_eq!(id_generator.count(DurableIdKind::WriteCheck), 1);
     assert_eq!(
-        second.response_value["write_authorization"]["expires_at"],
-        first.response_value["write_authorization"]["expires_at"]
+        second.response_value["write_check"]["expires_at"],
+        first.response_value["write_check"]["expires_at"]
     );
     Ok(())
 }
@@ -3411,26 +3368,29 @@ fn prepare_write_non_allow_replay_returns_original_response_without_effect(
     request.intended_paths = vec!["src/other.rs".to_owned()];
     let before = harness.counts()?;
 
-    let first = harness
-        .service
-        .prepare_write(request.clone(), invocation(AccessClass::WriteAuthorization))?;
+    let first = harness.service.prepare_write(
+        request.clone(),
+        invocation(OperationCategory::AgentWorkflow),
+    )?;
     let after_first = harness.counts()?;
-    let same_context = harness
-        .service
-        .prepare_write(request.clone(), invocation(AccessClass::WriteAuthorization))?;
-    let context_mismatch = harness
-        .service
-        .prepare_write(request, invocation(AccessClass::CoreMutation))?;
+    let same_context = harness.service.prepare_write(
+        request.clone(),
+        invocation(OperationCategory::AgentWorkflow),
+    )?;
+    let context_mismatch = harness.service.prepare_write(
+        request,
+        invocation_with_actor(
+            ActorSource::agent_connection("connection_other"),
+            OperationCategory::AgentWorkflow,
+        ),
+    )?;
 
     assert_eq!(first.response_value["decision"], "blocked");
     assert_prepare_reason(&first.response_value, "path_out_of_scope");
     assert_eq!(after_first.state_version, before.state_version + 1);
     assert_eq!(after_first.task_events, before.task_events + 1);
     assert_eq!(after_first.tool_invocations, before.tool_invocations + 1);
-    assert_eq!(
-        after_first.write_authorizations,
-        before.write_authorizations
-    );
+    assert_eq!(after_first.write_checks, before.write_checks);
     assert_latest_prepare_write_event(
         &harness,
         &first.response_value,
@@ -3470,21 +3430,18 @@ fn prepare_write_replay_requires_current_verified_grant() -> Result<(), Box<dyn 
         Some(&task_id),
         Some(&change_unit_id),
     );
-    let first = harness
-        .service
-        .prepare_write(request.clone(), invocation(AccessClass::WriteAuthorization))?;
-    let after_first = harness.counts()?;
-    set_surface_local_access(
-        &harness,
-        json!({
-            "authorized_access_classes": ["core_mutation"],
-            "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
-        }),
+    let first = harness.service.prepare_write(
+        request.clone(),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
-
-    let second = harness
-        .service
-        .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+    let after_first = harness.counts()?;
+    let second = harness.service.prepare_write(
+        request,
+        invocation_with_actor(
+            ActorSource::agent_connection("connection_other"),
+            OperationCategory::AgentWorkflow,
+        ),
+    )?;
 
     assert_eq!(first.response_value["decision"], "allowed");
     assert!(!second.replayed);
@@ -3517,7 +3474,7 @@ fn stage_artifact_creates_transient_handle_without_core_commit() -> Result<(), B
     request.safe_bytes_or_notice = "Local trace sample captured for debugging.".to_owned();
     let response = harness
         .service
-        .stage_artifact(request, invocation(AccessClass::ArtifactRegistration))?;
+        .stage_artifact(request, invocation(OperationCategory::AgentWorkflow))?;
     let after = harness.counts()?;
     let handle_id = response.response_value["staged_artifact_handle"]["handle_id"]
         .as_str()
@@ -3544,8 +3501,7 @@ fn stage_artifact_creates_transient_handle_without_core_commit() -> Result<(), B
     assert_eq!(after.tool_invocations, before.tool_invocations);
     assert_eq!(row.status, "staged");
     assert_eq!(row.redaction_state, "none");
-    assert_eq!(row.created_by_surface_id, SURFACE_ID);
-    assert_eq!(row.created_by_surface_instance_id, SURFACE_INSTANCE_ID);
+    assert_eq!(row.created_by_actor_source, AGENT_ACTOR_SOURCE);
     assert!(row.tmp_path.starts_with("artifacts/tmp/"));
     assert!(row.tmp_path.ends_with(".txt"));
     assert!(harness
@@ -3581,7 +3537,7 @@ fn stage_artifact_rejects_checksum_mismatch_without_effect() -> Result<(), Box<d
         Some("0000000000000000000000000000000000000000000000000000000000000000".to_owned()).into();
     let response = harness
         .service
-        .stage_artifact(request, invocation(AccessClass::ArtifactRegistration))?;
+        .stage_artifact(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
@@ -3610,7 +3566,7 @@ fn stage_artifact_rejects_invalid_checksum_format_without_effect() -> Result<(),
     request.expected_sha256 = Some("sha256:0000".to_owned()).into();
     let response = harness
         .service
-        .stage_artifact(request, invocation(AccessClass::ArtifactRegistration))?;
+        .stage_artifact(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
@@ -3640,7 +3596,7 @@ fn stage_artifact_rejects_size_mismatch_without_effect() -> Result<(), Box<dyn E
     request.expected_size_bytes = Some(999).into();
     let response = harness
         .service
-        .stage_artifact(request, invocation(AccessClass::ArtifactRegistration))?;
+        .stage_artifact(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
@@ -3669,7 +3625,7 @@ fn stage_artifact_rejects_oversized_input_without_effect() -> Result<(), Box<dyn
     request.safe_bytes_or_notice = "x".repeat(MAX_STAGED_BODY_BYTES + 1);
     let response = harness
         .service
-        .stage_artifact(request, invocation(AccessClass::ArtifactRegistration))?;
+        .stage_artifact(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
@@ -3698,7 +3654,7 @@ fn stage_artifact_rejects_unsafe_secret_input_without_effect() -> Result<(), Box
     request.safe_bytes_or_notice = "password=hunter2".to_owned();
     let response = harness
         .service
-        .stage_artifact(request, invocation(AccessClass::ArtifactRegistration))?;
+        .stage_artifact(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
@@ -3746,7 +3702,7 @@ fn stage_artifact_dry_run_creates_no_handle_or_storage() -> Result<(), Box<dyn E
     request.safe_bytes_or_notice = "Redacted diagnostic excerpt.".to_owned();
     let response = harness
         .service
-        .stage_artifact(request, invocation(AccessClass::ArtifactRegistration))?;
+        .stage_artifact(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "dry_run");
     assert_eq!(response.response_value["base"]["effect_kind"], "no_effect");
@@ -3774,7 +3730,7 @@ fn stage_artifact_dry_run_still_checks_stale_state() -> Result<(), Box<dyn Error
     );
     let response = harness
         .service
-        .stage_artifact(request, invocation(AccessClass::ArtifactRegistration))?;
+        .stage_artifact(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
@@ -3802,7 +3758,7 @@ fn stage_artifact_invalid_input_does_not_bypass_access_preflight() -> Result<(),
     request.safe_bytes_or_notice = String::new();
     let response = harness
         .service
-        .stage_artifact(request, invocation(AccessClass::ReadStatus))?;
+        .stage_artifact(request, invocation(OperationCategory::Read))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
@@ -3814,7 +3770,7 @@ fn stage_artifact_invalid_input_does_not_bypass_access_preflight() -> Result<(),
 }
 
 #[test]
-fn stage_artifact_uses_verified_surface_provenance() -> Result<(), Box<dyn Error>> {
+fn stage_artifact_uses_verified_invocation_provenance() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     enable_stage_artifact_capability(&harness)?;
     let (task_id, _) = create_task_with_change_unit(&harness, "stage_provenance")?;
@@ -3833,15 +3789,11 @@ fn stage_artifact_uses_verified_surface_provenance() -> Result<(), Box<dyn Error
 
     let response = harness
         .service
-        .stage_artifact(request, invocation(AccessClass::ArtifactRegistration))?;
+        .stage_artifact(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(
-        response.response_value["staged_artifact_handle"]["created_by_surface_id"],
-        SURFACE_ID
-    );
-    assert_eq!(
-        response.response_value["staged_artifact_handle"]["created_by_surface_instance_id"],
-        SURFACE_INSTANCE_ID
+        response.response_value["staged_artifact_handle"]["created_by_actor_source"],
+        AGENT_ACTOR_SOURCE
     );
     assert_eq!(
         response.response_value["staged_artifact_handle"]["redaction_state"],
@@ -3851,8 +3803,7 @@ fn stage_artifact_uses_verified_surface_provenance() -> Result<(), Box<dyn Error
         .as_str()
         .expect("handle id should be present");
     let row = staged_artifact_row(&harness, handle_id)?;
-    assert_eq!(row.created_by_surface_id, SURFACE_ID);
-    assert_eq!(row.created_by_surface_instance_id, SURFACE_INSTANCE_ID);
+    assert_eq!(row.created_by_actor_source, AGENT_ACTOR_SOURCE);
     Ok(())
 }
 
@@ -3865,13 +3816,13 @@ fn stage_artifact_rejects_caller_submitted_provenance_fields() -> Result<(), Box
         Some(2),
         "task_forged_provenance",
     ))?;
-    value["created_by_surface_id"] = json!("forged_surface");
-    value["created_by_surface_instance_id"] = json!("forged_instance");
+    value["created_by_actor_source"] = json!("forged_connection");
+    value["created_by_actor_source"] = json!("forged_instance");
 
     let error = serde_json::from_value::<StageArtifactRequest>(value)
         .expect_err("caller-submitted provenance fields should be rejected");
 
-    assert!(error.to_string().contains("created_by_surface_id"));
+    assert!(error.to_string().contains("created_by_actor_source"));
     Ok(())
 }
 
@@ -3892,7 +3843,7 @@ fn record_run_without_product_write_commits_run_only() -> Result<(), Box<dyn Err
             &task_id,
             &change_unit_id,
         ),
-        invocation(AccessClass::RunRecording),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let after = harness.counts()?;
 
@@ -3906,7 +3857,7 @@ fn record_run_without_product_write_commits_run_only() -> Result<(), Box<dyn Err
     assert_eq!(run_scope_revision(&harness, &run_id)?, 1);
     assert_eq!(after.state_version, before.state_version + 1);
     assert_eq!(after.runs, before.runs + 1);
-    assert_eq!(after.write_authorizations, before.write_authorizations);
+    assert_eq!(after.write_checks, before.write_checks);
     assert_eq!(after.artifacts, before.artifacts);
     assert_eq!(after.task_events, before.task_events + 1);
     assert_eq!(after.tool_invocations, before.tool_invocations + 1);
@@ -3944,7 +3895,7 @@ fn record_run_non_null_close_assessment_creates_current_basis() -> Result<(), Bo
     .into();
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
     let revision = task_revision(&harness, &task_id)?;
     let basis = revision
         .current_close_basis
@@ -3990,7 +3941,7 @@ fn current_compatible_run_ref_can_enter_close_basis() -> Result<(), Box<dyn Erro
     first.run_id = Some(RunId::new("run_current_ref_first")).into();
     let first_response = harness
         .service
-        .record_run(first, invocation(AccessClass::RunRecording))?;
+        .record_run(first, invocation(OperationCategory::AgentWorkflow))?;
     assert_eq!(first_response.response_value["base"]["state_version"], 3);
 
     let mut second = record_run_request(
@@ -4019,7 +3970,7 @@ fn current_compatible_run_ref_can_enter_close_basis() -> Result<(), Box<dyn Erro
 
     let response = harness
         .service
-        .record_run(second, invocation(AccessClass::RunRecording))?;
+        .record_run(second, invocation(OperationCategory::AgentWorkflow))?;
     let basis = task_revision(&harness, &task_id)?
         .current_close_basis
         .expect("current basis should be stored");
@@ -4056,7 +4007,7 @@ fn record_run_rejects_superseded_change_unit_run_ref_without_effect() -> Result<
     old.run_id = Some(RunId::new("run_old_unit")).into();
     harness
         .service
-        .record_run(old, invocation(AccessClass::RunRecording))?;
+        .record_run(old, invocation(OperationCategory::AgentWorkflow))?;
 
     let replace = harness.service.update_scope(
         update_scope_request(
@@ -4068,7 +4019,7 @@ fn record_run_rejects_superseded_change_unit_run_ref_without_effect() -> Result<
             ChangeUnitOperation::ReplaceCurrent,
             "Replacement current scope.",
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let replacement_change_unit_id = response_record_id(&replace.response_value, "change_unit_ref");
     let before = harness.counts()?;
@@ -4098,7 +4049,7 @@ fn record_run_rejects_superseded_change_unit_run_ref_without_effect() -> Result<
 
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
@@ -4126,7 +4077,7 @@ fn record_run_scope_revision_is_required_by_storage_constraint() -> Result<(), B
     request.run_id = Some(RunId::new("run_scope_required")).into();
     harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
     let before = harness.counts()?;
 
     let error = harness
@@ -4161,7 +4112,7 @@ fn record_run_rejects_baseline_incompatible_run_ref_without_effect() -> Result<(
     baseline.run_id = Some(RunId::new("run_baseline_mismatch")).into();
     harness
         .service
-        .record_run(baseline, invocation(AccessClass::RunRecording))?;
+        .record_run(baseline, invocation(OperationCategory::AgentWorkflow))?;
     set_run_observed_baseline(&harness, "run_baseline_mismatch", "baseline_other")?;
     let before = harness.counts()?;
 
@@ -4190,7 +4141,7 @@ fn record_run_rejects_baseline_incompatible_run_ref_without_effect() -> Result<(
 
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
@@ -4220,7 +4171,7 @@ fn historical_verified_artifact_reuse_requires_new_current_run() -> Result<(), B
             ChangeUnitOperation::ReplaceCurrent,
             "Replacement scope for artifact reuse.",
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let replacement_change_unit_id = response_record_id(&replace.response_value, "change_unit_ref");
 
@@ -4249,7 +4200,7 @@ fn historical_verified_artifact_reuse_requires_new_current_run() -> Result<(), B
     let before_reject = harness.counts()?;
     let rejected = harness
         .service
-        .record_run(direct_old_run, invocation(AccessClass::RunRecording))?;
+        .record_run(direct_old_run, invocation(OperationCategory::AgentWorkflow))?;
     assert_eq!(rejected.response_value["base"]["response_kind"], "rejected");
     assert_eq!(harness.counts()?, before_reject);
 
@@ -4286,7 +4237,7 @@ fn historical_verified_artifact_reuse_requires_new_current_run() -> Result<(), B
 
     let response = harness
         .service
-        .record_run(current_reuse, invocation(AccessClass::RunRecording))?;
+        .record_run(current_reuse, invocation(OperationCategory::AgentWorkflow))?;
     let basis = task_revision(&harness, &task_id)?
         .current_close_basis
         .expect("current basis should be stored");
@@ -4332,7 +4283,7 @@ fn record_run_state_includes_current_evidence_and_close_state() -> Result<(), Bo
 
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(
         response.response_value["evidence_summary"]["status"],
@@ -4381,7 +4332,7 @@ fn record_run_generates_opaque_residual_risk_ids_on_commit() -> Result<(), Box<d
     .into();
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
     let risk_ids = response.response_value["current_close_basis"]["residual_risks"]
         .as_array()
         .expect("residual risks should be an array")
@@ -4411,16 +4362,13 @@ fn record_run_generates_opaque_residual_risk_ids_on_commit() -> Result<(), Box<d
 fn record_run_rejects_unsupported_close_basis_ref_kinds_without_effect(
 ) -> Result<(), Box<dyn Error>> {
     let unsupported = [
-        (StateRecordKind::WriteAuthorization, "wa_fabricated"),
+        (StateRecordKind::WriteCheck, "wa_fabricated"),
         (StateRecordKind::UserJudgment, "uj_fabricated"),
         (StateRecordKind::Blocker, "blocker_fabricated"),
         (StateRecordKind::TaskEvent, "evt_fabricated"),
         (StateRecordKind::ProjectState, "project_state_fabricated"),
         (StateRecordKind::Task, "task_fabricated"),
-        (
-            StateRecordKind::LocalSurfaceRegistration,
-            "surface_fabricated",
-        ),
+        (StateRecordKind::AgentConnection, "connection_fabricated"),
     ];
 
     for (index, (record_kind, record_id)) in unsupported.into_iter().enumerate() {
@@ -4455,7 +4403,7 @@ fn record_run_rejects_unsupported_close_basis_ref_kinds_without_effect(
 
         let response = harness
             .service
-            .record_run(request, invocation(AccessClass::RunRecording))?;
+            .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
         assert_eq!(response.response_value["base"]["response_kind"], "rejected");
         assert_eq!(
             response.response_value["errors"][0]["code"],
@@ -4509,7 +4457,7 @@ fn record_run_rejects_nonexistent_allowed_close_basis_refs_without_effect(
 
         let response = harness
             .service
-            .record_run(request, invocation(AccessClass::RunRecording))?;
+            .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
         assert_eq!(response.response_value["base"]["response_kind"], "rejected");
         assert_eq!(
             response.response_value["errors"][0]["code"],
@@ -4568,7 +4516,7 @@ fn record_run_rejects_cross_project_artifact_and_cross_task_run_refs_without_eff
 
         let response = harness
             .service
-            .record_run(request, invocation(AccessClass::RunRecording))?;
+            .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
         assert_eq!(response.response_value["base"]["response_kind"], "rejected");
         assert_eq!(
             response.response_value["errors"][0]["code"],
@@ -4629,7 +4577,7 @@ fn record_run_rejects_corrupt_artifact_close_basis_ref_without_effect() -> Resul
 
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
         response.response_value["errors"][0]["code"],
@@ -4682,7 +4630,7 @@ fn record_run_rejects_noncurrent_evidence_summary_close_basis_ref_without_effect
 
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
         response.response_value["errors"][0]["code"],
@@ -4736,7 +4684,7 @@ fn record_run_canonicalizes_deduplicates_and_adds_current_close_basis_refs(
 
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
     let revision = task_revision(&harness, &task_id)?;
     let basis = revision
         .current_close_basis
@@ -4801,7 +4749,7 @@ fn final_acceptance_judgment_basis_uses_canonical_close_basis_refs() -> Result<(
             Some(&change_unit_id),
             JudgmentKind::FinalAcceptance,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "result");
@@ -4837,7 +4785,7 @@ fn record_run_null_close_assessment_invalidates_existing_basis() -> Result<(), B
     .into();
     harness
         .service
-        .record_run(establish, invocation(AccessClass::RunRecording))?;
+        .record_run(establish, invocation(OperationCategory::AgentWorkflow))?;
     assert!(task_revision(&harness, &task_id)?
         .current_close_basis
         .is_some());
@@ -4852,7 +4800,7 @@ fn record_run_null_close_assessment_invalidates_existing_basis() -> Result<(), B
     );
     let response = harness
         .service
-        .record_run(clear, invocation(AccessClass::RunRecording))?;
+        .record_run(clear, invocation(OperationCategory::AgentWorkflow))?;
     let revision = task_revision(&harness, &task_id)?;
 
     assert!(response.response_value["current_close_basis"].is_null());
@@ -4888,7 +4836,7 @@ fn record_run_dry_run_allocates_no_residual_risk_ids() -> Result<(), Box<dyn Err
     .into();
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "dry_run");
     assert_eq!(generator.count(DurableIdKind::Risk), 0);
@@ -4902,8 +4850,7 @@ fn record_run_product_write_consumes_valid_authorization_once() -> Result<(), Bo
     let harness = MethodHarness::new()?;
     enable_record_run_capabilities(&harness)?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_write")?;
-    let write_authorization_id =
-        prepare_write_authorization(&harness, &task_id, &change_unit_id, 2, "run_write")?;
+    let write_check_id = prepare_write_check(&harness, &task_id, &change_unit_id, 2, "run_write")?;
     let before = harness.counts()?;
 
     let mut request = record_run_request(
@@ -4916,27 +4863,23 @@ fn record_run_product_write_consumes_valid_authorization_once() -> Result<(), Bo
     );
     request.observed_changes.product_file_write_observed = true;
     request.observed_changes.changed_paths = vec!["src/export.rs".to_owned()];
-    request.write_authorization_id =
-        Some(WriteAuthorizationId::new(&write_authorization_id)).into();
+    request.write_check_id = Some(WriteCheckId::new(&write_check_id)).into();
     request.evidence_updates = vec![supported_evidence_update(
         "Product write was reported with external tool output.",
     )];
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
     let after = harness.counts()?;
     let run_id = run_id_from_record_run(&response.response_value);
     let observation_id = response.response_value["evidence_observations"][0]["observation_id"]
         .as_str()
         .expect("observation id should be present")
         .to_owned();
-    let write_summary = &response.response_value["state"]["write_authority_summary"];
+    let write_summary = &response.response_value["state"]["write_check_summary"];
 
     assert_eq!(response.response_value["base"]["state_version"], 4);
-    assert_eq!(
-        write_authorization_status(&harness, &write_authorization_id)?,
-        "consumed"
-    );
+    assert_eq!(write_check_status(&harness, &write_check_id)?, "consumed");
     assert_eq!(write_summary["status"], "consumed");
     assert_eq!(write_summary["consumed_by_run_ref"]["record_id"], run_id);
     assert_eq!(
@@ -4949,22 +4892,23 @@ fn record_run_product_write_consumes_valid_authorization_once() -> Result<(), Bo
     );
     assert_eq!(
         write_summary["guarantee_display"]["capability_refs"][0]["record_kind"],
-        "local_surface_registration"
+        "agent_connection"
     );
     let status = harness.service.status(
         StatusRequest {
             envelope: envelope("req_run_write_status", None, false, None, Some(&task_id)),
             include: status_include(),
         },
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
-    assert_eq!(
-        status.response_value["write_authority_summary"],
-        response.response_value["state"]["write_authority_summary"]
-    );
+    let mut response_write_summary =
+        response.response_value["state"]["write_check_summary"].clone();
+    let status_write_summary = status.response_value["write_check_summary"].clone();
+    response_write_summary["guarantee_display"] = status_write_summary["guarantee_display"].clone();
+    assert_eq!(status_write_summary, response_write_summary);
     assert_eq!(after.state_version, before.state_version + 1);
     assert_eq!(after.runs, before.runs + 1);
-    assert_eq!(after.write_authorizations, before.write_authorizations);
+    assert_eq!(after.write_checks, before.write_checks);
     assert_eq!(after.task_events, before.task_events + 1);
     assert_eq!(after.tool_invocations, before.tool_invocations + 1);
     Ok(())
@@ -4980,8 +4924,8 @@ fn record_run_consumes_authorization_at_fourteen_minutes_fifty_nine_seconds(
         CountingDurableIdGenerator::new(["auth_1459", "prepare_event_1459", "record_event_1459"]);
     let clock = ManualClock::at("2026-06-18T00:00:00Z");
     harness.use_generator_and_clock(id_generator, clock.clone());
-    let write_authorization_id =
-        prepare_write_authorization(&harness, &task_id, &change_unit_id, 2, "run_auth_1459")?;
+    let write_check_id =
+        prepare_write_check(&harness, &task_id, &change_unit_id, 2, "run_auth_1459")?;
     clock.advance(Duration::seconds(14 * 60 + 59));
     let before = harness.counts()?;
 
@@ -4992,18 +4936,15 @@ fn record_run_consumes_authorization_at_fourteen_minutes_fifty_nine_seconds(
             3,
             &task_id,
             &change_unit_id,
-            &write_authorization_id,
+            &write_check_id,
             "run_auth_1459",
         ),
-        invocation(AccessClass::RunRecording),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let after = harness.counts()?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "result");
-    assert_eq!(
-        write_authorization_status(&harness, &write_authorization_id)?,
-        "consumed"
-    );
+    assert_eq!(write_check_status(&harness, &write_check_id)?, "consumed");
     assert_eq!(after.state_version, before.state_version + 1);
     assert_eq!(after.runs, before.runs + 1);
     assert_eq!(after.task_events, before.task_events + 1);
@@ -5019,8 +4960,8 @@ fn record_run_rejects_authorization_at_exactly_fifteen_minutes_without_effect(
     let id_generator = CountingDurableIdGenerator::new(["auth_1500", "prepare_event_1500"]);
     let clock = ManualClock::at("2026-06-18T00:00:00Z");
     harness.use_generator_and_clock(id_generator, clock.clone());
-    let write_authorization_id =
-        prepare_write_authorization(&harness, &task_id, &change_unit_id, 2, "run_auth_1500")?;
+    let write_check_id =
+        prepare_write_check(&harness, &task_id, &change_unit_id, 2, "run_auth_1500")?;
     clock.advance(Duration::minutes(15));
     let before = harness.counts()?;
 
@@ -5031,25 +4972,22 @@ fn record_run_rejects_authorization_at_exactly_fifteen_minutes_without_effect(
             3,
             &task_id,
             &change_unit_id,
-            &write_authorization_id,
+            &write_check_id,
             "run_auth_1500",
         ),
-        invocation(AccessClass::RunRecording),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
         response.response_value["errors"][0]["code"],
-        "WRITE_AUTHORIZATION_INVALID"
+        "WRITE_CHECK_INVALID"
     );
     assert_eq!(
         response.response_value["errors"][0]["details"]["authorization_reason"],
         "expired"
     );
-    assert_eq!(
-        write_authorization_status(&harness, &write_authorization_id)?,
-        "active"
-    );
+    assert_eq!(write_check_status(&harness, &write_check_id)?, "active");
     assert_eq!(harness.counts()?, before);
     Ok(())
 }
@@ -5060,7 +4998,7 @@ fn record_run_limits_historical_far_future_authorization_to_fifteen_minutes(
     let mut harness = MethodHarness::new()?;
     enable_record_run_capabilities(&harness)?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_auth_legacy")?;
-    insert_active_write_authorization_with_timestamps(
+    insert_active_write_check_with_timestamps(
         &harness,
         &task_id,
         &change_unit_id,
@@ -5084,7 +5022,7 @@ fn record_run_limits_historical_far_future_authorization_to_fifteen_minutes(
             "wa_legacy_future",
             "run_auth_legacy",
         ),
-        invocation(AccessClass::RunRecording),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
@@ -5102,7 +5040,7 @@ fn record_run_honors_stored_expiration_earlier_than_fifteen_minutes() -> Result<
     let mut harness = MethodHarness::new()?;
     enable_record_run_capabilities(&harness)?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_auth_early_exp")?;
-    insert_active_write_authorization_with_timestamps(
+    insert_active_write_check_with_timestamps(
         &harness,
         &task_id,
         &change_unit_id,
@@ -5126,7 +5064,7 @@ fn record_run_honors_stored_expiration_earlier_than_fifteen_minutes() -> Result<
             "wa_early_expiration",
             "run_auth_early_exp",
         ),
-        invocation(AccessClass::RunRecording),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
@@ -5144,7 +5082,7 @@ fn record_run_treats_invalid_authorization_timestamp_as_corrupt_state() -> Resul
     let mut harness = MethodHarness::new()?;
     enable_record_run_capabilities(&harness)?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_auth_bad_time")?;
-    insert_active_write_authorization_with_timestamps(
+    insert_active_write_check_with_timestamps(
         &harness,
         &task_id,
         &change_unit_id,
@@ -5168,12 +5106,12 @@ fn record_run_treats_invalid_authorization_timestamp_as_corrupt_state() -> Resul
             "wa_bad_timestamp",
             "run_auth_bad_time",
         ),
-        invocation(AccessClass::RunRecording),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_store_rejection(&response, "MCP_UNAVAILABLE", "corrupt_stored_value");
     let details = &response.response_value["errors"][0]["details"]["owner_state_error"];
-    assert_eq!(details["table"], "write_authorizations");
+    assert_eq!(details["table"], "write_checks");
     assert_eq!(details["record_ref"], "wa_bad_timestamp");
     assert_eq!(details["logical_column"], "created_at");
     assert_eq!(harness.counts()?, before);
@@ -5185,7 +5123,7 @@ fn record_run_stale_basis_precedes_authorization_expiration() -> Result<(), Box<
     let mut harness = MethodHarness::new()?;
     enable_record_run_capabilities(&harness)?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_auth_stale_exp")?;
-    insert_active_write_authorization_with_timestamps(
+    insert_active_write_check_with_timestamps(
         &harness,
         &task_id,
         &change_unit_id,
@@ -5204,7 +5142,7 @@ fn record_run_stale_basis_precedes_authorization_expiration() -> Result<(), Box<
             ChangeUnitOperation::KeepCurrent,
             "Initial current scope.",
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let id_generator = CountingDurableIdGenerator::new(Vec::<&str>::new());
     let clock = ManualClock::at("2026-06-18T00:15:00Z");
@@ -5221,7 +5159,7 @@ fn record_run_stale_basis_precedes_authorization_expiration() -> Result<(), Box<
             "wa_stale_and_expired",
             "run_auth_stale_exp",
         ),
-        invocation(AccessClass::RunRecording),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
@@ -5253,12 +5191,12 @@ fn record_run_missing_authorization_rejects_product_write_without_effect(
     request.observed_changes.changed_paths = vec!["src/export.rs".to_owned()];
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
         response.response_value["errors"][0]["code"],
-        "WRITE_AUTHORIZATION_REQUIRED"
+        "WRITE_CHECK_REQUIRED"
     );
     assert_eq!(harness.counts()?, before);
     Ok(())
@@ -5269,8 +5207,8 @@ fn record_run_stale_authorization_basis_rejects_before_consumption() -> Result<(
     let harness = MethodHarness::new()?;
     enable_record_run_capabilities(&harness)?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_stale_auth")?;
-    let write_authorization_id =
-        prepare_write_authorization(&harness, &task_id, &change_unit_id, 2, "run_stale_auth")?;
+    let write_check_id =
+        prepare_write_check(&harness, &task_id, &change_unit_id, 2, "run_stale_auth")?;
     harness.service.update_scope(
         update_scope_request(
             "req_run_stale_auth_touch",
@@ -5281,7 +5219,7 @@ fn record_run_stale_authorization_basis_rejects_before_consumption() -> Result<(
             ChangeUnitOperation::KeepCurrent,
             "Initial current scope.",
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let before = harness.counts()?;
 
@@ -5295,21 +5233,17 @@ fn record_run_stale_authorization_basis_rejects_before_consumption() -> Result<(
     );
     request.observed_changes.product_file_write_observed = true;
     request.observed_changes.changed_paths = vec!["src/export.rs".to_owned()];
-    request.write_authorization_id =
-        Some(WriteAuthorizationId::new(&write_authorization_id)).into();
+    request.write_check_id = Some(WriteCheckId::new(&write_check_id)).into();
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
         response.response_value["errors"][0]["code"],
         "STATE_VERSION_CONFLICT"
     );
-    assert_eq!(
-        write_authorization_status(&harness, &write_authorization_id)?,
-        "active"
-    );
+    assert_eq!(write_check_status(&harness, &write_check_id)?, "active");
     assert_eq!(harness.counts()?, before);
     Ok(())
 }
@@ -5319,8 +5253,8 @@ fn record_run_consumed_authorization_reuse_rejects_without_effect() -> Result<()
     let harness = MethodHarness::new()?;
     enable_record_run_capabilities(&harness)?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_reuse_auth")?;
-    let write_authorization_id =
-        prepare_write_authorization(&harness, &task_id, &change_unit_id, 2, "run_reuse_auth")?;
+    let write_check_id =
+        prepare_write_check(&harness, &task_id, &change_unit_id, 2, "run_reuse_auth")?;
 
     let mut first = record_run_request(
         "req_run_reuse_first",
@@ -5332,10 +5266,10 @@ fn record_run_consumed_authorization_reuse_rejects_without_effect() -> Result<()
     );
     first.observed_changes.product_file_write_observed = true;
     first.observed_changes.changed_paths = vec!["src/export.rs".to_owned()];
-    first.write_authorization_id = Some(WriteAuthorizationId::new(&write_authorization_id)).into();
+    first.write_check_id = Some(WriteCheckId::new(&write_check_id)).into();
     harness
         .service
-        .record_run(first, invocation(AccessClass::RunRecording))?;
+        .record_run(first, invocation(OperationCategory::AgentWorkflow))?;
     let before = harness.counts()?;
 
     let mut second = record_run_request(
@@ -5348,15 +5282,15 @@ fn record_run_consumed_authorization_reuse_rejects_without_effect() -> Result<()
     );
     second.observed_changes.product_file_write_observed = true;
     second.observed_changes.changed_paths = vec!["src/export.rs".to_owned()];
-    second.write_authorization_id = Some(WriteAuthorizationId::new(&write_authorization_id)).into();
+    second.write_check_id = Some(WriteCheckId::new(&write_check_id)).into();
     let response = harness
         .service
-        .record_run(second, invocation(AccessClass::RunRecording))?;
+        .record_run(second, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
         response.response_value["errors"][0]["code"],
-        "WRITE_AUTHORIZATION_INVALID"
+        "WRITE_CHECK_INVALID"
     );
     assert_eq!(
         response.response_value["errors"][0]["details"]["authorization_reason"],
@@ -5372,8 +5306,8 @@ fn record_run_path_mismatch_rejects_without_consuming_authorization() -> Result<
     let harness = MethodHarness::new()?;
     enable_record_run_capabilities(&harness)?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_path_auth")?;
-    let write_authorization_id =
-        prepare_write_authorization(&harness, &task_id, &change_unit_id, 2, "run_path_auth")?;
+    let write_check_id =
+        prepare_write_check(&harness, &task_id, &change_unit_id, 2, "run_path_auth")?;
     let before = harness.counts()?;
 
     let mut request = record_run_request(
@@ -5386,25 +5320,21 @@ fn record_run_path_mismatch_rejects_without_consuming_authorization() -> Result<
     );
     request.observed_changes.product_file_write_observed = true;
     request.observed_changes.changed_paths = vec!["tests/export.rs".to_owned()];
-    request.write_authorization_id =
-        Some(WriteAuthorizationId::new(&write_authorization_id)).into();
+    request.write_check_id = Some(WriteCheckId::new(&write_check_id)).into();
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
         response.response_value["errors"][0]["code"],
-        "WRITE_AUTHORIZATION_INVALID"
+        "WRITE_CHECK_INVALID"
     );
     assert_eq!(
         response.response_value["errors"][0]["details"]["authorization_reason"],
         "path_mismatch"
     );
-    assert_eq!(
-        write_authorization_status(&harness, &write_authorization_id)?,
-        "active"
-    );
+    assert_eq!(write_check_status(&harness, &write_check_id)?, "active");
     assert_eq!(harness.counts()?, before);
     Ok(())
 }
@@ -5415,9 +5345,9 @@ fn record_run_rejects_authorization_baseline_mismatch_without_consumption(
     let harness = MethodHarness::new()?;
     enable_record_run_capabilities(&harness)?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_baseline_auth")?;
-    let write_authorization_id =
-        prepare_write_authorization(&harness, &task_id, &change_unit_id, 2, "run_baseline_auth")?;
-    mutate_write_authorization_scope_json(&harness, &write_authorization_id, |scope| {
+    let write_check_id =
+        prepare_write_check(&harness, &task_id, &change_unit_id, 2, "run_baseline_auth")?;
+    mutate_write_check_scope_json(&harness, &write_check_id, |scope| {
         scope["baseline_ref"] = json!("baseline_other");
     })?;
     let before = harness.counts()?;
@@ -5429,17 +5359,14 @@ fn record_run_rejects_authorization_baseline_mismatch_without_consumption(
             3,
             &task_id,
             &change_unit_id,
-            &write_authorization_id,
+            &write_check_id,
             "run_baseline_auth",
         ),
-        invocation(AccessClass::RunRecording),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
-    assert_write_authorization_invalid_reason(&response, "baseline_mismatch");
-    assert_eq!(
-        write_authorization_status(&harness, &write_authorization_id)?,
-        "active"
-    );
+    assert_write_check_invalid_reason(&response, "baseline_mismatch");
+    assert_eq!(write_check_status(&harness, &write_check_id)?, "active");
     assert_eq!(harness.counts()?, before);
     Ok(())
 }
@@ -5450,9 +5377,9 @@ fn record_run_rejects_authorization_task_mismatch_without_consumption() -> Resul
     let harness = MethodHarness::new()?;
     enable_record_run_capabilities(&harness)?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_task_auth")?;
-    let write_authorization_id =
-        prepare_write_authorization(&harness, &task_id, &change_unit_id, 2, "run_task_auth")?;
-    mutate_write_authorization_scope_json(&harness, &write_authorization_id, |scope| {
+    let write_check_id =
+        prepare_write_check(&harness, &task_id, &change_unit_id, 2, "run_task_auth")?;
+    mutate_write_check_scope_json(&harness, &write_check_id, |scope| {
         scope["task_id"] = json!("task_other");
     })?;
     let before = harness.counts()?;
@@ -5464,17 +5391,14 @@ fn record_run_rejects_authorization_task_mismatch_without_consumption() -> Resul
             3,
             &task_id,
             &change_unit_id,
-            &write_authorization_id,
+            &write_check_id,
             "run_task_auth",
         ),
-        invocation(AccessClass::RunRecording),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
-    assert_write_authorization_invalid_reason(&response, "task_mismatch");
-    assert_eq!(
-        write_authorization_status(&harness, &write_authorization_id)?,
-        "active"
-    );
+    assert_write_check_invalid_reason(&response, "task_mismatch");
+    assert_eq!(write_check_status(&harness, &write_check_id)?, "active");
     assert_eq!(harness.counts()?, before);
     Ok(())
 }
@@ -5485,14 +5409,14 @@ fn record_run_rejects_authorization_change_unit_mismatch_without_consumption(
     let harness = MethodHarness::new()?;
     enable_record_run_capabilities(&harness)?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_change_unit_auth")?;
-    let write_authorization_id = prepare_write_authorization(
+    let write_check_id = prepare_write_check(
         &harness,
         &task_id,
         &change_unit_id,
         2,
         "run_change_unit_auth",
     )?;
-    mutate_write_authorization_scope_json(&harness, &write_authorization_id, |scope| {
+    mutate_write_check_scope_json(&harness, &write_check_id, |scope| {
         scope["change_unit_id"] = json!("cu_other");
     })?;
     let before = harness.counts()?;
@@ -5504,17 +5428,14 @@ fn record_run_rejects_authorization_change_unit_mismatch_without_consumption(
             3,
             &task_id,
             &change_unit_id,
-            &write_authorization_id,
+            &write_check_id,
             "run_change_unit_auth",
         ),
-        invocation(AccessClass::RunRecording),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
-    assert_write_authorization_invalid_reason(&response, "change_unit_mismatch");
-    assert_eq!(
-        write_authorization_status(&harness, &write_authorization_id)?,
-        "active"
-    );
+    assert_write_check_invalid_reason(&response, "change_unit_mismatch");
+    assert_eq!(write_check_status(&harness, &write_check_id)?, "active");
     assert_eq!(harness.counts()?, before);
     Ok(())
 }
@@ -5525,9 +5446,9 @@ fn record_run_rejects_authorization_product_write_flag_mismatch_without_consumpt
     let harness = MethodHarness::new()?;
     enable_record_run_capabilities(&harness)?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_flag_auth")?;
-    let write_authorization_id =
-        prepare_write_authorization(&harness, &task_id, &change_unit_id, 2, "run_flag_auth")?;
-    mutate_write_authorization_scope_json(&harness, &write_authorization_id, |scope| {
+    let write_check_id =
+        prepare_write_check(&harness, &task_id, &change_unit_id, 2, "run_flag_auth")?;
+    mutate_write_check_scope_json(&harness, &write_check_id, |scope| {
         scope["product_file_write_intended"] = json!(false);
     })?;
     let before = harness.counts()?;
@@ -5539,17 +5460,14 @@ fn record_run_rejects_authorization_product_write_flag_mismatch_without_consumpt
             3,
             &task_id,
             &change_unit_id,
-            &write_authorization_id,
+            &write_check_id,
             "run_flag_auth",
         ),
-        invocation(AccessClass::RunRecording),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
-    assert_write_authorization_invalid_reason(&response, "product_write_flag_mismatch");
-    assert_eq!(
-        write_authorization_status(&harness, &write_authorization_id)?,
-        "active"
-    );
+    assert_write_check_invalid_reason(&response, "product_write_flag_mismatch");
+    assert_eq!(write_check_status(&harness, &write_check_id)?, "active");
     assert_eq!(harness.counts()?, before);
     Ok(())
 }
@@ -5559,12 +5477,12 @@ fn record_run_rejects_authorization_sensitive_category_mismatch_without_consumpt
 ) -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_sensitive_auth")?;
-    insert_active_write_authorization_with_scope(
+    insert_active_write_check_with_scope(
         &harness,
-        WriteAuthorizationScopeFixture {
+        WriteCheckScopeFixture {
             task_id: &task_id,
             change_unit_id: &change_unit_id,
-            write_authorization_id: "wa_sensitive_mismatch",
+            write_check_id: "wa_sensitive_mismatch",
             basis_state_version: 2,
             created_at: "2999-01-01T00:00:00.000Z",
             expires_at: "2999-01-01T00:15:00.000Z",
@@ -5588,11 +5506,11 @@ fn record_run_rejects_authorization_sensitive_category_mismatch_without_consumpt
 
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
 
-    assert_write_authorization_invalid_reason(&response, "sensitive_category_mismatch");
+    assert_write_check_invalid_reason(&response, "sensitive_category_mismatch");
     assert_eq!(
-        write_authorization_status(&harness, "wa_sensitive_mismatch")?,
+        write_check_status(&harness, "wa_sensitive_mismatch")?,
         "active"
     );
     assert_eq!(harness.counts()?, before);
@@ -5632,10 +5550,7 @@ fn record_run_promotes_staged_artifact_and_updates_evidence() -> Result<(), Box<
         claim: "Search-result count validation passed.".to_owned(),
         source_kind: EvidenceSourceKind::ExternalTool,
         assurance_level: EvidenceAssuranceLevel::ExternalToolResult,
-        observed_by_actor_kind: None.into(),
-        observed_actor_role: None.into(),
-        observed_by_surface_id: None.into(),
-        observed_by_surface_instance_id: None.into(),
+        observed_by_actor_source: None.into(),
         tool_name: Some("search-count-validator".to_owned()).into(),
         tool_invocation_id: None.into(),
         tool_metadata: Map::from_iter([("validator".to_owned(), json!("search-count"))]),
@@ -5646,7 +5561,7 @@ fn record_run_promotes_staged_artifact_and_updates_evidence() -> Result<(), Box<
     }];
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
     let after = harness.counts()?;
     let artifact_id = response.response_value["registered_artifacts"][0]["artifact_id"]
         .as_str()
@@ -5712,13 +5627,7 @@ fn record_run_promotes_staged_artifact_and_updates_evidence() -> Result<(), Box<
     );
     assert_eq!(observation["source_kind"], "external_tool");
     assert_eq!(observation["assurance_level"], "external_tool_result");
-    assert_eq!(observation["observed_by_actor_kind"], "agent");
-    assert_eq!(observation["observed_actor_role"], "user_interaction");
-    assert_eq!(observation["observed_by_surface_id"], SURFACE_ID);
-    assert_eq!(
-        observation["observed_by_surface_instance_id"],
-        SURFACE_INSTANCE_ID
-    );
+    assert_eq!(observation["observed_by_actor_source"], AGENT_ACTOR_SOURCE);
     assert_eq!(observation["tool_metadata"]["validator"], "search-count");
     assert_eq!(
         observation["output_artifact_refs"][0]["artifact_id"],
@@ -5781,11 +5690,11 @@ fn record_run_observations_preserve_provenance_classification() -> Result<(), Bo
             "cooperative_report",
         ),
         (
-            "Registered surface observation.",
-            EvidenceSourceKind::SurfaceObservation,
-            EvidenceAssuranceLevel::RegisteredSurfaceObserved,
-            "surface_observation",
-            "registered_surface_observed",
+            "Registered connection observation.",
+            EvidenceSourceKind::ConnectionObservation,
+            EvidenceAssuranceLevel::RegisteredConnectionObserved,
+            "connection_observation",
+            "registered_connection_observed",
         ),
         (
             "External tool result.",
@@ -5823,10 +5732,29 @@ fn record_run_observations_preserve_provenance_classification() -> Result<(), Bo
             supported_evidence_update_with_provenance(claim, *source_kind, *assurance_level)
         })
         .collect();
+    request.evidence_observations = classes
+        .iter()
+        .map(
+            |(claim, source_kind, assurance_level, _, _)| EvidenceObservationInput {
+                claim: (*claim).to_owned(),
+                source_kind: *source_kind,
+                assurance_level: *assurance_level,
+                observed_by_actor_source: None.into(),
+                tool_name: Some("fixture-evidence-check".to_owned()).into(),
+                tool_invocation_id: None.into(),
+                tool_metadata: JsonObject::new(),
+                input_refs: Vec::new(),
+                output_artifact_refs: Vec::new(),
+                limitations: Vec::new(),
+                observed_at: volicord_types::UtcTimestamp::parse("2026-06-18T00:00:00Z")
+                    .expect("fixture timestamp should parse"),
+            },
+        )
+        .collect();
 
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
     let observations = response.response_value["evidence_observations"]
         .as_array()
         .expect("evidence observations should be present");
@@ -5838,12 +5766,6 @@ fn record_run_observations_preserve_provenance_classification() -> Result<(), Bo
         assert_eq!(observation["assurance_level"], assurance_value);
         assert!(observation.get("guarantee_display").is_none());
     }
-    assert_ne!(observations[0]["source_kind"], "surface_observation");
-    assert_ne!(observations[0]["source_kind"], "external_tool");
-    assert_ne!(
-        observations[0]["assurance_level"],
-        "registered_surface_observed"
-    );
     Ok(())
 }
 
@@ -5868,7 +5790,7 @@ fn record_run_rejects_supported_evidence_without_provenance() -> Result<(), Box<
 
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
@@ -5902,7 +5824,7 @@ fn record_run_promotes_zero_byte_artifact_with_real_empty_sha256() -> Result<(),
     stage_request.expected_size_bytes = Some(0).into();
     let stage_response = harness
         .service
-        .stage_artifact(stage_request, invocation(AccessClass::ArtifactRegistration))?;
+        .stage_artifact(stage_request, invocation(OperationCategory::AgentWorkflow))?;
     let handle: StagedArtifactHandle =
         serde_json::from_value(stage_response.response_value["staged_artifact_handle"].clone())?;
 
@@ -5922,7 +5844,7 @@ fn record_run_promotes_zero_byte_artifact_with_real_empty_sha256() -> Result<(),
     )];
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
     let artifact_id = response.response_value["registered_artifacts"][0]["artifact_id"]
         .as_str()
         .expect("artifact id should be present");
@@ -5976,7 +5898,7 @@ fn corrupt_artifact_blocks_evidence_and_close() -> Result<(), Box<dyn Error>> {
     .into();
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
     let artifact_id = response.response_value["registered_artifacts"][0]["artifact_id"]
         .as_str()
         .expect("artifact id should be present")
@@ -5996,14 +5918,14 @@ fn corrupt_artifact_blocks_evidence_and_close() -> Result<(), Box<dyn Error>> {
             include: StatusInclude {
                 task: true,
                 pending_user_judgments: false,
-                write_authority: false,
+                write_check: false,
                 evidence: true,
                 close: true,
                 guarantees: false,
                 continuity: false,
             },
         },
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
     let artifact_ref = &status.response_value["evidence_summary"]["coverage_items"][0]
         ["supporting_artifact_refs"][0];
@@ -6030,7 +5952,7 @@ fn corrupt_artifact_blocks_evidence_and_close() -> Result<(), Box<dyn Error>> {
             close_reason: None,
             superseding_task_id: None,
         }),
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
     assert_close_blocker(&check.response_value, "artifact_unavailable");
     Ok(())
@@ -6068,7 +5990,7 @@ fn corrupt_artifact_is_not_linkable_as_existing_artifact() -> Result<(), Box<dyn
     )];
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
@@ -6104,7 +6026,7 @@ fn verified_existing_artifact_ref_missing_integrity_fact_is_rejected() -> Result
     )];
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
@@ -6161,7 +6083,7 @@ fn modified_persistent_artifact_body_blocks_existing_link_before_authorization(
         "modified_existing",
     )?;
     let artifact_id = artifact_ref.artifact_id.as_str().to_owned();
-    let write_authorization_id = prepare_write_authorization(
+    let write_check_id = prepare_write_check(
         &harness,
         &task_id,
         &change_unit_id,
@@ -6179,7 +6101,7 @@ fn modified_persistent_artifact_body_blocks_existing_link_before_authorization(
         state_version + 1,
         &task_id,
         &change_unit_id,
-        &write_authorization_id,
+        &write_check_id,
         "run_modified_existing",
     );
     request.artifact_inputs = vec![existing_artifact_input(
@@ -6188,17 +6110,14 @@ fn modified_persistent_artifact_body_blocks_existing_link_before_authorization(
     )];
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
         response.response_value["errors"][0]["code"],
         "ARTIFACT_MISSING"
     );
-    assert_eq!(
-        write_authorization_status(&harness, &write_authorization_id)?,
-        "active"
-    );
+    assert_eq!(write_check_status(&harness, &write_check_id)?, "active");
     assert_eq!(harness.counts()?, before);
     assert_eq!(persistent_artifact_row(&harness, &artifact_id)?, before_row);
     assert_public_response_has_no_internal_leak(&response, &harness.runtime_home_path);
@@ -6292,37 +6211,37 @@ fn symlink_within_artifact_store_keeps_persistent_artifact_usable() -> Result<()
 }
 
 #[test]
-fn record_run_staged_artifact_surface_mismatch_rejects_without_effect() -> Result<(), Box<dyn Error>>
-{
+fn record_run_staged_artifact_actor_source_mismatch_rejects_without_effect(
+) -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     enable_record_run_capabilities(&harness)?;
-    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_stage_surface")?;
-    let mut handle = stage_artifact_for_record_run(&harness, &task_id, "run_stage_surface", 2)?;
-    handle.created_by_surface_id = SurfaceId::new("forged_surface");
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_stage_source")?;
+    let mut handle = stage_artifact_for_record_run(&harness, &task_id, "run_stage_source", 2)?;
+    handle.created_by_actor_source = ActorSource::agent_connection("forged_connection");
     let before = harness.counts()?;
 
     let mut request = record_run_request(
-        "req_run_stage_surface",
-        "idem_run_stage_surface",
+        "req_run_stage_source",
+        "idem_run_stage_source",
         false,
         Some(2),
         &task_id,
         &change_unit_id,
     );
     request.artifact_inputs = vec![artifact_input_for_handle(
-        "artifact_input_surface",
+        "artifact_input_source",
         handle,
         None,
         None,
     )];
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
         response.response_value["errors"][0]["details"]["artifact_input_error"]["reason"],
-        "staged_handle_surface_mismatch"
+        "staged_handle_actor_source_mismatch"
     );
     assert_eq!(harness.counts()?, before);
     Ok(())
@@ -6353,7 +6272,7 @@ fn record_run_expired_staged_artifact_rejects_without_effect() -> Result<(), Box
     )];
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
@@ -6390,7 +6309,7 @@ fn record_run_staged_artifact_uses_semantic_expiry_boundary() -> Result<(), Box<
     )];
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
     assert_eq!(response.response_value["base"]["response_kind"], "result");
 
     let mut harness = MethodHarness::new()?;
@@ -6419,7 +6338,7 @@ fn record_run_staged_artifact_uses_semantic_expiry_boundary() -> Result<(), Box<
     )];
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
@@ -6456,7 +6375,7 @@ fn record_run_staged_artifact_accepts_equivalent_offset_expiration() -> Result<(
     )];
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "result");
     Ok(())
@@ -6491,7 +6410,7 @@ fn record_run_invalid_stored_staged_artifact_expiration_is_corrupt_state(
     )];
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_owner_state_value_rejection(
         &response,
@@ -6537,7 +6456,7 @@ fn record_run_checksum_mismatch_rejects_and_rolls_back_all_effects() -> Result<(
     .into();
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
@@ -6589,7 +6508,7 @@ fn record_run_body_checksum_mismatch_rolls_back_all_effects() -> Result<(), Box<
 
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
@@ -6641,7 +6560,7 @@ fn record_run_body_size_mismatch_rolls_back_all_effects() -> Result<(), Box<dyn 
 
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
@@ -6687,7 +6606,7 @@ fn record_run_staging_path_outside_artifact_store_rolls_back_all_effects(
 
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
@@ -6715,7 +6634,7 @@ fn record_run_dry_run_and_idempotency_replay_have_no_extra_effects() -> Result<(
             &task_id,
             &change_unit_id,
         ),
-        invocation(AccessClass::RunRecording),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     assert_eq!(dry_run.response_value["base"]["response_kind"], "dry_run");
     assert_eq!(harness.counts()?, before_dry);
@@ -6728,13 +6647,14 @@ fn record_run_dry_run_and_idempotency_replay_have_no_extra_effects() -> Result<(
         &task_id,
         &change_unit_id,
     );
-    let first = harness
-        .service
-        .record_run(request.clone(), invocation(AccessClass::RunRecording))?;
+    let first = harness.service.record_run(
+        request.clone(),
+        invocation(OperationCategory::AgentWorkflow),
+    )?;
     let after_first = harness.counts()?;
     let second = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert!(second.replayed);
     assert_eq!(second.response_json, first.response_json);
@@ -6758,7 +6678,7 @@ fn request_user_judgment_creates_pending_record() -> Result<(), Box<dyn Error>> 
             Some(&change_unit_id),
             JudgmentKind::ProductDecision,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let after = harness.counts()?;
     let judgment_id = response_record_id(&response.response_value, "user_judgment_ref");
@@ -6801,7 +6721,7 @@ fn authority_bearing_judgment_generates_canonical_options() -> Result<(), Box<dy
             Some(&change_unit_id),
             JudgmentKind::Cancellation,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     let options = response.response_value["user_judgment"]["options"]
@@ -6836,7 +6756,7 @@ fn authority_option_locale_changes_display_only() -> Result<(), Box<dyn Error>> 
             Some(&english_change_unit_id),
             JudgmentKind::Cancellation,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     let korean_harness = MethodHarness::new()?;
@@ -6854,7 +6774,7 @@ fn authority_option_locale_changes_display_only() -> Result<(), Box<dyn Error>> 
     korean_request.envelope.locale = Some("ko-KR".to_owned()).into();
     let korean = korean_harness
         .service
-        .request_user_judgment(korean_request, invocation(AccessClass::CoreMutation))?;
+        .request_user_judgment(korean_request, invocation(OperationCategory::AgentWorkflow))?;
 
     let english_accept = &english.response_value["user_judgment"]["options"][0];
     let korean_accept = &korean.response_value["user_judgment"]["options"][0];
@@ -6882,9 +6802,10 @@ fn authority_option_locale_changes_display_only() -> Result<(), Box<dyn Error>> 
         JudgmentKind::Cancellation,
     );
     fallback_request.envelope.locale = Some("zz-ZZ".to_owned()).into();
-    let fallback = fallback_harness
-        .service
-        .request_user_judgment(fallback_request, invocation(AccessClass::CoreMutation))?;
+    let fallback = fallback_harness.service.request_user_judgment(
+        fallback_request,
+        invocation(OperationCategory::AgentWorkflow),
+    )?;
     assert_eq!(
         english_accept["label"],
         fallback.response_value["user_judgment"]["options"][0]["label"]
@@ -6917,7 +6838,7 @@ fn authority_bearing_judgment_request_rejects_caller_options() -> Result<(), Box
 
     let response = harness
         .service
-        .request_user_judgment(request, invocation(AccessClass::CoreMutation))?;
+        .request_user_judgment(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
@@ -6942,7 +6863,7 @@ fn record_user_judgment_resolves_pending_record() -> Result<(), Box<dyn Error>> 
             Some(&change_unit_id),
             JudgmentKind::ProductDecision,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let pending_judgment_id =
         response_record_id(&pending_judgment.response_value, "user_judgment_ref");
@@ -6958,7 +6879,7 @@ fn record_user_judgment_resolves_pending_record() -> Result<(), Box<dyn Error>> 
             JudgmentKind::ProductDecision,
             answer_payload(JudgmentKind::ProductDecision),
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::UserOnly),
     )?;
     let after = harness.counts()?;
 
@@ -6969,8 +6890,8 @@ fn record_user_judgment_resolves_pending_record() -> Result<(), Box<dyn Error>> 
         "resolved"
     );
     assert_eq!(
-        response.response_value["user_judgment"]["resolution"]["resolved_by_actor_kind"],
-        "user"
+        response.response_value["user_judgment"]["resolution"]["resolved_by_actor_source"],
+        LOCAL_USER_ACTOR_SOURCE
     );
     assert_eq!(
         response.response_value["user_judgment"]["resolution"]["resolution_outcome"],
@@ -7011,18 +6932,9 @@ fn record_user_judgment_resolves_pending_record() -> Result<(), Box<dyn Error>> 
     assert_eq!(
         user_judgment_actor_provenance(&harness, &pending_judgment_id)?,
         UserJudgmentActorProvenance {
-            resolved_by_actor_kind: Some("user".to_owned()),
-            resolved_actor_role: Some("user_interaction".to_owned()),
-            resolved_by_surface_id: Some(SURFACE_ID.to_owned()),
-            resolved_by_surface_instance_id: Some(SURFACE_INSTANCE_ID.to_owned()),
-            resolved_verification_basis: Some(format!(
-                "{}:{}",
-                VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION,
-                VERIFICATION_BASIS_TEST_FIXTURE_BINDING
-            )),
-            resolved_assurance_level: Some(
-                ACTOR_ASSURANCE_REGISTERED_SURFACE_COOPERATIVE.to_owned()
-            ),
+            resolved_by_actor_source: Some(LOCAL_USER_ACTOR_SOURCE.to_owned()),
+            resolved_verification_basis: Some(VERIFICATION_BASIS_TEST_FIXTURE_BINDING.to_owned()),
+            resolved_assurance_level: Some("local_user_channel".to_owned()),
         }
     );
     let (event_kind, event_payload, _) = latest_task_event(&harness)?;
@@ -7045,7 +6957,7 @@ fn record_user_judgment_persists_authority_accept_action() -> Result<(), Box<dyn
             Some(&change_unit_id),
             JudgmentKind::Cancellation,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let pending_judgment_id =
         response_record_id(&pending_judgment.response_value, "user_judgment_ref");
@@ -7060,7 +6972,7 @@ fn record_user_judgment_persists_authority_accept_action() -> Result<(), Box<dyn
             JudgmentKind::Cancellation,
             answer_payload(JudgmentKind::Cancellation),
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::UserOnly),
     )?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "result");
@@ -7118,7 +7030,7 @@ fn accepted_decision_judgments_create_project_continuity_records() -> Result<(),
                 Some(&change_unit_id),
                 judgment_kind,
             ),
-            invocation(AccessClass::CoreMutation),
+            invocation(OperationCategory::AgentWorkflow),
         )?;
         let pending_judgment_id =
             response_record_id(&pending_judgment.response_value, "user_judgment_ref");
@@ -7134,7 +7046,7 @@ fn accepted_decision_judgments_create_project_continuity_records() -> Result<(),
                 judgment_kind,
                 answer_payload(judgment_kind),
             ),
-            invocation(AccessClass::CoreMutation),
+            invocation(OperationCategory::UserOnly),
         )?;
 
         let after = harness.counts()?;
@@ -7186,7 +7098,7 @@ fn accepted_residual_risk_creates_project_continuity_record() -> Result<(), Box<
             Some(&change_unit_id),
             JudgmentKind::ResidualRiskAcceptance,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let pending_judgment_id =
         response_record_id(&pending_judgment.response_value, "user_judgment_ref");
@@ -7202,7 +7114,7 @@ fn accepted_residual_risk_creates_project_continuity_record() -> Result<(), Box<
             JudgmentKind::ResidualRiskAcceptance,
             residual_risk_acceptance_payload(&risk_ids),
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::UserOnly),
     )?;
 
     let after = harness.counts()?;
@@ -7238,7 +7150,7 @@ fn status_continuity_summary_is_include_gated() -> Result<(), Box<dyn Error>> {
             Some(&change_unit_id),
             JudgmentKind::TechnicalDecision,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let pending_judgment_id =
         response_record_id(&pending_judgment.response_value, "user_judgment_ref");
@@ -7252,7 +7164,7 @@ fn status_continuity_summary_is_include_gated() -> Result<(), Box<dyn Error>> {
             JudgmentKind::TechnicalDecision,
             answer_payload(JudgmentKind::TechnicalDecision),
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::UserOnly),
     )?;
 
     let hidden = harness.service.status(
@@ -7269,7 +7181,7 @@ fn status_continuity_summary_is_include_gated() -> Result<(), Box<dyn Error>> {
                 ..status_include()
             },
         },
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
     assert_field_absent(&hidden.response_value, "continuity_summary");
 
@@ -7287,7 +7199,7 @@ fn status_continuity_summary_is_include_gated() -> Result<(), Box<dyn Error>> {
                 ..status_include()
             },
         },
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
     let summary = shown.response_value["continuity_summary"]
         .as_array()
@@ -7313,7 +7225,7 @@ fn stale_judgment_does_not_create_project_continuity_record() -> Result<(), Box<
             Some(&change_unit_id),
             JudgmentKind::ProductDecision,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let pending_judgment_id =
         response_record_id(&pending_judgment.response_value, "user_judgment_ref");
@@ -7327,7 +7239,7 @@ fn stale_judgment_does_not_create_project_continuity_record() -> Result<(), Box<
             ChangeUnitOperation::ReplaceCurrent,
             "stale_continuity_scope",
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let before = harness.counts()?;
 
@@ -7341,7 +7253,7 @@ fn stale_judgment_does_not_create_project_continuity_record() -> Result<(), Box<
             JudgmentKind::ProductDecision,
             answer_payload(JudgmentKind::ProductDecision),
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::UserOnly),
     )?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
@@ -7388,7 +7300,7 @@ fn close_completion_creates_known_limit_continuity_and_preserves_records(
             close_reason: Some(CloseReason::CompletedSelfChecked),
             superseding_task_id: None,
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     let after_close = harness.counts()?;
@@ -7438,7 +7350,7 @@ fn accepted_authority_judgment_requires_structured_rationale() -> Result<(), Box
             Some(&change_unit_id),
             JudgmentKind::Cancellation,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let pending_judgment_id =
         response_record_id(&pending_judgment.response_value, "user_judgment_ref");
@@ -7457,7 +7369,7 @@ fn accepted_authority_judgment_requires_structured_rationale() -> Result<(), Box
 
     let response = harness
         .service
-        .record_user_judgment(request, invocation(AccessClass::CoreMutation))?;
+        .record_user_judgment(request, invocation(OperationCategory::UserOnly))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
@@ -7490,7 +7402,7 @@ fn record_user_judgment_persists_rejected_option_outcome() -> Result<(), Box<dyn
             Some(&change_unit_id),
             JudgmentKind::Cancellation,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let pending_judgment_id =
         response_record_id(&pending_judgment.response_value, "user_judgment_ref");
@@ -7507,7 +7419,7 @@ fn record_user_judgment_persists_rejected_option_outcome() -> Result<(), Box<dyn
 
     let response = harness
         .service
-        .record_user_judgment(request, invocation(AccessClass::CoreMutation))?;
+        .record_user_judgment(request, invocation(OperationCategory::UserOnly))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "result");
     assert_ne!(
@@ -7552,7 +7464,7 @@ fn rejected_authority_judgment_accepts_concise_rationale() -> Result<(), Box<dyn
             Some(&change_unit_id),
             JudgmentKind::Cancellation,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let pending_judgment_id =
         response_record_id(&pending_judgment.response_value, "user_judgment_ref");
@@ -7581,7 +7493,7 @@ fn rejected_authority_judgment_accepts_concise_rationale() -> Result<(), Box<dyn
 
     let response = harness
         .service
-        .record_user_judgment(request, invocation(AccessClass::CoreMutation))?;
+        .record_user_judgment(request, invocation(OperationCategory::UserOnly))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "result");
     assert_eq!(
@@ -7622,7 +7534,7 @@ fn resolved_judgment_without_machine_action_is_owner_state_corruption() -> Resul
             Some(&change_unit_id),
             JudgmentKind::FinalAcceptance,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
     set_user_judgment_resolution_json(
@@ -7642,7 +7554,7 @@ fn resolved_judgment_without_machine_action_is_owner_state_corruption() -> Resul
                 },
                 "note": null,
                 "accepted_risks": [],
-                "resolved_by_actor_kind": "user"
+                "resolved_by_actor_source": "user"
             })
             .to_string(),
         ),
@@ -7660,7 +7572,7 @@ fn resolved_judgment_without_machine_action_is_owner_state_corruption() -> Resul
             close_reason: None,
             superseding_task_id: None,
         }),
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     assert_owner_state_value_rejection(
@@ -7750,7 +7662,7 @@ fn non_authority_custom_options_remain_usable_without_outcome_input() -> Result<
     .into();
     let pending_judgment = harness
         .service
-        .request_user_judgment(request, invocation(AccessClass::CoreMutation))?;
+        .request_user_judgment(request, invocation(OperationCategory::AgentWorkflow))?;
     let pending_judgment_id =
         response_record_id(&pending_judgment.response_value, "user_judgment_ref");
     assert_eq!(
@@ -7780,7 +7692,7 @@ fn non_authority_custom_options_remain_usable_without_outcome_input() -> Result<
 
     let response = harness
         .service
-        .record_user_judgment(record_request, invocation(AccessClass::CoreMutation))?;
+        .record_user_judgment(record_request, invocation(OperationCategory::UserOnly))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "result");
     assert_eq!(
@@ -7813,7 +7725,7 @@ fn record_user_judgment_rejects_answer_outcome_contradicting_option() -> Result<
             Some(&change_unit_id),
             JudgmentKind::ScopeDecision,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let pending_judgment_id =
         response_record_id(&pending_judgment.response_value, "user_judgment_ref");
@@ -7831,7 +7743,7 @@ fn record_user_judgment_rejects_answer_outcome_contradicting_option() -> Result<
 
     let response = harness
         .service
-        .record_user_judgment(request, invocation(AccessClass::CoreMutation))?;
+        .record_user_judgment(request, invocation(OperationCategory::UserOnly))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
@@ -7864,7 +7776,7 @@ fn record_user_judgment_rejects_blocked_answer_outcome() -> Result<(), Box<dyn E
             Some(&change_unit_id),
             JudgmentKind::ScopeDecision,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let pending_judgment_id =
         response_record_id(&pending_judgment.response_value, "user_judgment_ref");
@@ -7881,7 +7793,7 @@ fn record_user_judgment_rejects_blocked_answer_outcome() -> Result<(), Box<dyn E
 
     let response = harness
         .service
-        .record_user_judgment(request, invocation(AccessClass::CoreMutation))?;
+        .record_user_judgment(request, invocation(OperationCategory::UserOnly))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
@@ -7922,11 +7834,11 @@ fn non_user_actor_cannot_resolve_authority_bearing_judgment() -> Result<(), Box<
             Some(&change_unit_id),
             JudgmentKind::FinalAcceptance,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let pending_judgment_id =
         response_record_id(&pending_judgment.response_value, "user_judgment_ref");
-    let mut request = record_judgment_request(
+    let request = record_judgment_request(
         "req_record_authority_actor",
         "idem_record_authority_actor",
         Some(after_basis + 1),
@@ -7935,17 +7847,16 @@ fn non_user_actor_cannot_resolve_authority_bearing_judgment() -> Result<(), Box<
         JudgmentKind::FinalAcceptance,
         answer_payload(JudgmentKind::FinalAcceptance),
     );
-    request.envelope.actor_kind = ActorKind::Agent;
     let before = harness.counts()?;
 
     let response = harness
         .service
-        .record_user_judgment(request, invocation(AccessClass::CoreMutation))?;
+        .record_user_judgment(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
         response.response_value["errors"][0]["code"],
-        "VALIDATION_FAILED"
+        "LOCAL_ACCESS_MISMATCH"
     );
     assert_eq!(harness.counts()?, before);
     assert_eq!(
@@ -7956,8 +7867,7 @@ fn non_user_actor_cannot_resolve_authority_bearing_judgment() -> Result<(), Box<
 }
 
 #[test]
-fn user_actor_on_agent_surface_cannot_resolve_authority_bearing_judgment(
-) -> Result<(), Box<dyn Error>> {
+fn local_user_can_resolve_authority_bearing_judgment() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "authority_role")?;
     let pending_judgment = harness.service.request_user_judgment(
@@ -7970,11 +7880,10 @@ fn user_actor_on_agent_surface_cannot_resolve_authority_bearing_judgment(
             Some(&change_unit_id),
             JudgmentKind::ScopeDecision,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let pending_judgment_id =
         response_record_id(&pending_judgment.response_value, "user_judgment_ref");
-    set_surface_interaction_role(&harness, SurfaceInteractionRole::Agent)?;
     let before = harness.counts()?;
 
     let response = harness.service.record_user_judgment(
@@ -7987,28 +7896,20 @@ fn user_actor_on_agent_surface_cannot_resolve_authority_bearing_judgment(
             JudgmentKind::ScopeDecision,
             answer_payload(JudgmentKind::ScopeDecision),
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::UserOnly),
     )?;
 
-    assert_eq!(response.response_value["base"]["response_kind"], "rejected");
-    assert_eq!(
-        response.response_value["errors"][0]["code"],
-        "LOCAL_ACCESS_MISMATCH"
-    );
-    assert_eq!(
-        response.response_value["errors"][0]["details"]["field"],
-        "surfaces.interaction_role"
-    );
-    assert_eq!(harness.counts()?, before);
+    assert_eq!(response.response_value["base"]["response_kind"], "result");
+    assert_eq!(harness.counts()?.state_version, before.state_version + 1);
     assert_eq!(
         user_judgment_status(&harness, &pending_judgment_id)?,
-        "pending"
+        "resolved"
     );
     Ok(())
 }
 
 #[test]
-fn agent_surface_can_resolve_non_authority_judgment() -> Result<(), Box<dyn Error>> {
+fn local_user_can_resolve_non_authority_judgment() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "agent_non_authority")?;
     let pending_judgment = harness.service.request_user_judgment(
@@ -8021,12 +7922,10 @@ fn agent_surface_can_resolve_non_authority_judgment() -> Result<(), Box<dyn Erro
             Some(&change_unit_id),
             JudgmentKind::ProductDecision,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let pending_judgment_id =
         response_record_id(&pending_judgment.response_value, "user_judgment_ref");
-    set_surface_interaction_role(&harness, SurfaceInteractionRole::Agent)?;
-
     let response = harness.service.record_user_judgment(
         record_judgment_request(
             "req_record_agent_non_authority",
@@ -8037,13 +7936,13 @@ fn agent_surface_can_resolve_non_authority_judgment() -> Result<(), Box<dyn Erro
             JudgmentKind::ProductDecision,
             answer_payload(JudgmentKind::ProductDecision),
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::UserOnly),
     )?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "result");
     assert_eq!(
-        user_judgment_actor_provenance(&harness, &pending_judgment_id)?.resolved_actor_role,
-        Some("agent".to_owned())
+        user_judgment_actor_provenance(&harness, &pending_judgment_id)?.resolved_by_actor_source,
+        Some(LOCAL_USER_ACTOR_SOURCE.to_owned())
     );
     assert_eq!(
         user_judgment_resolution_outcome(&harness, &pending_judgment_id)?,
@@ -8087,14 +7986,14 @@ fn stored_final_acceptance_without_actor_provenance_does_not_authorize_close(
             close_reason: Some(CloseReason::CompletedSelfChecked),
             superseding_task_id: None,
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_owner_state_value_rejection(
         &response,
         "user_judgments",
         &final_judgment_id,
-        "resolved_by_actor_kind",
+        "resolved_by_actor_source",
         &harness.runtime_home_path,
     );
     assert_eq!(harness.counts()?, before);
@@ -8117,7 +8016,7 @@ fn rejected_final_acceptance_does_not_authorize_close() -> Result<(), Box<dyn Er
             Some(&change_unit_id),
             JudgmentKind::FinalAcceptance,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let final_judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
     let mut record = record_judgment_request(
@@ -8132,7 +8031,7 @@ fn rejected_final_acceptance_does_not_authorize_close() -> Result<(), Box<dyn Er
     record.selected_option_id = volicord_types::UserJudgmentOptionId::new("reject");
     let recorded = harness
         .service
-        .record_user_judgment(record, invocation(AccessClass::CoreMutation))?;
+        .record_user_judgment(record, invocation(OperationCategory::UserOnly))?;
     let after_final = recorded.response_value["base"]["state_version"]
         .as_u64()
         .expect("state_version should be present");
@@ -8149,7 +8048,7 @@ fn rejected_final_acceptance_does_not_authorize_close() -> Result<(), Box<dyn Er
             close_reason: Some(CloseReason::CompletedSelfChecked),
             superseding_task_id: None,
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(response.response_value["close_state"], "blocked");
@@ -8186,7 +8085,7 @@ fn stored_final_acceptance_non_user_actor_does_not_authorize_close_or_status(
         after_basis,
         "final_non_user",
     )?;
-    set_user_judgment_resolution_actor(&harness, &final_judgment_id, "agent")?;
+    set_user_judgment_resolution_actor(&harness, &final_judgment_id, AGENT_ACTOR_SOURCE)?;
     let before = harness.counts()?;
 
     let close = harness.service.close_task(
@@ -8200,7 +8099,7 @@ fn stored_final_acceptance_non_user_actor_does_not_authorize_close_or_status(
             close_reason: Some(CloseReason::CompletedSelfChecked),
             superseding_task_id: None,
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let status = harness.service.status(
         StatusRequest {
@@ -8213,7 +8112,7 @@ fn stored_final_acceptance_non_user_actor_does_not_authorize_close_or_status(
             ),
             include: status_include(),
         },
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     assert_eq!(close.response_value["close_state"], "blocked");
@@ -8254,7 +8153,7 @@ fn stored_residual_risk_acceptance_non_user_actor_covers_no_risks() -> Result<()
             Some(&change_unit_id),
             JudgmentKind::ResidualRiskAcceptance,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let judgment_id = response_record_id(&pending_judgment.response_value, "user_judgment_ref");
     let accepted = harness.service.record_user_judgment(
@@ -8267,12 +8166,12 @@ fn stored_residual_risk_acceptance_non_user_actor_covers_no_risks() -> Result<()
             JudgmentKind::ResidualRiskAcceptance,
             residual_risk_acceptance_payload(&risk_ids),
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::UserOnly),
     )?;
     let after_risk = accepted.response_value["base"]["state_version"]
         .as_u64()
         .expect("state version should be present");
-    set_user_judgment_resolution_actor(&harness, &judgment_id, "agent")?;
+    set_user_judgment_resolution_actor(&harness, &judgment_id, AGENT_ACTOR_SOURCE)?;
     record_final_acceptance(
         &harness,
         &task_id,
@@ -8293,7 +8192,7 @@ fn stored_residual_risk_acceptance_non_user_actor_covers_no_risks() -> Result<()
             ),
             include: status_include(),
         },
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     let coverage = status.response_value["risk_acceptance_coverage"]
@@ -8320,7 +8219,7 @@ fn stored_sensitive_approval_non_user_actor_does_not_authorize_write() -> Result
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "sensitive_non_user")?;
     let (after_approval, judgment_id) =
         record_sensitive_approval(&harness, &task_id, &change_unit_id, 2, "sensitive_non_user")?;
-    set_user_judgment_resolution_actor(&harness, &judgment_id, "agent")?;
+    set_user_judgment_resolution_actor(&harness, &judgment_id, AGENT_ACTOR_SOURCE)?;
     let before = harness.counts()?;
 
     let mut request = prepare_write_request(
@@ -8333,7 +8232,7 @@ fn stored_sensitive_approval_non_user_actor_does_not_authorize_write() -> Result
     request.sensitive_categories = vec!["network".to_owned()];
     let response = harness
         .service
-        .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+        .prepare_write(request, invocation(OperationCategory::AgentWorkflow))?;
     let after = harness.counts()?;
 
     assert_eq!(response.response_value["decision"], "approval_required");
@@ -8342,8 +8241,8 @@ fn stored_sensitive_approval_non_user_actor_does_not_authorize_write() -> Result
         response.response_value["active_user_judgment_refs"],
         json!([])
     );
-    assert!(response.response_value["write_authorization"].is_null());
-    assert_eq!(after.write_authorizations, before.write_authorizations);
+    assert!(response.response_value["write_check"].is_null());
+    assert_eq!(after.write_checks, before.write_checks);
     assert_eq!(user_judgment_status(&harness, &judgment_id)?, "resolved");
     assert_eq!(
         user_judgment_resolution_outcome(&harness, &judgment_id)?,
@@ -8366,7 +8265,7 @@ fn incompatible_judgment_kind_is_rejected_without_effect() -> Result<(), Box<dyn
             Some(&change_unit_id),
             JudgmentKind::ProductDecision,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let pending_judgment_id =
         response_record_id(&pending_judgment.response_value, "user_judgment_ref");
@@ -8382,7 +8281,7 @@ fn incompatible_judgment_kind_is_rejected_without_effect() -> Result<(), Box<dyn
             JudgmentKind::TechnicalDecision,
             answer_payload(JudgmentKind::TechnicalDecision),
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::UserOnly),
     )?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
@@ -8422,7 +8321,7 @@ fn final_acceptance_does_not_substitute_for_residual_risk_acceptance() -> Result
     .into();
     let basis_response = harness
         .service
-        .record_run(basis_request, invocation(AccessClass::RunRecording))?;
+        .record_run(basis_request, invocation(OperationCategory::AgentWorkflow))?;
     let after_basis = basis_response.response_value["base"]["state_version"]
         .as_u64()
         .expect("state version should be present");
@@ -8436,7 +8335,7 @@ fn final_acceptance_does_not_substitute_for_residual_risk_acceptance() -> Result
             Some(&change_unit_id),
             JudgmentKind::ResidualRiskAcceptance,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let pending_judgment_id =
         response_record_id(&pending_judgment.response_value, "user_judgment_ref");
@@ -8452,7 +8351,7 @@ fn final_acceptance_does_not_substitute_for_residual_risk_acceptance() -> Result
             JudgmentKind::ResidualRiskAcceptance,
             answer_payload(JudgmentKind::FinalAcceptance),
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::UserOnly),
     )?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
@@ -8498,7 +8397,7 @@ fn final_acceptance_for_old_scope_revision_is_rejected_for_close() -> Result<(),
             ChangeUnitOperation::KeepCurrent,
             "Materially changed scope after final acceptance.",
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let after_scope = scope_response.response_value["base"]["state_version"]
         .as_u64()
@@ -8529,7 +8428,7 @@ fn final_acceptance_for_old_scope_revision_is_rejected_for_close() -> Result<(),
             close_reason: Some(CloseReason::CompletedSelfChecked),
             superseding_task_id: None,
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(response.response_value["close_state"], "blocked");
@@ -8583,7 +8482,7 @@ fn final_acceptance_for_old_close_basis_revision_is_rejected_for_close(
             close_reason: Some(CloseReason::CompletedSelfChecked),
             superseding_task_id: None,
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(response.response_value["close_state"], "blocked");
@@ -8613,7 +8512,7 @@ fn resolved_judgment_without_outcome_is_owner_state_corruption() -> Result<(), B
             Some(&change_unit_id),
             JudgmentKind::FinalAcceptance,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
     set_user_judgment_resolution_json(
@@ -8633,7 +8532,7 @@ fn resolved_judgment_without_outcome_is_owner_state_corruption() -> Result<(), B
                 },
                 "note":null,
                 "accepted_risks":[],
-                "resolved_by_actor_kind":"user"
+                "resolved_by_actor_source":"user"
             }"#,
         ),
     )?;
@@ -8650,7 +8549,7 @@ fn resolved_judgment_without_outcome_is_owner_state_corruption() -> Result<(), B
             close_reason: Some(CloseReason::CompletedSelfChecked),
             superseding_task_id: None,
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_owner_state_value_rejection(
@@ -8690,7 +8589,7 @@ fn partial_residual_risk_acceptance_leaves_current_risk_blocker() -> Result<(), 
             Some(&change_unit_id),
             JudgmentKind::ResidualRiskAcceptance,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let pending_judgment_id =
         response_record_id(&pending_judgment.response_value, "user_judgment_ref");
@@ -8704,7 +8603,7 @@ fn partial_residual_risk_acceptance_leaves_current_risk_blocker() -> Result<(), 
             JudgmentKind::ResidualRiskAcceptance,
             residual_risk_acceptance_payload(&accepted_risk_ids),
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::UserOnly),
     )?;
     let after_partial = accepted.response_value["base"]["state_version"]
         .as_u64()
@@ -8728,7 +8627,7 @@ fn partial_residual_risk_acceptance_leaves_current_risk_blocker() -> Result<(), 
             close_reason: Some(CloseReason::CompletedSelfChecked),
             superseding_task_id: None,
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(response.response_value["close_state"], "blocked");
@@ -8761,7 +8660,7 @@ fn stale_residual_risk_acceptance_is_distinct_from_missing_acceptance() -> Resul
             Some(&change_unit_id),
             JudgmentKind::ResidualRiskAcceptance,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let judgment_id = response_record_id(&pending_judgment.response_value, "user_judgment_ref");
     let accepted = harness.service.record_user_judgment(
@@ -8774,7 +8673,7 @@ fn stale_residual_risk_acceptance_is_distinct_from_missing_acceptance() -> Resul
             JudgmentKind::ResidualRiskAcceptance,
             residual_risk_acceptance_payload(&old_risk_ids),
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::UserOnly),
     )?;
     let after_old_acceptance = accepted.response_value["base"]["state_version"]
         .as_u64()
@@ -8809,7 +8708,7 @@ fn stale_residual_risk_acceptance_is_distinct_from_missing_acceptance() -> Resul
             close_reason: Some(CloseReason::CompletedSelfChecked),
             superseding_task_id: None,
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(user_judgment_status(&harness, &judgment_id)?, "stale");
@@ -8869,7 +8768,7 @@ fn residual_risk_answer_rejects_identical_text_with_different_risk_id() -> Resul
             Some(&change_unit_id),
             JudgmentKind::ResidualRiskAcceptance,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let pending_judgment_id =
         response_record_id(&pending_judgment.response_value, "user_judgment_ref");
@@ -8884,7 +8783,7 @@ fn residual_risk_answer_rejects_identical_text_with_different_risk_id() -> Resul
             JudgmentKind::ResidualRiskAcceptance,
             residual_risk_acceptance_payload(&old_risk_ids),
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::UserOnly),
     )?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
@@ -8917,10 +8816,10 @@ fn sensitive_approval_requires_exact_path_category_and_change_unit() -> Result<(
     request.sensitive_categories = vec!["network".to_owned()];
     let response = path_harness
         .service
-        .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+        .prepare_write(request, invocation(OperationCategory::AgentWorkflow))?;
     assert_eq!(response.response_value["decision"], "approval_required");
     assert_prepare_reason(&response.response_value, "sensitive_approval_missing");
-    assert!(response.response_value["write_authorization"].is_null());
+    assert!(response.response_value["write_check"].is_null());
 
     let category_harness = MethodHarness::new()?;
     let (task_id, change_unit_id) =
@@ -8937,10 +8836,10 @@ fn sensitive_approval_requires_exact_path_category_and_change_unit() -> Result<(
     request.sensitive_categories = vec!["credential".to_owned()];
     let response = category_harness
         .service
-        .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+        .prepare_write(request, invocation(OperationCategory::AgentWorkflow))?;
     assert_eq!(response.response_value["decision"], "approval_required");
     assert_prepare_reason(&response.response_value, "sensitive_approval_missing");
-    assert!(response.response_value["write_authorization"].is_null());
+    assert!(response.response_value["write_check"].is_null());
 
     let cu_harness = MethodHarness::new()?;
     let (task_id, change_unit_id) =
@@ -8957,7 +8856,7 @@ fn sensitive_approval_requires_exact_path_category_and_change_unit() -> Result<(
             ChangeUnitOperation::ReplaceCurrent,
             "Replacement scope for sensitive approval.",
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let replacement_change_unit_id = response_record_id(&replace.response_value, "change_unit_ref");
     let after_replace = replace.response_value["base"]["state_version"]
@@ -8973,10 +8872,10 @@ fn sensitive_approval_requires_exact_path_category_and_change_unit() -> Result<(
     request.sensitive_categories = vec!["network".to_owned()];
     let response = cu_harness
         .service
-        .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+        .prepare_write(request, invocation(OperationCategory::AgentWorkflow))?;
     assert_eq!(response.response_value["decision"], "approval_required");
     assert_prepare_reason(&response.response_value, "sensitive_approval_missing");
-    assert!(response.response_value["write_authorization"].is_null());
+    assert!(response.response_value["write_check"].is_null());
     Ok(())
 }
 
@@ -8998,14 +8897,14 @@ fn public_sensitive_lifecycle_derives_full_requirement_and_closes() -> Result<()
             include: StatusInclude {
                 task: true,
                 pending_user_judgments: true,
-                write_authority: true,
+                write_check: true,
                 evidence: true,
                 close: true,
                 guarantees: true,
                 continuity: false,
             },
         },
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
     assert_eq!(status.response_value["base"]["response_kind"], "result");
 
@@ -9021,10 +8920,9 @@ fn public_sensitive_lifecycle_derives_full_requirement_and_closes() -> Result<()
     prepare.sensitive_categories = vec!["network".to_owned()];
     let prepared = harness
         .service
-        .prepare_write(prepare, invocation(AccessClass::WriteAuthorization))?;
+        .prepare_write(prepare, invocation(OperationCategory::AgentWorkflow))?;
     assert_eq!(prepared.response_value["decision"], "allowed");
-    let write_authorization_id =
-        response_record_id(&prepared.response_value, "write_authorization_ref");
+    let write_check_id = response_record_id(&prepared.response_value, "write_check_ref");
     let after_prepare = prepared.response_value["base"]["state_version"]
         .as_u64()
         .expect("state_version should be present");
@@ -9042,7 +8940,7 @@ fn public_sensitive_lifecycle_derives_full_requirement_and_closes() -> Result<()
         after_prepare,
         &task_id,
         &change_unit_id,
-        &write_authorization_id,
+        &write_check_id,
         "run_sensitive_public",
     );
     run.observed_changes.sensitive_categories = vec!["network".to_owned()];
@@ -9063,7 +8961,7 @@ fn public_sensitive_lifecycle_derives_full_requirement_and_closes() -> Result<()
     .into();
     let recorded = harness
         .service
-        .record_run(run, invocation(AccessClass::RunRecording))?;
+        .record_run(run, invocation(OperationCategory::AgentWorkflow))?;
     assert_eq!(recorded.response_value["base"]["response_kind"], "result");
     let requirement =
         &recorded.response_value["current_close_basis"]["sensitive_action_requirements"][0];
@@ -9072,8 +8970,8 @@ fn public_sensitive_lifecycle_derives_full_requirement_and_closes() -> Result<()
     assert_eq!(requirement["sensitive_categories"], json!(["network"]));
     assert_eq!(requirement["change_unit_id"], change_unit_id);
     assert_eq!(
-        requirement["source_write_authorization_ref"]["record_id"],
-        write_authorization_id
+        requirement["source_write_check_ref"]["record_id"],
+        write_check_id
     );
     assert!(requirement["action_kind"]
         .as_str()
@@ -9098,14 +8996,14 @@ fn public_sensitive_lifecycle_derives_full_requirement_and_closes() -> Result<()
             include: StatusInclude {
                 task: true,
                 pending_user_judgments: true,
-                write_authority: false,
+                write_check: false,
                 evidence: true,
                 close: true,
                 guarantees: false,
                 continuity: false,
             },
         },
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
     assert_eq!(
         status.response_value["current_close_basis"]["sensitive_action_requirements"][0]
@@ -9131,7 +9029,7 @@ fn public_sensitive_lifecycle_derives_full_requirement_and_closes() -> Result<()
             close_reason: Some(CloseReason::CompletedSelfChecked),
             superseding_task_id: None,
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     assert_eq!(closed.response_value["close_state"], "closed");
     assert_no_close_blocker(&closed.response_value, "missing_sensitive_approval");
@@ -9149,7 +9047,7 @@ fn close_sensitive_approval_coverage_rejects_mismatched_approvals() -> Result<()
     ) -> Result<(), Box<dyn Error>> {
         let harness = MethodHarness::new()?;
         let (task_id, change_unit_id) = create_task_with_change_unit(&harness, suffix)?;
-        let write_authorization_id = format!("wa_sensitive_{suffix}");
+        let write_check_id = format!("wa_sensitive_{suffix}");
         let recorded = record_sensitive_product_write_close_basis(
             &harness,
             SensitiveProductWriteBasisFixture {
@@ -9157,7 +9055,7 @@ fn close_sensitive_approval_coverage_rejects_mismatched_approvals() -> Result<()
                 change_unit_id: &change_unit_id,
                 expected_state_version: 2,
                 suffix,
-                write_authorization_id: &write_authorization_id,
+                write_check_id: &write_check_id,
                 intended_operation: "local_sensitive_step",
                 intended_paths: &["src/export.rs"],
                 observed_categories: requirement_categories,
@@ -9195,7 +9093,7 @@ fn close_sensitive_approval_coverage_rejects_mismatched_approvals() -> Result<()
                 close_reason: Some(CloseReason::CompletedSelfChecked),
                 superseding_task_id: None,
             }),
-            invocation(AccessClass::CoreMutation),
+            invocation(OperationCategory::AgentWorkflow),
         )?;
         assert_eq!(response.response_value["close_state"], "blocked");
         assert_close_blocker(&response.response_value, "missing_sensitive_approval");
@@ -9282,7 +9180,7 @@ fn multiple_sensitive_requirements_require_complete_coverage() -> Result<(), Box
             change_unit_id: &change_unit_id,
             expected_state_version: 2,
             suffix: "multiple_network",
-            write_authorization_id: "wa_sensitive_multiple_network",
+            write_check_id: "wa_sensitive_multiple_network",
             intended_operation: "local_sensitive_step",
             intended_paths: &["src/export.rs"],
             observed_categories: &["network"],
@@ -9299,7 +9197,7 @@ fn multiple_sensitive_requirements_require_complete_coverage() -> Result<(), Box
             change_unit_id: &change_unit_id,
             expected_state_version: after_first,
             suffix: "multiple_credential",
-            write_authorization_id: "wa_sensitive_multiple_credential",
+            write_check_id: "wa_sensitive_multiple_credential",
             intended_operation: "local_sensitive_step",
             intended_paths: &["src/export.rs"],
             observed_categories: &["credential"],
@@ -9346,7 +9244,7 @@ fn multiple_sensitive_requirements_require_complete_coverage() -> Result<(), Box
             close_reason: Some(CloseReason::CompletedSelfChecked),
             superseding_task_id: None,
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     assert_eq!(blocked.response_value["close_state"], "blocked");
     assert_close_blocker(&blocked.response_value, "missing_sensitive_approval");
@@ -9375,7 +9273,7 @@ fn multiple_sensitive_requirements_require_complete_coverage() -> Result<(), Box
             close_reason: Some(CloseReason::CompletedSelfChecked),
             superseding_task_id: None,
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     assert_eq!(closed.response_value["close_state"], "closed");
     Ok(())
@@ -9407,7 +9305,7 @@ fn close_assessment_cannot_invent_or_erase_sensitive_requirements() -> Result<()
     let before_invent = invent_harness.counts()?;
     let invented = invent_harness
         .service
-        .record_run(invent, invocation(AccessClass::RunRecording))?;
+        .record_run(invent, invocation(OperationCategory::AgentWorkflow))?;
     assert_eq!(invented.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
         invented.response_value["errors"][0]["code"],
@@ -9425,7 +9323,7 @@ fn close_assessment_cannot_invent_or_erase_sensitive_requirements() -> Result<()
             change_unit_id: &change_unit_id,
             expected_state_version: 2,
             suffix: "erase_initial",
-            write_authorization_id: "wa_sensitive_erase_initial",
+            write_check_id: "wa_sensitive_erase_initial",
             intended_operation: "local_sensitive_step",
             intended_paths: &["src/export.rs"],
             observed_categories: &["network"],
@@ -9456,7 +9354,7 @@ fn close_assessment_cannot_invent_or_erase_sensitive_requirements() -> Result<()
     let before_erase = erase_harness.counts()?;
     let erased = erase_harness
         .service
-        .record_run(erase, invocation(AccessClass::RunRecording))?;
+        .record_run(erase, invocation(OperationCategory::AgentWorkflow))?;
     assert_eq!(erased.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
         erased.response_value["errors"][0]["code"],
@@ -9508,7 +9406,7 @@ fn category_only_close_basis_is_corrupt_owner_state() -> Result<(), Box<dyn Erro
             close_reason: None,
             superseding_task_id: None,
         }),
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
     assert_owner_state_rejection(
         &check,
@@ -9536,7 +9434,7 @@ fn scope_change_supersedes_pending_judgment_and_stale_pending_answer_has_no_effe
             Some(&change_unit_id),
             JudgmentKind::ProductDecision,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let pending_judgment_id =
         response_record_id(&pending_judgment.response_value, "user_judgment_ref");
@@ -9554,7 +9452,7 @@ fn scope_change_supersedes_pending_judgment_and_stale_pending_answer_has_no_effe
             ChangeUnitOperation::KeepCurrent,
             "Material scope change after pending judgment.",
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     assert_eq!(
         scope_response.response_value["base"]["response_kind"], "result",
@@ -9586,7 +9484,7 @@ fn scope_change_supersedes_pending_judgment_and_stale_pending_answer_has_no_effe
             JudgmentKind::ProductDecision,
             answer_payload(JudgmentKind::ProductDecision),
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::UserOnly),
     )?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
@@ -9649,7 +9547,7 @@ fn bare_array_authority_options_are_owner_state_corruption() -> Result<(), Box<d
             Some(&change_unit_id),
             JudgmentKind::Cancellation,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let pending_judgment_id =
         response_record_id(&pending_judgment.response_value, "user_judgment_ref");
@@ -9679,7 +9577,7 @@ fn bare_array_authority_options_are_owner_state_corruption() -> Result<(), Box<d
             JudgmentKind::Cancellation,
             answer_payload(JudgmentKind::Cancellation),
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::UserOnly),
     )?;
 
     assert_owner_state_rejection(
@@ -9712,7 +9610,7 @@ fn record_user_judgment_rejects_selected_option_outside_original_request(
             Some(&change_unit_id),
             JudgmentKind::ProductDecision,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let pending_judgment_id =
         response_record_id(&pending_judgment.response_value, "user_judgment_ref");
@@ -9729,7 +9627,7 @@ fn record_user_judgment_rejects_selected_option_outside_original_request(
     let before = harness.counts()?;
     let response = harness
         .service
-        .record_user_judgment(request, invocation(AccessClass::CoreMutation))?;
+        .record_user_judgment(request, invocation(OperationCategory::UserOnly))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
@@ -9745,7 +9643,7 @@ fn record_user_judgment_rejects_selected_option_outside_original_request(
 }
 
 #[test]
-fn sensitive_action_scope_does_not_create_write_authorization() -> Result<(), Box<dyn Error>> {
+fn sensitive_action_scope_does_not_create_write_check() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "sensitive")?;
     let pending_judgment = harness.service.request_user_judgment(
@@ -9758,7 +9656,7 @@ fn sensitive_action_scope_does_not_create_write_authorization() -> Result<(), Bo
             Some(&change_unit_id),
             JudgmentKind::SensitiveApproval,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let pending_judgment_id =
         response_record_id(&pending_judgment.response_value, "user_judgment_ref");
@@ -9774,14 +9672,14 @@ fn sensitive_action_scope_does_not_create_write_authorization() -> Result<(), Bo
             JudgmentKind::SensitiveApproval,
             answer_payload(JudgmentKind::SensitiveApproval),
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::UserOnly),
     )?;
     let after = harness.counts()?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "result");
-    assert_eq!(after.write_authorizations, before.write_authorizations);
+    assert_eq!(after.write_checks, before.write_checks);
     assert_eq!(
-        response.response_value["state"]["write_authority_summary"],
+        response.response_value["state"]["write_check_summary"],
         Value::Null
     );
     Ok(())
@@ -9804,7 +9702,7 @@ fn recorded_scope_decision_does_not_change_scope_or_current_change_unit(
             Some(&change_unit_id),
             JudgmentKind::ScopeDecision,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let pending_judgment_id =
         response_record_id(&pending_judgment.response_value, "user_judgment_ref");
@@ -9820,7 +9718,7 @@ fn recorded_scope_decision_does_not_change_scope_or_current_change_unit(
             JudgmentKind::ScopeDecision,
             answer_payload(JudgmentKind::ScopeDecision),
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::UserOnly),
     )?;
     let after = harness.counts()?;
 
@@ -9842,7 +9740,7 @@ fn recorded_scope_decision_does_not_change_scope_or_current_change_unit(
 }
 
 #[test]
-fn user_interaction_surface_records_authority_judgment_provenance() -> Result<(), Box<dyn Error>> {
+fn local_user_channel_records_authority_judgment_provenance() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "judgment_provenance")?;
     let pending_judgment = harness.service.request_user_judgment(
@@ -9855,7 +9753,7 @@ fn user_interaction_surface_records_authority_judgment_provenance() -> Result<()
             Some(&change_unit_id),
             JudgmentKind::ScopeDecision,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let pending_judgment_id =
         response_record_id(&pending_judgment.response_value, "user_judgment_ref");
@@ -9871,7 +9769,7 @@ fn user_interaction_surface_records_authority_judgment_provenance() -> Result<()
             JudgmentKind::ScopeDecision,
             answer_payload(JudgmentKind::ScopeDecision),
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::UserOnly),
     )?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "result");
@@ -9888,71 +9786,53 @@ fn user_interaction_surface_records_authority_judgment_provenance() -> Result<()
         Some("accepted".to_owned())
     );
     let provenance = user_judgment_actor_provenance(&harness, &pending_judgment_id)?;
-    assert_eq!(provenance.resolved_by_actor_kind, Some("user".to_owned()));
     assert_eq!(
-        provenance.resolved_actor_role,
-        Some("user_interaction".to_owned())
-    );
-    assert_eq!(
-        provenance.resolved_by_surface_id,
-        Some(SURFACE_ID.to_owned())
-    );
-    assert_eq!(
-        provenance.resolved_by_surface_instance_id,
-        Some(SURFACE_INSTANCE_ID.to_owned())
+        provenance.resolved_by_actor_source,
+        Some(LOCAL_USER_ACTOR_SOURCE.to_owned())
     );
     let verification_basis = provenance
         .resolved_verification_basis
         .expect("resolved verification basis should be present");
-    assert!(verification_basis.contains(VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION));
-    assert!(verification_basis.contains(VERIFICATION_BASIS_TEST_FIXTURE_BINDING));
+    assert_eq!(verification_basis, VERIFICATION_BASIS_TEST_FIXTURE_BINDING);
     assert_eq!(
         provenance.resolved_assurance_level,
-        Some(ACTOR_ASSURANCE_REGISTERED_SURFACE_COOPERATIVE.to_owned())
+        Some("local_user_channel".to_owned())
     );
     assert_eq!(harness.counts()?.user_judgments, before.user_judgments);
     Ok(())
 }
 
 #[test]
-fn registered_agent_surface_cannot_record_authority_judgment() -> Result<(), Box<dyn Error>> {
+fn agent_connection_cannot_record_authority_judgment() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
-    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "agent_surface")?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "agent_connection")?;
     let pending_judgment = harness.service.request_user_judgment(
         user_judgment_request(
-            "req_agent_surface_judgment",
-            "idem_agent_surface_judgment",
+            "req_agent_connection_judgment",
+            "idem_agent_connection_judgment",
             false,
             Some(2),
             &task_id,
             Some(&change_unit_id),
             JudgmentKind::ScopeDecision,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let pending_judgment_id =
         response_record_id(&pending_judgment.response_value, "user_judgment_ref");
-    harness.conn()?.execute(
-        "UPDATE surfaces
-            SET interaction_role = 'agent'
-          WHERE project_id = ?1
-            AND surface_id = ?2
-            AND surface_instance_id = ?3",
-        rusqlite::params![PROJECT_ID, SURFACE_ID, SURFACE_INSTANCE_ID],
-    )?;
     let before = harness.counts()?;
 
     let response = harness.service.record_user_judgment(
         record_judgment_request(
-            "req_agent_surface_record",
-            "idem_agent_surface_record",
+            "req_agent_connection_record",
+            "idem_agent_connection_record",
             Some(3),
             &task_id,
             &pending_judgment_id,
             JudgmentKind::ScopeDecision,
             answer_payload(JudgmentKind::ScopeDecision),
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
@@ -9962,7 +9842,7 @@ fn registered_agent_surface_cannot_record_authority_judgment() -> Result<(), Box
     );
     assert_eq!(
         response.response_value["errors"][0]["details"]["field"],
-        "surfaces.interaction_role"
+        "invocation.operation_category"
     );
     assert_eq!(harness.counts()?, before);
     assert_eq!(
@@ -9986,7 +9866,7 @@ fn accepted_authority_judgments_require_structured_rationale() -> Result<(), Box
             Some(&change_unit_id),
             JudgmentKind::ScopeDecision,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let pending_judgment_id =
         response_record_id(&pending_judgment.response_value, "user_judgment_ref");
@@ -10004,7 +9884,7 @@ fn accepted_authority_judgments_require_structured_rationale() -> Result<(), Box
 
     let response = harness
         .service
-        .record_user_judgment(request, invocation(AccessClass::CoreMutation))?;
+        .record_user_judgment(request, invocation(OperationCategory::UserOnly))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
@@ -10046,7 +9926,7 @@ fn project_continuity_and_rationale_do_not_replace_final_acceptance() -> Result<
             Some(&change_unit_id),
             JudgmentKind::ProductDecision,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let pending_judgment_id =
         response_record_id(&pending_judgment.response_value, "user_judgment_ref");
@@ -10060,7 +9940,7 @@ fn project_continuity_and_rationale_do_not_replace_final_acceptance() -> Result<
             JudgmentKind::ProductDecision,
             answer_payload(JudgmentKind::ProductDecision),
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::UserOnly),
     )?;
     let after_judgment = recorded.response_value["base"]["state_version"]
         .as_u64()
@@ -10081,7 +9961,7 @@ fn project_continuity_and_rationale_do_not_replace_final_acceptance() -> Result<
             close_reason: Some(CloseReason::CompletedSelfChecked),
             superseding_task_id: None,
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(close.response_value["close_state"], "blocked");
@@ -10121,7 +10001,7 @@ fn final_and_residual_risk_acceptance_are_non_substitutable() -> Result<(), Box<
             close_reason: Some(CloseReason::CompletedSelfChecked),
             superseding_task_id: None,
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     assert_close_blocker(
         &final_only.response_value,
@@ -10152,7 +10032,7 @@ fn final_and_residual_risk_acceptance_are_non_substitutable() -> Result<(), Box<
             Some(&change_unit_id),
             JudgmentKind::ResidualRiskAcceptance,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let pending_judgment_id =
         response_record_id(&pending_judgment.response_value, "user_judgment_ref");
@@ -10166,7 +10046,7 @@ fn final_and_residual_risk_acceptance_are_non_substitutable() -> Result<(), Box<
             JudgmentKind::ResidualRiskAcceptance,
             residual_risk_acceptance_payload(&risk_ids),
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::UserOnly),
     )?;
     let after_risk = recorded.response_value["base"]["state_version"]
         .as_u64()
@@ -10182,7 +10062,7 @@ fn final_and_residual_risk_acceptance_are_non_substitutable() -> Result<(), Box<
             close_reason: Some(CloseReason::CompletedSelfChecked),
             superseding_task_id: None,
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     assert_close_blocker(&risk_only.response_value, "missing_final_acceptance");
     assert_no_close_blocker(
@@ -10208,7 +10088,7 @@ fn judgment_dry_runs_have_no_storage_effect() -> Result<(), Box<dyn Error>> {
             Some(&change_unit_id),
             JudgmentKind::ProductDecision,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(
@@ -10227,7 +10107,7 @@ fn judgment_dry_runs_have_no_storage_effect() -> Result<(), Box<dyn Error>> {
             Some(&change_unit_id),
             JudgmentKind::ProductDecision,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let pending_judgment_id =
         response_record_id(&pending_judgment.response_value, "user_judgment_ref");
@@ -10245,7 +10125,7 @@ fn judgment_dry_runs_have_no_storage_effect() -> Result<(), Box<dyn Error>> {
     record_preview_request.envelope.dry_run = true;
     let record_preview = harness.service.record_user_judgment(
         record_preview_request,
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::UserOnly),
     )?;
 
     assert_eq!(
@@ -10274,7 +10154,7 @@ fn stale_state_rejects_record_user_judgment_without_effect() -> Result<(), Box<d
             Some(&change_unit_id),
             JudgmentKind::ProductDecision,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let pending_judgment_id =
         response_record_id(&pending_judgment.response_value, "user_judgment_ref");
@@ -10290,7 +10170,7 @@ fn stale_state_rejects_record_user_judgment_without_effect() -> Result<(), Box<d
             JudgmentKind::ProductDecision,
             answer_payload(JudgmentKind::ProductDecision),
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::UserOnly),
     )?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
@@ -10320,7 +10200,7 @@ fn record_user_judgment_idempotency_replays_without_effect() -> Result<(), Box<d
             Some(&change_unit_id),
             JudgmentKind::ProductDecision,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let pending_judgment_id =
         response_record_id(&pending_judgment.response_value, "user_judgment_ref");
@@ -10336,11 +10216,11 @@ fn record_user_judgment_idempotency_replays_without_effect() -> Result<(), Box<d
 
     let first = harness
         .service
-        .record_user_judgment(request.clone(), invocation(AccessClass::CoreMutation))?;
+        .record_user_judgment(request.clone(), invocation(OperationCategory::UserOnly))?;
     let after_first = harness.counts()?;
     let second = harness
         .service
-        .record_user_judgment(request, invocation(AccessClass::CoreMutation))?;
+        .record_user_judgment(request, invocation(OperationCategory::UserOnly))?;
 
     assert!(second.replayed);
     assert_eq!(second.response_json, first.response_json);
@@ -10365,7 +10245,7 @@ fn close_task_check_is_read_only() -> Result<(), Box<dyn Error>> {
             close_reason: None,
             superseding_task_id: None,
         }),
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "result");
@@ -10393,7 +10273,7 @@ fn close_task_check_dry_run_is_read_only() -> Result<(), Box<dyn Error>> {
             close_reason: None,
             superseding_task_id: None,
         }),
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "result");
@@ -10429,7 +10309,7 @@ fn close_task_does_not_use_terminal_summary_as_current_basis() -> Result<(), Box
             close_reason: None,
             superseding_task_id: None,
         }),
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "result");
@@ -10463,7 +10343,7 @@ fn malformed_completion_policy_rejects_close_check_without_effect() -> Result<()
             close_reason: None,
             superseding_task_id: None,
         }),
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     assert_owner_state_rejection(
@@ -10501,7 +10381,7 @@ fn malformed_completion_policy_rejects_close_complete_without_effect() -> Result
             close_reason: Some(CloseReason::CompletedSelfChecked),
             superseding_task_id: None,
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_owner_state_rejection(
@@ -10539,7 +10419,7 @@ fn schema_invalid_close_summary_rejects_instead_of_hiding_residual_risk(
             close_reason: None,
             superseding_task_id: None,
         }),
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     assert_owner_state_rejection(
@@ -10576,7 +10456,7 @@ fn malformed_close_basis_stops_close_readiness_without_effect() -> Result<(), Bo
             close_reason: None,
             superseding_task_id: None,
         }),
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     assert_owner_state_rejection(
@@ -10613,7 +10493,7 @@ fn malformed_lifecycle_state_does_not_default_close_phase() -> Result<(), Box<dy
             close_reason: None,
             superseding_task_id: None,
         }),
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     assert_owner_state_rejection(
@@ -10647,7 +10527,7 @@ fn malformed_write_basis_rejects_prepare_write_without_effect() -> Result<(), Bo
             Some(&task_id),
             Some(&change_unit_id),
         ),
-        invocation(AccessClass::WriteAuthorization),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_owner_state_rejection(
@@ -10682,7 +10562,7 @@ fn malformed_bounded_paths_rejects_prepare_write_without_empty_scope() -> Result
             Some(&task_id),
             Some(&change_unit_id),
         ),
-        invocation(AccessClass::WriteAuthorization),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_owner_state_rejection(
@@ -10723,7 +10603,7 @@ fn prepare_write_dry_run_with_corrupt_owner_state_is_rejected_no_effect(
 
     let response = harness
         .service
-        .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+        .prepare_write(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_owner_state_rejection(
         &response,
@@ -10754,7 +10634,7 @@ fn status_read_only_rejects_corrupt_owner_state_without_effect() -> Result<(), B
             envelope: envelope("req_status_bad_owner", None, false, None, Some(&task_id)),
             include: status_include(),
         },
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     assert_owner_state_rejection(
@@ -10791,7 +10671,7 @@ fn resolved_judgment_null_resolution_json_is_owner_state_corruption() -> Result<
             Some(&change_unit_id),
             JudgmentKind::FinalAcceptance,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
     set_user_judgment_resolution_json(&harness, &judgment_id, None)?;
@@ -10808,7 +10688,7 @@ fn resolved_judgment_null_resolution_json_is_owner_state_corruption() -> Result<
             close_reason: None,
             superseding_task_id: None,
         }),
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     assert_owner_state_value_rejection(
@@ -10844,7 +10724,7 @@ fn malformed_optional_resolution_json_rejects_close_readiness() -> Result<(), Bo
             Some(&change_unit_id),
             JudgmentKind::FinalAcceptance,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
     set_user_judgment_resolution_json(&harness, &judgment_id, Some(corrupt_owner_json()))?;
@@ -10861,7 +10741,7 @@ fn malformed_optional_resolution_json_rejects_close_readiness() -> Result<(), Bo
             close_reason: None,
             superseding_task_id: None,
         }),
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     assert_owner_state_rejection(
@@ -10890,7 +10770,7 @@ fn stored_judgment_request_wrong_field_type_rejects_record_without_effect(
             Some(&change_unit_id),
             JudgmentKind::ProductDecision,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
     let corrupt_request_json = r#"{"presentation":17,"question":"must not leak secret-request-path","required_for":["close_complete"],"expires_at":null}"#;
@@ -10912,7 +10792,7 @@ fn stored_judgment_request_wrong_field_type_rejects_record_without_effect(
             JudgmentKind::ProductDecision,
             answer_payload(JudgmentKind::ProductDecision),
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::UserOnly),
     )?;
 
     assert_owner_state_rejection(
@@ -10949,7 +10829,7 @@ fn request_user_judgment_rejects_expiration_at_clock_boundary() -> Result<(), Bo
 
     let response = harness
         .service
-        .request_user_judgment(request, invocation(AccessClass::CoreMutation))?;
+        .request_user_judgment(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
@@ -10986,7 +10866,7 @@ fn record_user_judgment_uses_semantic_expiry_boundary() -> Result<(), Box<dyn Er
     .into();
     let judgment = harness
         .service
-        .request_user_judgment(request, invocation(AccessClass::CoreMutation))?;
+        .request_user_judgment(request, invocation(OperationCategory::AgentWorkflow))?;
     let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
 
     let response = harness.service.record_user_judgment(
@@ -10999,7 +10879,7 @@ fn record_user_judgment_uses_semantic_expiry_boundary() -> Result<(), Box<dyn Er
             JudgmentKind::ProductDecision,
             answer_payload(JudgmentKind::ProductDecision),
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::UserOnly),
     )?;
     assert_eq!(response.response_value["base"]["response_kind"], "result");
     assert_eq!(user_judgment_status(&harness, &judgment_id)?, "resolved");
@@ -11021,7 +10901,7 @@ fn record_user_judgment_uses_semantic_expiry_boundary() -> Result<(), Box<dyn Er
     request.expires_at = Some(volicord_types::UtcTimestamp::parse("2026-06-18T00:00:01Z")?).into();
     let judgment = harness
         .service
-        .request_user_judgment(request, invocation(AccessClass::CoreMutation))?;
+        .request_user_judgment(request, invocation(OperationCategory::AgentWorkflow))?;
     let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
     clock.advance(Duration::seconds(1));
     let before = harness.counts()?;
@@ -11036,7 +10916,7 @@ fn record_user_judgment_uses_semantic_expiry_boundary() -> Result<(), Box<dyn Er
             JudgmentKind::ProductDecision,
             answer_payload(JudgmentKind::ProductDecision),
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::UserOnly),
     )?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
@@ -11065,7 +10945,7 @@ fn stored_judgment_request_invalid_expiration_rejects_record_without_effect(
             Some(&change_unit_id),
             JudgmentKind::ProductDecision,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
     let corrupt_request_json = r#"{"presentation":"short","question":"must not leak secret-expiry-path","required_for":["close_complete"],"expires_at":"tomorrow"}"#;
@@ -11087,7 +10967,7 @@ fn stored_judgment_request_invalid_expiration_rejects_record_without_effect(
             JudgmentKind::ProductDecision,
             answer_payload(JudgmentKind::ProductDecision),
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::UserOnly),
     )?;
 
     assert_owner_state_rejection(
@@ -11118,7 +10998,7 @@ fn stored_judgment_request_missing_required_field_rejects_record_without_effect(
             Some(&change_unit_id),
             JudgmentKind::ProductDecision,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
     let corrupt_request_json =
@@ -11141,7 +11021,7 @@ fn stored_judgment_request_missing_required_field_rejects_record_without_effect(
             JudgmentKind::ProductDecision,
             answer_payload(JudgmentKind::ProductDecision),
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::UserOnly),
     )?;
 
     assert_owner_state_rejection(
@@ -11181,7 +11061,7 @@ fn stored_judgment_resolution_incompatible_branches_rejects_close_without_effect
             Some(&change_unit_id),
             JudgmentKind::FinalAcceptance,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
     set_user_judgment_resolution_json(
@@ -11203,7 +11083,7 @@ fn stored_judgment_resolution_incompatible_branches_rejects_close_without_effect
                 },
                 "note":null,
                 "accepted_risks":[],
-                "resolved_by_actor_kind":"user"
+                "resolved_by_actor_source":"user"
             }"#,
         ),
     )?;
@@ -11220,7 +11100,7 @@ fn stored_judgment_resolution_incompatible_branches_rejects_close_without_effect
             close_reason: None,
             superseding_task_id: None,
         }),
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     assert_owner_state_rejection(
@@ -11249,7 +11129,7 @@ fn stored_judgment_basis_invalid_revision_type_rejects_record_without_effect(
             Some(&change_unit_id),
             JudgmentKind::ProductDecision,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
     set_user_judgment_owner_json(
@@ -11284,7 +11164,7 @@ fn stored_judgment_basis_invalid_revision_type_rejects_record_without_effect(
             JudgmentKind::ProductDecision,
             answer_payload(JudgmentKind::ProductDecision),
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::UserOnly),
     )?;
 
     assert_owner_state_rejection(
@@ -11322,7 +11202,7 @@ fn stored_accepted_risk_missing_risk_id_rejects_close_without_effect() -> Result
             Some(&change_unit_id),
             JudgmentKind::ResidualRiskAcceptance,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
     set_user_judgment_resolution_json(
@@ -11349,7 +11229,7 @@ fn stored_accepted_risk_missing_risk_id_rejects_close_without_effect() -> Result
                     "related_refs": [],
                     "accepted_for_close": true
                 }],
-                "resolved_by_actor_kind": "user"
+                "resolved_by_actor_source": "user"
             })
             .to_string(),
         ),
@@ -11367,7 +11247,7 @@ fn stored_accepted_risk_missing_risk_id_rejects_close_without_effect() -> Result
             close_reason: None,
             superseding_task_id: None,
         }),
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     assert_owner_state_rejection(
@@ -11411,7 +11291,7 @@ fn malformed_artifact_producer_json_rejects_existing_artifact_run_without_effect
     )];
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_owner_state_rejection(
         &response,
@@ -11461,7 +11341,7 @@ fn artifact_provenance_missing_source_ref_rejects_close_without_effect(
     .into();
     let basis_response = harness
         .service
-        .record_run(basis_request, invocation(AccessClass::RunRecording))?;
+        .record_run(basis_request, invocation(OperationCategory::AgentWorkflow))?;
     assert_eq!(
         basis_response.response_value["base"]["response_kind"],
         "result"
@@ -11480,7 +11360,7 @@ fn artifact_provenance_missing_source_ref_rejects_close_without_effect(
             close_reason: None,
             superseding_task_id: None,
         }),
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     assert_owner_state_value_rejection(
@@ -11529,7 +11409,7 @@ fn malformed_evidence_coverage_rejects_status_without_effect() -> Result<(), Box
             ),
             include: status_include(),
         },
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     assert_owner_state_rejection(
@@ -11576,7 +11456,7 @@ fn malformed_evidence_source_refs_rejects_close_without_effect() -> Result<(), B
             close_reason: None,
             superseding_task_id: None,
         }),
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     assert_owner_state_rejection(
@@ -11623,7 +11503,7 @@ fn malformed_evidence_metadata_rejects_status_without_effect() -> Result<(), Box
             ),
             include: status_include(),
         },
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     assert_owner_state_rejection(
@@ -11664,7 +11544,7 @@ fn display_only_staged_artifact_metadata_corruption_falls_back() -> Result<(), B
     )];
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "result");
     assert_eq!(
@@ -11695,7 +11575,7 @@ fn close_task_complete_blocks_missing_final_acceptance() -> Result<(), Box<dyn E
             close_reason: Some(CloseReason::CompletedSelfChecked),
             superseding_task_id: None,
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "result");
@@ -11722,9 +11602,10 @@ fn close_complete_blocks_only_relevant_pending_judgments() -> Result<(), Box<dyn
         JudgmentKind::ProductDecision,
     );
     product_request.required_for = vec![volicord_types::JudgmentRequiredFor::CloseComplete];
-    harness
-        .service
-        .request_user_judgment(product_request, invocation(AccessClass::CoreMutation))?;
+    harness.service.request_user_judgment(
+        product_request,
+        invocation(OperationCategory::AgentWorkflow),
+    )?;
     let after_final = record_final_acceptance(
         &harness,
         &task_id,
@@ -11745,7 +11626,7 @@ fn close_complete_blocks_only_relevant_pending_judgments() -> Result<(), Box<dyn
             close_reason: Some(CloseReason::CompletedSelfChecked),
             superseding_task_id: None,
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(response.response_value["close_state"], "blocked");
@@ -11781,7 +11662,7 @@ fn close_complete_ignores_pending_cancellation_authority() -> Result<(), Box<dyn
             Some(&change_unit_id),
             JudgmentKind::Cancellation,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let after_final = record_final_acceptance(
         &harness,
@@ -11802,7 +11683,7 @@ fn close_complete_ignores_pending_cancellation_authority() -> Result<(), Box<dyn
             close_reason: Some(CloseReason::CompletedSelfChecked),
             superseding_task_id: None,
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(response.response_value["close_state"], "closed");
@@ -11837,7 +11718,7 @@ fn close_task_complete_blocks_unsupported_evidence_claim() -> Result<(), Box<dyn
             close_reason: Some(CloseReason::CompletedSelfChecked),
             superseding_task_id: None,
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(response.response_value["close_state"], "blocked");
@@ -11885,7 +11766,7 @@ fn unverified_claim_alone_cannot_satisfy_close_readiness() -> Result<(), Box<dyn
             close_reason: Some(CloseReason::CompletedSelfChecked),
             superseding_task_id: None,
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(response.response_value["close_state"], "blocked");
@@ -11940,7 +11821,7 @@ fn missing_evidence_and_insufficient_provenance_are_distinct_blockers() -> Resul
             close_reason: Some(CloseReason::CompletedSelfChecked),
             superseding_task_id: None,
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(response.response_value["close_state"], "blocked");
@@ -11997,7 +11878,7 @@ fn cooperative_agent_report_only_blocks_when_stronger_evidence_is_required(
             close_reason: Some(CloseReason::CompletedSelfChecked),
             superseding_task_id: None,
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(response.response_value["close_state"], "blocked");
@@ -12036,7 +11917,7 @@ fn external_tool_provenance_supports_the_attached_close_claim() -> Result<(), Bo
             close_reason: Some(CloseReason::CompletedSelfChecked),
             superseding_task_id: None,
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(response.response_value["close_state"], "closed");
@@ -12096,7 +11977,7 @@ fn supported_evidence_without_provenance_cannot_satisfy_close_readiness(
             close_reason: Some(CloseReason::CompletedSelfChecked),
             superseding_task_id: None,
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(response.response_value["close_state"], "blocked");
@@ -12152,7 +12033,7 @@ fn external_tool_evidence_does_not_support_unattached_close_claim() -> Result<()
             close_reason: Some(CloseReason::CompletedSelfChecked),
             superseding_task_id: None,
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(response.response_value["close_state"], "blocked");
@@ -12197,7 +12078,7 @@ fn user_observation_evidence_does_not_replace_final_acceptance() -> Result<(), B
             close_reason: Some(CloseReason::CompletedSelfChecked),
             superseding_task_id: None,
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(response.response_value["close_state"], "blocked");
@@ -12255,7 +12136,7 @@ fn stale_evidence_provenance_is_not_current_close_evidence() -> Result<(), Box<d
             close_reason: Some(CloseReason::CompletedSelfChecked),
             superseding_task_id: None,
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(response.response_value["close_state"], "blocked");
@@ -12284,7 +12165,7 @@ fn close_task_complete_success() -> Result<(), Box<dyn Error>> {
             close_reason: Some(CloseReason::CompletedSelfChecked),
             superseding_task_id: None,
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let after = harness.counts()?;
     let fields = task_terminal_fields(&harness, &task_id)?;
@@ -12337,7 +12218,7 @@ fn close_task_cancel_success_despite_missing_completion_evidence() -> Result<(),
             close_reason: Some(CloseReason::Cancelled),
             superseding_task_id: None,
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let after = harness.counts()?;
     let fields = task_terminal_fields(&harness, &task_id)?;
@@ -12370,7 +12251,7 @@ fn close_task_cancel_requires_current_user_cancellation_authority() -> Result<()
             close_reason: Some(CloseReason::Cancelled),
             superseding_task_id: None,
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(response.response_value["close_state"], "blocked");
@@ -12409,7 +12290,7 @@ fn rejected_cancellation_authority_does_not_cancel_task() -> Result<(), Box<dyn 
             close_reason: Some(CloseReason::Cancelled),
             superseding_task_id: None,
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(
@@ -12438,7 +12319,7 @@ fn scope_change_stales_cancellation_authority() -> Result<(), Box<dyn Error>> {
             ChangeUnitOperation::ReplaceCurrent,
             "Replacement scope after cancellation judgment.",
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let after_scope = scope.response_value["base"]["state_version"]
         .as_u64()
@@ -12458,7 +12339,7 @@ fn scope_change_stales_cancellation_authority() -> Result<(), Box<dyn Error>> {
             close_reason: Some(CloseReason::Cancelled),
             superseding_task_id: None,
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(response.response_value["close_state"], "blocked");
@@ -12486,7 +12367,7 @@ fn close_task_supersede_success() -> Result<(), Box<dyn Error>> {
             close_reason: Some(CloseReason::Superseded),
             superseding_task_id: Some(superseding_task_id),
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let after = harness.counts()?;
     let fields = task_terminal_fields(&harness, &task_id)?;
@@ -12522,7 +12403,7 @@ fn close_task_stale_state_rejected_without_blocker() -> Result<(), Box<dyn Error
             close_reason: Some(CloseReason::CompletedSelfChecked),
             superseding_task_id: None,
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
@@ -12552,7 +12433,7 @@ fn close_task_blocker_code_routing_uses_method_local_codes() -> Result<(), Box<d
             close_reason: Some(CloseReason::CompletedSelfChecked),
             superseding_task_id: None,
         }),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "result");
@@ -12587,13 +12468,14 @@ fn close_task_idempotency_replays_terminal_transition() -> Result<(), Box<dyn Er
         superseding_task_id: None,
     });
 
-    let first = harness
-        .service
-        .close_task(request.clone(), invocation(AccessClass::CoreMutation))?;
+    let first = harness.service.close_task(
+        request.clone(),
+        invocation(OperationCategory::AgentWorkflow),
+    )?;
     let after_first = harness.counts()?;
     let second = harness
         .service
-        .close_task(request, invocation(AccessClass::CoreMutation))?;
+        .close_task(request, invocation(OperationCategory::AgentWorkflow))?;
 
     assert_eq!(first.response_value["close_state"], "closed");
     assert!(second.replayed);
@@ -12612,8 +12494,6 @@ fn envelope(
     ToolEnvelope {
         project_id: ProjectId::new(PROJECT_ID),
         task_id: task_id.map(TaskId::new).into(),
-        actor_kind: ActorKind::Agent,
-        surface_id: SurfaceId::new(SURFACE_ID),
         request_id: RequestId::new(request_id),
         idempotency_key: idempotency_key.map(IdempotencyKey::new).into(),
         expected_state_version: expected_state_version.into(),
@@ -12622,33 +12502,49 @@ fn envelope(
     }
 }
 
-fn invocation(access_class: AccessClass) -> InvocationContext {
-    InvocationContext {
-        binding: crate::pipeline::AdapterSessionBinding::new(
-            ProjectId::new(PROJECT_ID),
-            SurfaceId::new(SURFACE_ID),
-            SurfaceInstanceId::new(SURFACE_INSTANCE_ID),
-            VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
-        ),
-        requested_access_class: access_class,
+fn invocation(operation_category: OperationCategory) -> InvocationContext {
+    invocation_with_actor(
+        actor_source_for_operation_category(operation_category),
+        operation_category,
+    )
+}
+
+fn actor_source_for_operation_category(operation_category: OperationCategory) -> ActorSource {
+    match operation_category {
+        OperationCategory::Read | OperationCategory::AgentWorkflow => {
+            ActorSource::agent_connection(CONNECTION_ID)
+        }
+        OperationCategory::UserOnly | OperationCategory::AdminLocal => ActorSource::LocalUser,
     }
 }
 
-fn assert_verified_surface(response: &PipelineResponse, access_class: AccessClass) {
+fn invocation_with_actor(
+    actor_source: ActorSource,
+    operation_category: OperationCategory,
+) -> InvocationContext {
+    InvocationContext::new(
+        ProjectId::new(PROJECT_ID),
+        actor_source,
+        operation_category,
+        VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
+    )
+}
+
+fn assert_verified_invocation(response: &PipelineResponse, operation_category: OperationCategory) {
     let verified = response
-        .verified_surface
+        .verified_invocation
         .as_ref()
-        .expect("method response should carry verified surface context");
+        .expect("method response should carry verified invocation context");
     assert_eq!(verified.project_id.as_str(), PROJECT_ID);
-    assert_eq!(verified.surface_id.as_str(), SURFACE_ID);
-    assert_eq!(verified.surface_instance_id.as_str(), SURFACE_INSTANCE_ID);
-    assert_eq!(verified.access_class, access_class);
-    assert!(verified
-        .verification_basis
-        .contains(VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION));
-    assert!(verified
-        .verification_basis
-        .contains(VERIFICATION_BASIS_TEST_FIXTURE_BINDING));
+    assert_eq!(
+        verified.actor_source,
+        actor_source_for_operation_category(operation_category)
+    );
+    assert_eq!(verified.operation_category, operation_category);
+    assert_eq!(
+        verified.verification_basis,
+        VERIFICATION_BASIS_TEST_FIXTURE_BINDING
+    );
 }
 
 fn assert_store_rejection(
@@ -12767,11 +12663,11 @@ fn assert_public_response_has_no_internal_leak(
     }
 }
 
-fn assert_write_authorization_invalid_reason(response: &PipelineResponse, reason: &str) {
+fn assert_write_check_invalid_reason(response: &PipelineResponse, reason: &str) {
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
         response.response_value["errors"][0]["code"],
-        "WRITE_AUTHORIZATION_INVALID"
+        "WRITE_CHECK_INVALID"
     );
     assert_eq!(
         response.response_value["errors"][0]["details"]["authorization_reason"],
@@ -12787,7 +12683,7 @@ fn status_include() -> StatusInclude {
     StatusInclude {
         task: true,
         pending_user_judgments: true,
-        write_authority: true,
+        write_check: true,
         evidence: true,
         close: true,
         guarantees: true,
@@ -12941,7 +12837,7 @@ fn record_run_request(
         kind: volicord_types::RunKind::Implementation,
         run_id: None.into(),
         baseline_ref: BaselineRef::new("baseline_test"),
-        write_authorization_id: None.into(),
+        write_check_id: None.into(),
         summary: "Recorded implementation run.".to_owned(),
         observed_changes: ObservedChanges {
             changed_paths: Vec::new(),
@@ -12962,7 +12858,7 @@ fn product_write_record_run_request(
     expected_state_version: u64,
     task_id: &str,
     change_unit_id: &str,
-    write_authorization_id: &str,
+    write_check_id: &str,
     run_id: &str,
 ) -> RecordRunRequest {
     let mut request = record_run_request(
@@ -12976,7 +12872,7 @@ fn product_write_record_run_request(
     request.run_id = Some(RunId::new(run_id)).into();
     request.observed_changes.product_file_write_observed = true;
     request.observed_changes.changed_paths = vec!["src/export.rs".to_owned()];
-    request.write_authorization_id = Some(WriteAuthorizationId::new(write_authorization_id)).into();
+    request.write_check_id = Some(WriteCheckId::new(write_check_id)).into();
     request
 }
 
@@ -13062,7 +12958,7 @@ fn record_close_evidence_with_updates(
     .into();
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
     Ok(response.response_value["base"]["state_version"]
         .as_u64()
         .expect("state_version should be present"))
@@ -13096,7 +12992,7 @@ fn record_close_basis_with_risks(
     .into();
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
     let state_version = response.response_value["base"]["state_version"]
         .as_u64()
         .expect("state_version should be present");
@@ -13150,7 +13046,7 @@ fn record_final_acceptance_with_id(
             Some(change_unit_id),
             JudgmentKind::FinalAcceptance,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let judgment_id = judgment.response_value["user_judgment_ref"]["record_id"]
         .as_str()
@@ -13168,7 +13064,7 @@ fn record_final_acceptance_with_id(
             JudgmentKind::FinalAcceptance,
             answer_payload(JudgmentKind::FinalAcceptance),
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::UserOnly),
     )?;
     let state_version = response.response_value["base"]["state_version"]
         .as_u64()
@@ -13232,7 +13128,7 @@ where
             close_reason: None,
             superseding_task_id: None,
         }),
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )?;
 
     assert_owner_state_rejection_with_category(
@@ -13268,7 +13164,7 @@ fn record_cancellation_authority(
             Some(change_unit_id),
             JudgmentKind::Cancellation,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
     let record_request_id = format!("req_cancel_authority_record_{suffix}");
@@ -13292,7 +13188,7 @@ fn record_cancellation_authority(
     }
     let response = harness
         .service
-        .record_user_judgment(request, invocation(AccessClass::CoreMutation))?;
+        .record_user_judgment(request, invocation(OperationCategory::UserOnly))?;
     let state_version = response.response_value["base"]["state_version"]
         .as_u64()
         .expect("state_version should be present");
@@ -13319,7 +13215,7 @@ fn record_scope_decision_authority(
             Some(change_unit_id),
             JudgmentKind::ScopeDecision,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let decision_ref: StateRecordRef =
         serde_json::from_value(judgment.response_value["user_judgment_ref"].clone())?;
@@ -13340,7 +13236,7 @@ fn record_scope_decision_authority(
     }
     let response = harness
         .service
-        .record_user_judgment(request, invocation(AccessClass::CoreMutation))?;
+        .record_user_judgment(request, invocation(OperationCategory::UserOnly))?;
     let state_version = response.response_value["base"]["state_version"]
         .as_u64()
         .expect("state_version should be present");
@@ -13366,7 +13262,7 @@ fn record_sensitive_approval(
             Some(change_unit_id),
             JudgmentKind::SensitiveApproval,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
     let record_request_id = format!("req_sensitive_approval_record_{suffix}");
@@ -13381,7 +13277,7 @@ fn record_sensitive_approval(
             JudgmentKind::SensitiveApproval,
             answer_payload(JudgmentKind::SensitiveApproval),
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::UserOnly),
     )?;
     let state_version = response.response_value["base"]["state_version"]
         .as_u64()
@@ -13410,9 +13306,10 @@ fn record_sensitive_approval_with_scope(
         JudgmentKind::SensitiveApproval,
     );
     judgment_request.sensitive_action_scope = Some(scope.clone()).into();
-    let judgment = harness
-        .service
-        .request_user_judgment(judgment_request, invocation(AccessClass::CoreMutation))?;
+    let judgment = harness.service.request_user_judgment(
+        judgment_request,
+        invocation(OperationCategory::AgentWorkflow),
+    )?;
     let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
     let record_request_id = format!("req_sensitive_scope_record_{suffix}");
     let record_idempotency_key = format!("idem_sensitive_scope_record_{suffix}");
@@ -13430,7 +13327,7 @@ fn record_sensitive_approval_with_scope(
     }
     let response = harness
         .service
-        .record_user_judgment(record_request, invocation(AccessClass::CoreMutation))?;
+        .record_user_judgment(record_request, invocation(OperationCategory::UserOnly))?;
     let state_version = response.response_value["base"]["state_version"]
         .as_u64()
         .expect("state_version should be present");
@@ -13467,12 +13364,12 @@ fn sensitive_scope(
         command_or_tool_summary: Some("Run a local diagnostic command.".to_owned()).into(),
         network_or_host_summary: Some("No remote host is authorized here.".to_owned()).into(),
         secret_or_credential_summary: None.into(),
-        capability_claim: "This is not Write Authorization.".to_owned(),
+        capability_claim: "This is not Write Check.".to_owned(),
         expires_at: None.into(),
     }
 }
 
-fn prepare_write_authorization(
+fn prepare_write_check(
     harness: &MethodHarness,
     task_id: &str,
     change_unit_id: &str,
@@ -13489,15 +13386,13 @@ fn prepare_write_authorization(
             Some(task_id),
             Some(change_unit_id),
         ),
-        invocation(AccessClass::WriteAuthorization),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     assert_eq!(response.response_value["decision"], "allowed");
-    Ok(
-        response.response_value["write_authorization_ref"]["record_id"]
-            .as_str()
-            .expect("write authorization ref should be present")
-            .to_owned(),
-    )
+    Ok(response.response_value["write_check_ref"]["record_id"]
+        .as_str()
+        .expect("write check ref should be present")
+        .to_owned())
 }
 
 fn stage_artifact_for_record_run(
@@ -13520,7 +13415,7 @@ fn stage_artifact_for_record_run(
     request.safe_bytes_or_notice = format!("{{\"fixture\":\"{suffix}\"}}");
     let response = harness
         .service
-        .stage_artifact(request, invocation(AccessClass::ArtifactRegistration))?;
+        .stage_artifact(request, invocation(OperationCategory::AgentWorkflow))?;
     Ok(serde_json::from_value(
         response.response_value["staged_artifact_handle"].clone(),
     )?)
@@ -13622,19 +13517,8 @@ fn residual_risk_input(summary: &str) -> volicord_types::ResidualRiskInput {
 }
 
 fn enable_record_run_capabilities(harness: &MethodHarness) -> Result<(), Box<dyn Error>> {
-    set_surface_capability(
-        harness,
-        &json!({
-            "access_class": "run_recording",
-            "supported_access_classes": [
-                "write_authorization",
-                "artifact_registration",
-                "run_recording"
-            ],
-            "manual_artifact_attachment_supported": true
-        })
-        .to_string(),
-    )
+    let _ = harness;
+    Ok(())
 }
 
 fn assert_close_blocker(response_value: &Value, code: &str) {
@@ -13732,7 +13616,7 @@ fn create_task_with_change_unit(
             Some(0),
             RequestedMode::Work,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let task_id = intake.response_value["task_ref"]["record_id"]
         .as_str()
@@ -13751,7 +13635,7 @@ fn create_task_with_change_unit(
             ChangeUnitOperation::CreateCurrent,
             "Initial current scope.",
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let change_unit_id = scope.response_value["change_unit_ref"]["record_id"]
         .as_str()
@@ -13775,7 +13659,7 @@ fn create_task_with_effect_contract(
             Some(0),
             RequestedMode::Work,
         ),
-        invocation(AccessClass::CoreMutation),
+        invocation(OperationCategory::AgentWorkflow),
     )?;
     let task_id = intake.response_value["task_ref"]["record_id"]
         .as_str()
@@ -13796,7 +13680,7 @@ fn create_task_with_effect_contract(
     request.change_unit.effect_contract = Some(contract);
     let scope = harness
         .service
-        .update_scope(request, invocation(AccessClass::CoreMutation))?;
+        .update_scope(request, invocation(OperationCategory::AgentWorkflow))?;
     let change_unit_id = scope.response_value["change_unit_ref"]["record_id"]
         .as_str()
         .expect("change unit ref should be present")
@@ -13844,8 +13728,7 @@ fn insert_superseding_task(harness: &MethodHarness, task_id: &str) -> Result<(),
         "INSERT INTO tasks (
                 project_id,
                 task_id,
-                created_by_surface_id,
-                created_by_surface_instance_id,
+                created_by_actor_source,
                 mode,
                 lifecycle_phase,
                 result,
@@ -13863,7 +13746,6 @@ fn insert_superseding_task(harness: &MethodHarness, task_id: &str) -> Result<(),
                 ?1,
                 ?2,
                 ?3,
-                ?4,
                 'work',
                 'ready',
                 'none',
@@ -13877,7 +13759,7 @@ fn insert_superseding_task(harness: &MethodHarness, task_id: &str) -> Result<(),
                 't0',
                 't0'
             )",
-        rusqlite::params![PROJECT_ID, task_id, SURFACE_ID, SURFACE_INSTANCE_ID],
+        rusqlite::params![PROJECT_ID, task_id, AGENT_ACTOR_SOURCE],
     )?;
     Ok(())
 }
@@ -13895,8 +13777,7 @@ fn active_task_id(harness: &MethodHarness) -> Result<Option<String>, Box<dyn Err
 
 #[derive(Debug, PartialEq)]
 struct StagedArtifactRow {
-    created_by_surface_id: String,
-    created_by_surface_instance_id: String,
+    created_by_actor_source: String,
     status: String,
     redaction_state: String,
     tmp_path: String,
@@ -13913,16 +13794,8 @@ struct PersistentArtifactRow {
     status: String,
 }
 
-fn enable_stage_artifact_capability(harness: &MethodHarness) -> Result<(), Box<dyn Error>> {
-    set_surface_capability(
-        harness,
-        &json!({
-            "access_class": "artifact_registration",
-            "supported_access_classes": ["artifact_registration"],
-            "manual_artifact_attachment_supported": true
-        })
-        .to_string(),
-    )
+fn enable_stage_artifact_capability(_harness: &MethodHarness) -> Result<(), Box<dyn Error>> {
+    Ok(())
 }
 
 fn staged_artifact_row(
@@ -13932,8 +13805,7 @@ fn staged_artifact_row(
     let conn = harness.conn()?;
     Ok(conn.query_row(
         "SELECT
-                created_by_surface_id,
-                created_by_surface_instance_id,
+                created_by_actor_source,
                 status,
                 redaction_state,
                 tmp_path,
@@ -13944,12 +13816,11 @@ fn staged_artifact_row(
         rusqlite::params![PROJECT_ID, handle_id],
         |row| {
             Ok(StagedArtifactRow {
-                created_by_surface_id: row.get(0)?,
-                created_by_surface_instance_id: row.get(1)?,
-                status: row.get(2)?,
-                redaction_state: row.get(3)?,
-                tmp_path: row.get(4)?,
-                ttl_hours: row.get(5)?,
+                created_by_actor_source: row.get(0)?,
+                status: row.get(1)?,
+                redaction_state: row.get(2)?,
+                tmp_path: row.get(3)?,
+                ttl_hours: row.get(4)?,
             })
         },
     )?)
@@ -14115,7 +13986,7 @@ fn sensitive_action_scope_for_kind(
             command_or_tool_summary: Some("Run a local diagnostic command.".to_owned()).into(),
             network_or_host_summary: Some("No remote host is authorized here.".to_owned()).into(),
             secret_or_credential_summary: None.into(),
-            capability_claim: "This is not Write Authorization.".to_owned(),
+            capability_claim: "This is not Write Check.".to_owned(),
             expires_at: None.into(),
         }),
         _ => None,
@@ -14131,14 +14002,13 @@ fn record_judgment_request(
     judgment_kind: JudgmentKind,
     answer: RecordUserJudgmentPayload,
 ) -> RecordUserJudgmentRequest {
-    let mut request_envelope = envelope(
+    let request_envelope = envelope(
         request_id,
         Some(idempotency_key),
         false,
         expected_state_version,
         Some(task_id),
     );
-    request_envelope.actor_kind = ActorKind::User;
     RecordUserJudgmentRequest {
         envelope: request_envelope,
         user_judgment_id: volicord_types::UserJudgmentId::new(user_judgment_id),
@@ -14308,12 +14178,12 @@ fn json_object(value: Value) -> JsonObject {
     }
 }
 
-fn insert_active_write_authorization(
+fn insert_active_write_check(
     harness: &MethodHarness,
     task_id: &str,
     change_unit_id: &str,
 ) -> Result<(), Box<dyn Error>> {
-    insert_active_write_authorization_with_timestamps(
+    insert_active_write_check_with_timestamps(
         harness,
         task_id,
         change_unit_id,
@@ -14324,21 +14194,21 @@ fn insert_active_write_authorization(
     )
 }
 
-fn insert_active_write_authorization_with_timestamps(
+fn insert_active_write_check_with_timestamps(
     harness: &MethodHarness,
     task_id: &str,
     change_unit_id: &str,
-    write_authorization_id: &str,
+    write_check_id: &str,
     basis_state_version: u64,
     created_at: &str,
     expires_at: &str,
 ) -> Result<(), Box<dyn Error>> {
-    insert_active_write_authorization_with_scope(
+    insert_active_write_check_with_scope(
         harness,
-        WriteAuthorizationScopeFixture {
+        WriteCheckScopeFixture {
             task_id,
             change_unit_id,
-            write_authorization_id,
+            write_check_id,
             basis_state_version,
             created_at,
             expires_at,
@@ -14349,10 +14219,10 @@ fn insert_active_write_authorization_with_timestamps(
     )
 }
 
-struct WriteAuthorizationScopeFixture<'a> {
+struct WriteCheckScopeFixture<'a> {
     task_id: &'a str,
     change_unit_id: &'a str,
-    write_authorization_id: &'a str,
+    write_check_id: &'a str,
     basis_state_version: u64,
     created_at: &'a str,
     expires_at: &'a str,
@@ -14361,9 +14231,9 @@ struct WriteAuthorizationScopeFixture<'a> {
     sensitive_categories: &'a [&'a str],
 }
 
-fn insert_active_write_authorization_with_scope(
+fn insert_active_write_check_with_scope(
     harness: &MethodHarness,
-    input: WriteAuthorizationScopeFixture<'_>,
+    input: WriteCheckScopeFixture<'_>,
 ) -> Result<(), Box<dyn Error>> {
     let conn = harness.conn()?;
     let attempt_scope_json = json!({
@@ -14377,16 +14247,15 @@ fn insert_active_write_authorization_with_scope(
     })
     .to_string();
     conn.execute(
-        "INSERT INTO write_authorizations (
+        "INSERT INTO write_checks (
                 project_id,
-                write_authorization_id,
+                write_check_id,
                 task_id,
                 change_unit_id,
                 basis_state_version,
                 status,
                 attempt_scope_json,
-                created_by_surface_id,
-                created_by_surface_instance_id,
+                created_by_actor_source,
                 expires_at,
                 created_at
             )
@@ -14400,18 +14269,16 @@ fn insert_active_write_authorization_with_scope(
                 ?6,
                 ?7,
                 ?8,
-                ?9,
-                ?10
+                ?9
             )",
         rusqlite::params![
             PROJECT_ID,
-            input.write_authorization_id,
+            input.write_check_id,
             input.task_id,
             input.change_unit_id,
             i64::try_from(input.basis_state_version)?,
             attempt_scope_json,
-            SURFACE_ID,
-            SURFACE_INSTANCE_ID,
+            AGENT_ACTOR_SOURCE,
             input.expires_at,
             input.created_at
         ],
@@ -14419,28 +14286,28 @@ fn insert_active_write_authorization_with_scope(
     Ok(())
 }
 
-fn mutate_write_authorization_scope_json(
+fn mutate_write_check_scope_json(
     harness: &MethodHarness,
-    write_authorization_id: &str,
+    write_check_id: &str,
     mutate: impl FnOnce(&mut Value),
 ) -> Result<(), Box<dyn Error>> {
     let conn = harness.conn()?;
     let text: String = conn.query_row(
         "SELECT attempt_scope_json
-           FROM write_authorizations
+           FROM write_checks
           WHERE project_id = ?1
-            AND write_authorization_id = ?2",
-        rusqlite::params![PROJECT_ID, write_authorization_id],
+            AND write_check_id = ?2",
+        rusqlite::params![PROJECT_ID, write_check_id],
         |row| row.get(0),
     )?;
     let mut value: Value = serde_json::from_str(&text)?;
     mutate(&mut value);
     conn.execute(
-        "UPDATE write_authorizations
+        "UPDATE write_checks
             SET attempt_scope_json = ?3
           WHERE project_id = ?1
-            AND write_authorization_id = ?2",
-        rusqlite::params![PROJECT_ID, write_authorization_id, value.to_string()],
+            AND write_check_id = ?2",
+        rusqlite::params![PROJECT_ID, write_check_id, value.to_string()],
     )?;
     Ok(())
 }
@@ -14450,7 +14317,7 @@ struct SensitiveProductWriteBasisFixture<'a> {
     change_unit_id: &'a str,
     expected_state_version: u64,
     suffix: &'a str,
-    write_authorization_id: &'a str,
+    write_check_id: &'a str,
     intended_operation: &'a str,
     intended_paths: &'a [&'a str],
     observed_categories: &'a [&'a str],
@@ -14462,12 +14329,12 @@ fn record_sensitive_product_write_close_basis(
     input: SensitiveProductWriteBasisFixture<'_>,
 ) -> Result<PipelineResponse, Box<dyn Error>> {
     enable_record_run_capabilities(harness)?;
-    insert_active_write_authorization_with_scope(
+    insert_active_write_check_with_scope(
         harness,
-        WriteAuthorizationScopeFixture {
+        WriteCheckScopeFixture {
             task_id: input.task_id,
             change_unit_id: input.change_unit_id,
-            write_authorization_id: input.write_authorization_id,
+            write_check_id: input.write_check_id,
             basis_state_version: input.expected_state_version,
             created_at: "2999-01-01T00:00:00.000Z",
             expires_at: "2999-01-01T00:15:00.000Z",
@@ -14482,7 +14349,7 @@ fn record_sensitive_product_write_close_basis(
         input.expected_state_version,
         input.task_id,
         input.change_unit_id,
-        input.write_authorization_id,
+        input.write_check_id,
         &format!("run_sensitive_{}", input.suffix),
     );
     request.observed_changes.changed_paths = input
@@ -14510,59 +14377,14 @@ fn record_sensitive_product_write_close_basis(
     .into();
     Ok(harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?)
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?)
 }
 
-fn set_surface_capability(
-    harness: &MethodHarness,
-    capability_profile_json: &str,
-) -> Result<(), Box<dyn Error>> {
-    let conn = harness.conn()?;
-    conn.execute(
-        "UPDATE surfaces
-                SET capability_profile_json = ?3
-              WHERE project_id = ?1
-                AND surface_id = ?2",
-        rusqlite::params![PROJECT_ID, SURFACE_ID, capability_profile_json],
-    )?;
-    Ok(())
-}
-
-fn set_surface_local_access(
-    harness: &MethodHarness,
-    local_access: Value,
-) -> Result<(), Box<dyn Error>> {
-    let conn = harness.conn()?;
-    conn.execute(
-        "UPDATE surfaces
-                SET local_access_json = ?3
-              WHERE project_id = ?1
-                AND surface_id = ?2",
-        rusqlite::params![PROJECT_ID, SURFACE_ID, local_access.to_string()],
-    )?;
-    Ok(())
-}
-
-fn set_surface_interaction_role(
-    harness: &MethodHarness,
-    role: SurfaceInteractionRole,
-) -> Result<(), Box<dyn Error>> {
-    let conn = harness.conn()?;
-    conn.execute(
-        "UPDATE surfaces
-                SET interaction_role = ?3
-              WHERE project_id = ?1
-                AND surface_id = ?2",
-        rusqlite::params![PROJECT_ID, SURFACE_ID, role.as_str()],
-    )?;
-    Ok(())
-}
-
-fn write_authorization_count(harness: &MethodHarness) -> Result<u64, Box<dyn Error>> {
+fn write_check_count(harness: &MethodHarness) -> Result<u64, Box<dyn Error>> {
     let conn = harness.conn()?;
     let count: i64 = conn.query_row(
         "SELECT COUNT(*)
-               FROM write_authorizations
+               FROM write_checks
               WHERE project_id = ?1",
         rusqlite::params![PROJECT_ID],
         |row| row.get(0),
@@ -14611,7 +14433,7 @@ fn assert_latest_prepare_write_event(
     assert_eq!(event_kind, "write_decision_recorded");
     assert_eq!(event_state_version, response_value["base"]["state_version"]);
     assert_eq!(payload["decision"], expected_decision);
-    assert!(payload["write_authorization_id"].is_null());
+    assert!(payload["write_check_id"].is_null());
     assert!(payload.get("reason_codes").is_none());
     assert!(payload.get("intended_paths").is_none());
     assert!(payload.get("intended_operation").is_none());
@@ -14625,33 +14447,30 @@ fn assert_latest_prepare_write_event(
     Ok(payload)
 }
 
-fn write_authorization_basis(
-    harness: &MethodHarness,
-    write_authorization_id: &str,
-) -> Result<u64, Box<dyn Error>> {
+fn write_check_basis(harness: &MethodHarness, write_check_id: &str) -> Result<u64, Box<dyn Error>> {
     let conn = harness.conn()?;
     let basis: i64 = conn.query_row(
         "SELECT basis_state_version
-               FROM write_authorizations
+               FROM write_checks
               WHERE project_id = ?1
-                AND write_authorization_id = ?2",
-        rusqlite::params![PROJECT_ID, write_authorization_id],
+                AND write_check_id = ?2",
+        rusqlite::params![PROJECT_ID, write_check_id],
         |row| row.get(0),
     )?;
     Ok(u64::try_from(basis)?)
 }
 
-fn write_authorization_timestamps(
+fn write_check_timestamps(
     harness: &MethodHarness,
-    write_authorization_id: &str,
+    write_check_id: &str,
 ) -> Result<(String, String), Box<dyn Error>> {
     let conn = harness.conn()?;
     Ok(conn.query_row(
         "SELECT created_at, expires_at
-               FROM write_authorizations
+               FROM write_checks
               WHERE project_id = ?1
-                AND write_authorization_id = ?2",
-        rusqlite::params![PROJECT_ID, write_authorization_id],
+                AND write_check_id = ?2",
+        rusqlite::params![PROJECT_ID, write_check_id],
         |row| Ok((row.get(0)?, row.get(1)?)),
     )?)
 }
@@ -14723,10 +14542,7 @@ fn user_judgment_actor_provenance(
     let conn = harness.conn()?;
     Ok(conn.query_row(
         "SELECT
-                resolved_by_actor_kind,
-                resolved_actor_role,
-                resolved_by_surface_id,
-                resolved_by_surface_instance_id,
+                resolved_by_actor_source,
                 resolved_verification_basis,
                 resolved_assurance_level
            FROM user_judgments
@@ -14735,12 +14551,9 @@ fn user_judgment_actor_provenance(
         rusqlite::params![PROJECT_ID, user_judgment_id],
         |row| {
             Ok(UserJudgmentActorProvenance {
-                resolved_by_actor_kind: row.get(0)?,
-                resolved_actor_role: row.get(1)?,
-                resolved_by_surface_id: row.get(2)?,
-                resolved_by_surface_instance_id: row.get(3)?,
-                resolved_verification_basis: row.get(4)?,
-                resolved_assurance_level: row.get(5)?,
+                resolved_by_actor_source: row.get(0)?,
+                resolved_verification_basis: row.get(1)?,
+                resolved_assurance_level: row.get(2)?,
             })
         },
     )?)
@@ -14754,10 +14567,7 @@ fn clear_user_judgment_actor_provenance(
     conn.pragma_update(None, "ignore_check_constraints", true)?;
     conn.execute(
         "UPDATE user_judgments
-            SET resolved_by_actor_kind = NULL,
-                resolved_actor_role = NULL,
-                resolved_by_surface_id = NULL,
-                resolved_by_surface_instance_id = NULL,
+            SET resolved_by_actor_source = NULL,
                 resolved_verification_basis = NULL,
                 resolved_assurance_level = NULL
           WHERE project_id = ?1
@@ -15104,11 +14914,11 @@ fn set_user_judgment_resolution_actor(
     actor_kind: &str,
 ) -> Result<(), Box<dyn Error>> {
     let mut resolution = resolution_json(harness, judgment_id)?;
-    resolution["resolved_by_actor_kind"] = json!(actor_kind);
+    resolution["resolved_by_actor_source"] = json!(actor_kind);
     harness.conn()?.execute(
         "UPDATE user_judgments
             SET resolution_json = ?3,
-                resolved_by_actor_kind = ?4
+                resolved_by_actor_source = ?4
           WHERE project_id = ?1
             AND judgment_id = ?2",
         rusqlite::params![PROJECT_ID, judgment_id, resolution.to_string(), actor_kind],
@@ -15116,14 +14926,14 @@ fn set_user_judgment_resolution_actor(
     Ok(())
 }
 
-fn set_user_judgment_resolved_actor_role(
+fn set_user_judgment_resolved_by_actor_source(
     harness: &MethodHarness,
     judgment_id: &str,
     role: &str,
 ) -> Result<(), Box<dyn Error>> {
     harness.conn()?.execute(
         "UPDATE user_judgments
-            SET resolved_actor_role = ?3
+            SET resolved_by_actor_source = ?3
           WHERE project_id = ?1
             AND judgment_id = ?2",
         rusqlite::params![PROJECT_ID, judgment_id, role],
@@ -15440,7 +15250,7 @@ fn promote_artifact_for_record_run(
     )];
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
     let state_version = response.response_value["base"]["state_version"]
         .as_u64()
         .expect("state_version should be present");
@@ -15510,7 +15320,7 @@ fn current_artifact_evidence_and_close_fixture(
     request.close_assessment = Some(close_assessment).into();
     let response = harness
         .service
-        .record_run(request, invocation(AccessClass::RunRecording))?;
+        .record_run(request, invocation(OperationCategory::AgentWorkflow))?;
     assert_eq!(response.response_value["base"]["response_kind"], "result");
     let body_path = persistent_artifact_body_path(harness, artifact_ref.artifact_id.as_str())?;
     Ok(ArtifactAuthorityFixture {
@@ -15536,14 +15346,14 @@ fn status_with_evidence_and_close(
             include: StatusInclude {
                 task: true,
                 pending_user_judgments: false,
-                write_authority: false,
+                write_check: false,
                 evidence: true,
                 close: true,
                 guarantees: false,
                 continuity: false,
             },
         },
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )
 }
 
@@ -15559,7 +15369,7 @@ fn close_check(harness: &MethodHarness, task_id: &str) -> CoreResult<PipelineRes
             close_reason: None,
             superseding_task_id: None,
         }),
-        invocation(AccessClass::ReadStatus),
+        invocation(OperationCategory::Read),
     )
 }
 
@@ -15584,17 +15394,17 @@ fn active_current_change_units(
     )?)
 }
 
-fn write_authorization_status(
+fn write_check_status(
     harness: &MethodHarness,
-    write_authorization_id: &str,
+    write_check_id: &str,
 ) -> Result<String, Box<dyn Error>> {
     let conn = harness.conn()?;
     Ok(conn.query_row(
         "SELECT status
-               FROM write_authorizations
+               FROM write_checks
               WHERE project_id = ?1
-                AND write_authorization_id = ?2",
-        rusqlite::params![PROJECT_ID, write_authorization_id],
+                AND write_check_id = ?2",
+        rusqlite::params![PROJECT_ID, write_check_id],
         |row| row.get(0),
     )?)
 }

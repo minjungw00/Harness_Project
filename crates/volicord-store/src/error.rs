@@ -174,12 +174,6 @@ impl StoreError {
                         false,
                         None,
                     ),
-                    "surface" => (
-                        StoreFailureRoute::LocalAccessMismatch,
-                        "surface_binding_missing",
-                        false,
-                        Some("project_state"),
-                    ),
                     "project_state_database" => (
                         StoreFailureRoute::OperationalUnavailable,
                         "project_state_database_missing",

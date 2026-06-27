@@ -987,7 +987,7 @@ pub mod core_fixtures {
         pub fn set_user_judgment_resolution_actor(
             &self,
             judgment_id: &str,
-            actor_kind: &str,
+            actor_source: &str,
         ) -> Result<(), Box<dyn Error>> {
             let text: String = self.conn()?.query_row(
                 "SELECT resolution_json
@@ -998,18 +998,18 @@ pub mod core_fixtures {
                 |row| row.get(0),
             )?;
             let mut value: Value = serde_json::from_str(&text)?;
-            value["resolved_by_actor_kind"] = Value::String(actor_kind.to_owned());
+            value["resolved_by_actor_source"] = Value::String(actor_source.to_owned());
             self.conn()?.execute(
                 "UPDATE user_judgments
                     SET resolution_json = ?3,
-                        resolved_by_actor_kind = ?4
+                        resolved_by_actor_source = ?4
                   WHERE project_id = ?1
                     AND judgment_id = ?2",
                 rusqlite::params![
                     self.project_id,
                     judgment_id,
                     serde_json::to_string(&value)?,
-                    actor_kind
+                    actor_source
                 ],
             )?;
             Ok(())
@@ -1471,7 +1471,7 @@ pub mod core_fixtures {
                 network_or_host_summary: Some("No remote host is authorized here.".to_owned())
                     .into(),
                 secret_or_credential_summary: None.into(),
-                capability_claim: "This is not Write Authorization.".to_owned(),
+                capability_claim: "This is not a Write Check result.".to_owned(),
                 expires_at: None.into(),
             }),
             _ => None,
