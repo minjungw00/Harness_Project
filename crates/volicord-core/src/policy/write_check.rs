@@ -144,7 +144,7 @@ pub(crate) fn run_write_check_mismatch(
     if !scope.product_file_write_intended {
         return Some(run_mismatch(
             "product_write_flag_mismatch",
-            "Write Check did not authorize a product-file write attempt",
+            "Write Check does not cover a product-file write attempt",
         ));
     }
     if scope.baseline_ref.as_ref() != Some(baseline_ref) {
