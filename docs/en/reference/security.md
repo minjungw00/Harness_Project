@@ -170,7 +170,7 @@ Must not claim:
 Host trust and approval decisions belong to the external host and the user. Volicord can install supported configuration and report whether further user action appears required, but it does not control the host trust decision.
 
 May claim:
-- managed host configuration state verification can distinguish `complete` from `action_required`, `partial_failure`, and `failed` when the administrative CLI can observe the required checks.
+- managed host configuration state verification can distinguish `complete` from `action_required` and `failed` when the administrative CLI can observe the required checks.
 - MCP server instructions and optional repository guidance can describe how an agent should select projects and tools.
 
 Must not claim:

@@ -167,7 +167,7 @@ Closed storage-owned value sets are persistence constraints. Unknown values must
 | Agent Connection `host_scope` | `user`, `project`, `local`, `export` |
 | Agent Connection `mode` | `read_only`, `workflow` |
 | Agent Connection `enabled` | `0`, `1` |
-| Agent Connection `last_verified_status` | `not_verified`, `complete`, `action_required`, `partial_failure`, `failed` |
+| Agent Connection `last_verified_status` | `not_verified`, `complete`, `action_required`, `failed` |
 | `change_units.status` | `proposed`, `active`, `replaced`, `closed` |
 | `write_checks.status` | `active`, `consumed`, `expired`, `stale`, `revoked` |
 | `user_judgments.status` | `pending`, `resolved`, `stale`, `superseded`, `expired` |

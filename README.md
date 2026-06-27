@@ -580,8 +580,7 @@ Setup result states at onboarding level:
 |---|---|
 | `complete` | Administrative setup, relevant host-owned gates, MCP initialization, and tool discovery all succeeded for the selected installation. |
 | `action_required` | The command succeeded, but a named host-owned action remains. Complete that action, then run `volicord agent verify`. |
-| `partial_failure` | Some durable administrative action may have succeeded before a later step failed. Read `effects` and `residual_effects` before retrying. |
-| `failed` | The requested setup or verification did not establish usable durable Agent Connection state or managed host configuration state. Fix the reported error before retrying. |
+| `failed` | The requested setup or verification did not establish usable durable Agent Connection state or managed host configuration state. Some durable host effects may already have happened; read reported `effects` and `residual_effects`, then fix the reported error before retrying. |
 
 Successful MCP startup does not prove that a host loaded or will consistently
 use Volicord. Tool discovery also does not guarantee that an AI model will choose
@@ -657,8 +656,7 @@ For exact location rules, use
 | Runtime Home and Product Repository overlap. | Choose separate paths with no ancestor-descendant relationship. Do not repair by editing SQLite. | [Runtime Boundaries](docs/en/reference/runtime-boundaries.md) |
 | Project-scoped setup refuses to write `.mcp.json` or `.codex/config.toml`. | Rerun only after deciding the repository write is intended and include `--allow-repository-write`. | [Administrative CLI](docs/en/reference/admin-cli.md) |
 | Result is `action_required`. | Complete the named host-owned trust, approval, reload, restart, OAuth, or executable-availability action, then run `volicord agent verify`. | [Agent Host Troubleshooting](docs/en/guides/agent-host-troubleshooting.md) |
-| Result is `partial_failure`. | Read `effects` and `residual_effects`; fix only the named issue before retrying. | [Agent Host Troubleshooting](docs/en/guides/agent-host-troubleshooting.md) |
-| Result is `failed`. | Fix the reported error, run a dry-run before another write when available, then retry install or verify. | [Agent Host Troubleshooting](docs/en/guides/agent-host-troubleshooting.md) |
+| Result is `failed`. | Read reported `effects` and `residual_effects`, fix the named issue, run a dry-run before another write when available, then retry install or verify. | [Agent Host Troubleshooting](docs/en/guides/agent-host-troubleshooting.md) |
 | A project-scoped host cannot find `volicord-mcp`. | Keep the project file portable and fix the future host process `PATH`. | [Agent Host Troubleshooting](docs/en/guides/agent-host-troubleshooting.md) |
 | Generic export stays `action_required`. | Apply the exported configuration in the external host yourself; Volicord cannot observe that host's load state. | [Agent Host Setup](docs/en/guides/agent-host-setup.md) |
 

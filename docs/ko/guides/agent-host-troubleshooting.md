@@ -92,14 +92,9 @@ VOLICORD_HOME=<runtime_home> \
 <a id="status-failed"></a>
 ## `status: failed`
 
-의미: 요청한 connection 또는 검증이 사용할 수 있는 지속 Agent Connection 상태나 호스트 설정을 만들지 못했습니다.
+의미: 요청한 connection 또는 검증이 사용할 수 있는 지속 Agent Connection 상태나 호스트 설정을 만들지 못했습니다. 실패 전에 일부 지속 호스트 효과가 이미 발생했을 수 있습니다.
 
-제한된 복구: stderr 또는 JSON `warnings`, `verification`, host detail 필드를 확인합니다. 이름 붙은 실행 파일, Runtime Home, Product Repository 경로, host target, host gate 문제를 고친 뒤 같은 명령을 다시 실행합니다. 첫 대응으로 관련 없는 상태를 삭제하지 않습니다.
-
-<a id="status-partial_failure"></a>
-## 부분 setup 또는 cleanup 결과
-
-일부 이전 가이드가 이 anchor로 연결됩니다. 현재 Agent Connection 결과 상태는 `complete`, `action_required`, `failed`입니다. 출력이 부분 cleanup 세부사항을 보고하면 재시도 전에 나열된 effects와 residual effects를 읽습니다.
+제한된 복구: stderr 또는 JSON `warnings`, `verification`, `effects`, `residual_effects`, host detail 필드를 확인합니다. 이름 붙은 실행 파일, Runtime Home, Product Repository 경로, host target, host gate 문제를 고친 뒤 같은 명령을 다시 실행합니다. 첫 대응으로 관련 없는 상태를 삭제하지 않습니다.
 
 <a id="ambiguous-project-selection"></a>
 ## 여러 연결된 Project가 있지만 사용할 selector가 없음

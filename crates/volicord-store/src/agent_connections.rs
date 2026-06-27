@@ -36,8 +36,6 @@ pub const VERIFIED_STATUS_NOT_VERIFIED: &str = "not_verified";
 pub const VERIFIED_STATUS_COMPLETE: &str = "complete";
 /// Agent Connection needs a host-controlled action.
 pub const VERIFIED_STATUS_ACTION_REQUIRED: &str = "action_required";
-/// Agent Connection verification partly succeeded or partly failed.
-pub const VERIFIED_STATUS_PARTIAL_FAILURE: &str = "partial_failure";
 /// Agent Connection verification failed.
 pub const VERIFIED_STATUS_FAILED: &str = "failed";
 
@@ -621,7 +619,6 @@ fn validate_verification_status(status: &str) -> StoreResult<()> {
         VERIFIED_STATUS_NOT_VERIFIED
             | VERIFIED_STATUS_COMPLETE
             | VERIFIED_STATUS_ACTION_REQUIRED
-            | VERIFIED_STATUS_PARTIAL_FAILURE
             | VERIFIED_STATUS_FAILED
     ) {
         Ok(())

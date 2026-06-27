@@ -568,8 +568,7 @@ VOLICORD_HOME=/Users/alex/.volicord \
 |---|---|
 | `complete` | 선택된 설치에서 관리 설정, 관련 호스트 소유 gate, MCP 초기화, 도구 발견이 모두 성공했습니다. |
 | `action_required` | 명령은 성공했지만 이름 붙은 호스트 소유 동작이 남았습니다. 그 동작을 완료한 뒤 `volicord agent verify`를 실행합니다. |
-| `partial_failure` | 뒤의 단계가 실패하기 전에 일부 지속 관리 동작이 성공했을 수 있습니다. 다시 시도하기 전에 `effects`와 `residual_effects`를 읽으세요. |
-| `failed` | 요청한 설정 또는 검증이 사용할 수 있는 지속 Agent Connection 상태나 managed host configuration state를 만들지 못했습니다. 다시 시도하기 전에 보고된 오류를 고칩니다. |
+| `failed` | 요청한 설정 또는 검증이 사용할 수 있는 지속 Agent Connection 상태나 managed host configuration state를 만들지 못했습니다. 일부 지속 호스트 효과는 이미 발생했을 수 있으므로, 보고된 `effects`와 `residual_effects`를 읽고 보고된 오류를 고친 뒤 다시 시도합니다. |
 
 성공한 MCP 시작은 호스트가 Volicord를 로드했거나 계속 일관되게 사용할 것임을
 증명하지 않습니다. 도구 발견도 AI 모델이 모든 요청에 대해 Volicord를 선택한다는
@@ -642,8 +641,7 @@ Volicord 런타임 데이터베이스, 런타임 기록, 생성 기록, 로그, 
 | Runtime Home과 Product Repository가 겹칩니다. | 조상-자손 관계가 없는 별도 경로를 선택합니다. SQLite를 편집해서 고치지 마세요. | [런타임 경계](docs/ko/reference/runtime-boundaries.md) |
 | 프로젝트 범위 설정이 `.mcp.json` 또는 `.codex/config.toml` 쓰기를 거부합니다. | 저장소 쓰기가 의도한 일인지 결정한 뒤에만 `--allow-repository-write`를 포함해 다시 실행합니다. | [관리 CLI](docs/ko/reference/admin-cli.md) |
 | 결과가 `action_required`입니다. | 이름 붙은 호스트 소유 trust, approval, reload, restart, OAuth, 또는 실행 파일 가용성 동작을 완료한 뒤 `volicord agent verify`를 실행합니다. | [에이전트 호스트 문제 해결](docs/ko/guides/agent-host-troubleshooting.md) |
-| 결과가 `partial_failure`입니다. | `effects`와 `residual_effects`를 읽고, 다시 시도하기 전에 이름 붙은 문제만 고칩니다. | [에이전트 호스트 문제 해결](docs/ko/guides/agent-host-troubleshooting.md) |
-| 결과가 `failed`입니다. | 보고된 오류를 고치고, 가능하면 다른 쓰기 전에 dry-run을 실행한 뒤 install 또는 verify를 다시 시도합니다. | [에이전트 호스트 문제 해결](docs/ko/guides/agent-host-troubleshooting.md) |
+| 결과가 `failed`입니다. | 보고된 `effects`와 `residual_effects`를 읽고, 이름 붙은 문제를 고치고, 가능하면 다른 쓰기 전에 dry-run을 실행한 뒤 install 또는 verify를 다시 시도합니다. | [에이전트 호스트 문제 해결](docs/ko/guides/agent-host-troubleshooting.md) |
 | 프로젝트 범위 호스트가 `volicord-mcp`를 찾지 못합니다. | 프로젝트 파일은 이식 가능한 형태로 유지하고 이후 호스트 프로세스의 `PATH`를 고칩니다. | [에이전트 호스트 문제 해결](docs/ko/guides/agent-host-troubleshooting.md) |
 | Generic export가 계속 `action_required`로 남습니다. | 내보낸 구성을 외부 호스트에 직접 적용합니다. Volicord는 그 호스트의 로드 상태를 관찰할 수 없습니다. | [에이전트 호스트 설정](docs/ko/guides/agent-host-setup.md) |
 

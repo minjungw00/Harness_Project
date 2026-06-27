@@ -92,14 +92,9 @@ Do not treat `action_required` as a Core failure or product acceptance result.
 <a id="status-failed"></a>
 ## `status: failed`
 
-Meaning: the requested connection or verification did not establish usable durable Agent Connection state or host configuration.
+Meaning: the requested connection or verification did not establish usable durable Agent Connection state or host configuration. Some durable host effects may already have happened before the failure.
 
-Bounded recovery: inspect stderr or JSON `warnings`, `verification`, and host detail fields. Fix the named executable, Runtime Home, Product Repository path, host target, or host gate issue, then rerun the same command. Do not delete unrelated state as a first response.
-
-<a id="status-partial_failure"></a>
-## Partial Setup Or Cleanup Result
-
-Some older guides link to this anchor. Current Agent Connection result states are `complete`, `action_required`, and `failed`; if output reports partial cleanup details, read the listed effects and residual effects before retrying.
+Bounded recovery: inspect stderr or JSON `warnings`, `verification`, `effects`, `residual_effects`, and host detail fields. Fix the named executable, Runtime Home, Product Repository path, host target, or host gate issue, then rerun the same command. Do not delete unrelated state as a first response.
 
 <a id="ambiguous-project-selection"></a>
 ## More Than One Connected Project Exists Without A Usable Selector

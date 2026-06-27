@@ -93,7 +93,7 @@ CREATE TABLE agent_connections (
   enabled INTEGER NOT NULL DEFAULT 1 CHECK (enabled IN (0, 1)),
   managed_fingerprint TEXT NOT NULL,
   last_verified_status TEXT NOT NULL DEFAULT 'not_verified'
-    CHECK (last_verified_status IN ('not_verified', 'complete', 'action_required', 'partial_failure', 'failed')),
+    CHECK (last_verified_status IN ('not_verified', 'complete', 'action_required', 'failed')),
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   metadata_json TEXT NOT NULL DEFAULT '{}',

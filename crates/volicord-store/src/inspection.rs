@@ -12,7 +12,6 @@ use crate::{
         HOST_KIND_CODEX, HOST_KIND_GENERIC, HOST_SCOPE_EXPORT, HOST_SCOPE_LOCAL,
         HOST_SCOPE_PROJECT, HOST_SCOPE_USER, VERIFIED_STATUS_ACTION_REQUIRED,
         VERIFIED_STATUS_COMPLETE, VERIFIED_STATUS_FAILED, VERIFIED_STATUS_NOT_VERIFIED,
-        VERIFIED_STATUS_PARTIAL_FAILURE,
     },
     bootstrap::{validate_project_record_for_execution, ProjectRecord},
     migrations::{
@@ -1128,7 +1127,6 @@ fn validate_verification_status(status: &str) -> Result<(), InspectionIssue> {
         VERIFIED_STATUS_NOT_VERIFIED
             | VERIFIED_STATUS_COMPLETE
             | VERIFIED_STATUS_ACTION_REQUIRED
-            | VERIFIED_STATUS_PARTIAL_FAILURE
             | VERIFIED_STATUS_FAILED
     ) {
         Ok(())
