@@ -287,7 +287,7 @@ The lifecycle here is conceptual authority meaning, not an API state table.
 |---|---|
 | Intake and shaping | User intent becomes a concrete goal, scope boundary, non-goals, acceptance criteria, Autonomy Boundary, and first safe Change Unit when the relevant owners define support. |
 | Scope update | Accepted scope or Change Unit changes become currently applied only through the scope owner-defined transition. A judgment record alone does not mutate current scope. |
-| Execution and observation | Runs record actions and observations. Product-file writes must be compatible with current scope and `Write Check`; read-only work does not authorize subsequent writes. |
+| Execution and observation | Runs record actions and observations. Product-file writes must be compatible with current scope and `Write Check`; read-only work does not create compatibility for subsequent writes. |
 | Waiting or blocked | If required owner-defined authority data is missing, stale, incompatible, or unsafe to bypass, Core exposes the blocker and the next required step instead of hiding the gap. |
 | Close attempt | Core evaluates whether the current state can close honestly. A final chat summary or generated report is not enough by itself. |
 | Terminal outcome | Completion, cancellation, or supersession ends the `Task` path. Cancellation and supersession are terminal, but they are not successful completion and do not satisfy completion evidence, acceptance, or risk requirements. |

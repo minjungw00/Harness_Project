@@ -65,7 +65,7 @@ Baseline owner-boundary rules:
 |---|---|
 | Independent close authority | A design-quality finding does not automatically become a close-readiness blocker, close category, product acceptance gate, scope override, evidence rule, or guarantee. |
 | Evidence and risk | Evidence requirements, final acceptance, residual-risk visibility, and residual-risk acceptance affect close only when the Core evidence authority or another relevant reference contract defines that requirement or effect. |
-| Judgment and authorization | A finding does not replace user-owned judgment, `Write Check`, sensitive-action approval, final acceptance, residual-risk acceptance, or required evidence. |
+| Judgment boundaries | A finding does not replace user-owned judgment, `Write Check`, sensitive-action approval, final acceptance, residual-risk acceptance, or required evidence. |
 | Severity | Severity labels are advisory triage; they do not override API, storage, security, scope, or close-readiness owners. |
 | Focused action | A next action must stay limited to what the relevant owner contract requires; documentation-routing convenience cannot expand it. |
 | Owner gap | An owner gap means the required owner document or contract is absent or unclear. It does not make a route or document path a product authority. |

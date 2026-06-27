@@ -1149,7 +1149,7 @@ pub mod core_fixtures {
             Ok(())
         }
 
-        /// Replaces Write Check authority timestamps for fixed-clock tests.
+        /// Replaces Write Check timestamps for fixed-clock tests.
         pub fn set_write_check_timestamps(
             &self,
             write_check_id: &str,
