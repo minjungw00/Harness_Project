@@ -287,9 +287,7 @@ params:
     - claim: "Search-result count validation passed."
       source_kind: external_tool
       assurance_level: external_tool_result
-      observed_by_actor_kind: null
-      observed_actor_role: null
-      observed_by_actor_source: null
+      observed_by_actor_source: agent_connection:conn_run_probe
       tool_name: "search-count-validator"
       tool_invocation_id: null
       tool_metadata:
@@ -458,8 +456,6 @@ evidence_observations:
     claim: "Search-result count validation passed."
     source_kind: external_tool
     assurance_level: external_tool_result
-    observed_by_actor_kind: agent
-    observed_actor_role: agent
     observed_by_actor_source: agent_connection:conn_run_probe
     tool_name: "search-count-validator"
     tool_invocation_id: null

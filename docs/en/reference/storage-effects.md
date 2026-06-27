@@ -650,7 +650,7 @@ No-effect branches:
 
 Valid `dry_run=true` returns `ToolDryRunResponse`.
 
-Cancellation effects require the method-owned current cancellation judgment with `machine_action=accept`, `resolution_outcome=accepted`, compatible basis, and verified `user_interaction` actor provenance. Missing or incompatible cancellation authority may produce an owner-allowed blocked cancellation effect, but must not fabricate acceptance or completion-only close evidence.
+Cancellation effects require the method-owned current cancellation judgment with `machine_action=accept`, `resolution_outcome=accepted`, compatible basis, `resolved_by_actor_source=local_user`, and compatible User Channel provenance. Missing or incompatible cancellation authority may produce an owner-allowed blocked cancellation effect, but must not fabricate acceptance or completion-only close evidence.
 
 Owner links:
 

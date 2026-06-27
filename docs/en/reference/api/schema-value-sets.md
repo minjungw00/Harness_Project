@@ -63,7 +63,7 @@ Method behavior is owned by method owner documents routed from [API Methods](met
 <a id="actor-values"></a>
 ## Actor source values
 
-Actor provenance fields such as `UserJudgmentResolution.resolved_by_actor_source` use the `ActorSource` value set:
+Actor provenance fields such as `EvidenceObservation.observed_by_actor_source`, `EvidenceObservationInput.observed_by_actor_source`, and `UserJudgmentResolution.resolved_by_actor_source` use the `ActorSource` value set:
 
 | Value | Used by | Owner route |
 |---|---|---|

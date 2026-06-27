@@ -63,7 +63,7 @@ volicord.close_task
 <a id="actor-values"></a>
 ## 행위자 출처 값
 
-`UserJudgmentResolution.resolved_by_actor_source` 같은 행위자 출처 필드는 `ActorSource` 값 집합을 사용합니다.
+`EvidenceObservation.observed_by_actor_source`, `EvidenceObservationInput.observed_by_actor_source`, `UserJudgmentResolution.resolved_by_actor_source` 같은 행위자 출처 필드는 `ActorSource` 값 집합을 사용합니다.
 
 | 값 | 사용하는 곳 | 담당 문서 경로 |
 |---|---|---|
