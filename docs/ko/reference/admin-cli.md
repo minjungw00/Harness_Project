@@ -252,7 +252,7 @@ volicord agent uninstall --connection-id ID [--runtime-home PATH] [--output text
 규칙:
 
 - `--connection-id`와 `--project-id`는 필수입니다.
-- 멤버십 제거는 프로젝트 상태, Core 기록, 호스트 설정, Product Repository 지침 파일을 삭제하지 않습니다.
+- 멤버십 제거는 프로젝트 상태, Core 기록, 호스트 설정, 조언용 Product Repository 지침 파일을 삭제하지 않습니다.
 - 마지막 Connection Project를 제거하면 남아 있는 Agent Connection 기록은 프로젝트가 다시 연결되기 전까지 프로젝트 범위 워크플로에 사용할 수 없습니다.
 
 ## 상태, 활성화, 검증 명령
@@ -302,9 +302,11 @@ volicord agent uninstall --connection-id ID [--runtime-home PATH] [--output text
 
 ## Product Repository 지침 경계
 
-현재 `volicord` 관리 CLI는 저장소 지침 하위 명령을 노출하지 않습니다. Product Repository 지침 파일, 생성된 호스트 지침, MCP 서버 지침, 일반 저장소 지침은 도구 선택과 작업 흐름 일관성에 도움이 될 수 있지만 Core 권한 기록이 아니며 강제 메커니즘도 아닙니다.
+`Product Repository` 지침은 로컬 에이전트를 위한 조언 텍스트입니다. 도구 선택과 작업 흐름 일관성을 돕기 위해 `AGENTS.md`, 생성된 호스트 지침, MCP 서버 지침, 호스트별 규칙 파일에 있을 수 있습니다.
 
-그런 지침은 접근 제어, 보안 강제, User Channel 권한, 사용자 소유 판단, 증거, 수락, 닫기 준비 상태, `Write Check`, 모델이 Volicord 도구를 선택한다는 증명을 부여한다고 주장하면 안 됩니다. 정확한 `Product Repository` 쓰기 경계는 [런타임 경계](runtime-boundaries.md#explicit-integration-files-in-product-repositories)가 담당합니다.
+현재 `volicord` 관리 CLI에는 이 자료를 다루는 전용 명령군이 없습니다. Agent Connection 상태, Connection Projects, `connection.mode`, `last_verified_status`는 Runtime Home 레지스트리 상태에 저장되며 Product Repository 파일에 저장되지 않습니다. `volicord agent status`는 위에 나열한 Agent Connection 필드를 보고합니다. 조언 텍스트 파일을 위한 출력 필드는 없습니다.
+
+사용자 판단은 `User Channel`을 통해 기록됩니다. 조언 텍스트는 사용자 판단, `Write Check`, 연결된 Project 멤버십, `connection.mode`, 증거, 수락, 닫기 준비 상태, 잔여 위험 수락, 접근 제어, 보안 강제, 모델이 Volicord 도구를 선택한다는 증명을 만들 수 없습니다. 정확한 `Product Repository` 쓰기 경계는 [런타임 경계](runtime-boundaries.md#explicit-integration-files-in-product-repositories)가 담당합니다.
 
 <a id="dry-run"></a>
 ## Dry-run과 기계 판독 출력

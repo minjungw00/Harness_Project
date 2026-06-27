@@ -27,6 +27,8 @@ VOLICORD_HOME=<runtime_home> \
 
 `volicord agent status` reports stored Agent Connection and connected Project state. It does not prove that Codex or Claude Code loaded the MCP server. `volicord-mcp --check` validates local startup for the MCP process only.
 
+That status output does not inspect advisory agent text in the Product Repository.
+
 <a id="missing-volicord-mcp"></a>
 ## `volicord-mcp` Is Missing, Not Executable, Or Cannot Be Resolved
 

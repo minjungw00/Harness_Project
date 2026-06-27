@@ -27,6 +27,8 @@ VOLICORD_HOME=<runtime_home> \
 
 `volicord agent status`는 저장된 Agent Connection과 연결된 Project 상태를 보고합니다. Codex나 Claude Code가 MCP 서버를 로드했다는 증명은 아닙니다. `volicord-mcp --check`는 MCP 프로세스의 로컬 시작만 검증합니다.
 
+그 status 출력은 Product Repository의 조언용 에이전트 텍스트를 검사하지 않습니다.
+
 <a id="missing-volicord-mcp"></a>
 ## `volicord-mcp`가 없거나 실행 불가이거나 해석되지 않음
 

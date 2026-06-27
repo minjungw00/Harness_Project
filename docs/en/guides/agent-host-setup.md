@@ -28,7 +28,7 @@ export VOLICORD_BIN="$(pwd)/target/debug"
 |---|---|---|
 | Volicord installation | `volicord` and `volicord-mcp` executables. | Source builds write under `target/`; installed executables may live elsewhere. |
 | `Volicord Runtime Home` | Project registry, Agent Connections, connected Projects, and Volicord runtime data. | Keep it separate from every `Product Repository`. |
-| `Product Repository` | Product files and explicitly selected project-scoped host configuration. | It is not Core authority and must not contain Runtime Home databases. |
+| `Product Repository` | Product files and explicitly selected project-scoped host configuration. | It may contain advisory agent text. It must not contain Runtime Home databases or Core records. |
 | Codex or Claude Code | Host configuration loading, project trust, project MCP approval, reload/restart behavior, the process environment used for MCP servers, and model tool choice. | Volicord cannot bypass host-owned decisions. |
 | `volicord-mcp` process | One connection-bound stdio server started with `--connection <connection_id>`. | Project routing is per public tool call. |
 
@@ -149,7 +149,7 @@ Expected Claude Code `.mcp.json` shape:
 }
 ```
 
-The project-scoped file is a product-file boundary exception for selected host configuration. It is not Core authority and does not store Runtime Home records.
+The project-scoped file is a product-file boundary exception for selected host configuration. It does not store Runtime Home records. Any adjacent advisory agent text is local model-facing context. It does not record user judgments or create a `Write Check`, Connection Projects membership, or `connection.mode` state.
 
 ## Generic Export
 

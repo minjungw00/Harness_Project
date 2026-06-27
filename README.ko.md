@@ -623,9 +623,14 @@ Volicord 런타임 데이터베이스, 런타임 기록, 생성 기록, 로그, 
 않습니다.
 
 설정 중 저장소 쓰기는 명시적으로 선택한 Agent Connection 호스트 구성으로 제한되며,
-비대화식 프로젝트 범위 쓰기에는 `--allow-repository-write`가 필요합니다. 호스트
-구성 파일과 별도의 조언 지침은 Core 권한, 증거, 최종 수락, 닫기 준비 상태,
-잔여 위험 수락, 보안 보장이 아닙니다.
+비대화식 프로젝트 범위 쓰기에는 `--allow-repository-write`가 필요합니다.
+`Product Repository` 지침은 로컬 에이전트를 위한 조언 텍스트입니다.
+`AGENTS.md`나 호스트별 규칙 파일에 있을 수 있지만, Volicord는 이를 레지스트리
+저장소로 취급하지 않습니다. Agent Connection 상태, `connection.mode`, 연결된
+Project는 Runtime Home 레지스트리 상태에 있고, 사용자 판단은 User Channel을
+통해 기록됩니다. 호스트 구성 파일과 조언 텍스트는 `Write Check`, 연결된
+Project 멤버십, `connection.mode`, 사용자 판단, 증거, 최종 수락, 닫기 준비
+상태, 잔여 위험 수락, 보안 보장을 만들 수 없습니다.
 
 정확한 위치 규칙은 [런타임 경계](docs/ko/reference/runtime-boundaries.md)를
 사용합니다.

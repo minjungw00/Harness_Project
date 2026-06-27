@@ -252,7 +252,7 @@ Rules:
 Rules:
 
 - `--connection-id` and `--project-id` are required.
-- Removing membership does not delete project state, Core records, host configuration, or Product Repository guidance files.
+- Removing membership does not delete project state, Core records, host configuration, or advisory Product Repository guidance files.
 - Removing the final Connection Project leaves any remaining Agent Connection record unusable for project-scoped workflow until a project is connected again.
 
 ## Status, enablement, and verification commands
@@ -302,9 +302,11 @@ Rules:
 
 ## Product Repository guidance boundary
 
-The current `volicord` administrative CLI exposes no repository-guidance subcommand. Product Repository guidance files, generated host instructions, MCP server instructions, and ordinary repository guidance can help tool selection and workflow consistency, but they are not Core authority records and are not an enforcement mechanism.
+Product Repository guidance is agent-facing advisory text for local agents. It can appear in files such as `AGENTS.md`, generated host instructions, MCP server instructions, or host-specific rule files to support tool selection and workflow consistency.
 
-Such guidance must not claim to grant access control, security enforcement, User Channel authority, user-owned judgment, evidence, acceptance, close readiness, a `Write Check`, or proof that a model will choose Volicord tools. Exact `Product Repository` write boundaries belong to [Runtime Boundaries](runtime-boundaries.md#explicit-integration-files-in-product-repositories).
+The current `volicord` administrative CLI has no dedicated command group for that material. It stores Agent Connection state, Connection Projects, `connection.mode`, and `last_verified_status` in Runtime Home registry state, not in Product Repository files. `volicord agent status` reports the Agent Connection fields listed above. It has no output field for advisory text files.
+
+User judgments are recorded through the `User Channel`. Advisory text cannot create user judgments, a `Write Check`, connected Project membership, `connection.mode`, evidence, acceptance, close readiness, residual-risk acceptance, access control, security enforcement, or proof that a model will choose Volicord tools. Exact `Product Repository` write boundaries belong to [Runtime Boundaries](runtime-boundaries.md#explicit-integration-files-in-product-repositories).
 
 <a id="dry-run"></a>
 ## Dry run and machine-readable output

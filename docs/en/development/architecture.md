@@ -65,7 +65,7 @@ The Cargo workspace contains these members:
 | `crates/volicord-types` | `volicord-types` | Library | Shared Rust request, response, schema-shaped, value-set, identifier, and canonical-hash types. |
 | `crates/volicord-store` | `volicord-store` | Library | SQLite, Runtime Home, bootstrap, project Store, artifact storage, migration, inspection, and storage-error implementation. |
 | `crates/volicord-core` | `volicord-core` | Library | Core service, shared request pipeline, method planning, policy checks, and Store coordination. |
-| `crates/volicord-cli` | `volicord-cli` | Library and `volicord` binary | Local administrative CLI for Runtime Home setup, project registration, User Channel commands, Agent Connection setup, host adapters, and repository guidance. |
+| `crates/volicord-cli` | `volicord-cli` | Library and `volicord` binary | Local administrative CLI for Runtime Home setup, project registration, User Channel commands, Agent Connection setup, and host adapters. |
 | `crates/volicord-mcp` | `volicord-mcp` | Library and `volicord-mcp` binary | MCP stdio adapter, startup validation, tool listing, `tools/call` dispatch, and Core invocation. |
 | `crates/volicord-test-support` | `volicord-test-support` | Library | Disposable Runtime Home, Store, Core, and fixture helpers shared by implementation tests. |
 | `tests/conformance` | `volicord-conformance-tests` | `baseline` test target | Baseline cross-method scenarios that exercise owner-defined behavior through Core-facing APIs. |
@@ -264,7 +264,7 @@ When `--dry-run` is selected, the command returns the plan from that planning ph
 
 Non-dry-run execution then initializes or reuses Runtime Home and project state, creates or reuses the Agent Connection and Connection Projects allowlist, and only then runs `volicord-mcp --check --connection <connection_id>` with the resolved Runtime Home. That MCP startup preflight happens before host configuration is applied.
 
-Host configuration application follows the previously constructed host plan and is guarded by the target snapshot, stale-plan checks, ownership markers, and fingerprint checks. Agent Connection inventory is registered or updated only after host configuration application, initially before the final verification state has been recorded. Product Repository guidance and generated host instructions are advisory context only and are not an authority-bearing setup effect.
+Host configuration application follows the previously constructed host plan and is guarded by the target snapshot, stale-plan checks, ownership markers, and fingerprint checks. Agent Connection inventory is registered or updated only after host configuration application, initially before the final verification state has been recorded. Product Repository guidance, where present, remains advisory context for local agents. It is separate from this setup effect: it does not record user judgments or create a `Write Check`, Connection Projects membership, or `connection.mode` state.
 
 Final verification first checks host readiness. Direct MCP stdio initialization and tool discovery run only when the host gate permits that handshake, so host readiness and direct MCP handshake are separate checks. A result can still be `action_required` when host-owned trust, approval, reload, restart, OAuth, or a comparable user-controlled action remains.
 
@@ -296,7 +296,7 @@ to choose a test layer for a concrete change.
 |---|---|
 | Colocated unit tests in implementation modules | Check local helpers, parsing, serialization, migration, Store, policy, and edge behavior close to the code under test. |
 | `crates/volicord-core/src/methods/tests.rs` | Exercises Core method planning, shared preflight behavior, effect branches, replay behavior, staging distinction, artifact promotion, close-readiness calculations, and method-owned storage mutation outcomes through `CoreService`. |
-| `crates/volicord-cli/tests/binary_admin.rs` | Runs the `volicord` binary for administrative initialization, registration, `volicord agent` connect/status/verify/project membership/uninstall behavior, dry-run behavior, host integration preflight handling, host config writes, repository guidance safety, and command-line error paths. |
+| `crates/volicord-cli/tests/binary_admin.rs` | Runs the `volicord` binary for administrative initialization, registration, `volicord agent` connect/status/verify/project membership/uninstall behavior, dry-run behavior, host integration preflight handling, host config writes, repository-write gating, and command-line error paths. |
 | `crates/volicord-mcp/tests/binary_transport.rs` | Runs the `volicord-mcp` binary for help/version, `--check`, stdio framing, line-delimited JSON-RPC, reconnection behavior, and MCP response wrapping. |
 | `tests/integration/mcp_connection.rs` | Verifies MCP connection binding, tool schemas, public method exposure, per-method `operation_category` derivation, Core/MCP parity, session rejection cases, replay context binding, and cross-layer storage effects. |
 | `tests/conformance/baseline.rs` | Exercises baseline public behavior scenarios through Core-facing APIs using shared fixtures, including replay, no-effect branches, Write Check, artifact lifecycle, judgment boundaries, close readiness, error routing, and corruption handling. |

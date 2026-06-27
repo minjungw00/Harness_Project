@@ -28,7 +28,7 @@ export VOLICORD_BIN="$(pwd)/target/debug"
 |---|---|---|
 | Volicord 설치 | `volicord`와 `volicord-mcp` 실행 파일. | 소스 빌드는 `target/` 아래에 쓰고 설치된 실행 파일은 다른 곳에 있을 수 있습니다. |
 | `Volicord Runtime Home` | Project registry, Agent Connection, 연결된 Project, Volicord 런타임 데이터. | 모든 `Product Repository`와 분리합니다. |
-| `Product Repository` | 제품 파일과 명시적으로 선택된 프로젝트 범위 호스트 설정. | Core 권한이 아니며 Runtime Home 데이터베이스를 포함하면 안 됩니다. |
+| `Product Repository` | 제품 파일과 명시적으로 선택된 프로젝트 범위 호스트 설정. | 조언용 에이전트 텍스트를 포함할 수 있습니다. Runtime Home 데이터베이스나 Core 기록을 포함하면 안 됩니다. |
 | Codex 또는 Claude Code | 호스트 설정 로드, 프로젝트 trust, 프로젝트 MCP 승인, reload/restart 동작, MCP 서버 실행 환경, 모델 도구 선택. | Volicord는 호스트 소유 결정을 우회할 수 없습니다. |
 | `volicord-mcp` 프로세스 | `--connection <connection_id>`로 시작되는 connection-bound stdio 서버 하나. | 프로젝트 라우팅은 공개 도구 호출마다 수행됩니다. |
 
@@ -149,7 +149,7 @@ PATH="$VOLICORD_BIN:$PATH" \
 }
 ```
 
-프로젝트 범위 파일은 선택된 호스트 설정을 위한 제품 파일 경계 예외입니다. Core 권한이 아니며 Runtime Home 기록을 저장하지 않습니다.
+프로젝트 범위 파일은 선택된 호스트 설정을 위한 제품 파일 경계 예외입니다. Runtime Home 기록을 저장하지 않습니다. 주변의 조언용 에이전트 텍스트는 로컬 모델 대상 맥락입니다. 사용자 판단을 기록하지 않고 `Write Check`, Connection Projects 멤버십, `connection.mode` 상태를 만들지 않습니다.
 
 ## Generic Export
 

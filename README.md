@@ -638,9 +638,14 @@ residual-risk records are not stored in the `Product Repository`.
 
 Repository writes during setup are limited to explicitly selected Agent Connection
 host configuration, and noninteractive project-scoped writes require
-`--allow-repository-write`. Host configuration files and any separate advisory
-guidance are not Core authority, evidence, final acceptance, close readiness,
-residual-risk acceptance, or a security guarantee.
+`--allow-repository-write`. Product Repository guidance is agent-facing advisory
+text for local agents. It can appear in files such as `AGENTS.md` or
+host-specific rule files, but Volicord does not treat it as a registry store.
+Agent Connection state, connection mode, and connected Projects live in Runtime
+Home registry state; user judgments are recorded through the User Channel. Host
+configuration files and advisory text cannot create a `Write Check`, connected
+Project membership, connection mode, user judgment, evidence, final acceptance,
+close readiness, residual-risk acceptance, or a security guarantee.
 
 For exact location rules, use
 [Runtime Boundaries](docs/en/reference/runtime-boundaries.md).
