@@ -25,7 +25,7 @@ This document does not own:
 
 The pending judgment is a request for a decision. It is not the decision itself, does not create evidence, does not change current scope, does not create `Write Check`, and does not close a `Task`.
 
-When this method creates a pending judgment, Core derives a `JudgmentBasis` from current state. Callers do not submit `basis`, `scope_revision`, `close_basis_revision`, session-binding fields, access-class fields, verified actor context, machine action, resolution outcome, or current close-basis authority fields.
+When this method creates a pending judgment, Core derives a `JudgmentBasis` from current state. Callers do not submit `basis`, `scope_revision`, `close_basis_revision`, session-binding fields, adapter-derived invocation context such as `actor_source`, `operation_category`, or `connection.mode`, verified actor context, machine action, resolution outcome, or current close-basis authority fields.
 
 ## Required inputs
 

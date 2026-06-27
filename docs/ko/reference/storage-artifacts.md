@@ -75,7 +75,7 @@
 
 조건:
 
-- operation category, connection capability, 가림 처리, 가용성, 담당 관계 검사를 통과해야 합니다.
+- `operation_category`, `connection.mode`, 가림 처리, 가용성, 담당 관계 검사를 통과해야 합니다.
 
 담당 경계:
 

@@ -75,7 +75,7 @@ Meaning:
 
 Conditions:
 
-- The read must pass access-class, capability, redaction, availability, and owner-relation checks.
+- The read must pass `operation_category`, `connection.mode`, redaction, availability, and owner-relation checks.
 
 Owner boundary:
 

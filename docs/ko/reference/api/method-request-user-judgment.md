@@ -25,7 +25,7 @@
 
 대기 중인 판단은 결정을 요청하는 기록입니다. 결정 자체가 아니며, 증거를 만들거나, 현재 적용 범위를 바꾸거나, `Write Check`을 만들거나, `Task`를 닫지 않습니다.
 
-이 메서드가 대기 판단을 만들 때 Core는 현재 상태에서 `JudgmentBasis`를 파생합니다. 호출자는 `basis`, `scope_revision`, `close_basis_revision`, 세션 바인딩 필드, 작업 범주 필드, 확인된 행위자 맥락, 기계 동작, 해결 결과, 현재 닫기 근거 권한 필드를 제출하지 않습니다.
+이 메서드가 대기 판단을 만들 때 Core는 현재 상태에서 `JudgmentBasis`를 파생합니다. 호출자는 `basis`, `scope_revision`, `close_basis_revision`, 세션 바인딩 필드, `actor_source`, `operation_category`, `connection.mode` 같은 어댑터 파생 호출 맥락, 확인된 행위자 맥락, 기계 동작, 해결 결과, 현재 닫기 근거 권한 필드를 제출하지 않습니다.
 
 ## 필수 입력
 

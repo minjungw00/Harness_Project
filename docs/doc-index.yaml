@@ -1585,7 +1585,7 @@ documents:
   - public API value sets
   - blocker category values
   - method-name values
-  - access-class values
+  - operation category values
   - '`CloseReadinessBlocker.category` values'
   - enum-like API vocabulary
 - doc_id: reference.api.errors
