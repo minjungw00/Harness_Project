@@ -934,8 +934,8 @@ documents:
   translation_policy: semantic_parity
   owner_area: documentation_maintenance
   created_on: '2026-06-02'
-  last_updated_on: '2026-06-27'
-  last_verified_on: '2026-06-27'
+  last_updated_on: '2026-06-28'
+  last_verified_on: '2026-06-28'
   applies_to:
   - volicord_workspace_0_1
   - doc_index_schema_v3

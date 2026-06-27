@@ -9,7 +9,7 @@ This README is route-only. It does not define term meanings, terminology metadat
 - Environment prerequisites before installation: [System Requirements](system-requirements.md).
 - Executable preparation and verification tutorial: [Installation](../getting-started/installation.md).
 - Product/system boundaries: [Scope](scope.md), [Core Model](core-model.md), [Runtime Boundaries](runtime-boundaries.md), and [Security](security.md).
-- First-run agent host setup: [Quickstart](../getting-started/quickstart.md) for the shortest success path, then [Agent Host Setup](../guides/agent-host-setup.md) for the complete operator guide and [Multi-Repository Agent Setup](../guides/multi-repository-agent-setup.md) for one user-scope integration serving multiple repositories.
+- First-run agent host setup: [Quickstart](../getting-started/quickstart.md) for the shortest success path, then [Agent Host Setup](../guides/agent-host-setup.md) for the complete operator guide and [Multi-Repository Agent Setup](../guides/multi-repository-agent-setup.md) for one user-scope Agent Connection serving multiple repositories.
 - Setup failures and recovery: [Agent Host Troubleshooting](../guides/agent-host-troubleshooting.md).
 - Local executable contracts: [Administrative CLI](admin-cli.md) for `volicord` administrative commands and Runtime Home selection, and [MCP Transport](mcp-transport.md) for `volicord-mcp` stdio startup, preflight, response wrapping, and shutdown.
 - API method behavior: [API Methods](api/methods.md), then the linked method owner.
