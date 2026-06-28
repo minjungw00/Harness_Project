@@ -2,7 +2,7 @@
 
 이 문서는 닫기 차단 사유와 API 응답 분기 사이의 경계를 담당합니다. 이 문서는 경계 경로 문서이며, 메서드 동작이나 스키마 형태의 담당 문서가 아닙니다.
 
-[API 오류 처리 경로](error-routing.md)에서 응답 분기를 먼저 식별한 뒤 이 문서를 사용합니다.
+[API 오류 처리 경로](error-routing.md)에서 응답 분기를 먼저 식별한 뒤 이 문서를 사용합니다. 전송부터 Core까지의 전체 결정 흐름은 [API 오류 우선순위](error-precedence.md#canonical-error-blocker-decision-flow)에서 시작합니다.
 
 이 문서가 담당합니다.
 
@@ -14,7 +14,7 @@
 
 - 메서드별 동작: [`volicord.close_task`](method-close-task.md)와 다른 메서드 담당 문서.
 - 데이터 형태와 값: [API 상태 스키마](schema-state.md), [API 값 집합](schema-value-sets.md#state-and-blocker-values).
-- 공개 오류 의미와 우선순위: [API 오류 코드](error-codes.md), [API 오류 우선순위](error-precedence.md).
+- 공개 오류 의미, 우선순위, 오류와 차단 사유의 정식 결정 흐름: [API 오류 코드](error-codes.md), [API 오류 우선순위](error-precedence.md#canonical-error-blocker-decision-flow).
 - Core 닫기 준비 상태 권한: [Core 모델](../core-model.md#close_task).
 - 저장 효과: [저장 효과](../storage-effects.md).
 - 표시 문구만: [템플릿 본문](../template-bodies.md).
@@ -24,6 +24,7 @@
 - 공개 `ErrorCode`는 [API 오류 코드](error-codes.md)가 정의하는 API 오류 조건 식별자입니다. 이 식별자는 자동으로 `CloseReadinessBlocker.category` 값이 되지 않으며 차단 사유 범주도 아닙니다.
 - 거부 응답의 오류 코드는 같은 조건이 닫기 준비 상태에 영향을 줄 수 있다는 이유만으로 차단 사유 범주로 사용하지 않습니다. 그 오류 코드는 API 오류 쪽에 남습니다.
 - 닫기 차단 사유의 객체 형태는 [API 상태 스키마](schema-state.md)의 `CloseReadinessBlocker`가 담당합니다. 차단 사유 범주 값은 [API 값 집합](schema-value-sets.md#state-and-blocker-values)이 담당합니다.
+- 메서드 소유 차단 사유형 결과는 응답 전용일 수도 있고 커밋될 수도 있습니다. 그 저장 구분은 메서드 담당 문서와 [저장 효과](../storage-effects.md)가 담당하며, 그 이유만으로 결과가 전송 실패가 되지는 않습니다.
 - 차단 사유 처리 경로는 API 응답 분기 처리 경로가 정해진 뒤에 적용되며 [API 오류 우선순위](error-precedence.md)를 대신하지 않습니다.
 - [API 오류 코드](error-codes.md)는 공개 오류 코드 의미를 정의하고, 이 문서는 공개 API 오류와 닫기 차단 사유 데이터 사이의 경계를 정의합니다.
 

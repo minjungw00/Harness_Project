@@ -1665,6 +1665,7 @@ documents:
   - implement
   - operate
   canonical_for:
+  - canonical error/blocker decision flow
   - public error selection precedence
   - primary `ErrorCode` selection
   - '`STATE_VERSION_CONFLICT` conflict selection'
@@ -1679,8 +1680,8 @@ documents:
   translation_policy: semantic_parity
   owner_area: core_api
   created_on: '2026-06-13'
-  last_updated_on: '2026-06-24'
-  last_verified_on: '2026-06-24'
+  last_updated_on: '2026-06-28'
+  last_verified_on: '2026-06-28'
   applies_to:
   - volicord_workspace_0_1
   primary_audience:
@@ -1704,8 +1705,8 @@ documents:
   translation_policy: semantic_parity
   owner_area: core_api
   created_on: '2026-06-13'
-  last_updated_on: '2026-06-24'
-  last_verified_on: '2026-06-24'
+  last_updated_on: '2026-06-28'
+  last_verified_on: '2026-06-28'
   applies_to:
   - volicord_workspace_0_1
   primary_audience:

@@ -2,7 +2,7 @@
 
 This document owns the routing boundary between close-readiness blockers and API response branches. It is a boundary router, not the method behavior owner or the schema owner.
 
-Use it after [API error routing](error-routing.md) identifies the response branch.
+Use it after [API error routing](error-routing.md) identifies the response branch. For the full transport-to-Core decision flow, start with [API error precedence](error-precedence.md#canonical-error-blocker-decision-flow).
 
 Owned here:
 
@@ -14,7 +14,7 @@ Adjacent owners:
 
 - Method-specific behavior: [`volicord.close_task`](method-close-task.md) and other method owners.
 - Data shapes and values: [API State Schemas](schema-state.md) and [API Value Sets](schema-value-sets.md#state-and-blocker-values).
-- Public error meanings and precedence: [API error codes](error-codes.md) and [API error precedence](error-precedence.md).
+- Public error meanings, precedence, and the canonical error/blocker decision flow: [API error codes](error-codes.md) and [API error precedence](error-precedence.md#canonical-error-blocker-decision-flow).
 - Core close-readiness authority: [Core Model](../core-model.md#close_task).
 - Storage effects: [Storage Effects](../storage-effects.md).
 - Display wording only: [Template Bodies](../template-bodies.md).
@@ -24,6 +24,7 @@ Adjacent owners:
 - A public `ErrorCode` identifies an API error condition defined by [API error codes](error-codes.md). It is not automatically a `CloseReadinessBlocker.category` value or any other close-readiness blocker category.
 - A rejected response error code stays on the API error side even when the same underlying condition can affect close readiness. It is not used as a blocker category merely because of that relationship.
 - Close-readiness blockers use the `CloseReadinessBlocker` shape from [API State Schemas](schema-state.md) and the blocker category value set from [API Value Sets](schema-value-sets.md#state-and-blocker-values).
+- Method-owned blocker-shaped results can be response-only or committed. That storage distinction belongs to the method owner and [Storage Effects](../storage-effects.md); it does not make the result a transport failure.
 - Blocker routing applies after API response branch routing and does not replace [API error precedence](error-precedence.md).
 - The [API error codes](error-codes.md) owner defines public error code meanings; this document defines the boundary between those errors and close-readiness blocker routing.
 

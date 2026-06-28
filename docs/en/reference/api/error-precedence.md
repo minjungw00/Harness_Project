@@ -1,6 +1,6 @@
 # API error precedence
 
-This document owns primary public-error selection when more than one public error candidate exists. It also owns public stale-state and idempotency conflict behavior for `STATE_VERSION_CONFLICT`.
+This document owns primary public-error selection when more than one public error candidate exists. It also owns the canonical error/blocker decision flow and public stale-state and idempotency conflict behavior for `STATE_VERSION_CONFLICT`.
 
 Use it to choose the primary public code for an error-bearing branch. Use adjacent owners for code meanings, branch routing, schemas, storage, and display wording.
 
@@ -8,19 +8,40 @@ Use it to choose the primary public code for an error-bearing branch. Use adjace
 
 Owned here:
 
+- The canonical decision flow that distinguishes transport or adapter failures, Core rejected responses, dry-run previews, method-owned blocked results, and committed blocker-shaped results.
 - The primary `errors[0]` selection order for error-bearing branches.
 - The result-side and blocker-code path boundary for `STATE_VERSION_CONFLICT`.
 - Public stale `expected_state_version`, stale `WriteCheck.basis_state_version`, and idempotency request-hash conflict behavior.
 
 Adjacent owners:
 
+- MCP JSON-RPC errors, `CallToolResult.isError`, and `tools/call` wrapping; see [MCP transport](../mcp-transport.md).
+- Agent Connection project selection, mode, and current connection context; see [Agent Connection](../agent-connection.md).
 - Public code meanings outside precedence selection; see [API error codes](error-codes.md).
 - API response branch routing; see [API error routing](error-routing.md).
 - Close-readiness blocker/API response boundary; see [API blocker routing](blocker-routing.md).
 - Method-specific behavior; see [`volicord.close_task`](method-close-task.md) and other method owners.
 - Machine-readable conflict detail fields; see [API error details](error-details.md#state-conflict-detail-fields).
+- Committed result storage effects; see [Storage Effects](../storage-effects.md).
 - Storage replay rows and state clocks; see [Storage Versioning](../storage-versioning.md).
 - Display wording only; see [Template Bodies](../template-bodies.md).
+
+<a id="canonical-error-blocker-decision-flow"></a>
+
+## Canonical error/blocker decision flow
+
+Use this flow before applying [primary error-code precedence](#primary-error-code-precedence). It chooses the response family first. The precedence table below applies only after a call has become a Volicord rejected response with `ToolRejectedResponse.errors[]`.
+
+| Order | Boundary | Execution point | Public shape | Routing rule |
+|---:|---|---|---|---|
+| 1 | Transport, JSON-RPC, or adapter message shape fails before a public Volicord request exists. | Transport or adapter layer, before Core execution. | JSON-RPC `error`, process exit diagnostic, or transport-owned failure shape. No Volicord `ErrorCode` is selected. | Route to [MCP transport](../mcp-transport.md) or the owning transport or adapter. Do not translate this into `ToolRejectedResponse.errors[]` after the request failed before Core. |
+| 2 | A known MCP tool call is rejected by the MCP adapter before Core execution. This includes Agent Connection mode rejection, project-selection failure, project allowlist failure, caller-owned invocation fields, or known-tool argument decoding/schema rejection. | MCP adapter layer, before Core execution. | MCP `CallToolResult` with `isError: true` and text content, unless the condition is a JSON-RPC protocol or parameter error owned by [MCP transport](../mcp-transport.md). | This is not a Volicord method result and has no `ToolRejectedResponse.errors[]`. Fix the MCP call, connection mode, or project selector before retrying. |
+| 3 | A typed Volicord request reaches Core and request validation, Core preflight, invocation compatibility, task lookup, freshness, or idempotency fails before the method-owned result branch. | Inside Core, before committed method execution. | `ToolRejectedResponse.errors[]` with public `ErrorCode` values. | Use [API error routing](error-routing.md) for the rejected branch and this document's precedence table for `errors[0]`. No committed operation proceeds. |
+| 4 | A valid `dry_run` request reaches a preview branch after preflight. | Inside Core, after validation and preflight, before commit. | `ToolDryRunResponse` with `DryRunSummary.would_errors[]` or `DryRunSummary.would_blockers[]` when the method defines them. | Route preview branch behavior to [API error routing](error-routing.md#dry-run-behavior). Preview blockers are `PlannedBlocker`, not stored `CloseReadinessBlocker` objects. |
+| 5 | A valid method evaluation returns a blocked result without selecting a committed blocked effect. | Inside Core, after method-owned evaluation. | Method-specific `MethodResult` fields, such as `CloseTaskResult(close_state=blocked)` or method-owned decision fields. No `errors[]` branch is present. | Route branch selection to [API error routing](error-routing.md#blocked-result-behavior), close-readiness blocker boundaries to [API blocker routing](blocker-routing.md), and method details to the method owner. This is not a transport or schema error. |
+| 6 | A valid method evaluation selects a committed blocker-shaped or non-allow result. | Inside Core, on a method-owned committed branch. | Method-specific `MethodResult` with committed effects when allowed by the method and storage-effect owners, such as committed `PrepareWriteResult` non-allow decisions. | This can be durable state rather than a failed transport call. Route exact storage effects to [Storage Effects](../storage-effects.md) and exact result fields to the method owner. Public error precedence does not apply because there is no `ToolRejectedResponse.errors[]` branch. |
+
+For MCP `tools/call`, successful MCP transport wraps a Volicord response with `isError: false`, including a Volicord domain-level `ToolRejectedResponse`. A caller must parse `result.content[0].text` as JSON to inspect `base.response_kind`, `errors`, or method result fields.
 
 <a id="primary-error-code-precedence"></a>
 

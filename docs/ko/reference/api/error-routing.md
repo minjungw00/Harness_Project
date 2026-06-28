@@ -2,7 +2,7 @@
 
 이 문서는 거부 응답, 차단 결과, `dry_run` 미리보기에 대한 API 응답 분기 경로를 담당합니다.
 
-API 응답 분기를 고를 때 이 문서를 사용합니다. 개별 닫기 차단 사유를 매핑하거나, 차단 사유 범주와 코드를 정의하거나, 메서드별 동작을 결정하는 문서로 사용하지 않습니다.
+[오류와 차단 사유의 정식 결정 흐름](error-precedence.md#canonical-error-blocker-decision-flow)이 전송 또는 어댑터 실패와 Core 응답을 구분한 뒤 Volicord API 응답 분기를 고를 때 이 문서를 사용합니다. 개별 닫기 차단 사유를 매핑하거나, 차단 사유 범주와 코드를 정의하거나, 메서드별 동작을 결정하는 문서로 사용하지 않습니다.
 
 이 문서가 담당합니다.
 
@@ -14,7 +14,7 @@ API 응답 분기를 고를 때 이 문서를 사용합니다. 개별 닫기 차
 이웃 담당 문서:
 
 - 공개 오류 코드 의미: [API 오류 코드](error-codes.md).
-- 주 공개 오류 선택: [API 오류 우선순위](error-precedence.md).
+- 오류와 차단 사유의 정식 결정 흐름 및 주 공개 오류 선택: [API 오류 우선순위](error-precedence.md#canonical-error-blocker-decision-flow).
 - 기계 판독용 오류 세부사항: [API 오류 세부사항](error-details.md).
 - `CloseReadinessBlocker`, `WriteDecisionReason`, `PlannedBlocker`, 공통 분기 형태: [API 상태 스키마](schema-state.md), [API 코어 스키마](schema-core.md). 범주와 enum 형태 값은 [API 값 집합](schema-value-sets.md)이 담당합니다.
 - 닫기 준비 상태 의미와 대체 불가 규칙: [Core 모델의 닫기 준비 상태](../core-model.md#close_task).
@@ -34,15 +34,17 @@ API 응답 분기를 고를 때 이 문서를 사용합니다. 개별 닫기 차
 거부 응답:
 - 공개 형태: `ToolRejectedResponse.errors[]`와 `ToolError.code: ErrorCode`.
 - 의미: 메서드가 커밋되는 동작으로 진행하지 않았다는 뜻입니다.
-- 조건: 공개 전송, 요청, 최신성, 호출 맥락, actor source, operation category, 선행조건 거부입니다.
+- 조건: 타입이 정해진 Volicord 요청이 Core에 도달했고, 메서드 소유 결과 분기 전에 요청 검증, 최신성, 호출 맥락, `actor_source`, `operation_category`, 그 밖의 선행조건이 실패한 경우입니다.
 - 상태 영향: 커밋된 동작이 없고 상태 변경도 없습니다.
+
+Core 실행 전에 일어나는 전송 및 어댑터 실패는 이 분기 밖에 있습니다. [MCP 전송](../mcp-transport.md)이나 해당 전송 또는 어댑터 담당 문서로 보냅니다.
 
 <a id="error-vs-blocker-blocked-result"></a>
 차단 결과:
 - 공개 형태: `write_decision_reasons`나 `blockers` 같은 메서드별 결과 필드입니다.
 - 의미: 메서드가 동작별 차단 결과를 반환했을 수 있다는 뜻입니다.
 - 경계: 차단 결과 데이터는 공개 전송 또는 스키마 오류가 아닙니다.
-- 상태 영향: 메서드 담당 문서가 허용한 커밋된 차단 결과나 읽기 전용 차단 사유 데이터만 가능합니다.
+- 상태 영향: 응답 전용일 수도 있고 커밋될 수도 있습니다. 메서드 담당 문서와 [저장 효과](../storage-effects.md)가 허용할 때만 커밋된 차단 사유형 결과가 가능합니다.
 
 <a id="error-vs-blocker-dry-run-preview"></a>
 `dry_run` 미리보기:
@@ -85,7 +87,7 @@ API 응답 분기를 고를 때 이 문서를 사용합니다. 개별 닫기 차
 ### 선행조건 실패
 
 조건:
-- 커밋 전에 Core, MCP, 호출 맥락, actor-source/operation-category 호환성, 상태 조회, `Task` 식별자, 필요한 선행조건이 실패합니다.
+- 커밋 전에 Core, MCP, 호출 맥락, `actor_source`/`operation_category` 호환성, 상태 조회, `Task` 식별자, 필요한 선행조건이 실패합니다.
 
 라우팅:
 - `ToolRejectedResponse.errors[]`.
@@ -126,6 +128,8 @@ API 응답 분기를 고를 때 이 문서를 사용합니다. 개별 닫기 차
 
 거부 응답은 메서드가 커밋되는 동작으로 진행하지 않았다는 뜻입니다. 거부 응답은 차단 결과가 아니며, 요청에 없던 권한, 증거, 수락, 닫기 상태를 만들지 않습니다.
 
+<a id="blocked-result-behavior"></a>
+
 ## 차단 결과 동작
 
 | 차단 경로 | 세부 항목 |
@@ -144,7 +148,7 @@ API 응답 분기를 고를 때 이 문서를 사용합니다. 개별 닫기 차
 - `write_decision_reasons: WriteDecisionReason[]`.
 
 상태 영향:
-- 커밋된 차단 결과의 상태 영향은 메서드 담당 문서만 정의할 수 있습니다.
+- 커밋되는 비허용 효과는 메서드 담당 문서와 [저장 효과](../storage-effects.md)가 정의합니다.
 
 결과 데이터:
 - 메서드 담당 판단 사유를 사용합니다.
@@ -162,7 +166,7 @@ API 응답 분기를 고를 때 이 문서를 사용합니다. 개별 닫기 차
 - 메서드 결과가 `blockers: CloseReadinessBlocker[]`를 담습니다.
 
 상태 영향:
-- 커밋된 차단 결과의 상태 영향은 `close_task` 메서드 담당 문서만 정의할 수 있습니다.
+- 차단된 `close_task` 결과가 응답 전용인지 커밋되는지는 `close_task` 메서드 담당 문서와 [저장 효과](../storage-effects.md)가 정의합니다.
 
 결과 데이터 경계:
 - 닫기 차단 사유/API 응답 처리 경계와 공개 오류 코드가 차단 사유로 표현되는 경우는 [API 차단 사유 처리 경로](blocker-routing.md)가 담당합니다.
@@ -183,7 +187,9 @@ API 응답 분기를 고를 때 이 문서를 사용합니다. 개별 닫기 차
 상태 영향:
 - 읽기 때문에 저장된 차단 사유나 상태 버전 증가가 생기지 않습니다.
 
-차단 결과는 메서드가 동작별 차단 결과를 반환했을 수 있다는 뜻입니다. 공개 전송 또는 스키마 오류가 아닙니다. 커밋된 차단 결과와 상태 영향은 [API 메서드](methods.md)가 안내하는 관련 메서드 담당 문서와 [저장 효과](../storage-effects.md)가 허용해야 합니다.
+차단 결과는 메서드가 동작별 차단 결과를 반환했을 수 있다는 뜻입니다. 공개 전송 또는 스키마 오류가 아니며 `ToolRejectedResponse.errors[]`를 사용하지 않습니다. 커밋된 차단 사유형 결과와 상태 영향은 [API 메서드](methods.md)가 안내하는 관련 메서드 담당 문서와 [저장 효과](../storage-effects.md)가 허용해야 합니다.
+
+<a id="dry-run-behavior"></a>
 
 ## `dry_run` 동작
 

@@ -2,7 +2,7 @@
 
 This document owns API response branch routing for rejected responses, blocked results, and `dry_run` previews.
 
-Use it to choose the API response branch. Do not use it to map individual close-readiness blockers, define blocker categories or codes, or decide method-specific behavior.
+Use it to choose the Volicord API response branch after the [canonical error/blocker decision flow](error-precedence.md#canonical-error-blocker-decision-flow) has distinguished transport or adapter failures from Core responses. Do not use it to map individual close-readiness blockers, define blocker categories or codes, or decide method-specific behavior.
 
 Owned here:
 
@@ -14,7 +14,7 @@ Owned here:
 Adjacent owners:
 
 - Public code meanings; see [API error codes](error-codes.md).
-- Primary public-error selection; see [API error precedence](error-precedence.md).
+- Canonical error/blocker decision flow and primary public-error selection; see [API error precedence](error-precedence.md#canonical-error-blocker-decision-flow).
 - Machine-readable error details; see [API error details](error-details.md).
 - `CloseReadinessBlocker`, `WriteDecisionReason`, `PlannedBlocker`, and common branch shapes; see [API State Schemas](schema-state.md) and [API Schema Core](schema-core.md). Category and enum-like values are owned by [API Value Sets](schema-value-sets.md).
 - Close-readiness meaning and non-substitution rules; see [Core Model close readiness](../core-model.md#close_task).
@@ -34,15 +34,17 @@ Adjacent owners:
 Rejected response:
 - Public shape: `ToolRejectedResponse.errors[]` with `ToolError.code: ErrorCode`.
 - Meaning: The method did not proceed to the committed operation.
-- Condition: The failure is public transport, request, freshness, invocation-context, actor-source, operation-category, or precondition rejection.
+- Condition: A typed Volicord request reached Core and failed request validation, freshness, invocation context, `actor_source`, `operation_category`, or another precondition before the method-owned result branch.
 - State effect: No committed operation and no state change.
+
+Transport and adapter failures that happen before Core execution are outside this branch. Route them through [MCP transport](../mcp-transport.md) or the owning transport or adapter.
 
 <a id="error-vs-blocker-blocked-result"></a>
 Blocked result:
 - Public shape: Method-specific result fields such as `write_decision_reasons` or `blockers`.
 - Meaning: The method may have returned an operation-specific blocked outcome.
 - Boundary: Blocked result data is not a public transport or schema error.
-- State effect: Only the method owner may allow a committed blocked result or read-only blocker data.
+- State effect: It may be response-only or committed. Only the method owner with [Storage Effects](../storage-effects.md) may allow a committed blocker-shaped result.
 
 <a id="error-vs-blocker-dry-run-preview"></a>
 Dry-run preview:
@@ -85,7 +87,7 @@ Result boundary:
 ### Precondition failure
 
 Condition:
-- Core, MCP, invocation context, actor-source/operation-category compatibility, state lookup, Task identity, or a required precondition fails before commit.
+- Core, MCP, invocation context, `actor_source`/`operation_category` compatibility, state lookup, Task identity, or a required precondition fails before commit.
 
 Route:
 - `ToolRejectedResponse.errors[]`.
@@ -126,6 +128,8 @@ Preview boundary:
 
 Rejected response means the method did not proceed to the committed operation. It is not a blocked result and does not create the authority, evidence, acceptance, or close state that the request lacked.
 
+<a id="blocked-result-behavior"></a>
+
 ## Blocked result behavior
 
 | Blocked path | Detail section |
@@ -144,7 +148,7 @@ Route:
 - `write_decision_reasons: WriteDecisionReason[]`.
 
 State effect:
-- Only the method owner may define any committed blocked-result effect.
+- The method owner and [Storage Effects](../storage-effects.md) define the committed non-allow effect.
 
 Result data:
 - Uses method-owned decision reasons.
@@ -162,7 +166,7 @@ Response branch:
 - The method result carries `blockers: CloseReadinessBlocker[]`.
 
 State effect:
-- Only the close-task method owner may define any committed blocked-result effect.
+- The close-task method owner and [Storage Effects](../storage-effects.md) define whether a blocked close-task result is response-only or committed.
 
 Result data boundary:
 - Close-readiness blocker/API response routing and public-code-to-blocker routing belong to [API blocker routing](blocker-routing.md).
@@ -183,7 +187,9 @@ Response branch:
 State effect:
 - No stored blocker and no state-version increment for the read.
 
-Blocked result means the method may have returned an operation-specific blocked outcome. It is not a public transport/schema error. Any committed blocked result and any state effect must be allowed by the relevant method owner listed in [API Methods](methods.md) and [Storage Effects](../storage-effects.md).
+Blocked result means the method may have returned an operation-specific blocked outcome. It is not a public transport/schema error and it does not use `ToolRejectedResponse.errors[]`. Any committed blocker-shaped result and any state effect must be allowed by the relevant method owner listed in [API Methods](methods.md) and [Storage Effects](../storage-effects.md).
+
+<a id="dry-run-behavior"></a>
 
 ## Dry-run behavior
 
