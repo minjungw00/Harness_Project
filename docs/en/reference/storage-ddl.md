@@ -41,7 +41,7 @@ Write Check rows record Core-state compatibility for a product-file write attemp
 
 ## `registry.sqlite`
 
-`registry.sqlite` stores Runtime Home identity, project registration, Agent Connection records, Connection Projects membership, and host configuration inventory. It does not store project-local Core state.
+`registry.sqlite` stores Runtime Home identity, setup profile records, project registration, Agent Connection records, Connection Projects membership, and host configuration inventory. It does not store project-local Core state.
 
 The DDL below is the initial physical registry schema for storage profile `baseline_sqlite_v3` schema version `1`. Storage profile and migration boundary behavior are owned by [Storage Versioning](storage-versioning.md).
 
@@ -67,9 +67,22 @@ CREATE TABLE runtime_home (
   metadata_json TEXT NOT NULL DEFAULT '{}'
 );
 
+CREATE TABLE setup_profile (
+  singleton_id INTEGER PRIMARY KEY CHECK (singleton_id = 1),
+  runtime_home_id TEXT NOT NULL,
+  mcp_command TEXT NOT NULL,
+  linked_bin_path TEXT,
+  installation_profile_json TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  metadata_json TEXT NOT NULL DEFAULT '{}',
+  FOREIGN KEY (runtime_home_id) REFERENCES runtime_home (runtime_home_id)
+);
+
 CREATE TABLE projects (
   project_id TEXT PRIMARY KEY,
   runtime_home_id TEXT NOT NULL,
+  project_name TEXT NOT NULL UNIQUE,
   repo_root TEXT NOT NULL,
   project_home TEXT NOT NULL UNIQUE,
   state_db_path TEXT NOT NULL,
@@ -80,16 +93,17 @@ CREATE TABLE projects (
   FOREIGN KEY (runtime_home_id) REFERENCES runtime_home (runtime_home_id)
 );
 
-CREATE INDEX idx_projects_repo_root ON projects (repo_root);
+CREATE UNIQUE INDEX idx_projects_repo_root_unique ON projects (repo_root);
 CREATE INDEX idx_projects_status ON projects (status);
 
 CREATE TABLE agent_connections (
   connection_id TEXT PRIMARY KEY,
   host_kind TEXT NOT NULL CHECK (host_kind IN ('codex', 'claude_code', 'generic')),
-  host_scope TEXT NOT NULL CHECK (host_scope IN ('user', 'project', 'local', 'export')),
-  server_name TEXT NOT NULL,
+  connection_intent TEXT NOT NULL
+    CHECK (connection_intent IN ('personal', 'shared', 'global', 'export')),
+  server_name TEXT NOT NULL DEFAULT 'volicord',
   config_target TEXT NOT NULL,
-  mode TEXT NOT NULL CHECK (mode IN ('read_only', 'workflow')),
+  mode TEXT NOT NULL DEFAULT 'workflow' CHECK (mode IN ('workflow', 'read_only')),
   enabled INTEGER NOT NULL DEFAULT 1 CHECK (enabled IN (0, 1)),
   managed_fingerprint TEXT NOT NULL,
   last_verified_status TEXT NOT NULL DEFAULT 'not_verified'
@@ -98,9 +112,9 @@ CREATE TABLE agent_connections (
   updated_at TEXT NOT NULL,
   metadata_json TEXT NOT NULL DEFAULT '{}',
   CHECK (
-    (host_kind = 'codex' AND host_scope IN ('user', 'project'))
-    OR (host_kind = 'claude_code' AND host_scope IN ('local', 'project', 'user'))
-    OR (host_kind = 'generic' AND host_scope = 'export')
+    (host_kind IN ('codex', 'claude_code')
+      AND connection_intent IN ('personal', 'shared', 'global'))
+    OR (host_kind = 'generic' AND connection_intent = 'export')
   )
 );
 
@@ -121,19 +135,22 @@ CREATE INDEX idx_connection_projects_project
 CREATE INDEX idx_agent_connections_enabled
   ON agent_connections (enabled);
 CREATE UNIQUE INDEX idx_agent_connections_target
-  ON agent_connections (host_kind, host_scope, config_target, server_name);
+  ON agent_connections (host_kind, connection_intent, config_target, server_name);
 ```
 
 Registry constraints:
 
 - `runtime_home` is a singleton table. The stored `runtime_home_id` identifies the Runtime Home record; it is not a security guarantee.
-- `projects.project_home` is unique. `repo_root` is indexed for lookup but does not replace project identity.
+- `setup_profile` is a singleton table. It stores setup-time MCP command and installation-profile metadata. It is not host trust, user authority, or public API state.
+- `projects.project_name`, `projects.repo_root`, and `projects.project_home` are unique. `repo_root` is the user-facing repository-root lookup key and does not replace internal project identity.
 - `projects.state_db_path` is retained as a stored column. Store application-level current-registration validation must confirm it equals `project_home/state.sqlite` before operational `ProjectRecord` lookup or listing, project-state migration or writable open, Agent Connection project routing, Core execution, setup reuse, or MCP project availability.
 - `projects.status` is storage-owned and baseline-valid only as `active`.
-- `agent_connections` stores one local MCP host connection unit, its mode, enabled state, host configuration inventory, and last verification status.
-- `agent_connections.mode` is constrained to `read_only` or `workflow`.
+- `agent_connections` stores one local MCP host connection unit, its connection intent, mode, enabled state, host configuration inventory, and last verification status.
+- `agent_connections.connection_intent` is constrained to `personal`, `shared`, `global`, or internal export state for generic MCP config export.
+- `agent_connections.server_name` defaults to the internal host config key `volicord`.
+- `agent_connections.mode` is constrained to `workflow` or `read_only`, and the default is `workflow`.
 - `connection_projects` is the explicit project allowlist for one Agent Connection. Deleting a project or connection that still has membership is restricted.
-- `agent_connections.host_kind` and `agent_connections.host_scope` are constrained to the supported host/scope matrix defined by [Administrative CLI](admin-cli.md).
+- `agent_connections.host_kind` and `agent_connections.connection_intent` are constrained to the supported direct host connection intents and the separate generic export flow defined by [Administrative CLI](admin-cli.md).
 - `schema_migrations` records applied registry schema versions. Migration execution semantics stay with [Storage Versioning](storage-versioning.md).
 
 ## Project `state.sqlite`

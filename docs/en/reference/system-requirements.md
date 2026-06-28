@@ -24,7 +24,7 @@ Do not infer support from Rust portability alone. A Rust crate being portable in
 | Shell syntax | Supported for the maintained POSIX-style examples. Other shells are unverified for these examples. | Installation examples use `export VOLICORD_BIN="$(pwd)/target/debug"`, quoted variable expansion, `PATH="$VOLICORD_BIN:$PATH"`, and `test -x`. | If your shell cannot run that syntax, translate the commands yourself and verify each resulting command before continuing. |
 | Executable role names | Supported and verified. | Reference owners define `volicord` as the administrative CLI role and `volicord-mcp` as the local MCP adapter role. | Build or install both `volicord` and `volicord-mcp`; do not treat one executable as a substitute for the other. |
 | Package-manager installation | Out of scope. | The Installation page documents source build and separately installed executable discovery, but no package-manager procedure or release layout is defined in repository owners. | Use the source build path or an already installed executable directory that contains both executables. |
-| Host version minimums for Codex and Claude Code | No stable minimum host version is defined. Host compatibility is checked operationally, not by a documented version floor. | Codex verification looks for `codex` on `PATH` and runs `codex --version`. Claude Code verification inspects host state through `claude mcp get <server_name>`. Administrative verification owns the final result states. | Use `volicord agent verify --connection-id <id>` after installation. Do not rely on an undocumented Codex or Claude Code minimum version. |
+| Host version minimums for Codex and Claude Code | No stable minimum host version is defined. Host compatibility is checked operationally, not by a documented version floor. | Codex verification looks for `codex` on `PATH` and runs `codex --version`. Claude Code verification inspects host state through `claude mcp get <server_name>`. Administrative verification owns the final result states. | Use `volicord connection verify HOST [--repo PATH] [--shared|--global]` after installation. Do not rely on an undocumented Codex or Claude Code minimum version. |
 
 ## Toolchain Requirements
 
@@ -51,7 +51,7 @@ Maintained command examples assume a POSIX-style shell with:
 - forward-slash paths in examples
 - colon-separated `PATH`
 
-`VOLICORD_BIN` is only a tutorial shell variable used by the documentation examples. Volicord does not read `VOLICORD_BIN` as configuration. The host configuration receives either an absolute executable path or the portable command name `volicord-mcp`, depending on scope.
+`VOLICORD_BIN` is only a tutorial shell variable used by the documentation examples. Volicord does not read `VOLICORD_BIN` as configuration. The setup profile records the `volicord-mcp` command used by managed host configuration and generic MCP configuration export.
 
 `VOLICORD_HOME` is different. It is a real Runtime Home selection input for `volicord` administrative commands and `volicord-mcp` process startup, as defined by their owner documents.
 
@@ -68,17 +68,19 @@ Before continuing, verify from the same shell:
 
 ```sh
 "$VOLICORD_BIN/volicord" --version
-"$VOLICORD_BIN/volicord" agent --help
+"$VOLICORD_BIN/volicord" setup --help
+"$VOLICORD_BIN/volicord" connect --help
 "$VOLICORD_BIN/volicord-mcp" --version
 "$VOLICORD_BIN/volicord-mcp" --help
 ```
 
 For POSIX-style shells, `test -x "$VOLICORD_BIN/volicord"` and `test -x "$VOLICORD_BIN/volicord-mcp"` are the maintained example checks for executable files.
 
-Host configuration has scope-specific command requirements:
+Host configuration uses the MCP command recorded by `volicord setup`:
 
-- Codex `user` scope and Claude Code `local` or `user` scope require an absolute `volicord-mcp` command path when `--mcp-command` is supplied. If omitted, the administrative CLI tries the `volicord` executable's sibling directory and then `PATH`.
-- Codex and Claude Code `project` scope must use the portable command name `volicord-mcp`; the future host process must be able to find `volicord-mcp` on its own `PATH`.
+- `volicord setup --mcp-command PATH` records the command that managed host configuration and generic MCP configuration export should use to start `volicord-mcp`.
+- If `--mcp-command` is omitted, setup discovery uses the sibling `volicord-mcp` next to the running `volicord` executable and then a command on `PATH`.
+- The future MCP host process must be able to start the recorded command and receive the intended `VOLICORD_HOME` when the default Runtime Home is not intended.
 - Generic export can render explicit configuration, but it remains user-managed until a host-specific owner defines an observable loadability gate.
 
 ## Runtime Home Requirements
@@ -88,14 +90,14 @@ A usable `Volicord Runtime Home` must be a local filesystem location the selecte
 Before installation:
 
 - Select a Runtime Home that is not the `Product Repository` and is not inside or above the `Product Repository`.
-- Ensure the selected user can create the directory or write into it when running `volicord init`, project registration, agent connection, or verification.
+- Ensure the selected user can create the directory or write into it when running `volicord setup`, `volicord project use`, `volicord connect`, or `volicord connection verify`.
 - Ensure future `volicord-mcp` host processes receive the same Runtime Home selection when the default `$HOME/.volicord` is not the intended location.
 
 Runtime Home selection and exact creation behavior are owned by [Administrative CLI](admin-cli.md) and [MCP Transport](mcp-transport.md). Runtime location and separation rules are owned by [Runtime Boundaries](runtime-boundaries.md).
 
 ## Product Repository Requirements
 
-A `Product Repository` must be an existing local directory for project registration and project-scoped host setup. It must remain separate from `Volicord Runtime Home`.
+A `Product Repository` must be an existing local directory for project registration, project selection, and shared-intent host setup. It must remain separate from `Volicord Runtime Home`.
 
 Read access is required when Volicord validates or uses the registered project. Write access to the `Product Repository` is required only for owner-defined product-file writes or explicitly requested integration files, including:
 
@@ -103,20 +105,20 @@ Read access is required when Volicord validates or uses the registered project. 
 - project-scoped Claude Code `.mcp.json`
 - optional Volicord-managed guidance blocks or files
 
-Noninteractive project-scoped host configuration or guidance writes require the explicit repository-write approval flag defined by [Administrative CLI](admin-cli.md). Runtime records, SQLite databases, generated records, logs, projections, QA results, acceptance records, close-readiness state, and residual-risk records do not belong in the `Product Repository`.
+Noninteractive shared-intent host configuration or guidance writes require the explicit `--shared` command path defined by [Administrative CLI](admin-cli.md#noninteractive-approval-behavior). Runtime records, SQLite databases, generated records, logs, projections, QA results, acceptance records, close-readiness state, and residual-risk records do not belong in the `Product Repository`.
 
 ## Host Configuration Requirements
 
-For direct host configuration setup, the administrative process must be able to inspect the target host configuration and write managed configuration when the selected host and scope require it.
+For direct host configuration setup, the administrative process must be able to inspect the target host configuration and write managed configuration when the selected host and connection intent require it.
 
-Baseline host and scope requirements:
+Baseline host and connection-intent requirements:
 
-| Host | Scope | Environment prerequisite |
+| Host | Connection intent | Environment prerequisite |
 |---|---|---|
-| Codex | `user` | `CODEX_HOME` or `HOME` must identify the user Codex configuration location; `codex` must be available on `PATH` for the availability check. |
-| Codex | `project` | The `Product Repository` must be writable when applying `.codex/config.toml`; the future Codex host must find `volicord-mcp` on `PATH`; Codex project trust may still be required. |
-| Claude Code | `local`, `user` | The `claude` executable must be launchable by the administrative process so Volicord can use `claude mcp` commands. |
-| Claude Code | `project` | The `Product Repository` must be writable when applying `.mcp.json`; the future Claude Code host must find `volicord-mcp` on `PATH`; project MCP approval may still be required. |
+| Codex | `personal`, `global` | `CODEX_HOME` or `HOME` must identify the user Codex configuration location; `codex` must be available on `PATH` for the availability check. |
+| Codex | `shared` | The selected `Product Repository` must be writable when applying `.codex/config.toml`; the future Codex host must be able to start the setup profile's MCP command; Codex project trust may still be required. |
+| Claude Code | `personal`, `global` | The `claude` executable must be launchable by the administrative process so Volicord can use `claude mcp` commands. |
+| Claude Code | `shared` | The selected `Product Repository` must be writable when applying `.mcp.json`; the future Claude Code host must be able to start the setup profile's MCP command; project MCP approval may still be required. |
 | Generic | `export` | A writable export target is needed only when writing an export file. The external host remains user-managed and unverified until loaded and checked by a host-specific mechanism. |
 
 Writing host configuration does not prove that the host trusted, approved, loaded, initialized, or exposed `volicord-mcp`. `managed host configuration state` meaning and host trust boundaries are owned by [Agent Connection](agent-connection.md).
@@ -143,7 +145,7 @@ Stop before installation when any of these conditions apply:
 - The selected Runtime Home cannot be created, read, or written by the processes that need it.
 - The Runtime Home and Product Repository are the same path or one contains the other.
 - The Product Repository is missing, is not a directory, or is not writable for a requested project-scoped configuration or guidance write.
-- Project-scoped host configuration cannot rely on `volicord-mcp` from the future host `PATH`.
+- Shared-intent host configuration cannot start the setup profile's recorded MCP command from the future host environment.
 - Codex or Claude Code is required for the selected host path but the administrative compatibility check cannot launch or interpret the host.
 - A required host trust, project trust, project MCP approval, OAuth, reload, restart, or comparable host-owned action remains and the operator cannot complete it.
 - The planned environment depends on Windows, PowerShell, a package manager, a container image, a remote host, a network listener, or a host-version promise that this repository does not document.

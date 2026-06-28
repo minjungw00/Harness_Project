@@ -29,8 +29,8 @@ Volicord keeps product, implementation, executable-role, MCP host term, and auth
 | Volicord installation | The deployed subset of Volicord executables and required runtime resources. | It does not imply that documentation, tests, source files, or repository metadata are present in every installation. |
 | `volicord` administrative process | The administrative CLI executable/process within Volicord implementation. | It is not a synonym for Volicord or for all of Volicord implementation. |
 | `volicord-mcp` MCP adapter process | The local stdio MCP adapter executable/process within Volicord implementation. | It is not separate from Volicord implementation and not the whole Volicord implementation by itself. |
-| `Agent Connection` | The local MCP host connection unit identified by `connection_id`. Its `connection.mode` is either `read_only` or `workflow`. | It is not an OS sandbox, filesystem ACL, network policy, secret-isolation mechanism, or user-judgment path. |
-| `Connection Projects` | The explicit allowlist of `project_id` values an Agent Connection may address. | It does not include every registered project by default and does not prove Product Repository authority. |
+| `Agent Connection` | The local MCP host connection unit stored with an internal `connection_id`, a connection intent, and `connection.mode` of `workflow` or `read_only`. | It is not an OS sandbox, filesystem ACL, network policy, secret-isolation mechanism, user-facing id requirement, or user-judgment path. |
+| `Connection Projects` | The explicit allowlist of internal `project_id` values an Agent Connection may address after user-facing repository-root selection. | It does not include every registered project by default and does not prove Product Repository authority. |
 | `User Channel` | The local user path for recording authority-bearing user judgments. | It is not an Agent Connection, MCP host, generated display, or Product Repository file. |
 | MCP server | An ordinary MCP protocol or host-configuration term that may name a server entry or process exposed to an MCP host, including a local stdio adapter process such as `volicord-mcp` when the host uses that label. | It does not make Volicord as a product/system, Volicord implementation, `volicord`, or `volicord-mcp` a TCP or HTTP network server, and it is not a product label for Volicord. |
 
@@ -53,12 +53,12 @@ This table summarizes the boundary roles in the baseline local Rust implementati
 
 | Boundary or surface | What belongs there | Primary process path | Must not infer |
 |---|---|---|---|
-| `Volicord Runtime Home` | `registry.sqlite`; per-project `projects/{project_id}/state.sqlite`; project artifact storage such as `projects/{project_id}/artifacts/` when artifact storage is used. The registry stores Runtime Home identity, project registrations, Agent Connection records, Connection Projects membership, and `managed host configuration state` inventory such as configuration target, managed fingerprint, and last verification status. | `volicord` initializes and updates setup and registry state. `volicord-mcp`, Core, and Store read or use Runtime Home state for startup, project routing, Core state, and artifacts. | It is not a `Product Repository`, external host configuration, installation directory, OS sandbox, network isolation layer, malware scanner, secret scanner, or proof of host trust. |
+| `Volicord Runtime Home` | `registry.sqlite`; per-project `projects/{project_id}/state.sqlite`; project artifact storage such as `projects/{project_id}/artifacts/` when artifact storage is used. The registry stores Runtime Home identity, setup profile records, project registrations, Agent Connection records, Connection Projects membership, and `managed host configuration state` inventory such as configuration target, connection intent, managed fingerprint, and last verification status. | `volicord setup`, project, connection, export, and user commands initialize, read, or update registry state through their owner-defined paths. `volicord-mcp`, Core, and Store read or use Runtime Home state for startup, project routing, Core state, and artifacts. | It is not a `Product Repository`, external host configuration, installation directory, OS sandbox, network isolation layer, malware scanner, secret scanner, or proof of host trust. |
 | `Product Repository` | User product files and only explicitly requested integration files, such as project-scoped host configuration or managed guidance. | User or host tools own ordinary product-file edits. Volicord may inspect product paths as inputs and may write explicit integration files only through owner-defined administrative paths. | It is not Runtime Home state, Core storage, artifact storage by default, or proof of Volicord authority. |
-| `managed host configuration state` in the Runtime Home registry | Volicord's registry inventory for a host target: host kind and scope, server name, configuration target, mode, enabled state, managed fingerprint, last verification status, and metadata. | `volicord agent` commands create, update, list, verify, or remove the registry row and Connection Projects membership. | It is not the external host configuration object itself and does not prove that the host trusted, approved, loaded, initialized, or exposed `volicord-mcp`. |
-| External MCP host configuration | Host-owned configuration or a user-managed export that can name `volicord-mcp --connection <connection_id>` and environment values such as `VOLICORD_HOME`. | `volicord` may write supported direct configuration or render an export when [Administrative CLI](admin-cli.md) defines that behavior; the external host owns loading and trust decisions. | It is not Runtime Home registry state, Core authority, or proof of Volicord authority. If it lives in a `Product Repository`, it is only an explicit integration file. |
-| `volicord` administrative CLI process | Local setup and registry/host-integration administration, including Runtime Home initialization, project registration, Agent Connection and Connection Projects management, host configuration apply or export, status, verification, and safe removal where defined. | A local operator or user runs the process. | It is not a public Volicord API method path, OS security enforcement layer, host trust decision, or blanket Product Repository edit authority. |
-| `volicord-mcp` MCP adapter process | A local stdio child process bound to one Agent Connection. It resolves Runtime Home, validates connection state, exposes tools by `connection.mode`, selects allowed projects, derives adapter-owned invocation facts, and routes public method calls through Core and Store. | An MCP host starts the process and communicates over stdin/stdout. | It does not itself grant arbitrary product-file edit authority, record authority-bearing user judgments, enforce host trust, provide sandboxing, or open a network listener. |
+| `managed host configuration state` in the Runtime Home registry | Volicord's registry inventory for a host target: host kind, connection intent, internal server name, configuration target, mode, enabled state, managed fingerprint, last verification status, and metadata. | `volicord connect`, `volicord connections`, `volicord connection status`, `volicord connection verify`, `volicord connection mode`, `volicord connection remove`, and export flows create, update, list, verify, or remove the registry row and Connection Projects membership. | It is not the external host configuration object itself and does not prove that the host trusted, approved, loaded, initialized, or exposed `volicord-mcp`. |
+| External MCP host configuration | Host-owned configuration or a user-managed export that can name `volicord-mcp` with an internal Agent Connection binding and environment values such as `VOLICORD_HOME`. | `volicord` may write supported direct configuration or render an export when [Administrative CLI](admin-cli.md) defines that behavior; the external host owns loading and trust decisions. | It is not Runtime Home registry state, Core authority, or proof of Volicord authority. If it lives in a `Product Repository`, it is only an explicit integration file. |
+| `volicord` administrative CLI process | Local setup and registry/host-integration administration, including Runtime Home initialization, project registration from repository roots, Agent Connection and Connection Projects management, host configuration apply or export, status, verification, mode change, and safe removal where defined. | A local operator or user runs the process. | It is not a public Volicord API method path, OS security enforcement layer, host trust decision, or blanket Product Repository edit authority. |
+| `volicord-mcp` MCP adapter process | A local stdio child process bound to one Agent Connection. It resolves Runtime Home, validates connection state, exposes tools by `connection.mode`, selects allowed projects by owner-defined repository-root rules, derives adapter-owned invocation facts, and routes public method calls through Core and Store. | An MCP host starts the process and communicates over stdin/stdout. | It does not itself grant arbitrary product-file edit authority, record authority-bearing user judgments, enforce host trust, provide sandboxing, or open a network listener. |
 
 <a id="runtime-location-product-repository"></a>
 ### `Product Repository`
@@ -89,7 +89,7 @@ The only baseline exceptions are explicitly requested integration files:
 Rules:
 
 - The administrative command must preview the exact target path and content before applying the write.
-- Noninteractive execution must include explicit repository-write check as defined by [Administrative CLI](admin-cli.md#noninteractive-approval-behavior).
+- Noninteractive execution must use the explicit shared-intent command path and conflict behavior defined by [Administrative CLI](admin-cli.md#noninteractive-approval-behavior).
 - The write must use Volicord ownership markers or a managed fingerprint.
 - Existing unmanaged content must be reported as a conflict rather than overwritten.
 - Replacement may apply only to matching Volicord-managed content.
@@ -144,12 +144,12 @@ Exact executable behavior, environment variables, framing, startup validation or
 
 ### Agent Connections and Connection Projects
 
-An Agent Connection is the local MCP host connection unit for `volicord-mcp`. The connection is identified by `connection_id`, has `connection.mode=read_only` or `connection.mode=workflow`, and can address only the explicitly allowed `project_id` values in its Connection Projects allowlist.
+An Agent Connection is the local MCP host connection unit for `volicord-mcp`. The connection has an internal `connection_id`, a connection intent of `personal`, `shared`, or `global`, `connection.mode=workflow` or `connection.mode=read_only`, and can address only the explicitly allowed internal `project_id` values in its Connection Projects allowlist. User-facing administrative commands select the connection by host, intent, and repository root rather than requiring the internal ids.
 
 An Agent Connection can request user judgments through supported API paths, but it cannot record authority-bearing user judgments. Those judgments are recorded through the `User Channel` with `actor_source=local_user`.
 
 Must not infer:
-- A copied `connection_id` proves authority, user identity, OS permission, host trust, or capability.
+- A copied internal `connection_id` proves authority, user identity, OS permission, host trust, or capability.
 - `connection.mode=workflow` grants filesystem, shell, network, secret, deployment, or Product Repository write permission.
 - A Connection Projects allowlist turns every registered project into an allowed project.
 - An Agent Connection can record final acceptance, residual-risk acceptance, sensitive-action approval, cancellation, or scope decisions on behalf of the user.
@@ -159,7 +159,7 @@ Must not infer:
 MCP host configuration belongs to the external MCP host. Volicord administrative commands may install supported host configuration directly or render explicit exported configuration when [Administrative CLI](admin-cli.md) defines that behavior, but this document only owns the location boundary.
 
 May claim:
-- Host configuration can name a `volicord-mcp` executable and environment values needed by that host.
+- Host configuration can name a `volicord-mcp` executable, an internal Agent Connection binding, and environment values needed by that host.
 - Host configuration can live outside the source repository, installation files, `Volicord Runtime Home`, and `Product Repository`.
 
 Must not claim:
@@ -242,7 +242,7 @@ Do not infer Volicord authority, security authority, runtime state, or isolation
 - The directory where Volicord is installed or started.
 - External MCP host configuration.
 - The directory selected as `Volicord Runtime Home`.
-- A copied `connection_id`.
+- A copied internal `connection_id`.
 - A displayed `ArtifactRef`.
 - A rendered `Projection`, status card, or template output.
 - Connector prose, chat text, or agent memory.

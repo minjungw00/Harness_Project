@@ -179,7 +179,8 @@ identifier_preservation:
     - "actor_source"
     - "operation_category"
     - "host_kind"
-    - "host_scope"
+    - "connection_intent"
+    - "setup_profile"
     - "server_name"
     - "config_target"
     - "managed_fingerprint"
@@ -202,8 +203,8 @@ identifier_preservation:
     - "volicord.close_task"
     - "volicord"
     - "volicord-mcp"
-    - "volicord.list_projects"
-    - "volicord agent connect"
+    - "volicord setup"
+    - "volicord connect"
     - "VOLICORD_BIN"
     - "VOLICORD_PROJECT_ID"
     - "VOLICORD_HOME"
@@ -1363,6 +1364,7 @@ terms:
     preserve_as_identifier:
       - "connection_id"
       - "connection.mode"
+      - "connection_intent"
       - "agent_connections"
     primary_owner:
       en: "docs/en/reference/agent-connection.md"
@@ -1377,8 +1379,9 @@ terms:
       - en: "docs/en/reference/admin-cli.md"
         ko: "docs/ko/reference/admin-cli.md"
     notes:
-      - "Use for the local MCP host connection unit identified by `connection_id`."
-      - "`connection.mode` is either `read_only` or `workflow`."
+      - "Use for the local MCP host connection unit stored with an internal `connection_id`."
+      - "`connection.mode` is either `workflow` or `read_only`."
+      - "`connection_intent` is `personal`, `shared`, `global`, or internal export state for generic MCP config export."
       - "Do not use as a synonym for Product Repository, Runtime Home, User Channel, or managed host configuration state."
       - "Do not make Agent Connection wording sound like OS permission, secret isolation, filesystem ACLs, or user authority."
   connection_id:
@@ -1402,6 +1405,30 @@ terms:
     notes:
       - "Use as the identifier for an Agent Connection."
       - "Do not describe a copied `connection_id` as user authority, OS permission, or proof of capability."
+  connection_intent:
+    category: "product_concept"
+    en: "connection intent"
+    ko_reference: "연결 의도"
+    ko_user: "연결 의도"
+    preserve_as_identifier:
+      - "connection_intent"
+      - "personal"
+      - "shared"
+      - "global"
+      - "export"
+    primary_owner:
+      en: "docs/en/reference/agent-connection.md"
+      ko: "docs/ko/reference/agent-connection.md"
+    related_references:
+      - en: "docs/en/reference/admin-cli.md"
+        ko: "docs/ko/reference/admin-cli.md"
+      - en: "docs/en/reference/storage-records.md"
+        ko: "docs/ko/reference/storage-records.md"
+      - en: "docs/en/reference/storage-ddl.md"
+        ko: "docs/ko/reference/storage-ddl.md"
+    notes:
+      - "Use for the user-facing Agent Connection intent choice of `personal`, `shared`, or `global`."
+      - "`export` is an internal storage value for generic MCP config export, not a normal direct host connection intent."
   current_connection_context:
     category: "runtime_context"
     en: "current connection context"
@@ -1449,7 +1476,8 @@ terms:
       - en: "docs/en/reference/storage-ddl.md"
         ko: "docs/ko/reference/storage-ddl.md"
     notes:
-      - "Use for the explicit allowlist of `project_id` values for an Agent Connection."
+      - "Use for the explicit allowlist of internal `project_id` values for an Agent Connection."
+      - "User-facing commands select projects by repository root or project name."
       - "Do not imply all registered projects are included unless the owner explicitly says so."
   user_channel:
     category: "product_concept"
@@ -1532,7 +1560,7 @@ terms:
       - "managed host configuration state"
     preserve_as_identifier:
       - "host_kind"
-      - "host_scope"
+      - "connection_intent"
       - "last_verified_status"
     primary_owner:
       en: "docs/en/reference/agent-connection.md"
@@ -1549,25 +1577,6 @@ terms:
     notes:
       - "Use this label for managed host configuration and last-known verification state."
       - "Do not treat managed host configuration state as proof that the external host trusted, approved, loaded, or exposed the MCP server."
-  volicord_list_projects:
-    category: "identifier"
-    en: "volicord.list_projects"
-    ko_reference: "`volicord.list_projects`"
-    ko_user: "`volicord.list_projects`"
-    preserve_identifier: true
-    preserve_as_identifier:
-      - "volicord.list_projects"
-    primary_owner:
-      en: "docs/en/reference/mcp-transport.md"
-      ko: "docs/ko/reference/mcp-transport.md"
-    related_references:
-      - en: "docs/en/reference/agent-connection.md"
-        ko: "docs/ko/reference/agent-connection.md"
-      - en: "docs/en/reference/api/methods.md"
-        ko: "docs/ko/reference/api/methods.md"
-    notes:
-      - "`volicord.list_projects` is an MCP adapter utility, not a public Core API method."
-      - "Preserve the exact tool name in English and Korean."
   state_version:
     category: "identifier"
     en: "state_version"

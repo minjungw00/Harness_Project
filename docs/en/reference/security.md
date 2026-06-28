@@ -21,7 +21,7 @@ Volicord security wording describes record and policy boundaries inside document
 |---|---|---|
 | `Volicord Runtime Home` | Storage/runtime owners define which Volicord operational records live there and how they are validated. | Runtime Home placement is not OS sandboxing, tamper-proof isolation, host trust, network isolation, malware scanning, or secret scanning. |
 | `Product Repository` | Product files can be inspected as inputs, and compatible product-file writes can be governed by owner-defined Core, user-judgment, and `Write Check` paths. | Product files are not Volicord state, and Volicord does not provide arbitrary product-file edit permission, malware scanning, secret scanning, or global filesystem interception. |
-| Agent Connections and host configuration | Agent Connections provide documented connection context, `actor_source` provenance, mode, and Connection Projects allowlists when the current invocation matches the registered connection. | Connection configuration is not OS permission, host trust, user identity, or proof that an external host loaded or exposed `volicord-mcp`. |
+| Agent Connections and host configuration | Agent Connections provide documented connection context, `actor_source` provenance, connection intent, mode, and Connection Projects allowlists when the current invocation matches the registered connection. | Connection configuration is not OS permission, host trust, user identity, or proof that an external host loaded or exposed `volicord-mcp`. |
 | `volicord-mcp` | The adapter routes MCP calls through Agent Connection checks, Runtime Home state, Core, and Store. | The process does not itself grant arbitrary product-file edit authority, record authority-bearing user judgments, enforce host trust, block commands, block networks, or isolate tools. |
 | `volicord` CLI | Administrative commands manage setup, registry state, and supported host-integration state. | The CLI is not a public API security boundary, host trust controller, OS permission mechanism, or blanket write approval. |
 
@@ -107,9 +107,9 @@ Volicord security claims assume local actors use the documented Volicord contrac
 May claim:
 - Local product files can be inputs to Volicord checks or user-owned judgments.
 - Local runtime data location can be defined by storage/runtime owners.
-- Agent Connections can provide `actor_source=agent_connection:<connection_id>` provenance when [Agent Connection Reference](agent-connection.md), method owners, and this security owner allow the claim.
+- Agent Connections can provide `actor_source=agent_connection:<connection_id>` provenance when [Agent Connection Reference](agent-connection.md), method owners, and this security owner allow the claim. The `connection_id` is internal registry identity, not a user-facing authority token.
 - The `User Channel` can provide `actor_source=local_user` provenance for authority-bearing user judgments when Core and method owners require it.
-- Connection Projects define the explicit `project_id` allowlist for an Agent Connection.
+- Connection Projects define the explicit internal `project_id` allowlist for an Agent Connection. User-facing commands select projects by repository root or project name.
 - `operation_category` classifies an operation as `read`, `agent_workflow`, `user_only`, or `admin_local`.
 - Baseline actor provenance is cooperative local provenance, not cryptographic human identity.
 
@@ -165,14 +165,15 @@ Must not claim:
 Connection identity, user-channel provenance, and operation categories limit what may be claimed.
 
 May claim:
-- `connection_id`, `connection.mode`, Connection Projects, `operation_category`, and `actor_source` can be used according to the runtime, Core, method, and security owners after the current invocation matches the documented connection context.
+- `connection_id`, connection intent, `connection.mode`, Connection Projects, `operation_category`, and `actor_source` can be used according to the runtime, Core, method, and security owners after the current invocation matches the documented connection context.
 - `actor_source` can supply durable provenance only when the Core and method owners accept the value for the current authority-resolution operation.
 - `actor_source=local_user` through the `User Channel` is required for authority-bearing user judgments.
 
 Must not claim:
 - `connection_id` alone is an authority token.
-- A copied connection identifier proves capability or user authority.
+- A copied internal connection identifier proves capability or user authority.
 - `connection.mode=workflow` is OS permission or broad authority.
+- A `personal`, `shared`, or `global` connection intent is OS permission, host trust, or broad authority.
 - `operation_category` is OS permission, host trust, or broad authority.
 - `actor_source` copied from text is a caller authority token.
 - Environment-controlled labels, public request fields, or arbitrary caller text are trusted authority, audit facts, or verification-basis inputs.
@@ -183,6 +184,7 @@ Host trust and approval decisions belong to the external host and the user. Voli
 
 May claim:
 - managed host configuration state verification can distinguish `complete` from `action_required` and `failed` when the administrative CLI can observe the required checks.
+- `action_required` can name setup repair, command-link repair, host trust, approval, restart, reload, or comparable user-controlled actions when those actions are the remaining observable blocker.
 - MCP server instructions and optional repository guidance can describe how an agent should select projects and tools.
 
 Must not claim:
@@ -248,7 +250,7 @@ Volicord does not allow readers or agents to infer authority from:
 
 - Broad approval.
 - Local path names.
-- Copied `connection_id` values.
+- Copied internal `connection_id` values.
 - Displayed `ArtifactRef` values.
 - Rendered `Projection` output.
 - `Product Repository` text.

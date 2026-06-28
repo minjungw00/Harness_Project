@@ -1149,7 +1149,7 @@ documents:
   - MCP startup validation and integration process binding
   - MCP Runtime Home environment resolution
   - per-call MCP project selection and validation
-  - '`volicord.list_projects` MCP adapter utility'
+  - MCP public tool schema surface without internal protocol envelope fields
   - line-delimited JSON-RPC over stdio
   - MCP supported request method set
   - '`tools/call` Volicord response wrapping'
