@@ -2,7 +2,7 @@
 
 하나의 사용자 범위 Agent Connection이 명시적으로 연결된 여러 `Product Repository` 등록을 섬겨야 할 때 이 가이드를 사용합니다.
 
-기준 topology:
+기준 토폴로지:
 
 ```mermaid
 flowchart LR
@@ -20,7 +20,7 @@ flowchart LR
 
 호스트 MCP 항목 하나, `volicord-mcp --connection <connection_id>` 프로세스 하나, 명시적으로 연결된 여러 Project가 있습니다. Project 하나를 추가해도 Runtime Home의 모든 Project 접근을 부여하지 않습니다. 연결된 Project 하나를 제거하면 호스트 항목을 다시 쓰지 않고 registry 상태를 통해 반영됩니다.
 
-project와 local 호스트 범위는 단일 Project 범위로 남습니다. 이 topology에는 user scope를 사용합니다.
+`project`와 `local` 호스트 범위는 단일 Project 범위로 남습니다. 이 토폴로지에는 `user` 범위를 사용합니다.
 
 ## 프로젝트 선택 흐름
 
