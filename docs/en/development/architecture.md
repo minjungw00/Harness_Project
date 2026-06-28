@@ -14,21 +14,37 @@ This checkout is the Volicord source repository and Rust workspace for the repos
 
 ```mermaid
 flowchart LR
-  host[MCP host or Agent Connection]
-  mcp["volicord-mcp stdio adapter"]
-  core["volicord-core"]
-  store["volicord-store project Store"]
-  artifacts[Artifact staging and artifact facilities]
-  operator[Operator]
-  cli["volicord administrative CLI"]
-  bootstrap[Bootstrap, registration, and inspection facilities]
-  user[User at local terminal]
-  runtime["Volicord Runtime Home"]
-  config[Host configuration files]
-  product["Product Repository"]
+  subgraph AgentRuntime["MCP runtime flow"]
+    host["AI host / Agent Connection"]
+    mcp["volicord-mcp stdio adapter"]
+    core["volicord-core"]
+    store["volicord-store project Store"]
+    artifacts["Artifact staging and artifact facilities"]
+  end
 
-  host --> mcp
-  mcp --> core
+  subgraph AdminManagement["Admin CLI management flow"]
+    operator["Operator terminal"]
+    cli["volicord administrative CLI"]
+    bootstrap["Bootstrap, registration, and inspection facilities"]
+    config["Host configuration files"]
+  end
+
+  subgraph UserAuthority["User Channel authority flow"]
+    user["User at local terminal"]
+    usercli["volicord user CLI"]
+    channel["User Channel"]
+  end
+
+  subgraph RuntimeBoundary["Volicord Runtime Home"]
+    runtime["Runtime state and records"]
+  end
+
+  subgraph ProductBoundary["Product Repository"]
+    product["Product files"]
+  end
+
+  host -- starts stdio child process --> mcp
+  mcp -- public tools/call dispatch --> core
   mcp -. startup and session validation .-> store
   core --> store
   core --> artifacts
@@ -36,15 +52,22 @@ flowchart LR
   artifacts --> runtime
 
   operator --> cli
-  user --> cli
   cli --> bootstrap
-  cli --> core
   cli --> config
   bootstrap --> runtime
+
+  user --> usercli
+  usercli --> channel
+  channel --> core
+  channel -. authority-bearing user judgments .-> runtime
 
   product -. owner-defined inputs and observed paths .-> core
   host -. product-file tools outside public API .-> product
 ```
+
+This diagram is an execution-orientation map. The `Volicord Runtime Home` and
+`Product Repository` boxes are storage/file boundaries, not process containers;
+the Product Repository remains outside the Runtime Home.
 
 The Volicord implementation in this repository has three distinct operational path shapes:
 
@@ -85,6 +108,11 @@ Internal dependency direction from the Cargo manifests:
 | `tests/conformance` | None; the package contains only test targets | `volicord-core`, `volicord-test-support`, `volicord-types` |
 | `tests/integration` | None; the package contains only test targets | `volicord-core`, `volicord-mcp`, `volicord-store`, `volicord-test-support`, `volicord-types` |
 | `xtask` | None | None |
+
+Dependency graph legend: the next Mermaid diagram is a Cargo dependency graph,
+not runtime process topology. Solid arrows point from a crate or package to a
+normal internal dependency. Dashed `dev` and `test` arrows are development and
+test-only dependency edges.
 
 ```mermaid
 flowchart TD
@@ -224,6 +252,10 @@ This flow is an implementation map. Exact public method contracts, error precede
 ## Administrative agent setup flow
 
 `volicord agent connect` is implemented as local administrative orchestration, not as a public Core method. The implementation lives under `crates/volicord-cli/src/agent_command.rs` and the host adapters in `crates/volicord-cli/src/host_integration/`; exact command, Agent Connection, MCP transport, and runtime-boundary contracts stay with [Administrative CLI](../reference/admin-cli.md), [MCP Transport](../reference/mcp-transport.md), [Runtime Boundaries](../reference/runtime-boundaries.md), and [Security](../reference/security.md).
+
+The following diagram is the administrative CLI management flow. It is not the
+steady-state MCP runtime path; `volicord-mcp` appears only in the explicit
+preflight and optional stdio handshake stages.
 
 ```mermaid
 flowchart TD

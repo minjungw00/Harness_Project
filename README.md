@@ -105,23 +105,28 @@ The point is ordinary: the agent should not turn speed into substitution.
 <a id="how-the-pieces-fit"></a>
 ## How The Pieces Fit
 
-The current local setup has four separate locations or actors:
+The current local setup keeps three flows and two filesystem boundaries separate:
 
 ```text
+MCP runtime flow
 AI host
   Codex, Claude Code, or a user-managed MCP host
         |
-        | starts a local child process
+        | starts a stdio child process for a configured Agent Connection
         v
 volicord-mcp --connection <connection_id>
         |
-        | uses the selected Volicord Runtime Home and allowed Product Repository
+        | handles public Volicord tool calls through Core
         v
 Volicord Runtime Home                    Product Repository
   /Users/alex/.volicord                    /work/acme-api
+  (Volicord runtime state)                 (product files; separate path)
 
-volicord
-  administrative CLI used for setup, status, verification, and connection management
+Admin CLI management flow
+operator terminal -> volicord -> Runtime Home registry and host configuration
+
+User Channel authority flow
+user terminal -> volicord user -> User Channel -> Core/Runtime Home records
 ```
 
 `volicord-mcp` is a local stdio child process started by the host. It is not a
@@ -131,7 +136,13 @@ selection happens per public Volicord tool call.
 
 `volicord` is the administrative CLI. It is used to build setup state, install or
 export host configuration, inspect status, and refresh verification. It is not a
-long-running server and is not a public Volicord API method set.
+long-running server and is not a public Volicord API method set. The
+`volicord user` subcommand is the User Channel path for authority-bearing user
+judgments.
+
+The `Product Repository` is shown beside the `Volicord Runtime Home` because it
+is a separate product-file boundary, not a child directory or runtime state
+inside the Runtime Home.
 
 <a id="terms"></a>
 ## Terms For First Setup

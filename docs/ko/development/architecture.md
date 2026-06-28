@@ -14,21 +14,37 @@ Volicord는 AI 지원 제품 작업을 위한 로컬 작업 권한 제품이자 
 
 ```mermaid
 flowchart LR
-  host[MCP 호스트 또는 Agent Connection]
-  mcp["volicord-mcp stdio 어댑터"]
-  core["volicord-core"]
-  store["volicord-store 프로젝트 Store"]
-  artifacts[아티팩트 스테이징과 아티팩트 기능]
-  operator[운영자]
-  cli["volicord 관리 CLI"]
-  bootstrap[부트스트랩, 등록, 검사 시설]
-  user[로컬 터미널 사용자]
-  runtime["Volicord Runtime Home"]
-  config[호스트 설정 파일]
-  product["Product Repository"]
+  subgraph AgentRuntime["MCP 런타임 흐름"]
+    host["에이전트 호스트 / Agent Connection"]
+    mcp["volicord-mcp stdio 어댑터"]
+    core["volicord-core"]
+    store["volicord-store 프로젝트 Store"]
+    artifacts["아티팩트 스테이징과 아티팩트 기능"]
+  end
 
-  host --> mcp
-  mcp --> core
+  subgraph AdminManagement["관리 CLI 흐름"]
+    operator["운영자 터미널"]
+    cli["volicord 관리 CLI"]
+    bootstrap["부트스트랩, 등록, 검사 시설"]
+    config["호스트 설정 파일"]
+  end
+
+  subgraph UserAuthority["User Channel 권한 흐름"]
+    user["로컬 터미널 사용자"]
+    usercli["volicord user CLI"]
+    channel["User Channel"]
+  end
+
+  subgraph RuntimeBoundary["Volicord Runtime Home"]
+    runtime["런타임 상태와 기록"]
+  end
+
+  subgraph ProductBoundary["Product Repository"]
+    product["제품 파일"]
+  end
+
+  host -- stdio 자식 프로세스 시작 --> mcp
+  mcp -- 공개 tools/call 디스패치 --> core
   mcp -. 시작과 세션 검증 .-> store
   core --> store
   core --> artifacts
@@ -36,15 +52,22 @@ flowchart LR
   artifacts --> runtime
 
   operator --> cli
-  user --> cli
   cli --> bootstrap
-  cli --> core
   cli --> config
   bootstrap --> runtime
+
+  user --> usercli
+  usercli --> channel
+  channel --> core
+  channel -. 권한을 지니는 사용자 판단 .-> runtime
 
   product -. 담당 문서가 정의한 입력과 관찰된 경로 .-> core
   host -. 공개 API 밖의 제품 파일 도구 .-> product
 ```
+
+이 그림은 실행 방향을 잡기 위한 지도입니다. `Volicord Runtime Home`과
+`Product Repository` 상자는 저장소/파일 경계이지 프로세스 컨테이너가 아닙니다.
+Product Repository는 Runtime Home 밖에 남습니다.
 
 이 저장소의 Volicord 구현에는 세 가지 운영 경로 형태가 있습니다.
 
@@ -85,6 +108,11 @@ Cargo manifest에서 확인되는 내부 의존 방향은 아래와 같습니다
 | `tests/conformance` | 없음. 이 패키지는 테스트 대상만 포함합니다. | `volicord-core`, `volicord-test-support`, `volicord-types` |
 | `tests/integration` | 없음. 이 패키지는 테스트 대상만 포함합니다. | `volicord-core`, `volicord-mcp`, `volicord-store`, `volicord-test-support`, `volicord-types` |
 | `xtask` | 없음 | 없음 |
+
+의존성 그래프 범례: 다음 Mermaid 그림은 Cargo 의존성 그래프이며 런타임 프로세스
+토폴로지가 아닙니다. 실선 화살표는 크레이트나 패키지에서 일반 내부 의존성으로
+향합니다. 점선 `dev`와 `test` 화살표는 개발 의존성과 테스트 전용 의존성
+간선입니다.
 
 ```mermaid
 flowchart TD
@@ -224,6 +252,10 @@ sequenceDiagram
 ## 관리 에이전트 설정 흐름
 
 `volicord agent connect`는 공개 Core 메서드가 아니라 로컬 관리 오케스트레이션으로 구현됩니다. 구현은 `crates/volicord-cli/src/agent_command.rs`와 `crates/volicord-cli/src/host_integration/`의 호스트 어댑터에 있습니다. 정확한 명령, Agent Connection, MCP 전송, 런타임 경계 계약은 [관리 CLI](../reference/admin-cli.md), [MCP 전송](../reference/mcp-transport.md), [런타임 경계](../reference/runtime-boundaries.md), [보안](../reference/security.md)이 담당합니다.
+
+아래 그림은 관리 CLI 흐름입니다. 상시 MCP 런타임 경로가 아니며,
+`volicord-mcp`는 명시적인 사전 점검과 선택적 stdio handshake 단계에서만
+등장합니다.
 
 ```mermaid
 flowchart TD
