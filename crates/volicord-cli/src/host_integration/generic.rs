@@ -5,9 +5,10 @@ use serde_json::{Map, Value};
 use super::{
     config_edit::{read_json_object, remove_file_if_fresh, write_json_object_if_fresh},
     current_entry_fingerprint_from_json, export_file_name, managed_fingerprint,
-    validated_server_name, HostAdapter, HostConfigError, HostConflict, HostConflictKind,
-    HostDetection, HostEffect, HostKind, HostPlan, HostRemoveRequest, HostScope, HostTarget,
-    ManagedServerEntry, PlannedChange,
+    validated_server_name, ConnectionIntent, HostAdapter, HostConfigError, HostConflict,
+    HostConflictKind, HostDetection, HostEffect, HostKind, HostPlan, HostPlanRequest,
+    HostRemoveRequest, HostScope, HostTarget, InstallationProfile, ManagedServerEntry,
+    PlannedChange,
 };
 use crate::host_integration::verification::{
     HostConfigurationStatus, HostExecutableStatus, HostGateStatus, ManagedConfigStatus,
@@ -18,22 +19,30 @@ use crate::host_integration::verification::{
 pub struct GenericAdapter;
 
 impl GenericAdapter {
-    pub fn plan(&self, request: GenericPlanRequest<'_>) -> Result<HostPlan, HostConfigError> {
-        if request.scope != HostScope::Export {
-            return Err(HostConfigError::Conflict(HostConflict::new(
-                HostConflictKind::InvalidScope,
-                "generic host integration supports only export scope",
-            )));
-        }
-        if !request.mcp_command.is_absolute() {
+    pub fn plan(&self, request: HostPlanRequest<'_>) -> Result<HostPlan, HostConfigError> {
+        let _ = request;
+        Err(HostConfigError::Conflict(HostConflict::new(
+            HostConflictKind::InvalidScope,
+            "generic MCP configuration is export-only and is not an ordinary host connection plan",
+        )))
+    }
+
+    pub fn plan_export(
+        &self,
+        request: GenericExportRequest<'_>,
+    ) -> Result<HostPlan, HostConfigError> {
+        if !request
+            .installation_profile
+            .volicord_mcp_command
+            .is_absolute()
+        {
             return Err(HostConfigError::Conflict(HostConflict::new(
                 HostConflictKind::InvalidCommand,
                 "generic export requires an absolute volicord-mcp command path",
             )));
         }
 
-        let server_name =
-            validated_server_name(request.connection_id, request.explicit_server_name)?;
+        let server_name = validated_server_name(request.connection_id, None)?;
         let target = request
             .output_path
             .map(Path::to_path_buf)
@@ -44,8 +53,8 @@ impl GenericAdapter {
             });
         let entry = ManagedServerEntry::new(
             request.connection_id,
-            request.mcp_command,
-            request.runtime_home,
+            request.installation_profile.volicord_mcp_command,
+            Some(request.installation_profile.runtime_home),
         );
         let fingerprint =
             managed_fingerprint(HostKind::Generic, HostScope::Export, &server_name, &entry);
@@ -100,14 +109,19 @@ impl GenericAdapter {
 
         Ok(HostPlan {
             host_kind: HostKind::Generic,
+            connection_intent: ConnectionIntent::Personal,
             host_scope: HostScope::Export,
+            mode: request.mode.to_owned(),
             server_name,
             target: HostTarget::Export(target),
             entry,
             change,
             fingerprint,
             conflicts,
-            user_actions: Vec::new(),
+            user_actions: vec![super::UserAction::new(
+                super::UserActionKind::HostTrustRequired,
+                "generic export must be loaded, trusted, or approved in the target host by the user",
+            )],
             file_snapshot: Some(snapshot),
         })
     }
@@ -145,7 +159,8 @@ impl HostAdapter for GenericAdapter {
 
     fn verify(&mut self, plan: &HostPlan) -> Result<Verification, HostConfigError> {
         if let Some(conflict) = plan.conflicts.first() {
-            return Ok(Verification::changed(conflict.message.clone()));
+            return Ok(Verification::changed(conflict.message.clone())
+                .merge_user_actions(&plan.user_actions));
         }
         let managed = verify_generic_export(plan)?;
         if managed != ManagedConfigStatus::Match {
@@ -156,14 +171,16 @@ impl HostAdapter for GenericAdapter {
                     managed.as_str(),
                     plan.server_name
                 ),
-            ));
+            )
+            .merge_user_actions(&plan.user_actions));
         }
         Ok(Verification::action_required(
             "generic export is valid, but external host loading remains user-managed and unverified",
         )
         .with_host_executable(HostExecutableStatus::NotRequired)
         .with_host_gate(HostGateStatus::ActionRequired)
-        .with_mcp_handshake_allowed(true))
+        .with_mcp_handshake_allowed(true)
+        .merge_user_actions(&plan.user_actions))
     }
 
     fn remove(&mut self, request: HostRemoveRequest) -> Result<HostEffect, HostConfigError> {
@@ -208,14 +225,12 @@ impl HostAdapter for GenericAdapter {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct GenericPlanRequest<'a> {
-    pub scope: HostScope,
+pub struct GenericExportRequest<'a> {
     pub connection_id: &'a str,
-    pub explicit_server_name: Option<&'a str>,
+    pub installation_profile: InstallationProfile<'a>,
+    pub mode: &'a str,
     pub output_dir: &'a Path,
     pub output_path: Option<&'a Path>,
-    pub mcp_command: &'a Path,
-    pub runtime_home: Option<&'a Path>,
     pub expected_fingerprint: Option<&'a str>,
 }
 
@@ -273,22 +288,28 @@ fn verification_from_managed_status(status: ManagedConfigStatus, details: String
 fn effect_from_plan(plan: &HostPlan) -> HostEffect {
     HostEffect {
         host_kind: plan.host_kind,
+        connection_intent: plan.connection_intent,
         host_scope: plan.host_scope,
+        mode: plan.mode.clone(),
         server_name: plan.server_name.clone(),
         target: plan.target.clone(),
         change: plan.change,
         fingerprint: plan.fingerprint.clone(),
+        user_actions: plan.user_actions.clone(),
     }
 }
 
 fn remove_effect(request: HostRemoveRequest, change: PlannedChange) -> HostEffect {
     HostEffect {
         host_kind: request.host_kind,
+        connection_intent: request.connection_intent,
         host_scope: request.host_scope,
+        mode: request.mode,
         server_name: request.server_name,
         target: request.target,
         change,
         fingerprint: request.expected_fingerprint,
+        user_actions: Vec::new(),
     }
 }
 
@@ -308,7 +329,7 @@ mod tests {
         let dir = temp_dir("generic-file")?;
         let adapter = GenericAdapter;
 
-        let plan = adapter.plan(request(&dir, None, Path::new("/bin/volicord-mcp")))?;
+        let plan = adapter.plan_export(request(&dir, None, Path::new("/bin/volicord-mcp")))?;
 
         assert_eq!(
             plan.target,
@@ -326,6 +347,29 @@ mod tests {
     }
 
     #[test]
+    fn ordinary_connection_planning_is_rejected() {
+        let adapter = GenericAdapter;
+        let error = adapter
+            .plan(HostPlanRequest {
+                host_kind: HostKind::Generic,
+                connection_intent: ConnectionIntent::Personal,
+                project: None,
+                installation_profile: InstallationProfile {
+                    runtime_home: Path::new("/runtime"),
+                    volicord_command: Path::new("/bin/volicord"),
+                    volicord_mcp_command: Path::new("/bin/volicord-mcp"),
+                    default_connection_mode: "workflow",
+                },
+                connection_id: "int_alpha",
+                mode: "workflow",
+                expected_fingerprint: None,
+            })
+            .expect_err("generic planning should be export-only");
+
+        assert!(matches!(error, HostConfigError::Conflict(_)));
+    }
+
+    #[test]
     fn unrelated_existing_file_is_a_conflict() -> Result<(), Box<dyn std::error::Error>> {
         let dir = temp_dir("generic-conflict")?;
         let target = dir.join("volicord-int_alpha.mcp.json");
@@ -335,7 +379,7 @@ mod tests {
         )?;
         let adapter = GenericAdapter;
 
-        let plan = adapter.plan(request(&dir, None, Path::new("/bin/volicord-mcp")))?;
+        let plan = adapter.plan_export(request(&dir, None, Path::new("/bin/volicord-mcp")))?;
 
         assert_eq!(
             plan.conflicts[0].kind,
@@ -352,11 +396,14 @@ mod tests {
     fn safe_owned_update_and_removal() -> Result<(), Box<dyn std::error::Error>> {
         let dir = temp_dir("generic-owned")?;
         let mut adapter = GenericAdapter;
-        let first = adapter.plan(request(&dir, None, Path::new("/bin/volicord-mcp")))?;
+        let first = adapter.plan_export(request(&dir, None, Path::new("/bin/volicord-mcp")))?;
         adapter.apply(&first)?;
-        let second = adapter.plan(GenericPlanRequest {
+        let second = adapter.plan_export(GenericExportRequest {
             expected_fingerprint: Some(&first.fingerprint),
-            mcp_command: Path::new("/usr/local/bin/volicord-mcp"),
+            installation_profile: InstallationProfile {
+                volicord_mcp_command: Path::new("/usr/local/bin/volicord-mcp"),
+                ..request(&dir, None, Path::new("/bin/volicord-mcp")).installation_profile
+            },
             ..request(&dir, None, Path::new("/bin/volicord-mcp"))
         })?;
         assert_eq!(second.change, PlannedChange::Update);
@@ -367,7 +414,9 @@ mod tests {
 
         let effect = adapter.remove(HostRemoveRequest {
             host_kind: HostKind::Generic,
+            connection_intent: second.connection_intent,
             host_scope: HostScope::Export,
+            mode: second.mode.clone(),
             server_name: second.server_name,
             target: HostTarget::Export(target.clone()),
             expected_fingerprint: second.fingerprint,
@@ -382,7 +431,7 @@ mod tests {
     fn removal_refuses_fingerprint_mismatch() -> Result<(), Box<dyn std::error::Error>> {
         let dir = temp_dir("generic-remove-mismatch")?;
         let mut adapter = GenericAdapter;
-        let plan = adapter.plan(request(&dir, None, Path::new("/bin/volicord-mcp")))?;
+        let plan = adapter.plan_export(request(&dir, None, Path::new("/bin/volicord-mcp")))?;
         adapter.apply(&plan)?;
         let HostTarget::Export(target) = plan.target.clone() else {
             unreachable!("generic target");
@@ -395,7 +444,9 @@ mod tests {
         let error = adapter
             .remove(HostRemoveRequest {
                 host_kind: HostKind::Generic,
+                connection_intent: plan.connection_intent,
                 host_scope: HostScope::Export,
+                mode: plan.mode.clone(),
                 server_name: plan.server_name,
                 target: HostTarget::Export(target),
                 expected_fingerprint: plan.fingerprint,
@@ -411,7 +462,7 @@ mod tests {
     ) -> Result<(), Box<dyn std::error::Error>> {
         let dir = temp_dir("generic-verify")?;
         let mut adapter = GenericAdapter;
-        let plan = adapter.plan(request(&dir, None, Path::new("/bin/volicord-mcp")))?;
+        let plan = adapter.plan_export(request(&dir, None, Path::new("/bin/volicord-mcp")))?;
         assert_eq!(adapter.verify(&plan)?.status.as_str(), "missing");
         adapter.apply(&plan)?;
         let verification = adapter.verify(&plan)?;
@@ -419,6 +470,10 @@ mod tests {
         assert_eq!(
             verification.host_state.as_str(),
             "configured_action_required"
+        );
+        assert_eq!(
+            verification.user_actions[0].kind,
+            crate::host_integration::UserActionKind::HostTrustRequired
         );
         assert!(verification.mcp_handshake_allowed);
         let HostTarget::Export(target) = plan.target.clone() else {
@@ -438,15 +493,18 @@ mod tests {
         output_dir: &'a Path,
         output_path: Option<&'a Path>,
         mcp_command: &'a Path,
-    ) -> GenericPlanRequest<'a> {
-        GenericPlanRequest {
-            scope: HostScope::Export,
+    ) -> GenericExportRequest<'a> {
+        GenericExportRequest {
             connection_id: "int_alpha",
-            explicit_server_name: None,
+            installation_profile: InstallationProfile {
+                runtime_home: Path::new("/runtime"),
+                volicord_command: Path::new("/bin/volicord"),
+                volicord_mcp_command: mcp_command,
+                default_connection_mode: "workflow",
+            },
+            mode: "workflow",
             output_dir,
             output_path,
-            mcp_command,
-            runtime_home: Some(Path::new("/runtime")),
             expected_fingerprint: None,
         }
     }

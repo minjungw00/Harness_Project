@@ -275,6 +275,7 @@ fn set_connection_mode(fixture: &CoreFixture, mode: &str) -> Result<(), Box<dyn 
         AgentConnectionRegistration {
             connection_id: existing.connection_id,
             host_kind: existing.host_kind,
+            intent: existing.intent,
             host_scope: existing.host_scope,
             server_name: existing.server_name,
             config_target: existing.config_target,
@@ -282,6 +283,8 @@ fn set_connection_mode(fixture: &CoreFixture, mode: &str) -> Result<(), Box<dyn 
             enabled: existing.enabled,
             managed_fingerprint: existing.managed_fingerprint,
             last_verified_status: existing.last_verified_status,
+            last_verification_report_json: existing.last_verification_report_json,
+            last_user_actions_json: existing.last_user_actions_json,
             metadata_json: existing.metadata_json,
         },
     )?;

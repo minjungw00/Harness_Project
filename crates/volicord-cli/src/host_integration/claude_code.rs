@@ -8,10 +8,11 @@ use serde_json::Value;
 
 use super::{
     config_edit::{read_json_object, write_json_object_if_fresh},
-    current_entry_fingerprint_from_json, managed_fingerprint, validated_server_name, HostAdapter,
-    HostConfigError, HostConflict, HostConflictKind, HostDetection, HostEffect, HostKind, HostPlan,
-    HostRemoveRequest, HostScope, HostTarget, ManagedServerEntry, PlannedChange, UserAction,
-    UserActionKind,
+    current_entry_fingerprint_from_json, is_volicord_managed_entry, managed_entry_from_json,
+    managed_fingerprint, validated_server_name, ConnectionIntent, HostAdapter, HostConfigError,
+    HostConflict, HostConflictKind, HostDetection, HostEffect, HostKind, HostPlan, HostPlanRequest,
+    HostRemoveRequest, HostScope, HostTarget, InstallationProfile, ManagedServerEntry,
+    PlannedChange, UserAction, UserActionKind, DEFAULT_MCP_COMMAND,
 };
 use crate::host_integration::verification::{
     HostConfigurationStatus, HostExecutableStatus, HostGateStatus, ManagedConfigStatus,
@@ -104,61 +105,49 @@ impl<R: CommandRunner> ClaudeCodeAdapter<R> {
         }
     }
 
-    pub fn plan(&mut self, request: ClaudePlanRequest<'_>) -> Result<HostPlan, HostConfigError> {
-        if !matches!(
-            request.scope,
-            HostScope::Local | HostScope::Project | HostScope::User
-        ) {
+    pub fn plan(&mut self, request: HostPlanRequest<'_>) -> Result<HostPlan, HostConfigError> {
+        if request.host_kind != HostKind::ClaudeCode {
             return Err(HostConfigError::Conflict(HostConflict::new(
                 HostConflictKind::InvalidScope,
-                "Claude Code supports local, project, and user host scopes",
+                "Claude Code adapter cannot plan a non-Claude Code host request",
             )));
         }
-        validate_mcp_command(request.scope, request.mcp_command)?;
-        if request.scope == HostScope::Project && request.runtime_home.is_some() {
-            return Err(HostConfigError::Conflict(HostConflict::new(
-                HostConflictKind::InvalidCommand,
-                "Claude Code project-scoped configuration must not embed a personal VOLICORD_HOME",
-            )));
-        }
-        let server_name =
-            validated_server_name(request.connection_id, request.explicit_server_name)?;
+        let scope = claude_scope_for_intent(request.connection_intent);
+        let (mcp_command, runtime_home) =
+            entry_inputs_for_scope(scope, request.installation_profile);
+        validate_mcp_command(scope, mcp_command)?;
+        let server_name = validated_server_name(request.connection_id, None)?;
         if server_name == "workspace" {
             return Err(HostConfigError::Conflict(HostConflict::new(
                 HostConflictKind::InvalidServerName,
                 "Claude Code reserves the MCP server name `workspace`",
             )));
         }
-        let entry = ManagedServerEntry::new(
-            request.connection_id,
-            request.mcp_command,
-            request.runtime_home,
-        );
-        let fingerprint =
-            managed_fingerprint(HostKind::ClaudeCode, request.scope, &server_name, &entry);
-        match request.scope {
+        let entry = ManagedServerEntry::new(request.connection_id, mcp_command, runtime_home);
+        let fingerprint = managed_fingerprint(HostKind::ClaudeCode, scope, &server_name, &entry);
+        match scope {
             HostScope::Project => self.plan_project_file(request, server_name, entry, fingerprint),
             HostScope::Local | HostScope::User => {
                 self.plan_external_cli(request, server_name, entry, fingerprint)
             }
-            _ => unreachable!("scope validated above"),
+            _ => unreachable!("Claude Code intent mapping validated above"),
         }
     }
 
     fn plan_project_file(
         &self,
-        request: ClaudePlanRequest<'_>,
+        request: HostPlanRequest<'_>,
         server_name: String,
         entry: ManagedServerEntry,
         fingerprint: String,
     ) -> Result<HostPlan, HostConfigError> {
-        let repo_root = request.repo_root.ok_or_else(|| {
+        let project = request.project.ok_or_else(|| {
             HostConfigError::Conflict(HostConflict::new(
                 HostConflictKind::InvalidScope,
-                "Claude Code project scope requires a Product Repository root",
+                "Claude Code shared connection intent requires a Product Repository root",
             ))
         })?;
-        let target = repo_root.join(".mcp.json");
+        let target = project.repo_root.join(".mcp.json");
         let (snapshot, object) = read_json_object(&target)?;
         if object
             .get("mcpServers")
@@ -175,31 +164,21 @@ impl<R: CommandRunner> ClaudeCodeAdapter<R> {
         let mut conflicts = Vec::new();
         let change = match existing {
             None => PlannedChange::Create,
-            Some(existing) => {
-                let current = current_entry_fingerprint_from_json(
-                    HostKind::ClaudeCode,
-                    HostScope::Project,
-                    &server_name,
-                    existing,
-                );
-                if current.as_deref() == Some(fingerprint.as_str()) {
-                    PlannedChange::Noop
-                } else if current.as_deref() == request.expected_fingerprint {
-                    PlannedChange::Update
-                } else {
-                    conflicts.push(HostConflict::new(
-                        HostConflictKind::UnmanagedNameCollision,
-                        format!(
-                            "Claude Code project MCP server name is already configured by an unrelated entry: {server_name}"
-                        ),
-                    ));
-                    PlannedChange::Noop
-                }
-            }
+            Some(existing) => classify_existing_json_entry(
+                HostScope::Project,
+                &server_name,
+                existing,
+                &fingerprint,
+                request.expected_fingerprint,
+                &mut conflicts,
+                "Claude Code project MCP server name",
+            ),
         };
         Ok(HostPlan {
             host_kind: HostKind::ClaudeCode,
+            connection_intent: request.connection_intent,
             host_scope: HostScope::Project,
+            mode: request.mode.to_owned(),
             server_name,
             target: HostTarget::File(target),
             entry,
@@ -216,21 +195,23 @@ impl<R: CommandRunner> ClaudeCodeAdapter<R> {
 
     fn plan_external_cli(
         &mut self,
-        request: ClaudePlanRequest<'_>,
+        request: HostPlanRequest<'_>,
         server_name: String,
         entry: ManagedServerEntry,
         fingerprint: String,
     ) -> Result<HostPlan, HostConfigError> {
-        let cwd = match request.scope {
+        let scope = claude_scope_for_intent(request.connection_intent);
+        let cwd = match scope {
             HostScope::Local => Some(
                 request
-                    .repo_root
+                    .project
                     .ok_or_else(|| {
                         HostConfigError::Conflict(HostConflict::new(
                             HostConflictKind::InvalidScope,
-                            "Claude Code local scope requires a Product Repository root",
+                            "Claude Code personal connection intent requires a Product Repository root",
                         ))
                     })?
+                    .repo_root
                     .to_path_buf(),
             ),
             HostScope::User => None,
@@ -249,15 +230,20 @@ impl<R: CommandRunner> ClaudeCodeAdapter<R> {
             Ok(output) if output.success => {
                 let inspection = parse_claude_mcp_get_output(&output);
                 if inspection.state == ClaudeMcpState::Connected {
-                    let current = fingerprint_from_claude_inspection(
-                        request.scope,
-                        &server_name,
-                        &inspection,
-                    );
+                    let current =
+                        fingerprint_from_claude_inspection(scope, &server_name, &inspection);
                     if current.as_deref() == Some(fingerprint.as_str()) {
                         PlannedChange::Noop
                     } else if current.as_deref() == request.expected_fingerprint {
                         PlannedChange::ExternalCommand
+                    } else if inspection_is_volicord_managed(&inspection) {
+                        conflicts.push(HostConflict::new(
+                            HostConflictKind::FingerprintMismatch,
+                            format!(
+                                "Claude Code MCP server name is already configured by a different Volicord-managed entry: {server_name}"
+                            ),
+                        ));
+                        PlannedChange::Noop
                     } else {
                         conflicts.push(HostConflict::new(
                             HostConflictKind::UnmanagedNameCollision,
@@ -281,7 +267,9 @@ impl<R: CommandRunner> ClaudeCodeAdapter<R> {
         };
         Ok(HostPlan {
             host_kind: HostKind::ClaudeCode,
-            host_scope: request.scope,
+            connection_intent: request.connection_intent,
+            host_scope: scope,
+            mode: request.mode.to_owned(),
             server_name,
             target: HostTarget::ExternalCli {
                 program: self.claude_command.clone(),
@@ -359,7 +347,8 @@ impl<R: CommandRunner> HostAdapter for ClaudeCodeAdapter<R> {
 
     fn verify(&mut self, plan: &HostPlan) -> Result<Verification, HostConfigError> {
         if let Some(conflict) = plan.conflicts.first() {
-            return Ok(Verification::changed(conflict.message.clone()));
+            return Ok(Verification::changed(conflict.message.clone())
+                .merge_user_actions(&plan.user_actions));
         }
         match &plan.target {
             HostTarget::File(target) if plan.host_scope == HostScope::Project => {
@@ -372,7 +361,8 @@ impl<R: CommandRunner> HostAdapter for ClaudeCodeAdapter<R> {
                             managed.as_str(),
                             plan.server_name
                         ),
-                    ));
+                    )
+                    .merge_user_actions(&plan.user_actions));
                 }
                 let cwd = target.parent().map(Path::to_path_buf);
                 let output = self.runner.run(&build_get_command(
@@ -381,13 +371,15 @@ impl<R: CommandRunner> HostAdapter for ClaudeCodeAdapter<R> {
                     cwd,
                 ));
                 Ok(match output {
-                    Ok(output) => verification_from_claude_output(plan, &output),
+                    Ok(output) => verification_from_claude_output(plan, &output)
+                        .merge_user_actions(&plan.user_actions),
                     Err(error) => Verification::unavailable(format!(
                         "Claude Code executable is unavailable for `{} mcp get {}`: {error}",
                         self.claude_command, plan.server_name
                     ))
                     .with_managed_config(ManagedConfigStatus::Match)
-                    .with_host_configuration(HostConfigurationStatus::Discovered),
+                    .with_host_configuration(HostConfigurationStatus::Discovered)
+                    .merge_user_actions(&plan.user_actions),
                 })
             }
             HostTarget::ExternalCli { cwd, .. } => {
@@ -397,16 +389,19 @@ impl<R: CommandRunner> HostAdapter for ClaudeCodeAdapter<R> {
                     cwd.clone(),
                 ));
                 Ok(match output {
-                    Ok(output) => verification_from_claude_output(plan, &output),
+                    Ok(output) => verification_from_claude_output(plan, &output)
+                        .merge_user_actions(&plan.user_actions),
                     Err(error) => Verification::unavailable(format!(
                         "Claude Code executable is unavailable for `{} mcp get {}`: {error}",
                         self.claude_command, plan.server_name
-                    )),
+                    ))
+                    .merge_user_actions(&plan.user_actions),
                 })
             }
-            _ => Ok(Verification::failed(
-                "Claude Code verification target is invalid",
-            )),
+            _ => Ok(
+                Verification::failed("Claude Code verification target is invalid")
+                    .merge_user_actions(&plan.user_actions),
+            ),
         }
     }
 
@@ -501,15 +496,67 @@ impl<R: CommandRunner> HostAdapter for ClaudeCodeAdapter<R> {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct ClaudePlanRequest<'a> {
-    pub scope: HostScope,
-    pub connection_id: &'a str,
-    pub explicit_server_name: Option<&'a str>,
-    pub repo_root: Option<&'a Path>,
-    pub mcp_command: &'a Path,
-    pub runtime_home: Option<&'a Path>,
-    pub expected_fingerprint: Option<&'a str>,
+fn claude_scope_for_intent(intent: ConnectionIntent) -> HostScope {
+    match intent {
+        ConnectionIntent::Personal => HostScope::Local,
+        ConnectionIntent::Shared => HostScope::Project,
+        ConnectionIntent::Global => HostScope::User,
+    }
+}
+
+fn entry_inputs_for_scope<'a>(
+    scope: HostScope,
+    profile: InstallationProfile<'a>,
+) -> (&'a Path, Option<&'a Path>) {
+    if scope == HostScope::Project {
+        (Path::new(DEFAULT_MCP_COMMAND), None)
+    } else {
+        (profile.volicord_mcp_command, Some(profile.runtime_home))
+    }
+}
+
+fn classify_existing_json_entry(
+    scope: HostScope,
+    server_name: &str,
+    value: &Value,
+    desired_fingerprint: &str,
+    expected_fingerprint: Option<&str>,
+    conflicts: &mut Vec<HostConflict>,
+    label: &str,
+) -> PlannedChange {
+    let Some(entry) = managed_entry_from_json(value).filter(is_volicord_managed_entry) else {
+        conflicts.push(HostConflict::new(
+            HostConflictKind::UnmanagedNameCollision,
+            format!("{label} is already configured by an unmanaged entry: {server_name}"),
+        ));
+        return PlannedChange::Noop;
+    };
+    let current = managed_fingerprint(HostKind::ClaudeCode, scope, server_name, &entry);
+    if current == desired_fingerprint {
+        PlannedChange::Noop
+    } else if expected_fingerprint == Some(current.as_str()) {
+        PlannedChange::Update
+    } else {
+        conflicts.push(HostConflict::new(
+            HostConflictKind::FingerprintMismatch,
+            format!("{label} is already configured by a different Volicord-managed entry: {server_name}"),
+        ));
+        PlannedChange::Noop
+    }
+}
+
+fn inspection_is_volicord_managed(inspection: &ClaudeMcpInspection) -> bool {
+    let Some(command) = &inspection.command else {
+        return false;
+    };
+    let Some(args) = &inspection.args else {
+        return false;
+    };
+    is_volicord_managed_entry(&ManagedServerEntry {
+        command: command.clone(),
+        args: args.clone(),
+        env: inspection.env.clone(),
+    })
 }
 
 pub fn build_add_command(
@@ -686,7 +733,11 @@ fn verification_from_claude_output(plan: &HostPlan, output: &CommandOutput) -> V
         )
         .with_host_executable(HostExecutableStatus::Available)
         .with_host_gate(HostGateStatus::ActionRequired)
-        .with_mcp_handshake_allowed(true),
+        .with_mcp_handshake_allowed(true)
+        .with_user_actions(vec![UserAction::new(
+            UserActionKind::ProjectApprovalRequired,
+            "Claude Code requires user approval before the MCP server is available",
+        )]),
         ClaudeMcpState::Rejected => {
             Verification::rejected("Claude Code reports the MCP server was rejected")
         }
@@ -904,22 +955,28 @@ fn is_connected_marker(line: &str) -> bool {
 fn effect_from_plan(plan: &HostPlan) -> HostEffect {
     HostEffect {
         host_kind: plan.host_kind,
+        connection_intent: plan.connection_intent,
         host_scope: plan.host_scope,
+        mode: plan.mode.clone(),
         server_name: plan.server_name.clone(),
         target: plan.target.clone(),
         change: plan.change,
         fingerprint: plan.fingerprint.clone(),
+        user_actions: plan.user_actions.clone(),
     }
 }
 
 fn remove_effect(request: HostRemoveRequest, change: PlannedChange) -> HostEffect {
     HostEffect {
         host_kind: request.host_kind,
+        connection_intent: request.connection_intent,
         host_scope: request.host_scope,
+        mode: request.mode,
         server_name: request.server_name,
         target: request.target,
         change,
         fingerprint: request.expected_fingerprint,
+        user_actions: Vec::new(),
     }
 }
 
@@ -930,6 +987,8 @@ mod tests {
         fs,
         time::{SystemTime, UNIX_EPOCH},
     };
+
+    use crate::host_integration::ProjectContext;
 
     use super::*;
 
@@ -943,24 +1002,18 @@ mod tests {
         let local = build_add_command(
             "claude",
             HostScope::Local,
-            "volicord-int_alpha",
+            "volicord",
             &entry,
             Some(PathBuf::from("/repo")),
         );
         let project = build_add_command(
             "claude",
             HostScope::Project,
-            "volicord-int_alpha",
+            "volicord",
             &ManagedServerEntry::new("int_alpha", Path::new("volicord-mcp"), None),
             Some(PathBuf::from("/repo")),
         );
-        let user = build_add_command(
-            "claude",
-            HostScope::User,
-            "volicord-int_alpha",
-            &entry,
-            None,
-        );
+        let user = build_add_command("claude", HostScope::User, "volicord", &entry, None);
 
         assert_eq!(local.cwd, Some(PathBuf::from("/repo")));
         assert_eq!(project.cwd, Some(PathBuf::from("/repo")));
@@ -993,10 +1046,7 @@ mod tests {
         ))?;
         let effect = adapter.apply(&plan)?;
         assert_eq!(effect.change, PlannedChange::ExternalCommand);
-        assert_eq!(
-            adapter.runner.calls[0].args,
-            ["mcp", "get", "volicord-int_alpha"]
-        );
+        assert_eq!(adapter.runner.calls[0].args, ["mcp", "get", "volicord"]);
         assert_eq!(adapter.runner.calls[1].args[0..2], ["mcp", "add"]);
 
         let mut failing = ClaudeCodeAdapter::new(FakeRunner::new(vec![
@@ -1021,6 +1071,35 @@ mod tests {
     }
 
     #[test]
+    fn intent_mapping_selects_claude_scopes() -> Result<(), Box<dyn std::error::Error>> {
+        let repo = temp_dir("claude-intent")?;
+        let mut personal = ClaudeCodeAdapter::new(FakeRunner::new(vec![missing_output()]));
+        let mut shared = ClaudeCodeAdapter::new(FakeRunner::new(Vec::new()));
+        let mut global = ClaudeCodeAdapter::new(FakeRunner::new(vec![missing_output()]));
+
+        let personal_plan = personal.plan(request(
+            HostScope::Local,
+            Some(&repo),
+            Path::new("/bin/volicord-mcp"),
+        ))?;
+        let shared_plan = shared.plan(request(
+            HostScope::Project,
+            Some(&repo),
+            Path::new("/bin/volicord-mcp"),
+        ))?;
+        let global_plan = global.plan(request(
+            HostScope::User,
+            None,
+            Path::new("/bin/volicord-mcp"),
+        ))?;
+
+        assert_eq!(personal_plan.host_scope, HostScope::Local);
+        assert_eq!(shared_plan.host_scope, HostScope::Project);
+        assert_eq!(global_plan.host_scope, HostScope::User);
+        Ok(())
+    }
+
+    #[test]
     fn verify_distinguishes_pending_and_rejected() -> Result<(), Box<dyn std::error::Error>> {
         let repo = temp_dir("claude-verify")?;
         let mut pending = ClaudeCodeAdapter::new(FakeRunner::new(vec![
@@ -1037,7 +1116,12 @@ mod tests {
             Some(&repo),
             Path::new("/bin/volicord-mcp"),
         ))?;
-        assert_eq!(pending.verify(&plan)?.status.as_str(), "action_required");
+        let verification = pending.verify(&plan)?;
+        assert_eq!(verification.status.as_str(), "action_required");
+        assert_eq!(
+            verification.user_actions[0].kind,
+            UserActionKind::ProjectApprovalRequired
+        );
 
         let mut rejected = ClaudeCodeAdapter::new(FakeRunner::new(vec![
             missing_output(),
@@ -1154,10 +1238,7 @@ mod tests {
 
         assert_eq!(verification.status.as_str(), "action_required");
         assert_eq!(adapter.runner.calls[0].cwd, Some(repo));
-        assert_eq!(
-            adapter.runner.calls[0].args,
-            ["mcp", "get", "volicord-int_alpha"]
-        );
+        assert_eq!(adapter.runner.calls[0].args, ["mcp", "get", "volicord"]);
         Ok(())
     }
 
@@ -1179,7 +1260,7 @@ mod tests {
         let text = fs::read_to_string(repo.join(".mcp.json"))?;
         assert!(text.contains("\"other\""));
         assert!(text.contains("\"note\": true"));
-        assert!(text.contains("\"volicord-int_alpha\""));
+        assert!(text.contains("\"volicord\""));
 
         let again = adapter.plan(request(
             HostScope::Project,
@@ -1187,6 +1268,29 @@ mod tests {
             Path::new("volicord-mcp"),
         ))?;
         assert_eq!(again.change, PlannedChange::Noop);
+        Ok(())
+    }
+
+    #[test]
+    fn project_file_reports_managed_fingerprint_mismatch() -> Result<(), Box<dyn std::error::Error>>
+    {
+        let repo = temp_dir("claude-project-mismatch")?;
+        fs::write(
+            repo.join(".mcp.json"),
+            "{\"mcpServers\":{\"volicord\":{\"command\":\"volicord-mcp\",\"args\":[\"--connection\",\"other\"]}}}\n",
+        )?;
+        let mut adapter = ClaudeCodeAdapter::new(FakeRunner::new(Vec::new()));
+
+        let plan = adapter.plan(request(
+            HostScope::Project,
+            Some(&repo),
+            Path::new("volicord-mcp"),
+        ))?;
+
+        assert_eq!(
+            plan.conflicts[0].kind,
+            HostConflictKind::FingerprintMismatch
+        );
         Ok(())
     }
 
@@ -1206,7 +1310,9 @@ mod tests {
 
         let effect = adapter.remove(HostRemoveRequest {
             host_kind: HostKind::ClaudeCode,
+            connection_intent: plan.connection_intent,
             host_scope: HostScope::Project,
+            mode: plan.mode.clone(),
             server_name: plan.server_name,
             target: HostTarget::File(target.clone()),
             expected_fingerprint: plan.fingerprint,
@@ -1214,7 +1320,7 @@ mod tests {
         let text = fs::read_to_string(target)?;
 
         assert_eq!(effect.change, PlannedChange::Remove);
-        assert!(!text.contains("volicord-int_alpha"));
+        assert!(!text.contains("volicord"));
         Ok(())
     }
 
@@ -1239,7 +1345,9 @@ mod tests {
         let error = adapter
             .remove(HostRemoveRequest {
                 host_kind: HostKind::ClaudeCode,
+                connection_intent: plan.connection_intent,
                 host_scope: HostScope::Project,
+                mode: plan.mode.clone(),
                 server_name: plan.server_name,
                 target: HostTarget::File(target),
                 expected_fingerprint: plan.fingerprint,
@@ -1251,18 +1359,19 @@ mod tests {
     }
 
     #[test]
-    fn project_scope_rejects_personal_paths() -> Result<(), Box<dyn std::error::Error>> {
+    fn shared_intent_uses_path_command_and_no_runtime_home(
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let repo = temp_dir("claude-project-path")?;
         let mut adapter = ClaudeCodeAdapter::new(FakeRunner::new(Vec::new()));
 
-        assert!(matches!(
-            adapter.plan(request(
-                HostScope::Project,
-                Some(&repo),
-                Path::new("/personal/target/debug/volicord-mcp")
-            )),
-            Err(HostConfigError::Conflict(_))
-        ));
+        let plan = adapter.plan(request(
+            HostScope::Project,
+            Some(&repo),
+            Path::new("/personal/target/debug/volicord-mcp"),
+        ))?;
+
+        assert_eq!(plan.entry.command, "volicord-mcp");
+        assert!(!plan.entry.env.contains_key("VOLICORD_HOME"));
         Ok(())
     }
 
@@ -1270,18 +1379,29 @@ mod tests {
         scope: HostScope,
         repo_root: Option<&'a Path>,
         mcp_command: &'a Path,
-    ) -> ClaudePlanRequest<'a> {
-        ClaudePlanRequest {
-            scope,
-            connection_id: "int_alpha",
-            explicit_server_name: None,
-            repo_root,
-            mcp_command,
-            runtime_home: if scope == HostScope::Project {
-                None
-            } else {
-                Some(Path::new("/runtime"))
+    ) -> HostPlanRequest<'a> {
+        let connection_intent = match scope {
+            HostScope::Local => ConnectionIntent::Personal,
+            HostScope::Project => ConnectionIntent::Shared,
+            HostScope::User => ConnectionIntent::Global,
+            HostScope::Export => ConnectionIntent::Personal,
+        };
+        HostPlanRequest {
+            host_kind: HostKind::ClaudeCode,
+            connection_intent,
+            project: repo_root.map(|repo_root| ProjectContext {
+                project_id: "project_alpha",
+                project_name: "Alpha",
+                repo_root,
+            }),
+            installation_profile: InstallationProfile {
+                runtime_home: Path::new("/runtime"),
+                volicord_command: Path::new("/bin/volicord"),
+                volicord_mcp_command: mcp_command,
+                default_connection_mode: "workflow",
             },
+            connection_id: "int_alpha",
+            mode: "workflow",
             expected_fingerprint: None,
         }
     }

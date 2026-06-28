@@ -4,6 +4,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 
@@ -13,7 +14,11 @@ pub mod config_edit;
 pub mod generic;
 pub mod verification;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub const DEFAULT_SERVER_NAME: &str = "volicord";
+pub const DEFAULT_MCP_COMMAND: &str = "volicord-mcp";
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
 pub enum HostKind {
     Codex,
     ClaudeCode,
@@ -30,7 +35,8 @@ impl HostKind {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
 pub enum HostScope {
     User,
     Project,
@@ -47,6 +53,50 @@ impl HostScope {
             Self::Export => "export",
         }
     }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ConnectionIntent {
+    Personal,
+    Shared,
+    Global,
+}
+
+impl ConnectionIntent {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Personal => "personal",
+            Self::Shared => "shared",
+            Self::Global => "global",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct InstallationProfile<'a> {
+    pub runtime_home: &'a Path,
+    pub volicord_command: &'a Path,
+    pub volicord_mcp_command: &'a Path,
+    pub default_connection_mode: &'a str,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct ProjectContext<'a> {
+    pub project_id: &'a str,
+    pub project_name: &'a str,
+    pub repo_root: &'a Path,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct HostPlanRequest<'a> {
+    pub host_kind: HostKind,
+    pub connection_intent: ConnectionIntent,
+    pub project: Option<ProjectContext<'a>>,
+    pub installation_profile: InstallationProfile<'a>,
+    pub connection_id: &'a str,
+    pub mode: &'a str,
+    pub expected_fingerprint: Option<&'a str>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -101,7 +151,9 @@ impl ManagedServerEntry {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HostPlan {
     pub host_kind: HostKind,
+    pub connection_intent: ConnectionIntent,
     pub host_scope: HostScope,
+    pub mode: String,
     pub server_name: String,
     pub target: HostTarget,
     pub entry: ManagedServerEntry,
@@ -165,7 +217,7 @@ pub enum HostConflictKind {
     ExternalCommandFailed,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct UserAction {
     pub kind: UserActionKind,
     pub message: String,
@@ -180,7 +232,8 @@ impl UserAction {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum UserActionKind {
     HostTrustRequired,
     ProjectApprovalRequired,
@@ -190,11 +243,14 @@ pub enum UserActionKind {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HostEffect {
     pub host_kind: HostKind,
+    pub connection_intent: ConnectionIntent,
     pub host_scope: HostScope,
+    pub mode: String,
     pub server_name: String,
     pub target: HostTarget,
     pub change: PlannedChange,
     pub fingerprint: String,
+    pub user_actions: Vec<UserAction>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -243,31 +299,17 @@ pub struct HostDetection {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HostRemoveRequest {
     pub host_kind: HostKind,
+    pub connection_intent: ConnectionIntent,
     pub host_scope: HostScope,
+    pub mode: String,
     pub server_name: String,
     pub target: HostTarget,
     pub expected_fingerprint: String,
 }
 
 pub fn default_server_name(connection_id: &str) -> String {
-    let sanitized = sanitize_identifier(connection_id);
-    let suffix = short_hash(connection_id);
-    if sanitized.is_empty() {
-        return format!("volicord-{suffix}");
-    }
-    let base = format!("volicord-{sanitized}");
-    if base.len() <= 48 {
-        base
-    } else {
-        let keep = 48usize.saturating_sub(suffix.len() + 1);
-        format!(
-            "{}-{suffix}",
-            base.trim_end_matches('-')
-                .chars()
-                .take(keep)
-                .collect::<String>()
-        )
-    }
+    let _ = connection_id;
+    DEFAULT_SERVER_NAME.to_owned()
 }
 
 pub fn export_file_name(connection_id: &str) -> String {
@@ -397,18 +439,23 @@ pub(crate) fn current_entry_fingerprint_from_json(
     server_name: &str,
     value: &Value,
 ) -> Option<String> {
+    let entry = managed_entry_from_json(value)?;
+    Some(managed_fingerprint(
+        host_kind,
+        host_scope,
+        server_name,
+        &entry,
+    ))
+}
+
+pub(crate) fn managed_entry_from_json(value: &Value) -> Option<ManagedServerEntry> {
     let object = value.as_object()?;
     let allowed_keys = ["command", "args", "env"];
     if object
         .keys()
         .any(|key| !allowed_keys.contains(&key.as_str()))
     {
-        return Some(unmanaged_fingerprint(
-            host_kind,
-            host_scope,
-            server_name,
-            &value.to_string(),
-        ));
+        return None;
     }
     let command = object.get("command")?.as_str()?.to_owned();
     let args = object
@@ -432,12 +479,17 @@ pub(crate) fn current_entry_fingerprint_from_json(
                 .collect::<Option<BTreeMap<_, _>>>()
         })
         .unwrap_or_else(|| Some(BTreeMap::new()))?;
-    Some(managed_fingerprint(
-        host_kind,
-        host_scope,
-        server_name,
-        &ManagedServerEntry { command, args, env },
-    ))
+    Some(ManagedServerEntry { command, args, env })
+}
+
+pub(crate) fn is_volicord_managed_entry(entry: &ManagedServerEntry) -> bool {
+    if entry.args.len() != 2 || entry.args[0] != "--connection" || entry.args[1].trim().is_empty() {
+        return false;
+    }
+    Path::new(&entry.command)
+        .file_name()
+        .and_then(|name| name.to_str())
+        .is_some_and(|name| name == DEFAULT_MCP_COMMAND)
 }
 
 #[cfg(test)]
@@ -445,15 +497,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn deterministic_server_name_uses_connection_identity() {
+    fn default_server_name_is_internal_host_key() {
         let first = default_server_name("integration/Alpha:One");
         let second = default_server_name("integration/Alpha:One");
         let other = default_server_name("integration/Alpha:Two");
 
         assert_eq!(first, second);
-        assert_ne!(first, other);
-        assert!(first.starts_with("volicord-integration-alpha-one"));
-        assert_ne!(first, "volicord-agent");
+        assert_eq!(first, other);
+        assert_eq!(first, DEFAULT_SERVER_NAME);
     }
 
     #[test]

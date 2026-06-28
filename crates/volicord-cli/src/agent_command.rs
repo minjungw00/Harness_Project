@@ -16,11 +16,13 @@ use volicord_store::{
     agent_connections::{
         add_connection_project, agent_connection_record, ensure_agent_connection,
         list_agent_connections, list_connection_projects, remove_agent_connection_if_unused,
-        remove_connection_project, set_connection_enabled, update_agent_connection_verification,
-        AgentConnectionRecord, AgentConnectionRegistration, ConnectionProjectRecord,
-        ConnectionProjectRegistration, CONNECTION_MODE_READ_ONLY, CONNECTION_MODE_WORKFLOW,
-        HOST_KIND_CLAUDE_CODE, HOST_KIND_CODEX, HOST_KIND_GENERIC, HOST_SCOPE_EXPORT,
-        HOST_SCOPE_LOCAL, HOST_SCOPE_PROJECT, HOST_SCOPE_USER, VERIFIED_STATUS_ACTION_REQUIRED,
+        remove_connection_project, set_connection_enabled,
+        update_agent_connection_verification_report, AgentConnectionRecord,
+        AgentConnectionRegistration, ConnectionProjectRecord, ConnectionProjectRegistration,
+        CONNECTION_INTENT_GLOBAL, CONNECTION_INTENT_PERSONAL, CONNECTION_INTENT_SHARED,
+        CONNECTION_MODE_READ_ONLY, CONNECTION_MODE_WORKFLOW, HOST_KIND_CLAUDE_CODE,
+        HOST_KIND_CODEX, HOST_KIND_GENERIC, HOST_SCOPE_EXPORT, HOST_SCOPE_LOCAL,
+        HOST_SCOPE_PROJECT, HOST_SCOPE_USER, VERIFIED_STATUS_ACTION_REQUIRED,
         VERIFIED_STATUS_COMPLETE, VERIFIED_STATUS_FAILED, VERIFIED_STATUS_NOT_VERIFIED,
     },
     bootstrap::{
@@ -34,12 +36,13 @@ use volicord_store::{
 
 use crate::host_integration::{
     claude_code::{ClaudeCodeAdapter, ProductionCommandRunner},
-    codex::{CodexAdapter, CodexEnvironment, CodexExistingPlanRequest, CodexPlanRequest},
-    generic::{GenericAdapter, GenericPlanRequest},
+    codex::{CodexAdapter, CodexEnvironment, CodexExistingPlanRequest},
+    generic::{GenericAdapter, GenericExportRequest},
     is_valid_server_name,
     verification::{Verification, VerificationStatus},
-    HostAdapter, HostConfigError, HostKind, HostPlan, HostRemoveRequest, HostScope, HostTarget,
-    ManagedServerEntry, PlannedChange,
+    ConnectionIntent, HostAdapter, HostConfigError, HostKind, HostPlan, HostPlanRequest,
+    HostRemoveRequest, HostScope, HostTarget, InstallationProfile, ManagedServerEntry,
+    PlannedChange, ProjectContext, UserAction, UserActionKind,
 };
 
 const VOLICORD_HOME: &str = "VOLICORD_HOME";
@@ -324,7 +327,6 @@ struct ParsedAgentOptions {
     host_kind: Option<HostKind>,
     host_scope: Option<HostScope>,
     server_name: Option<String>,
-    mcp_command: Option<PathBuf>,
     export_path: Option<PathBuf>,
     export_dir: Option<PathBuf>,
     output: OutputFormat,
@@ -344,7 +346,6 @@ impl Default for ParsedAgentOptions {
             host_kind: None,
             host_scope: None,
             server_name: None,
-            mcp_command: None,
             export_path: None,
             export_dir: None,
             output: OutputFormat::Text,
@@ -432,6 +433,7 @@ fn command_connect(
     let parsed = parse_agent_options(args, connect_allowed_options())?;
     let host_kind = required_host_kind(&parsed)?;
     let host_scope = required_host_scope(&parsed)?;
+    let connection_intent = connection_intent_for_host_scope(host_kind, host_scope)?;
     validate_host_scope(host_kind, host_scope)?;
     validate_repository_write_permission(&parsed, host_scope)?;
     let server_name = parsed
@@ -515,20 +517,20 @@ fn command_connect(
             &server_name,
         )
     });
-    let mcp_command = resolve_mcp_command(&parsed, host_scope, &setup_profile)?;
     let existing = agent_connection_record(&runtime_home, &connection_id)?;
     let expected_fingerprint = existing
         .as_ref()
         .map(|record| record.managed_fingerprint.as_str());
     let host_plan = build_host_plan(
-        HostPlanRequest {
+        BuildHostPlanRequest {
             host_kind,
-            scope: host_scope,
+            connection_intent,
             connection_id: &connection_id,
-            server_name: &server_name,
             repo_root: Some(&project.repo_root),
-            mcp_command: &mcp_command,
-            runtime_home: runtime_home_for_host_config(host_scope, &runtime_home),
+            project_id: Some(&project.project_id),
+            project_name: Some(&project.project_name),
+            installation_profile: installation_profile_context(&runtime_home, &setup_profile),
+            mode: &mode,
             expected_fingerprint,
             export_target: export_target.as_deref(),
             export_dir: parsed.export_dir.as_deref(),
@@ -539,12 +541,14 @@ fn command_connect(
     if let Some(conflict) = host_plan.conflicts.first() {
         return Err(AgentCommandError::runtime(conflict.message.clone()));
     }
+    let mcp_command = PathBuf::from(&host_plan.entry.command);
     let metadata_json = connection_metadata_json(&host_plan, &mcp_command, &runtime_home)?;
     let mut connection = ensure_agent_connection(
         &runtime_home,
         AgentConnectionRegistration {
             connection_id: connection_id.clone(),
             host_kind: host_kind.as_str().to_owned(),
+            intent: connection_intent.as_str().to_owned(),
             host_scope: host_scope.as_str().to_owned(),
             server_name: host_plan.server_name.clone(),
             config_target: host_target_text(&host_plan.target),
@@ -555,6 +559,11 @@ fn command_connect(
                 .as_ref()
                 .map(|record| record.last_verified_status.clone())
                 .unwrap_or_else(|| VERIFIED_STATUS_NOT_VERIFIED.to_owned()),
+            last_verification_report_json: existing
+                .as_ref()
+                .map(|record| record.last_verification_report_json.clone())
+                .unwrap_or_else(|| "{}".to_owned()),
+            last_user_actions_json: user_actions_json(&host_plan.user_actions)?,
             metadata_json,
         },
     )?;
@@ -576,11 +585,13 @@ fn command_connect(
         Some(&project.project_id),
         process,
     )?;
-    connection = update_agent_connection_verification(
+    connection = update_agent_connection_verification_report(
         &runtime_home,
         &connection.connection_id,
         verification.status.store_status(),
         &host_plan.fingerprint,
+        &verification_report_json(&verification)?,
+        &user_actions_json(&verification.host.user_actions)?,
     )?;
     let projects = list_connection_projects(&runtime_home, &connection.connection_id)?;
     render_connection_output(
@@ -787,11 +798,13 @@ fn command_verify(
         None,
         process,
     )?;
-    connection = update_agent_connection_verification(
+    connection = update_agent_connection_verification_report(
         &runtime_home,
         &connection.connection_id,
         verification.status.store_status(),
         &host_plan.fingerprint,
+        &verification_report_json(&verification)?,
+        &user_actions_json(&verification.host.user_actions)?,
     )?;
     let projects = list_connection_projects(&runtime_home, connection_id)?;
     render_connection_output(
@@ -980,7 +993,6 @@ fn set_agent_option(
         "host" => parsed.host_kind = Some(parse_host_kind(&value_text(name, value)?)?),
         "scope" => parsed.host_scope = Some(parse_host_scope(&value_text(name, value)?)?),
         "server-name" => parsed.server_name = Some(value_text(name, value)?),
-        "mcp-command" => parsed.mcp_command = Some(value_path(name, value)?),
         "export-path" => parsed.export_path = Some(value_path(name, value)?),
         "export-dir" => parsed.export_dir = Some(value_path(name, value)?),
         "output" => {
@@ -1071,6 +1083,34 @@ fn parse_connection_mode(value: &str) -> Result<String, AgentCommandError> {
     }
 }
 
+fn parse_connection_intent(value: &str) -> Result<ConnectionIntent, AgentCommandError> {
+    match value {
+        CONNECTION_INTENT_PERSONAL => Ok(ConnectionIntent::Personal),
+        CONNECTION_INTENT_SHARED => Ok(ConnectionIntent::Shared),
+        CONNECTION_INTENT_GLOBAL => Ok(ConnectionIntent::Global),
+        other => Err(AgentCommandError::runtime(format!(
+            "unknown connection intent in registry: {other}"
+        ))),
+    }
+}
+
+fn connection_intent_for_host_scope(
+    host_kind: HostKind,
+    scope: HostScope,
+) -> Result<ConnectionIntent, AgentCommandError> {
+    match (host_kind, scope) {
+        (HostKind::Codex, HostScope::User) => Ok(ConnectionIntent::Personal),
+        (HostKind::Codex, HostScope::Project) => Ok(ConnectionIntent::Shared),
+        (HostKind::ClaudeCode, HostScope::Local) => Ok(ConnectionIntent::Personal),
+        (HostKind::ClaudeCode, HostScope::Project) => Ok(ConnectionIntent::Shared),
+        (HostKind::ClaudeCode, HostScope::User) => Ok(ConnectionIntent::Global),
+        (HostKind::Generic, HostScope::Export) => Ok(ConnectionIntent::Personal),
+        _ => Err(AgentCommandError::usage(
+            "host and scope must match the supported Agent Connection matrix",
+        )),
+    }
+}
+
 fn validate_host_scope(host_kind: HostKind, scope: HostScope) -> Result<(), AgentCommandError> {
     let valid = matches!(
         (host_kind, scope),
@@ -1139,6 +1179,18 @@ fn required_installation_profile(
             runtime_home.display()
         ))
     })
+}
+
+fn installation_profile_context<'a>(
+    runtime_home: &'a Path,
+    profile: &'a InstallationProfileRecord,
+) -> InstallationProfile<'a> {
+    InstallationProfile {
+        runtime_home,
+        volicord_command: Path::new(&profile.volicord_command),
+        volicord_mcp_command: Path::new(&profile.volicord_mcp_command),
+        default_connection_mode: &profile.default_connection_mode,
+    }
 }
 
 fn resolve_optional_repo_root(
@@ -1260,22 +1312,6 @@ fn enforce_single_project_scope(
     Ok(())
 }
 
-fn resolve_mcp_command(
-    parsed: &ParsedAgentOptions,
-    scope: HostScope,
-    profile: &InstallationProfileRecord,
-) -> Result<PathBuf, AgentCommandError> {
-    if parsed.mcp_command.is_some() {
-        return Err(AgentCommandError::usage(
-            "MCP command location is recorded by volicord setup; run `volicord setup --mcp-command PATH` to change it",
-        ));
-    }
-    if scope == HostScope::Project {
-        return Ok(PathBuf::from(DEFAULT_MCP_COMMAND));
-    }
-    Ok(PathBuf::from(&profile.volicord_mcp_command))
-}
-
 fn connection_target_hint(
     host_kind: HostKind,
     scope: HostScope,
@@ -1321,14 +1357,15 @@ fn connection_target_hint(
     }
 }
 
-struct HostPlanRequest<'a> {
+struct BuildHostPlanRequest<'a> {
     host_kind: HostKind,
-    scope: HostScope,
+    connection_intent: ConnectionIntent,
     connection_id: &'a str,
-    server_name: &'a str,
     repo_root: Option<&'a Path>,
-    mcp_command: &'a Path,
-    runtime_home: Option<&'a Path>,
+    project_id: Option<&'a str>,
+    project_name: Option<&'a str>,
+    installation_profile: InstallationProfile<'a>,
+    mode: &'a str,
     expected_fingerprint: Option<&'a str>,
     export_target: Option<&'a Path>,
     export_dir: Option<&'a Path>,
@@ -1336,50 +1373,42 @@ struct HostPlanRequest<'a> {
 }
 
 fn build_host_plan(
-    request: HostPlanRequest<'_>,
+    request: BuildHostPlanRequest<'_>,
     process: &impl AgentProcess,
 ) -> Result<HostPlan, AgentCommandError> {
+    let project = request.repo_root.map(|repo_root| ProjectContext {
+        project_id: request.project_id.unwrap_or(""),
+        project_name: request.project_name.unwrap_or(""),
+        repo_root,
+    });
+    let plan_request = HostPlanRequest {
+        host_kind: request.host_kind,
+        connection_intent: request.connection_intent,
+        project,
+        installation_profile: request.installation_profile,
+        connection_id: request.connection_id,
+        mode: request.mode,
+        expected_fingerprint: request.expected_fingerprint,
+    };
     match request.host_kind {
         HostKind::Codex => {
             let adapter = CodexAdapter::new(codex_environment(process));
-            adapter
-                .plan(CodexPlanRequest {
-                    scope: request.scope,
-                    connection_id: request.connection_id,
-                    explicit_server_name: Some(request.server_name),
-                    repo_root: request.repo_root,
-                    mcp_command: request.mcp_command,
-                    runtime_home: request.runtime_home,
-                    expected_fingerprint: request.expected_fingerprint,
-                })
-                .map_err(Into::into)
+            adapter.plan(plan_request).map_err(Into::into)
         }
         HostKind::ClaudeCode => {
             let mut adapter = ClaudeCodeAdapter::new(ProductionCommandRunner);
-            adapter
-                .plan(crate::host_integration::claude_code::ClaudePlanRequest {
-                    scope: request.scope,
-                    connection_id: request.connection_id,
-                    explicit_server_name: Some(request.server_name),
-                    repo_root: request.repo_root,
-                    mcp_command: request.mcp_command,
-                    runtime_home: request.runtime_home,
-                    expected_fingerprint: request.expected_fingerprint,
-                })
-                .map_err(Into::into)
+            adapter.plan(plan_request).map_err(Into::into)
         }
         HostKind::Generic => {
             let adapter = GenericAdapter;
             let output_dir = request.export_dir.unwrap_or(request.current_dir);
             adapter
-                .plan(GenericPlanRequest {
-                    scope: request.scope,
+                .plan_export(GenericExportRequest {
                     connection_id: request.connection_id,
-                    explicit_server_name: Some(request.server_name),
+                    installation_profile: request.installation_profile,
+                    mode: request.mode,
                     output_dir,
                     output_path: request.export_target,
-                    mcp_command: request.mcp_command,
-                    runtime_home: request.runtime_home,
                     expected_fingerprint: request.expected_fingerprint,
                 })
                 .map_err(Into::into)
@@ -1438,7 +1467,9 @@ fn remove_host_configuration(
     let host_kind = parse_host_kind(&connection.host_kind)?;
     let request = HostRemoveRequest {
         host_kind,
+        connection_intent: parse_connection_intent(&connection.intent)?,
         host_scope: parse_host_scope(&connection.host_scope)?,
+        mode: connection.mode.clone(),
         server_name: connection.server_name.clone(),
         target: plan.target.clone(),
         expected_fingerprint: connection.managed_fingerprint.clone(),
@@ -1467,6 +1498,7 @@ fn existing_host_plan(
 ) -> Result<HostPlan, AgentCommandError> {
     let host_kind = parse_host_kind(&connection.host_kind)?;
     let host_scope = parse_host_scope(&connection.host_scope)?;
+    let connection_intent = parse_connection_intent(&connection.intent)?;
     let metadata = parse_metadata(&connection.metadata_json);
     let mcp_command = metadata
         .get("mcp_command")
@@ -1481,6 +1513,7 @@ fn existing_host_plan(
             let adapter = CodexAdapter::new(codex_environment(process));
             adapter
                 .plan_existing(CodexExistingPlanRequest {
+                    connection_intent,
                     scope: host_scope,
                     connection_id: &connection.connection_id,
                     server_name: &connection.server_name,
@@ -1488,12 +1521,14 @@ fn existing_host_plan(
                     mcp_command: &mcp_command,
                     runtime_home: runtime_home_for_entry.as_deref(),
                     managed_fingerprint: &connection.managed_fingerprint,
+                    mode: &connection.mode,
                 })
                 .map_err(Into::into)
         }
         _ => Ok(manual_existing_host_plan(
             connection,
             host_kind,
+            connection_intent,
             host_scope,
             &mcp_command,
             runtime_home_for_entry.as_deref(),
@@ -1505,6 +1540,7 @@ fn existing_host_plan(
 fn manual_existing_host_plan(
     connection: &AgentConnectionRecord,
     host_kind: HostKind,
+    connection_intent: ConnectionIntent,
     host_scope: HostScope,
     mcp_command: &Path,
     runtime_home: Option<&Path>,
@@ -1537,15 +1573,40 @@ fn manual_existing_host_plan(
     };
     HostPlan {
         host_kind,
+        connection_intent,
         host_scope,
+        mode: connection.mode.clone(),
         server_name: connection.server_name.clone(),
         target,
         entry: ManagedServerEntry::new(&connection.connection_id, mcp_command, runtime_home),
         change: PlannedChange::Noop,
         fingerprint: connection.managed_fingerprint.clone(),
         conflicts: Vec::new(),
-        user_actions: Vec::new(),
+        user_actions: stored_or_default_user_actions(connection, host_kind, host_scope),
         file_snapshot: None,
+    }
+}
+
+fn stored_or_default_user_actions(
+    connection: &AgentConnectionRecord,
+    host_kind: HostKind,
+    host_scope: HostScope,
+) -> Vec<UserAction> {
+    let parsed = serde_json::from_str::<Vec<UserAction>>(&connection.last_user_actions_json)
+        .unwrap_or_default();
+    if !parsed.is_empty() {
+        return parsed;
+    }
+    match (host_kind, host_scope) {
+        (HostKind::ClaudeCode, HostScope::Project) => vec![UserAction::new(
+            UserActionKind::ProjectApprovalRequired,
+            "Claude Code requires user approval before project-scoped .mcp.json servers load",
+        )],
+        (HostKind::Generic, HostScope::Export) => vec![UserAction::new(
+            UserActionKind::HostTrustRequired,
+            "generic export must be loaded, trusted, or approved in the target host by the user",
+        )],
+        _ => Vec::new(),
     }
 }
 
@@ -2025,14 +2086,31 @@ fn connection_json(connection: &AgentConnectionRecord, project_ids: &[String]) -
     json!({
         "connection_id": connection.connection_id,
         "host_kind": connection.host_kind,
+        "connection_intent": connection.intent,
         "host_scope": connection.host_scope,
         "mode": connection.mode,
         "enabled": connection.enabled,
         "connected_projects": project_ids,
         "verification_status": connection.last_verified_status,
+        "verification_report": json_object_text(&connection.last_verification_report_json),
+        "user_actions": json_array_text(&connection.last_user_actions_json),
         "server_name": connection.server_name,
         "config_target": connection.config_target,
     })
+}
+
+fn json_object_text(text: &str) -> Value {
+    serde_json::from_str::<Value>(text)
+        .ok()
+        .filter(Value::is_object)
+        .unwrap_or_else(|| json!({}))
+}
+
+fn json_array_text(text: &str) -> Value {
+    serde_json::from_str::<Value>(text)
+        .ok()
+        .filter(Value::is_array)
+        .unwrap_or_else(|| json!([]))
 }
 
 fn verification_json(report: &VerificationReport) -> Value {
@@ -2040,12 +2118,31 @@ fn verification_json(report: &VerificationReport) -> Value {
         "status": report.status.as_str(),
         "host": {
             "status": report.host.status.as_str(),
+            "host_state": report.host.host_state.as_str(),
+            "managed_config": report.host.managed_config.as_str(),
+            "host_executable": report.host.host_executable.as_str(),
+            "host_gate": report.host.host_gate.as_str(),
+            "host_configuration": report.host.host_configuration.as_str(),
+            "mcp_handshake_allowed": report.host.mcp_handshake_allowed,
             "details": report.host.details,
+            "diagnostic": report.host.diagnostic,
+            "user_actions": report.host.user_actions,
         },
         "preflight": step_json(&report.preflight),
         "mcp_handshake": step_json(&report.handshake),
         "tools": report.tools,
     })
+}
+
+fn verification_report_json(report: &VerificationReport) -> Result<String, AgentCommandError> {
+    serde_json::to_string(&verification_json(report))
+        .map_err(|error| AgentCommandError::runtime(error.to_string()))
+}
+
+fn user_actions_json(
+    actions: &[crate::host_integration::UserAction],
+) -> Result<String, AgentCommandError> {
+    serde_json::to_string(actions).map_err(|error| AgentCommandError::runtime(error.to_string()))
 }
 
 fn step_json(step: &VerificationStep) -> Value {
@@ -2099,6 +2196,8 @@ fn connection_metadata_json(
     let mut value = json!({
         "created_by": AGENT_METADATA_CREATED_BY,
         "mcp_command": path_text(mcp_command),
+        "connection_intent": plan.connection_intent.as_str(),
+        "mode": plan.mode.as_str(),
     });
     let object = value
         .as_object_mut()

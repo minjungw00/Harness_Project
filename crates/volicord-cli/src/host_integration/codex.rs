@@ -10,10 +10,11 @@ use toml_edit::{value, Array, DocumentMut, Item, Table};
 use super::{
     claude_code::{CommandInvocation, CommandRunner, ProductionCommandRunner},
     config_edit::{read_text_snapshot, write_if_fresh, FileSnapshot},
-    managed_fingerprint, unmanaged_fingerprint, validated_server_name, HostAdapter,
-    HostConfigError, HostConflict, HostConflictKind, HostDetection, HostEffect, HostKind, HostPlan,
-    HostRemoveRequest, HostScope, HostTarget, ManagedServerEntry, PlannedChange, UserAction,
-    UserActionKind,
+    is_volicord_managed_entry, managed_fingerprint, unmanaged_fingerprint, validated_server_name,
+    ConnectionIntent, HostAdapter, HostConfigError, HostConflict, HostConflictKind, HostDetection,
+    HostEffect, HostKind, HostPlan, HostPlanRequest, HostRemoveRequest, HostScope, HostTarget,
+    InstallationProfile, ManagedServerEntry, PlannedChange, ProjectContext, UserAction,
+    UserActionKind, DEFAULT_MCP_COMMAND,
 };
 use crate::host_integration::verification::{
     HostConfigurationStatus, HostExecutableStatus, HostGateStatus, ManagedConfigStatus,
@@ -47,36 +48,22 @@ impl<R: CommandRunner> CodexAdapter<R> {
         }
     }
 
-    pub fn plan(&self, request: CodexPlanRequest<'_>) -> Result<HostPlan, HostConfigError> {
-        if !matches!(request.scope, HostScope::User | HostScope::Project) {
-            return Ok(conflicted_plan(
-                HostScope::Project,
-                request.connection_id,
-                request.explicit_server_name,
-                request.mcp_command,
-                HostConflict::new(
-                    HostConflictKind::InvalidScope,
-                    "Codex supports only user and project host scopes",
-                ),
-            ));
-        }
-        validate_mcp_command(request.scope, request.mcp_command)?;
-        if request.scope == HostScope::Project && request.runtime_home.is_some() {
+    pub fn plan(&self, request: HostPlanRequest<'_>) -> Result<HostPlan, HostConfigError> {
+        if request.host_kind != HostKind::Codex {
             return Err(HostConfigError::Conflict(HostConflict::new(
-                HostConflictKind::InvalidCommand,
-                "Codex project-scoped configuration must not embed a personal VOLICORD_HOME",
+                HostConflictKind::InvalidScope,
+                "Codex adapter cannot plan a non-Codex host request",
             )));
         }
+        let scope = codex_scope_for_intent(request.connection_intent)?;
+        let (mcp_command, runtime_home) =
+            entry_inputs_for_scope(scope, request.installation_profile);
+        validate_mcp_command(scope, mcp_command)?;
 
-        let server_name =
-            validated_server_name(request.connection_id, request.explicit_server_name)?;
-        let target = self.config_path(request.scope, request.repo_root)?;
-        let entry = ManagedServerEntry::new(
-            request.connection_id,
-            request.mcp_command,
-            request.runtime_home,
-        );
-        let fingerprint = managed_fingerprint(HostKind::Codex, request.scope, &server_name, &entry);
+        let server_name = validated_server_name(request.connection_id, None)?;
+        let target = self.config_path(scope, request.project)?;
+        let entry = ManagedServerEntry::new(request.connection_id, mcp_command, runtime_home);
+        let fingerprint = managed_fingerprint(HostKind::Codex, scope, &server_name, &entry);
         let (snapshot, text) = read_text_snapshot(&target)?;
         let document = parse_document(text.as_deref(), &target)?;
         if document.as_table().contains_key("mcp_servers")
@@ -96,29 +83,23 @@ impl<R: CommandRunner> CodexAdapter<R> {
         let mut conflicts = Vec::new();
         let change = match existing {
             None => PlannedChange::Create,
-            Some(item) => {
-                let current = codex_entry_fingerprint(request.scope, &server_name, item);
-                if current.as_deref() == Some(fingerprint.as_str()) {
-                    PlannedChange::Noop
-                } else if current.as_deref() == request.expected_fingerprint {
-                    PlannedChange::Update
-                } else {
-                    conflicts.push(HostConflict::new(
-                        HostConflictKind::UnmanagedNameCollision,
-                        format!(
-                            "Codex MCP server name is already configured by an unrelated entry: {server_name}"
-                        ),
-                    ));
-                    PlannedChange::Noop
-                }
-            }
+            Some(item) => classify_existing_codex_entry(
+                scope,
+                &server_name,
+                item,
+                &fingerprint,
+                request.expected_fingerprint,
+                &mut conflicts,
+            ),
         };
         let mut user_actions = Vec::new();
-        add_project_trust_action(request.scope, &mut user_actions);
+        add_project_trust_action(scope, &mut user_actions);
 
         Ok(HostPlan {
             host_kind: HostKind::Codex,
-            host_scope: request.scope,
+            connection_intent: request.connection_intent,
+            host_scope: scope,
+            mode: request.mode.to_owned(),
             server_name,
             target: HostTarget::File(target),
             entry,
@@ -159,7 +140,9 @@ impl<R: CommandRunner> CodexAdapter<R> {
 
         Ok(HostPlan {
             host_kind: HostKind::Codex,
+            connection_intent: request.connection_intent,
             host_scope: request.scope,
+            mode: request.mode.to_owned(),
             server_name,
             target: HostTarget::File(request.config_target.to_path_buf()),
             entry,
@@ -174,22 +157,22 @@ impl<R: CommandRunner> CodexAdapter<R> {
     fn config_path(
         &self,
         scope: HostScope,
-        repo_root: Option<&Path>,
+        project: Option<ProjectContext<'_>>,
     ) -> Result<PathBuf, HostConfigError> {
         match scope {
             HostScope::User => Ok(self.codex_home()?.join("config.toml")),
             HostScope::Project => {
-                let repo_root = repo_root.ok_or_else(|| {
+                let project = project.ok_or_else(|| {
                     HostConfigError::Conflict(HostConflict::new(
                         HostConflictKind::InvalidScope,
-                        "Codex project scope requires a Product Repository root",
+                        "Codex shared connection intent requires a Product Repository root",
                     ))
                 })?;
-                Ok(repo_root.join(".codex").join("config.toml"))
+                Ok(project.repo_root.join(".codex").join("config.toml"))
             }
             _ => Err(HostConfigError::Conflict(HostConflict::new(
                 HostConflictKind::InvalidScope,
-                "Codex supports only user and project host scopes",
+                "Codex supports only personal and shared connection intents",
             ))),
         }
     }
@@ -291,7 +274,8 @@ impl<R: CommandRunner> HostAdapter for CodexAdapter<R> {
 
     fn verify(&mut self, plan: &HostPlan) -> Result<Verification, HostConfigError> {
         if let Some(conflict) = plan.conflicts.first() {
-            return Ok(Verification::changed(conflict.message.clone()));
+            return Ok(Verification::changed(conflict.message.clone())
+                .merge_user_actions(&plan.user_actions));
         }
         let config_target = match &plan.target {
             HostTarget::File(target) => target.as_path(),
@@ -312,13 +296,14 @@ impl<R: CommandRunner> HostAdapter for CodexAdapter<R> {
             if let Some(diagnostic) = executable.diagnostic {
                 verification = verification.with_diagnostic(diagnostic);
             }
-            return Ok(verification);
+            return Ok(verification.merge_user_actions(&plan.user_actions));
         }
         if !executable.is_available() {
             return Ok(verification_from_executable_unavailable(
                 executable,
                 plan.host_scope == HostScope::Project,
-            ));
+            )
+            .merge_user_actions(&plan.user_actions));
         }
         if plan.host_scope == HostScope::Project {
             return Ok(Verification::action_required(
@@ -326,13 +311,15 @@ impl<R: CommandRunner> HostAdapter for CodexAdapter<R> {
             )
             .with_host_executable(HostExecutableStatus::Available)
             .with_host_gate(HostGateStatus::ActionRequired)
-            .with_mcp_handshake_allowed(true));
+            .with_mcp_handshake_allowed(true)
+            .merge_user_actions(&plan.user_actions));
         }
         Ok(Verification::configured_ready(
             "Codex managed configuration is present, Codex executable is available, and no separate project trust gate applies",
         )
         .with_host_executable(HostExecutableStatus::Available)
-        .with_mcp_handshake_allowed(true))
+        .with_mcp_handshake_allowed(true)
+        .merge_user_actions(&plan.user_actions))
     }
 
     fn remove(&mut self, request: HostRemoveRequest) -> Result<HostEffect, HostConfigError> {
@@ -373,18 +360,8 @@ impl<R: CommandRunner> HostAdapter for CodexAdapter<R> {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct CodexPlanRequest<'a> {
-    pub scope: HostScope,
-    pub connection_id: &'a str,
-    pub explicit_server_name: Option<&'a str>,
-    pub repo_root: Option<&'a Path>,
-    pub mcp_command: &'a Path,
-    pub runtime_home: Option<&'a Path>,
-    pub expected_fingerprint: Option<&'a str>,
-}
-
-#[derive(Debug, Clone, Copy)]
 pub struct CodexExistingPlanRequest<'a> {
+    pub connection_intent: ConnectionIntent,
     pub scope: HostScope,
     pub connection_id: &'a str,
     pub server_name: &'a str,
@@ -392,6 +369,62 @@ pub struct CodexExistingPlanRequest<'a> {
     pub mcp_command: &'a Path,
     pub runtime_home: Option<&'a Path>,
     pub managed_fingerprint: &'a str,
+    pub mode: &'a str,
+}
+
+fn codex_scope_for_intent(intent: ConnectionIntent) -> Result<HostScope, HostConfigError> {
+    match intent {
+        ConnectionIntent::Personal => Ok(HostScope::User),
+        ConnectionIntent::Shared => Ok(HostScope::Project),
+        ConnectionIntent::Global => Err(HostConfigError::Conflict(HostConflict::new(
+            HostConflictKind::InvalidScope,
+            "Codex does not support global connection intent",
+        ))),
+    }
+}
+
+fn entry_inputs_for_scope<'a>(
+    scope: HostScope,
+    profile: InstallationProfile<'a>,
+) -> (&'a Path, Option<&'a Path>) {
+    if scope == HostScope::Project {
+        (Path::new(DEFAULT_MCP_COMMAND), None)
+    } else {
+        (profile.volicord_mcp_command, Some(profile.runtime_home))
+    }
+}
+
+fn classify_existing_codex_entry(
+    scope: HostScope,
+    server_name: &str,
+    item: &Item,
+    desired_fingerprint: &str,
+    expected_fingerprint: Option<&str>,
+    conflicts: &mut Vec<HostConflict>,
+) -> PlannedChange {
+    let Some(entry) = codex_managed_entry(item) else {
+        conflicts.push(HostConflict::new(
+            HostConflictKind::UnmanagedNameCollision,
+            format!(
+                "Codex MCP server name is already configured by an unmanaged entry: {server_name}"
+            ),
+        ));
+        return PlannedChange::Noop;
+    };
+    let current = managed_fingerprint(HostKind::Codex, scope, server_name, &entry);
+    if current == desired_fingerprint {
+        PlannedChange::Noop
+    } else if expected_fingerprint == Some(current.as_str()) {
+        PlannedChange::Update
+    } else {
+        conflicts.push(HostConflict::new(
+            HostConflictKind::FingerprintMismatch,
+            format!(
+                "Codex MCP server name is already configured by a different Volicord-managed entry: {server_name}"
+            ),
+        ));
+        PlannedChange::Noop
+    }
 }
 
 fn add_project_trust_action(scope: HostScope, user_actions: &mut Vec<UserAction>) {
@@ -488,6 +521,40 @@ fn server_table(entry: &ManagedServerEntry) -> Table {
         table["env"] = Item::Table(env);
     }
     table
+}
+
+fn codex_managed_entry(item: &Item) -> Option<ManagedServerEntry> {
+    let table = item.as_table()?;
+    let allowed_keys = ["command", "args", "env"];
+    if table.iter().any(|(key, _)| !allowed_keys.contains(&key)) {
+        return None;
+    }
+    let command = table.get("command")?.as_str()?.to_owned();
+    let args = table
+        .get("args")
+        .and_then(Item::as_array)
+        .map(|items| {
+            items
+                .iter()
+                .map(|item| item.as_str().map(str::to_owned))
+                .collect::<Option<Vec<_>>>()
+        })
+        .unwrap_or_else(|| Some(Vec::new()))?;
+    let env = table
+        .get("env")
+        .and_then(Item::as_table)
+        .map(|items| {
+            items
+                .iter()
+                .map(|(key, item)| {
+                    item.as_str()
+                        .map(|value| (key.to_owned(), value.to_owned()))
+                })
+                .collect::<Option<BTreeMap<_, _>>>()
+        })
+        .unwrap_or_else(|| Some(BTreeMap::new()))?;
+    let entry = ManagedServerEntry { command, args, env };
+    is_volicord_managed_entry(&entry).then_some(entry)
 }
 
 fn codex_entry_fingerprint(scope: HostScope, server_name: &str, item: &Item) -> Option<String> {
@@ -650,47 +717,28 @@ fn find_executable_in_path(program: &str, path: Option<&OsString>) -> Option<Pat
 fn effect_from_plan(plan: &HostPlan) -> HostEffect {
     HostEffect {
         host_kind: plan.host_kind,
+        connection_intent: plan.connection_intent,
         host_scope: plan.host_scope,
+        mode: plan.mode.clone(),
         server_name: plan.server_name.clone(),
         target: plan.target.clone(),
         change: plan.change,
         fingerprint: plan.fingerprint.clone(),
+        user_actions: plan.user_actions.clone(),
     }
 }
 
 fn remove_effect(request: HostRemoveRequest, change: PlannedChange) -> HostEffect {
     HostEffect {
         host_kind: request.host_kind,
+        connection_intent: request.connection_intent,
         host_scope: request.host_scope,
+        mode: request.mode,
         server_name: request.server_name,
         target: request.target,
         change,
         fingerprint: request.expected_fingerprint,
-    }
-}
-
-fn conflicted_plan(
-    scope: HostScope,
-    connection_id: &str,
-    explicit_server_name: Option<&str>,
-    command: &Path,
-    conflict: HostConflict,
-) -> HostPlan {
-    let server_name = validated_server_name(connection_id, explicit_server_name)
-        .unwrap_or_else(|_| super::default_server_name(connection_id));
-    let entry = ManagedServerEntry::new(connection_id, command, None);
-    let fingerprint = managed_fingerprint(HostKind::Codex, scope, &server_name, &entry);
-    HostPlan {
-        host_kind: HostKind::Codex,
-        host_scope: scope,
-        server_name,
-        target: HostTarget::File(PathBuf::new()),
-        entry,
-        change: PlannedChange::Noop,
-        fingerprint,
-        conflicts: vec![conflict],
         user_actions: Vec::new(),
-        file_snapshot: None,
     }
 }
 
@@ -756,21 +804,50 @@ mod tests {
         let repo = temp_dir("codex-project")?;
         let adapter = CodexAdapter::new(CodexEnvironment::default());
 
-        let plan = adapter.plan(CodexPlanRequest {
-            scope: HostScope::Project,
-            connection_id: "int-project",
-            explicit_server_name: None,
-            repo_root: Some(&repo),
-            mcp_command: Path::new("volicord-mcp"),
-            runtime_home: None,
-            expected_fingerprint: None,
-        })?;
+        let plan = adapter.plan(request(
+            HostScope::Project,
+            Some(&repo),
+            Path::new("ignored"),
+        ))?;
 
         assert_eq!(
             plan.target,
             HostTarget::File(repo.join(".codex").join("config.toml"))
         );
         assert_eq!(plan.user_actions[0].kind, UserActionKind::HostTrustRequired);
+        Ok(())
+    }
+
+    #[test]
+    fn intent_mapping_rejects_codex_global() -> Result<(), Box<dyn std::error::Error>> {
+        let dir = temp_dir("codex-intent")?;
+        let repo = temp_dir("codex-intent-repo")?;
+        let adapter = CodexAdapter::new(CodexEnvironment {
+            home: Some(dir.clone()),
+            codex_home: None,
+            path: None,
+        });
+
+        let personal = adapter.plan(request(
+            HostScope::User,
+            None,
+            Path::new("/bin/volicord-mcp"),
+        ))?;
+        let shared = adapter.plan(request(
+            HostScope::Project,
+            Some(&repo),
+            Path::new("ignored"),
+        ))?;
+        let global = adapter
+            .plan(HostPlanRequest {
+                connection_intent: ConnectionIntent::Global,
+                ..request(HostScope::User, None, Path::new("/bin/volicord-mcp"))
+            })
+            .expect_err("Codex global intent should be unsupported");
+
+        assert_eq!(personal.host_scope, HostScope::User);
+        assert_eq!(shared.host_scope, HostScope::Project);
+        assert!(matches!(global, HostConfigError::Conflict(_)));
         Ok(())
     }
 
@@ -861,7 +938,7 @@ mod tests {
         assert!(text.contains("# keep me"));
         assert!(text.contains("model = \"gpt-5.5\""));
         assert!(text.contains("[mcp_servers.other]"));
-        assert!(text.contains("[mcp_servers.volicord-int_alpha]"));
+        assert!(text.contains("[mcp_servers.volicord]"));
         assert!(text.contains("args = [\"--connection\", \"int_alpha\"]"));
         Ok(())
     }
@@ -882,16 +959,24 @@ mod tests {
         ))?;
         adapter.apply(&first)?;
 
-        let second = adapter.plan(CodexPlanRequest {
+        let second = adapter.plan(HostPlanRequest {
             expected_fingerprint: Some(&first.fingerprint),
-            mcp_command: Path::new("/usr/local/bin/volicord-mcp"),
+            installation_profile: InstallationProfile {
+                volicord_mcp_command: Path::new("/usr/local/bin/volicord-mcp"),
+                ..request(HostScope::User, None, Path::new("/bin/volicord-mcp"))
+                    .installation_profile
+            },
             ..request(HostScope::User, None, Path::new("/bin/volicord-mcp"))
         })?;
         assert_eq!(second.change, PlannedChange::Update);
         adapter.apply(&second)?;
 
-        let third = adapter.plan(CodexPlanRequest {
-            mcp_command: Path::new("/usr/local/bin/volicord-mcp"),
+        let third = adapter.plan(HostPlanRequest {
+            installation_profile: InstallationProfile {
+                volicord_mcp_command: Path::new("/usr/local/bin/volicord-mcp"),
+                ..request(HostScope::User, None, Path::new("/bin/volicord-mcp"))
+                    .installation_profile
+            },
             ..request(HostScope::User, None, Path::new("/bin/volicord-mcp"))
         })?;
         assert_eq!(third.change, PlannedChange::Noop);
@@ -905,7 +990,7 @@ mod tests {
         fs::create_dir_all(&codex_home)?;
         fs::write(
             codex_home.join("config.toml"),
-            "[mcp_servers.volicord-int_alpha]\ncommand = \"other\"\n",
+            "[mcp_servers.volicord]\ncommand = \"other\"\n",
         )?;
         let adapter = CodexAdapter::new(CodexEnvironment {
             home: None,
@@ -922,6 +1007,34 @@ mod tests {
         assert_eq!(
             plan.conflicts[0].kind,
             HostConflictKind::UnmanagedNameCollision
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn managed_fingerprint_mismatch_is_reported() -> Result<(), Box<dyn std::error::Error>> {
+        let dir = temp_dir("codex-managed-mismatch")?;
+        let codex_home = dir.join("codex");
+        fs::create_dir_all(&codex_home)?;
+        fs::write(
+            codex_home.join("config.toml"),
+            "[mcp_servers.volicord]\ncommand = \"/bin/volicord-mcp\"\nargs = [\"--connection\", \"other\"]\n",
+        )?;
+        let adapter = CodexAdapter::new(CodexEnvironment {
+            home: None,
+            codex_home: Some(codex_home),
+            path: None,
+        });
+
+        let plan = adapter.plan(request(
+            HostScope::User,
+            None,
+            Path::new("/bin/volicord-mcp"),
+        ))?;
+
+        assert_eq!(
+            plan.conflicts[0].kind,
+            HostConflictKind::FingerprintMismatch
         );
         Ok(())
     }
@@ -953,35 +1066,19 @@ mod tests {
     }
 
     #[test]
-    fn project_scope_requires_path_command_and_no_runtime_home(
+    fn shared_intent_uses_path_command_and_no_runtime_home(
     ) -> Result<(), Box<dyn std::error::Error>> {
         let repo = temp_dir("codex-project-path")?;
         let adapter = CodexAdapter::new(CodexEnvironment::default());
 
-        assert!(matches!(
-            adapter.plan(CodexPlanRequest {
-                scope: HostScope::Project,
-                connection_id: "int_alpha",
-                explicit_server_name: None,
-                repo_root: Some(&repo),
-                mcp_command: Path::new("/personal/target/debug/volicord-mcp"),
-                runtime_home: None,
-                expected_fingerprint: None,
-            }),
-            Err(HostConfigError::Conflict(_))
-        ));
-        assert!(matches!(
-            adapter.plan(CodexPlanRequest {
-                scope: HostScope::Project,
-                connection_id: "int_alpha",
-                explicit_server_name: None,
-                repo_root: Some(&repo),
-                mcp_command: Path::new("volicord-mcp"),
-                runtime_home: Some(Path::new("/home/me/.volicord")),
-                expected_fingerprint: None,
-            }),
-            Err(HostConfigError::Conflict(_))
-        ));
+        let plan = adapter.plan(request(
+            HostScope::Project,
+            Some(&repo),
+            Path::new("/personal/target/debug/volicord-mcp"),
+        ))?;
+
+        assert_eq!(plan.entry.command, "volicord-mcp");
+        assert!(!plan.entry.env.contains_key("VOLICORD_HOME"));
         Ok(())
     }
 
@@ -1011,7 +1108,9 @@ mod tests {
         let error = adapter
             .remove(HostRemoveRequest {
                 host_kind: HostKind::Codex,
+                connection_intent: plan.connection_intent,
                 host_scope: HostScope::User,
+                mode: plan.mode.clone(),
                 server_name: plan.server_name,
                 target: HostTarget::File(target),
                 expected_fingerprint: plan.fingerprint,
@@ -1247,21 +1346,21 @@ mod tests {
         assert_eq!(adapter.verify(&plan)?.status.as_str(), "changed");
 
         let repo = temp_dir("codex-project-verify")?;
-        let project = adapter.plan(CodexPlanRequest {
-            scope: HostScope::Project,
-            connection_id: "int_alpha",
-            explicit_server_name: None,
-            repo_root: Some(&repo),
-            mcp_command: Path::new("volicord-mcp"),
-            runtime_home: None,
-            expected_fingerprint: None,
-        })?;
+        let project = adapter.plan(request(
+            HostScope::Project,
+            Some(&repo),
+            Path::new("ignored"),
+        ))?;
         adapter.apply(&project)?;
         let verification = adapter.verify(&project)?;
         assert_eq!(verification.status.as_str(), "action_required");
         assert_eq!(
             verification.host_executable,
             HostExecutableStatus::Available
+        );
+        assert_eq!(
+            verification.user_actions[0].kind,
+            UserActionKind::HostTrustRequired
         );
         assert!(verification.mcp_handshake_allowed);
         Ok(())
@@ -1271,14 +1370,28 @@ mod tests {
         scope: HostScope,
         repo_root: Option<&'a Path>,
         mcp_command: &'a Path,
-    ) -> CodexPlanRequest<'a> {
-        CodexPlanRequest {
-            scope,
+    ) -> HostPlanRequest<'a> {
+        let connection_intent = match scope {
+            HostScope::User => ConnectionIntent::Personal,
+            HostScope::Project => ConnectionIntent::Shared,
+            _ => ConnectionIntent::Personal,
+        };
+        HostPlanRequest {
+            host_kind: HostKind::Codex,
+            connection_intent,
+            project: repo_root.map(|repo_root| ProjectContext {
+                project_id: "project_alpha",
+                project_name: "Alpha",
+                repo_root,
+            }),
+            installation_profile: InstallationProfile {
+                runtime_home: Path::new("/runtime"),
+                volicord_command: Path::new("/bin/volicord"),
+                volicord_mcp_command: mcp_command,
+                default_connection_mode: "workflow",
+            },
             connection_id: "int_alpha",
-            explicit_server_name: None,
-            repo_root,
-            mcp_command,
-            runtime_home: Some(Path::new("/runtime")),
+            mode: "workflow",
             expected_fingerprint: None,
         }
     }
@@ -1290,6 +1403,10 @@ mod tests {
         runtime_home: Option<&'a Path>,
     ) -> CodexExistingPlanRequest<'a> {
         CodexExistingPlanRequest {
+            connection_intent: match scope {
+                HostScope::Project => ConnectionIntent::Shared,
+                _ => ConnectionIntent::Personal,
+            },
             scope,
             connection_id: "int_alpha",
             server_name: "volicord-existing",
@@ -1297,6 +1414,7 @@ mod tests {
             mcp_command,
             runtime_home,
             managed_fingerprint: "stored-fingerprint",
+            mode: "workflow",
         }
     }
 

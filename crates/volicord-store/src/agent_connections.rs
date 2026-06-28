@@ -55,6 +55,7 @@ pub const VERIFIED_STATUS_FAILED: &str = "failed";
 pub struct AgentConnectionRegistration {
     pub connection_id: String,
     pub host_kind: String,
+    pub intent: String,
     pub host_scope: String,
     pub server_name: String,
     pub config_target: String,
@@ -62,6 +63,8 @@ pub struct AgentConnectionRegistration {
     pub enabled: bool,
     pub managed_fingerprint: String,
     pub last_verified_status: String,
+    pub last_verification_report_json: String,
+    pub last_user_actions_json: String,
     pub metadata_json: String,
 }
 
@@ -175,7 +178,7 @@ pub fn ensure_agent_connection(
         AgentConnectionWriteRegistration {
             connection_internal_id: registration.connection_id,
             host_kind: registration.host_kind,
-            intent: CONNECTION_INTENT_PERSONAL.to_owned(),
+            intent: registration.intent,
             host_scope: registration.host_scope,
             project_internal_id: None,
             server_name: registration.server_name,
@@ -184,8 +187,8 @@ pub fn ensure_agent_connection(
             enabled: registration.enabled,
             managed_fingerprint: registration.managed_fingerprint,
             last_verification_status: registration.last_verified_status,
-            last_verification_report_json: "{}".to_owned(),
-            last_user_actions_json: "[]".to_owned(),
+            last_verification_report_json: registration.last_verification_report_json,
+            last_user_actions_json: registration.last_user_actions_json,
             metadata_json: registration.metadata_json,
         },
     )
@@ -830,11 +833,20 @@ fn validate_agent_connection_registration(
 ) -> StoreResult<()> {
     validate_identifier("connection_id", &registration.connection_id)?;
     validate_host_kind_scope(&registration.host_kind, &registration.host_scope)?;
+    validate_connection_intent(&registration.intent)?;
     validate_nonempty("server_name", &registration.server_name)?;
     validate_nonempty("config_target", &registration.config_target)?;
     validate_connection_mode(&registration.mode)?;
     validate_nonempty("managed_fingerprint", &registration.managed_fingerprint)?;
     validate_verification_status(&registration.last_verified_status)?;
+    validate_json_object(
+        "agent_connections.last_verification_report_json",
+        &registration.last_verification_report_json,
+    )?;
+    validate_json_array(
+        "agent_connections.last_user_actions_json",
+        &registration.last_user_actions_json,
+    )?;
     validate_json_object(
         "agent_connections.metadata_json",
         &registration.metadata_json,
@@ -1443,6 +1455,7 @@ mod tests {
         AgentConnectionRegistration {
             connection_id: connection_id.to_owned(),
             host_kind: HOST_KIND_CODEX.to_owned(),
+            intent: CONNECTION_INTENT_PERSONAL.to_owned(),
             host_scope: HOST_SCOPE_USER.to_owned(),
             server_name: "volicord".to_owned(),
             config_target: "/tmp/volicord-test-config.toml".to_owned(),
@@ -1450,6 +1463,8 @@ mod tests {
             enabled: true,
             managed_fingerprint: "fingerprint".to_owned(),
             last_verified_status: VERIFIED_STATUS_NOT_VERIFIED.to_owned(),
+            last_verification_report_json: "{}".to_owned(),
+            last_user_actions_json: "[]".to_owned(),
             metadata_json: "{}".to_owned(),
         }
     }

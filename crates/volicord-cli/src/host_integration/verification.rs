@@ -1,4 +1,9 @@
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+use serde::Serialize;
+
+use super::UserAction;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
 pub enum VerificationStatus {
     Complete,
     ActionRequired,
@@ -27,7 +32,8 @@ impl VerificationStatus {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
 pub enum HostVerificationState {
     ConfiguredReady,
     ConfiguredActionRequired,
@@ -56,7 +62,8 @@ impl HostVerificationState {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
 pub enum ManagedConfigStatus {
     Match,
     Missing,
@@ -79,7 +86,8 @@ impl ManagedConfigStatus {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
 pub enum HostExecutableStatus {
     Available,
     Unavailable,
@@ -98,7 +106,8 @@ impl HostExecutableStatus {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
 pub enum HostGateStatus {
     Ready,
     ActionRequired,
@@ -121,7 +130,8 @@ impl HostGateStatus {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
 pub enum HostConfigurationStatus {
     Discovered,
     Missing,
@@ -144,7 +154,7 @@ impl HostConfigurationStatus {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Verification {
     pub status: VerificationStatus,
     pub host_state: HostVerificationState,
@@ -155,6 +165,7 @@ pub struct Verification {
     pub mcp_handshake_allowed: bool,
     pub details: String,
     pub diagnostic: Option<String>,
+    pub user_actions: Vec<UserAction>,
 }
 
 impl Verification {
@@ -169,6 +180,7 @@ impl Verification {
             mcp_handshake_allowed: false,
             details: details.into(),
             diagnostic: None,
+            user_actions: Vec::new(),
         }
     }
 
@@ -183,6 +195,7 @@ impl Verification {
             mcp_handshake_allowed: true,
             details: details.into(),
             diagnostic: None,
+            user_actions: Vec::new(),
         }
     }
 
@@ -197,6 +210,7 @@ impl Verification {
             mcp_handshake_allowed: true,
             details: details.into(),
             diagnostic: None,
+            user_actions: Vec::new(),
         }
     }
 
@@ -211,6 +225,7 @@ impl Verification {
             mcp_handshake_allowed: false,
             details: details.into(),
             diagnostic: None,
+            user_actions: Vec::new(),
         }
     }
 
@@ -225,6 +240,7 @@ impl Verification {
             mcp_handshake_allowed: false,
             details: details.into(),
             diagnostic: None,
+            user_actions: Vec::new(),
         }
     }
 
@@ -239,6 +255,7 @@ impl Verification {
             mcp_handshake_allowed: false,
             details: details.into(),
             diagnostic: None,
+            user_actions: Vec::new(),
         }
     }
 
@@ -253,6 +270,7 @@ impl Verification {
             mcp_handshake_allowed: false,
             details: details.into(),
             diagnostic: None,
+            user_actions: Vec::new(),
         }
     }
 
@@ -267,6 +285,7 @@ impl Verification {
             mcp_handshake_allowed: false,
             details: details.into(),
             diagnostic: None,
+            user_actions: Vec::new(),
         }
     }
 
@@ -281,6 +300,7 @@ impl Verification {
             mcp_handshake_allowed: false,
             details: details.into(),
             diagnostic: None,
+            user_actions: Vec::new(),
         }
     }
 
@@ -311,6 +331,20 @@ impl Verification {
 
     pub fn with_diagnostic(mut self, diagnostic: impl Into<String>) -> Self {
         self.diagnostic = Some(diagnostic.into());
+        self
+    }
+
+    pub fn with_user_actions(mut self, user_actions: Vec<UserAction>) -> Self {
+        self.user_actions = user_actions;
+        self
+    }
+
+    pub fn merge_user_actions(mut self, user_actions: &[UserAction]) -> Self {
+        for action in user_actions {
+            if !self.user_actions.contains(action) {
+                self.user_actions.push(action.clone());
+            }
+        }
         self
     }
 }

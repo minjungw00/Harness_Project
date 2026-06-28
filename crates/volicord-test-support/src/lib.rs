@@ -192,6 +192,7 @@ pub mod core_fixtures {
                 AgentConnectionRegistration {
                     connection_id: connection_id.clone(),
                     host_kind: HOST_KIND_CODEX.to_owned(),
+                    intent: volicord_store::agent_connections::CONNECTION_INTENT_SHARED.to_owned(),
                     host_scope: HOST_SCOPE_PROJECT.to_owned(),
                     server_name: "volicord-test".to_owned(),
                     config_target: runtime_home
@@ -204,6 +205,8 @@ pub mod core_fixtures {
                     enabled: true,
                     managed_fingerprint: format!("fixture:{component}"),
                     last_verified_status: VERIFIED_STATUS_COMPLETE.to_owned(),
+                    last_verification_report_json: "{}".to_owned(),
+                    last_user_actions_json: "[]".to_owned(),
                     metadata_json: "{}".to_owned(),
                 },
             )?;
