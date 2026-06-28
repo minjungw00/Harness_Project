@@ -227,48 +227,51 @@ sequenceDiagram
 
 ```mermaid
 flowchart TD
-  parse["입력 파싱과 검증"]
-  plan["registry와 호스트 상태 검사, ID 도출, 프로젝트/연결/호스트 계획 작성, 충돌 거부"]
+  parse["옵션 검증, 경로와 실행 파일 입력 해석"]
   dry{"--dry-run?"}
-  dryout["계획만 반환, Runtime Home이나 SQLite 쓰기, MCP 사전 점검, 호스트 적용, 초기화, 도구 발견 없음"]
-  runtime["Runtime Home과 프로젝트 상태 초기화 또는 재사용"]
-  connection["Agent Connection과 Connection Projects 허용 목록 생성 또는 재사용"]
+  dryout["쓰기 없는 계획/출력 렌더링, Runtime Home 생성, 등록, 호스트 적용, 사전 점검, handshake 없음"]
+  runtime["Runtime Home 초기화 또는 재사용"]
+  project["선택된 프로젝트 등록 또는 재사용"]
+  plan["호스트 설정 계획 작성과 점검"]
+  connection["Agent Connection 인벤토리 등록 또는 재사용"]
+  membership["Connection Project 멤버십 추가 또는 확인"]
+  host["계획된 호스트 설정 적용"]
+  verify["호스트 적용 뒤 검증 실행"]
+  readiness["호스트 준비 상태와 관리 설정 확인"]
   preflight["해석된 Runtime Home으로 volicord-mcp --check --connection 실행"]
-  host["호스트 대상 스냅샷을 읽고 계획된 호스트 설정 적용"]
-  inventory["최종 검증 전 Agent Connection 인벤토리 등록 또는 갱신"]
-  readiness["호스트 준비 상태 검증"]
-  gate{"호스트 게이트가 MCP handshake를 허용?"}
+  gate{"호스트 게이트와 사전 점검이 stdio handshake를 허용?"}
   handshake["MCP stdio 초기화와 도구 발견"]
-  hostonly["호스트 검증 결과 사용"]
-  final["연결 결과 도출과 Agent Connection 검증 상태 갱신"]
-  fail["지속 효과가 시작된 뒤 실패하면 journal의 소유된 효과를 보상하고 잔여 효과 보고"]
+  aggregate["연결 결과 도출"]
+  final["검증 상태 기록 또는 보고"]
+  fail["실패 단계 보고, 앞선 지속 설정 효과는 남을 수 있음"]
 
-  parse --> plan --> dry
+  parse --> dry
   dry -- yes --> dryout
-  dry -- no --> runtime --> connection --> preflight --> host --> inventory --> readiness --> gate
-  gate -- yes --> handshake --> final
-  gate -- no --> hostonly --> final
-  runtime -. 이후 실패 .-> fail
+  dry -- no --> runtime --> project --> plan --> connection --> membership --> host --> verify
+  verify --> readiness --> preflight --> gate
+  gate -- yes --> handshake --> aggregate --> final
+  gate -- no --> aggregate
+  runtime -. 설정 시작 뒤 실패 .-> fail
+  project -. 실패 .-> fail
+  plan -. 충돌 또는 실패 .-> fail
   connection -. 실패 .-> fail
-  preflight -. 실패 .-> fail
+  membership -. 실패 .-> fail
   host -. 실패 .-> fail
-  inventory -. 실패 .-> fail
   readiness -. 실패 .-> fail
+  preflight -. 실패 .-> fail
   handshake -. 실패 .-> fail
   final -. 실패 .-> fail
 ```
 
-연결 순서는 지속 설정 전에 읽기 전용 계획 단계를 둡니다. 명령은 호스트, 범위, 저장소 쓰기, Runtime Home, 저장소, 연결, 실행 파일 입력을 파싱하고 검증합니다. 그런 다음 기존 registry와 호스트 상태를 검사하고, 안정적인 식별자를 도출하고, 프로젝트, 연결, 호스트 계획을 만들며, Runtime Home 상태를 만들거나 registry 행을 바꾸기 전에 호스트 충돌을 거부합니다. 따라서 호스트 계획은 Store 쪽 설정보다 먼저 일어납니다.
+연결 순서는 지속 설정 전에 명령 옵션을 검증하고 경로를 해석합니다. `--dry-run`에서는 계획 출력을 렌더링할 만큼의 프로젝트, 대상, 연결 식별자만 해석한 뒤 쓰기 없는 경로에서 멈춥니다. Runtime Home 디렉터리나 SQLite 상태를 만들지 않고, 프로젝트, Agent Connection, Connection Project를 등록하지 않으며, 호스트 설정을 적용하지 않고, `volicord-mcp --check`를 실행하지 않으며, MCP stdio 초기화나 도구 발견도 수행하지 않습니다.
 
-`--dry-run`이 선택되면 명령은 그 계획 단계의 결과만 반환합니다. Runtime Home 디렉터리나 SQLite 상태를 만들지 않고, `volicord-mcp --check`를 실행하지 않으며, 호스트 설정을 적용하지 않고, MCP stdio 초기화나 도구 발견도 수행하지 않습니다.
+dry-run이 아닌 실행은 먼저 선택된 Runtime Home을 초기화하거나 재사용한 뒤 선택된 프로젝트를 등록하거나 재사용합니다. 프로젝트가 registry 상태에서 사용할 수 있게 된 뒤 명령은 MCP 실행 파일을 해석하고, 연결 식별자를 도출하고, 호스트 설정 계획을 만들며, Agent Connection 행을 등록하거나 갱신하기 전에 호스트 계획 충돌을 거부합니다.
 
-dry-run이 아닌 실행은 Runtime Home과 프로젝트 상태를 초기화하거나 재사용한 뒤, Agent Connection과 Connection Projects 허용 목록을 만들거나 재사용합니다. 그 다음에만 해석된 Runtime Home으로 `volicord-mcp --check --connection <connection_id>`를 실행합니다. 이 MCP 시작 사전 점검은 호스트 설정 적용보다 먼저 일어납니다.
+호스트 계획이 받아들여지면 명령은 Agent Connection을 등록하거나 재사용하고, 단일 프로젝트 범위의 프로젝트 수 규칙을 적용하며, Connection Project 멤버십을 추가하거나 확인한 다음 계획된 호스트 설정을 적용합니다. `Product Repository` 지침이 있더라도 로컬 에이전트를 위한 조언 맥락으로 남습니다. 이 지침은 설정 효과와 별개입니다. 사용자 판단을 기록하지 않고 `Write Check`, Connection Projects 멤버십, `connection.mode` 상태를 만들지 않습니다.
 
-호스트 설정 적용은 앞서 만든 호스트 계획을 따르며 대상 스냅샷, stale-plan 점검, 소유 마커, 지문 점검으로 보호됩니다. Agent Connection 인벤토리는 호스트 설정 적용 뒤에만 등록하거나 갱신하며, 처음에는 최종 검증 상태가 기록되기 전 상태입니다. `Product Repository` 지침이 있더라도 로컬 에이전트를 위한 조언 맥락으로 남습니다. 이 지침은 설정 효과와 별개입니다. 사용자 판단을 기록하지 않고 `Write Check`, Connection Projects 멤버십, `connection.mode` 상태를 만들지 않습니다.
+검증은 호스트 설정이 적용된 뒤 실행됩니다. 호스트 어댑터를 통해 호스트 준비 상태와 관리 설정을 확인하고, 해석된 Runtime Home으로 `volicord-mcp --check --connection <connection_id>`를 실행하며, 호스트 게이트가 handshake를 허용하고 사전 점검이 통과한 경우에만 직접 MCP stdio 초기화와 `tools/list` 발견을 수행합니다. 그런 다음 명령은 관리 CLI 구현이 정한 방식으로 결과 검증 상태를 기록하거나 보고합니다.
 
-최종 검증은 먼저 호스트 준비 상태를 확인합니다. 직접 MCP stdio 초기화와 도구 발견은 호스트 게이트가 그 handshake를 허용할 때만 실행되므로, 호스트 준비 상태와 직접 MCP handshake는 별도 점검입니다. 호스트가 소유한 신뢰, 승인, 재로드, 재시작, OAuth, 또는 비슷한 사용자 제어 행동이 남아 있으면 결과는 여전히 `action_required`일 수 있습니다.
-
-실패 처리는 Runtime Home, registry, 호스트 설정 경계를 가로지르는 journal 기반 보상입니다. 새로 적용한 관리 효과는 소유권과 안전 점검이 허용할 때만 되돌리려고 시도하며, 남는 잔여 효과는 보고합니다. 이 보상은 하나의 원자적 Store 트랜잭션이 아니고, 모든 지속 경계와 호스트 경계에 대한 보편적 롤백을 주장하지 않습니다.
+실패 처리는 경계별로 이루어집니다. 입력 검증 오류와 dry-run 실패는 지속 쓰기 전에 발생합니다. Runtime Home, registry, 호스트 설정 효과가 시작된 뒤 뒤쪽 단계가 실패하면 명령은 실패한 단계를 보고합니다. 앞서 성공한 효과는 이후 `status`, `verify`, `project`, `uninstall` 명령에서 관찰될 수 있습니다. 설정 흐름은 Runtime Home registry 상태와 외부 호스트 설정을 가로지르는 되돌리기 상태나 원자적 되돌림을 제공하지 않습니다.
 
 ## 결정 경로
 
