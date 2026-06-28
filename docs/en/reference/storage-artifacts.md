@@ -24,7 +24,23 @@ This document does not own:
 <a id="lifecycle-boundary"></a>
 ## Lifecycle summary
 
-Artifact storage distinguishes staging, promotion, persistent linking, and body reads. `ArtifactRef` is the public API pointer to a registered persistent artifact. Storage implements persistent artifact authority through `artifacts` plus `artifact_links`.
+Artifact storage distinguishes staging, promotion, persistent linking, and body reads. `ArtifactRef` is the public API pointer to a registered persistent artifact. Storage implements persistent artifact authority through `artifacts` plus `artifact_links`. For record-family placement, see [Storage Records](storage-records.md). For response-branch persistence effects, see [Storage Effects](storage-effects.md).
+
+```mermaid
+flowchart LR
+  Stage["volicord.stage_artifact<br/>transient staged representation or handle"]
+  NoEvidence["not durable evidence by itself"]
+  Promote["compatible owner method accepts staged input<br/>durable artifacts row"]
+  Link["artifact_links<br/>durable owner relation"]
+  Evidence["evidence eligibility starts here<br/>durable linked owner record"]
+  Reuse["existing_artifact_ref<br/>already durable ArtifactRef"]
+
+  Stage --> Promote --> Link --> Evidence
+  Stage -.-> NoEvidence
+  Reuse --> Link
+```
+
+Only a compatible owner method can move staged input into promotion. Existing artifact reuse starts from an already durable `ArtifactRef`; it is not new staging.
 
 | Stage | Details |
 |---|---|
@@ -130,7 +146,7 @@ Not allowed:
 Allowed:
 
 - A successful `volicord.stage_artifact` returns `StageArtifactResult` with `base.effect_kind=staging_created`.
-- It may write safe bytes or a safe notice under `artifacts/tmp/`.
+- It may write safe bytes or a safe notice under `artifacts/tmp/`, creating the transient staging path when staging occurs.
 - The stored `artifact_staging.tmp_path` for staged bytes or notices is `project_home`-relative, with a shape such as `artifacts/tmp/<file>`.
 - It may create the transient staging row.
 

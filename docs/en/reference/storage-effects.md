@@ -101,6 +101,8 @@ Allowed effect:
 
 - storage-owned transient staging
 
+This branch is separate from a regular Core committed mutation. It may create a storage-owned staged representation or handle, but that transient staging write is not a Core current-row mutation, persistent `ArtifactRef`, artifact link, or evidence record by itself.
+
 Disallowed effects:
 
 - Core current row
@@ -122,6 +124,8 @@ Allowed effects:
 - `task_events` append
 - replay row creation
 - exactly one `project_state.state_version` increment
+
+Artifact promotion and `artifact_links` creation occur only when the method owner selects a committed mutation branch that explicitly includes those artifact effects. They do not follow automatically from earlier staging.
 
 <a id="committed-blocked-result"></a>
 ### Committed blocked result
@@ -427,7 +431,7 @@ Successful staging may:
 - create `artifact_staging` or an equivalent storage-owned staging record
 - store transient safe bytes or notices under `artifacts/tmp/`
 
-This branch creates only transient storage-owned staging.
+This branch creates only transient storage-owned staging. It is not the regular Core committed mutation branch, and temporary staging directories may be created when staging occurs rather than during project registration.
 
 It does not create:
 

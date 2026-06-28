@@ -30,14 +30,16 @@
 
 Volicord는 기준 범위 기록을 로컬 `Volicord Runtime Home` 하나와 등록된 프로젝트별 로컬 상태 데이터베이스 하나에 저장합니다. 기본 기준 루트는 `~/.volicord`이며, 구현은 같은 역할을 하는 설정 루트를 선택할 수 있습니다.
 
+아래 트리는 관련 저장 기능을 사용한 뒤의 대표 배치입니다. 프로젝트 등록 직후의 초기 디렉터리 체크리스트가 아닙니다. 프로젝트 등록은 프로젝트 상태를 만들거나 열지만, 아티팩트 저장소 디렉터리는 필요할 때 늦게 만들어질 수 있습니다.
+
 ```text
 ~/.volicord/
   registry.sqlite
   projects/
     PRJ-0001/
       state.sqlite
-      artifacts/
-        tmp/
+      artifacts/        # 아티팩트 저장소를 사용할 때 생성
+        tmp/            # 아티팩트 스테이징이 일어날 때 생성
 ```
 
 저장 위치:
@@ -45,7 +47,7 @@ Volicord는 기준 범위 기록을 로컬 `Volicord Runtime Home` 하나와 등
 - `registry.sqlite`는 Runtime Home 식별 정보, 프로젝트 등록 매핑, Agent Connection 기록, Connection Projects 멤버십, registry 메타데이터를 저장합니다. 프로젝트 등록에는 등록된 `repo_root`, `project_home`, 프로젝트 `state.sqlite` 경로, 상태가 포함됩니다.
 - `projects/{project_id}/`는 등록된 프로젝트 하나의 Volicord 프로젝트 홈입니다. `repo_root`와 같은 위치나 권한이 아닙니다.
 - `state.sqlite`는 등록된 프로젝트의 프로젝트별 로컬 Core 상태를 저장합니다.
-- `artifacts/`는 아티팩트 저장소를 사용할 때의 프로젝트 아티팩트 저장소입니다. `artifacts/tmp/`는 아티팩트 스테이징에 필요할 때 쓰는 임시 스테이징 공간이며 증거 권한이 아닙니다. 이 디렉터리들은 프로젝트 등록 직후에 반드시 존재할 필요가 없습니다.
+- `artifacts/`는 아티팩트 저장소를 사용할 때의 프로젝트 아티팩트 저장소이며, 아티팩트 저장소가 처음 필요할 때 늦게 만들어질 수 있습니다. `artifacts/tmp/`는 아티팩트 스테이징에 필요할 때 쓰는 임시 스테이징 공간이며 증거 권한이 아닙니다. 이 디렉터리도 스테이징이 일어날 때 늦게 만들어질 수 있습니다. 이 디렉터리들은 프로젝트 등록 직후에 반드시 존재할 필요가 없습니다.
 
 아티팩트 경로 기준:
 

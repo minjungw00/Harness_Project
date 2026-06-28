@@ -24,7 +24,23 @@
 <a id="lifecycle-boundary"></a>
 ## 아티팩트 생명주기 요약
 
-아티팩트 저장은 스테이징, 승격, 지속 연결, 본문 읽기를 구분합니다. `ArtifactRef`는 등록된 지속 아티팩트를 가리키는 공개 API 포인터입니다. 저장소는 `artifacts`와 `artifact_links`를 사용해 지속 아티팩트 권한을 구현합니다.
+아티팩트 저장은 스테이징, 승격, 지속 연결, 본문 읽기를 구분합니다. `ArtifactRef`는 등록된 지속 아티팩트를 가리키는 공개 API 포인터입니다. 저장소는 `artifacts`와 `artifact_links`를 사용해 지속 아티팩트 권한을 구현합니다. 기록 계열 배치는 [저장소 기록](storage-records.md)을 보고, 응답 분기별 지속 효과는 [저장 효과](storage-effects.md)를 봅니다.
+
+```mermaid
+flowchart LR
+  Stage["volicord.stage_artifact<br/>임시 스테이징 표현 또는 핸들"]
+  NoEvidence["그 자체로 지속 증거가 아님"]
+  Promote["호환되는 담당 메서드가 스테이징 입력 수락<br/>지속 artifacts 행"]
+  Link["artifact_links<br/>지속 담당 관계"]
+  Evidence["증거 자격은 여기서 시작<br/>지속 연결된 담당 기록"]
+  Reuse["existing_artifact_ref<br/>이미 지속되는 ArtifactRef"]
+
+  Stage --> Promote --> Link --> Evidence
+  Stage -.-> NoEvidence
+  Reuse --> Link
+```
+
+호환되는 담당 메서드만 스테이징 입력을 승격으로 넘길 수 있습니다. 기존 아티팩트 재사용은 이미 지속되는 `ArtifactRef`에서 시작하며 새 스테이징이 아닙니다.
 
 | 단계 | 세부 블록 |
 |---|---|
@@ -130,7 +146,7 @@ Core는 성공한 `volicord.stage_artifact` 요청의 확인된 호출 맥락에
 허용되는 것:
 
 - 성공한 `volicord.stage_artifact`는 `base.effect_kind=staging_created`인 `StageArtifactResult`를 반환합니다.
-- 저장소는 `artifacts/tmp/` 아래 안전한 아티팩트 바이트 또는 안전한 알림을 둘 수 있습니다.
+- 저장소는 `artifacts/tmp/` 아래 안전한 아티팩트 바이트 또는 안전한 알림을 둘 수 있으며, 스테이징이 일어날 때 임시 스테이징 경로를 만들 수 있습니다.
 - 스테이징 바이트 또는 알림에 대해 저장되는 `artifact_staging.tmp_path`는 `project_home` 기준 상대 경로이며 `artifacts/tmp/<file>` 같은 형태를 사용합니다.
 - 저장소는 `artifact_staging` 행이나 그에 해당하는 임시 스테이징 기록을 만들 수 있습니다.
 

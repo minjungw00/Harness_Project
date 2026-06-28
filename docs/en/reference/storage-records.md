@@ -30,14 +30,16 @@ This document does not own:
 
 Volicord stores baseline records in one local `Volicord Runtime Home` and one project-local state database per registered project. The default reference root is `~/.volicord`; an implementation may choose an equivalent configured root.
 
+The tree is representative after the relevant storage features have been used; it is not an initial-directory checklist. Project registration creates or opens project state, while artifact-store directories may be created lazily.
+
 ```text
 ~/.volicord/
   registry.sqlite
   projects/
     PRJ-0001/
       state.sqlite
-      artifacts/
-        tmp/
+      artifacts/        # created when artifact storage is used
+        tmp/            # created when artifact staging occurs
 ```
 
 Storage placement:
@@ -45,7 +47,7 @@ Storage placement:
 - `registry.sqlite` stores Runtime Home identity, project registration mapping, Agent Connection records, Connection Projects membership, and registry metadata. Project registration includes the registered `repo_root`, `project_home`, project `state.sqlite` path, and status.
 - `projects/{project_id}/` is the Volicord project home for one registered project. It is not the same location or authority as `repo_root`.
 - `state.sqlite` stores project-local Core state for the registered project.
-- `artifacts/` is the project artifact store when artifact storage is used. `artifacts/tmp/` is transient staging space when artifact staging requires it, not evidence authority. These directories need not exist immediately after project registration.
+- `artifacts/` is the project artifact store when artifact storage is used; it may be created lazily when artifact storage is first needed. `artifacts/tmp/` is transient staging space when artifact staging requires it, not evidence authority; it may be created lazily when staging occurs. These directories need not exist immediately after project registration.
 
 Artifact path bases:
 
