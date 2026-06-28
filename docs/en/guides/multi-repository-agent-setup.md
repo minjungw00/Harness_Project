@@ -22,6 +22,18 @@ There is one host MCP entry, one `volicord-mcp --connection <connection_id>` pro
 
 Project and local host scopes remain single-Project scopes. Use user scope for this topology.
 
+## Project Selection Flow
+
+For exact project-selection and transport behavior, use [Agent Connection](../reference/agent-connection.md#current-connection-context) and [MCP Transport](../reference/mcp-transport.md). In this guide, the practical rule is:
+
+| MCP call shape | Connected Projects on the Agent Connection | Adapter action | Agent action |
+|---|---:|---|---|
+| `volicord.list_projects` | Zero, one, or many | Returns the projects visible through the bound Agent Connection without entering Core. | Use the returned `project_id` values, or ask the operator to connect a Project if the list is empty. |
+| Public Volicord method tool with `envelope.project_id` | Zero, one, or many | Validates that the selected Project is connected and available before Core execution. | Use a `project_id` returned by `volicord.list_projects`; do not invent one from paths or memory. |
+| Public Volicord method tool without `envelope.project_id` | Exactly one | May route to that single Project, then still applies project availability, mode, and method checks. | Omission is acceptable only while the connection remains single-Project. |
+| Public Volicord method tool without `envelope.project_id` | Multiple | Rejects the call as ambiguous before Core execution. | Call `volicord.list_projects`, choose the intended Project, and retry with explicit `envelope.project_id`. |
+| Public Volicord method tool without `envelope.project_id` | Zero | Rejects before Core execution because no Project is connected. | Ask the operator to connect a Project before retrying project-routed tools. |
+
 ## Prerequisites And Completion
 
 Before adding a second repository, complete user-scope host setup for Product Repository A through [Agent Host Setup](agent-host-setup.md). The connection can be `complete`, or it can be `action_required` only when the remaining action is host-owned trust, approval, reload, restart, or comparable follow-up documented by [Agent Host Troubleshooting](agent-host-troubleshooting.md#status-action_required).
@@ -92,7 +104,7 @@ When a user asks which repositories are available, the agent calls:
 {"name":"volicord.list_projects","arguments":{}}
 ```
 
-The MCP result identifies the `connection_id`, mode, and connected Projects. A workflow call that targets one repository must include explicit `project_id` once more than one Project is connected:
+The MCP result identifies the `connection_id`, mode, and connected Projects. A public Volicord method tool call that targets one repository must include explicit `project_id` once more than one Project is connected:
 
 ```json
 {
