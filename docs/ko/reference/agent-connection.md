@@ -43,6 +43,21 @@ Agent Connection은 `connection_id`로 식별되는 로컬 MCP 호스트 연결 
 - `last_verified_status`
 - 생성 및 갱신 시각
 
+<a id="lifecycle-and-state-boundaries"></a>
+## 생명주기와 상태 경계
+
+Agent Connection 생명주기는 여러 상태 영역에 걸쳐 있습니다. 한 명령이 한
+상태 영역을 바꾸더라도 다른 영역은 그대로 둘 수 있습니다.
+
+| 영역 | 저장 또는 담당 위치 | 바꾸는 명령 | 경계 |
+|---|---|---|---|
+| Agent Connection 레지스트리 상태 | `Volicord Runtime Home` 아래의 `agent_connections` 기록입니다. 식별자, 호스트/범위, 서버 이름, `config_target`, `connection.mode`, `enabled`, 관리 지문, `last_verified_status`를 포함합니다. | `volicord agent connect`가 기록을 만들거나 재사용하고, `volicord agent enable`과 `volicord agent disable`이 `enabled`를 전환하며, `volicord agent verify`가 `last_verified_status`를 갱신하고, `volicord agent uninstall`은 멤버십 제거 뒤 기록을 제거할 수 있습니다. | 레지스트리 상태는 관리 상태입니다. 호스트 설정 파일이 아니며, 외부 호스트가 MCP 서버를 로드, 신뢰, 승인, 노출했다는 증거가 아닙니다. |
+| Connection Projects 멤버십 | 같은 Runtime Home 아래의 `connection_projects` 기록입니다. | `volicord agent connect`가 선택된 프로젝트를 추가하고, `volicord agent project add`와 `volicord agent project remove`가 멤버십을 바꾸며, `volicord agent uninstall`이 관련 멤버십을 제거합니다. | 멤버십은 Agent Connection의 프로젝트 허용 목록을 제어합니다. 모든 Runtime Home 프로젝트를 등록하지 않으며 프로젝트 등록, 프로젝트 상태, Core 기록을 삭제하지 않습니다. |
+| 호스트 설정 | `config_target`이 가리키는 MCP 호스트 설정 위치 또는 생성된 `generic` export입니다. | `volicord agent connect`가 관리 호스트 설정을 설치하거나 내보냅니다. `volicord agent uninstall`은 안전 점검이 허용할 때 일치하는 관리 내용만 제거합니다. 프로젝트 멤버십 명령과 enable/disable은 호스트 설정을 다시 쓰지 않습니다. | 호스트 설정은 `volicord-mcp --connection <connection_id>`를 시작하지만 외부 호스트 통합 표면으로 남습니다. 레지스트리 상태와 동일하지 않습니다. |
+| 검증 상태 | Agent Connection 레지스트리 기록의 `last_verified_status`와 [관리 CLI](admin-cli.md#agent-connection-result-states)가 담당하는 명령 출력입니다. | `volicord agent connect`와 `volicord agent verify`가 구현된 호스트, 사전 점검, MCP 초기화, `tools/list` 점검을 가능한 곳에서 실행합니다. | 검증은 Volicord 쪽 상태와 호스트/MCP 준비 상태를 모두 살펴볼 수 있습니다. `volicord-mcp --check --connection <connection_id>`만으로는 시작 검증일 뿐이며 `complete` Agent Connection이 아닙니다. |
+| 호출 가능 여부 | MCP 어댑터가 시작 시점과 공개 도구 호출마다 파생하는 현재 연결 맥락입니다. | `enabled`, 연결 프로젝트 가용성, `connection.mode`, 메서드의 `operation_category`가 영향을 줍니다. | 레지스트리나 프로젝트 상태가 바뀌면 호스트 설정을 다시 쓰지 않아도 호출이 불가능해질 수 있습니다. |
+| 제거 | 관리 호스트 내용, `connection_projects`, 그리고 경우에 따라 `agent_connections`입니다. | `volicord agent uninstall`입니다. | 제거는 `Product Repository`, 프로젝트 등록, 프로젝트 상태, Core 기록, Runtime Home 자체, 아티팩트 저장소, 관련 없는 호스트 설정을 삭제하면 안 됩니다. |
+
 규칙:
 
 - Agent Connection은 에이전트 대상이며 로컬 `User Channel`로 동작할 수 없습니다.

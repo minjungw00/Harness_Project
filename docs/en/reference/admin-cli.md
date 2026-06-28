@@ -156,6 +156,20 @@ Host trust boundary:
 - Claude Code project-scoped MCP configuration may require project MCP approval before it loads.
 - Volicord must not claim that host trust, project trust, project MCP approval, OAuth, or comparable user-controlled host actions can be bypassed.
 
+## Agent Connection command effects
+
+Agent Connection commands operate on separate state surfaces. Exact Agent
+Connection meanings are owned by [Agent Connection](agent-connection.md#lifecycle-and-state-boundaries).
+
+| Command | Runtime Home registry effect | Host configuration effect | Verification effect |
+|---|---|---|---|
+| `volicord agent connect` | Creates or reuses one `agent_connections` record, sets `enabled=true`, stores the selected `connection.mode`, and adds the selected project to `connection_projects`. | Installs or exports managed host configuration for the selected host and scope. | Runs implemented host/preflight/MCP checks where available and stores the resulting `last_verified_status`. |
+| `volicord agent list` and `volicord agent status` | Read stored Agent Connection fields and connected projects. | Do not launch the host and do not rewrite host configuration. | Report stored verification state without refreshing it. |
+| `volicord agent verify` | Reads the existing Agent Connection and updates `last_verified_status` and managed fingerprint from the verification result. | Inspects the managed target when the host integration owns an observable target. | Checks Volicord-side state and host/MCP readiness according to the implemented host path. |
+| `volicord agent enable` and `volicord agent disable` | Toggle the stored `enabled` field for one Agent Connection. | Do not rewrite host configuration. | Do not refresh verification and do not create user-owned judgments. |
+| `volicord agent project add` and `volicord agent project remove` | Add or remove one `connection_projects` membership. `project add` may register the project when required repository information is supplied. | Do not rewrite host configuration. | Do not refresh verification. |
+| `volicord agent uninstall` | Removes associated `connection_projects` records and removes the Agent Connection record when no memberships remain. | Removes only matching managed host configuration when ownership and safety checks permit removal. | Does not delete `Product Repository` contents, project registration or project state, Core records, the Runtime Home itself, artifact storage, or unrelated host configuration. |
+
 <a id="agent-connection-result-states"></a>
 <a id="agent-setup-result-states"></a>
 ## Agent Connection result states
@@ -164,6 +178,7 @@ The agent command family uses these connection result states:
 
 | State | Meaning |
 |---|---|
+| `not_verified` | No verification result is currently recorded for the Agent Connection. This is not proof that the host failed. |
 | `complete` | Durable Agent Connection state exists, managed host configuration exists and matches its expected fingerprint, the host-specific loadability gate is satisfied, no required trust or approval action remains, connection preflight succeeds, MCP initialization succeeds, and `tools/list` succeeds with the required tools. |
 | `action_required` | Durable Agent Connection state and host configuration are present, but host trust, project approval, OAuth, reload, restart, or a comparable user-controlled host action remains. |
 | `failed` | The requested connection or verification did not establish usable durable Agent Connection state or host configuration. |
@@ -286,7 +301,7 @@ Verification must check:
 - MCP initialization succeeds
 - `tools/list` exposes the tools required by the connection mode
 
-Verification records one of `complete`, `action_required`, or `failed` into the Agent Connection's `last_verified_status`. The command output reports the host check, preflight check, and MCP handshake check when those checks ran.
+Verification stores the resulting supported verification status in the Agent Connection's `last_verified_status`. The command output reports the host check, preflight check, and MCP handshake check when those checks ran.
 
 ## Uninstall
 

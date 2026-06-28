@@ -156,6 +156,22 @@ volicord agent uninstall --connection-id ID [--runtime-home PATH] [--output text
 - Claude Code 프로젝트 범위 MCP 설정은 로드되기 전에 프로젝트 MCP 승인이 필요할 수 있습니다.
 - Volicord는 호스트 신뢰, 프로젝트 신뢰, 프로젝트 MCP 승인, OAuth, 또는 그와 비슷한 사용자 통제 호스트 동작을 우회할 수 있다고 주장하면 안 됩니다.
 
+<a id="agent-connection-command-effects"></a>
+## Agent Connection 명령 효과
+
+Agent Connection 명령은 서로 다른 상태 영역에 작용합니다. 정확한 Agent
+Connection 의미는 [Agent Connection](agent-connection.md#lifecycle-and-state-boundaries)이
+담당합니다.
+
+| 명령 | Runtime Home 레지스트리 효과 | 호스트 설정 효과 | 검증 효과 |
+|---|---|---|---|
+| `volicord agent connect` | `agent_connections` 기록 하나를 만들거나 재사용하고, `enabled=true`를 설정하며, 선택한 `connection.mode`를 저장하고, 선택된 프로젝트를 `connection_projects`에 추가합니다. | 선택된 호스트와 범위에 맞는 관리 호스트 설정을 설치하거나 내보냅니다. | 가능한 곳에서 구현된 호스트/사전 점검/MCP 점검을 실행하고 결과 `last_verified_status`를 저장합니다. |
+| `volicord agent list`와 `volicord agent status` | 저장된 Agent Connection 필드와 연결 프로젝트를 읽습니다. | 호스트를 시작하지 않고 호스트 설정을 다시 쓰지 않습니다. | 저장된 검증 상태를 보고하며 갱신하지 않습니다. |
+| `volicord agent verify` | 기존 Agent Connection을 읽고 검증 결과에 따라 `last_verified_status`와 관리 지문을 갱신합니다. | 호스트 통합이 관찰 가능한 대상을 소유하면 그 관리 대상을 검사합니다. | 구현된 호스트 경로에 따라 Volicord 쪽 상태와 호스트/MCP 준비 상태를 점검합니다. |
+| `volicord agent enable`과 `volicord agent disable` | Agent Connection 하나의 저장된 `enabled` 필드를 전환합니다. | 호스트 설정을 다시 쓰지 않습니다. | 검증을 갱신하지 않고 사용자 소유 판단을 만들지 않습니다. |
+| `volicord agent project add`와 `volicord agent project remove` | `connection_projects` 멤버십 하나를 추가하거나 제거합니다. `project add`는 필요한 저장소 정보가 제공되면 프로젝트를 등록할 수 있습니다. | 호스트 설정을 다시 쓰지 않습니다. | 검증을 갱신하지 않습니다. |
+| `volicord agent uninstall` | 관련 `connection_projects` 기록을 제거하고 멤버십이 남아 있지 않으면 Agent Connection 기록을 제거합니다. | 소유권과 안전 점검이 허용할 때 일치하는 관리 호스트 설정만 제거합니다. | `Product Repository` 내용, 프로젝트 등록 또는 프로젝트 상태, Core 기록, Runtime Home 자체, 아티팩트 저장소, 관련 없는 호스트 설정을 삭제하지 않습니다. |
+
 <a id="agent-connection-result-states"></a>
 <a id="agent-setup-result-states"></a>
 ## Agent Connection 결과 상태
@@ -164,6 +180,7 @@ volicord agent uninstall --connection-id ID [--runtime-home PATH] [--output text
 
 | 상태 | 의미 |
 |---|---|
+| `not_verified` | Agent Connection에 현재 기록된 검증 결과가 없습니다. 호스트가 실패했다는 증거가 아닙니다. |
 | `complete` | 오래 유지되는 Agent Connection 상태가 있고, 관리되는 호스트 설정이 존재하며 예상 관리 지문과 일치하고, 호스트별 로드 가능성 게이트가 충족되고, 필요한 신뢰나 승인 동작이 남아 있지 않고, 연결 사전 점검이 성공하고, MCP 초기화가 성공하고, `tools/list`가 필요한 도구를 노출합니다. |
 | `action_required` | 오래 유지되는 Agent Connection 상태와 호스트 설정은 있지만 호스트 신뢰, 프로젝트 승인, OAuth, reload, restart, 또는 그와 비슷한 사용자 통제 호스트 동작이 남아 있습니다. |
 | `failed` | 요청한 연결이나 검증이 사용할 수 있는 오래 유지되는 Agent Connection 상태 또는 호스트 설정을 만들지 못했습니다. |
@@ -286,7 +303,7 @@ volicord agent uninstall --connection-id ID [--runtime-home PATH] [--output text
 - MCP 초기화가 성공합니다.
 - `tools/list`가 연결 모드에 필요한 도구를 노출합니다.
 
-검증은 Agent Connection의 `last_verified_status`에 `complete`, `action_required`, `failed` 중 하나를 기록합니다. 명령 출력은 해당 점검이 실행된 경우 호스트 점검, 사전 점검, MCP handshake 점검을 보고합니다.
+검증은 Agent Connection의 `last_verified_status`에 지원되는 검증 상태 결과를 저장합니다. 명령 출력은 해당 점검이 실행된 경우 호스트 점검, 사전 점검, MCP handshake 점검을 보고합니다.
 
 ## 제거
 

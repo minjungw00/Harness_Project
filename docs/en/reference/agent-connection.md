@@ -43,6 +43,20 @@ Stored Agent Connection fields include:
 - `last_verified_status`
 - creation and update timestamps
 
+## Lifecycle And State Boundaries
+
+An Agent Connection lifecycle spans several state surfaces. A command can change
+one surface without changing the others.
+
+| Surface | Stored or owned by | Changed by | Boundary |
+|---|---|---|---|
+| Agent Connection registry state | `agent_connections` records under the `Volicord Runtime Home`, including identity, host/scope, server name, `config_target`, `connection.mode`, `enabled`, managed fingerprint, and `last_verified_status`. | `volicord agent connect` creates or reuses the record, `volicord agent enable` and `volicord agent disable` toggle `enabled`, `volicord agent verify` updates `last_verified_status`, and `volicord agent uninstall` may remove the record after membership removal. | Registry state is management state. It is not the host configuration file and is not proof that the external host loaded, trusted, approved, or exposed the MCP server. |
+| Connection Projects membership | `connection_projects` records under the same Runtime Home. | `volicord agent connect` adds the selected project, `volicord agent project add` and `volicord agent project remove` change membership, and `volicord agent uninstall` removes associated memberships. | Membership controls the Agent Connection project allowlist. It does not register every Runtime Home project and does not delete project registration, project state, or Core records. |
+| Host configuration | The MCP host configuration location named by `config_target`, or a generated `generic` export. | `volicord agent connect` installs or exports managed host configuration; `volicord agent uninstall` removes only matching managed content when safety checks permit it. Project membership commands and enable/disable do not rewrite host configuration. | Host configuration starts `volicord-mcp --connection <connection_id>`, but remains an external host integration surface. It is not identical to registry state. |
+| Verification state | `last_verified_status` in the Agent Connection registry record, plus command output owned by [Administrative CLI](admin-cli.md#agent-connection-result-states). | `volicord agent connect` and `volicord agent verify` run the implemented host, preflight, MCP initialization, and `tools/list` checks where available. | Verification can inspect both Volicord-side state and host/MCP readiness. `volicord-mcp --check --connection <connection_id>` alone is startup validation, not a `complete` Agent Connection. |
+| Invocation eligibility | Current connection context derived by the MCP adapter at startup and per public tool call. | Affected by `enabled`, connected project availability, `connection.mode`, and the method's `operation_category`. | Eligibility can become unavailable after registry or project-state changes without any host configuration rewrite. |
+| Removal | Managed host content, `connection_projects`, and sometimes `agent_connections`. | `volicord agent uninstall`. | Removal must not delete a `Product Repository`, project registration, project state, Core records, the Runtime Home itself, artifact storage, or unrelated host configuration. |
+
 Rules:
 
 - An Agent Connection is agent-facing and cannot act as the local `User Channel`.
