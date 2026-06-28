@@ -20,7 +20,8 @@ use volicord_store::{
         HOST_SCOPE_PROJECT, VERIFIED_STATUS_COMPLETE,
     },
     bootstrap::{
-        initialize_runtime_home, register_project, ProjectRegistration, ACTIVE_PROJECT_STATUS,
+        initialize_runtime_home, register_project, write_installation_profile,
+        InstallationProfileRegistration, ProjectRegistration, ACTIVE_PROJECT_STATUS,
     },
     core_pipeline::{CoreProjectStore, StorageEffectCounts},
     sqlite::open_project_state_database,
@@ -164,6 +165,17 @@ pub mod core_fixtures {
                 runtime_home.path(),
                 &format!("runtime_home_{component}"),
                 "{}",
+            )?;
+            write_installation_profile(
+                runtime_home.path(),
+                InstallationProfileRegistration {
+                    installation_id: "default".to_owned(),
+                    volicord_command: "volicord".to_owned(),
+                    volicord_mcp_command: "volicord-mcp".to_owned(),
+                    bin_dir: runtime_home.path().join("bin"),
+                    default_connection_mode: CONNECTION_MODE_WORKFLOW.to_owned(),
+                    metadata_json: "{}".to_owned(),
+                },
             )?;
             register_project(
                 runtime_home.path(),

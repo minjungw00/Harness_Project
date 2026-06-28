@@ -15,7 +15,8 @@ use volicord_store::agent_connections::{
 };
 use volicord_store::{
     bootstrap::{
-        initialize_runtime_home, register_project, ProjectRegistration, ACTIVE_PROJECT_STATUS,
+        initialize_runtime_home, register_project, write_installation_profile,
+        InstallationProfileRegistration, ProjectRegistration, ACTIVE_PROJECT_STATUS,
     },
     core_pipeline::CoreProjectStore,
 };
@@ -33,6 +34,8 @@ fn binary_help_uses_agent_connection_model() -> Result<(), Box<dyn Error>> {
     assert_success(&help);
     let text = stdout(&help);
 
+    assert!(text.contains("volicord setup"));
+    assert!(text.contains("volicord doctor"));
     assert!(text.contains("volicord agent connect"));
     assert!(text.contains("--connection-id ID"));
     assert!(text.contains("--mode read_only|workflow"));
@@ -48,13 +51,73 @@ fn binary_help_uses_agent_connection_model() -> Result<(), Box<dyn Error>> {
 
 #[cfg(unix)]
 #[test]
-fn agent_connect_defaults_to_read_only_and_writes_connection_config() -> Result<(), Box<dyn Error>>
-{
+fn setup_and_doctor_report_installation_profile() -> Result<(), Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new("cli-bin-setup-doctor")?;
+    let bin_dir = runtime_home.path().join("bin");
+    let mcp = write_fake_mcp(&bin_dir)?;
+
+    let setup = run_setup_json(runtime_home.path(), &mcp)?;
+    assert_success(&setup);
+    let setup_json = json_stdout(&setup)?;
+    assert_eq!(setup_json["status"], "complete");
+    assert_eq!(
+        setup_json["installation_profile"]["volicord_mcp_command"],
+        path_text(&mcp)
+    );
+    assert_eq!(
+        setup_json["installation_profile"]["default_connection_mode"],
+        "workflow"
+    );
+
+    let doctor = run_with_home_env(runtime_home.path(), ["doctor", "--json"], &[])?;
+    assert_success(&doctor);
+    let doctor_json = json_stdout(&doctor)?;
+    assert_eq!(doctor_json["status"], "complete");
+    assert!(doctor_json["checks"]
+        .as_array()
+        .expect("checks should be an array")
+        .iter()
+        .any(|check| check["id"] == "installation_profile" && check["status"] == "passed"));
+    Ok(())
+}
+
+#[test]
+fn doctor_without_setup_reports_action_required() -> Result<(), Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new("cli-bin-doctor-missing")?;
+
+    let doctor = run_with_home_env(runtime_home.path(), ["doctor", "--json"], &[])?;
+    assert_success(&doctor);
+    let value = json_stdout(&doctor)?;
+    assert_eq!(value["status"], "action_required");
+    assert!(value["actions"]
+        .as_array()
+        .expect("actions should be an array")
+        .iter()
+        .any(|action| action["id"] == "run_setup"));
+    Ok(())
+}
+
+#[test]
+fn ordinary_command_before_setup_instructs_setup() -> Result<(), Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new("cli-bin-setup-required")?;
+
+    let output = run_with_home_env(runtime_home.path(), ["project", "list"], &[])?;
+
+    assert!(!output.status.success());
+    assert!(stderr(&output).contains("run `volicord setup`"));
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn agent_connect_respects_explicit_read_only_and_writes_connection_config(
+) -> Result<(), Box<dyn Error>> {
     let runtime_home = TempRuntimeHome::new("cli-bin-connection-read-only")?;
     let repo_root = runtime_home.create_product_repo("product-repo")?;
     let bin_dir = runtime_home.path().join("bin");
     write_fake_codex(&bin_dir)?;
-    write_fake_mcp(&bin_dir)?;
+    let mcp = write_fake_mcp(&bin_dir)?;
+    assert_success(&run_setup(runtime_home.path(), &mcp)?);
 
     let output = run_with_home_env(
         runtime_home.path(),
@@ -69,6 +132,8 @@ fn agent_connect_defaults_to_read_only_and_writes_connection_config() -> Result<
             "project_read_only",
             "--repo-root",
             path_text(&repo_root).as_str(),
+            "--mode",
+            "read_only",
             "--allow-repository-write",
             "--output",
             "json",
@@ -106,7 +171,8 @@ fn agent_connect_uses_explicit_workflow_mode() -> Result<(), Box<dyn Error>> {
     let repo_root = runtime_home.create_product_repo("product-repo")?;
     let bin_dir = runtime_home.path().join("bin");
     write_fake_codex(&bin_dir)?;
-    write_fake_mcp(&bin_dir)?;
+    let mcp = write_fake_mcp(&bin_dir)?;
+    assert_success(&run_setup(runtime_home.path(), &mcp)?);
 
     let output = run_with_home_env(
         runtime_home.path(),
@@ -157,6 +223,7 @@ fn connection_project_enable_disable_and_uninstall_flow() -> Result<(), Box<dyn 
     let codex_home = runtime_home.path().join("codex-home");
     let mcp = write_fake_mcp(&bin_dir)?;
     write_fake_codex(&bin_dir)?;
+    assert_success(&run_setup(runtime_home.path(), &mcp)?);
 
     let connect = run_with_home_env(
         runtime_home.path(),
@@ -171,14 +238,13 @@ fn connection_project_enable_disable_and_uninstall_flow() -> Result<(), Box<dyn 
             "project_a",
             "--repo-root",
             path_text(&repo_a).as_str(),
-            "--mcp-command",
-            path_text(&mcp).as_str(),
             "--output",
             "json",
         ],
         &[
             ("PATH", path_env(&[bin_dir.as_path()])),
             ("CODEX_HOME", path_text(&codex_home)),
+            ("VOLICORD_TEST_CONNECTION_MODE", "workflow".to_owned()),
         ],
     )?;
     assert_success(&connect);
@@ -291,6 +357,7 @@ fn user_channel_records_pending_judgment_with_local_user_provenance() -> Result<
     let runtime_home = TempRuntimeHome::new("cli-bin-user-channel")?;
     let repo_root = runtime_home.create_product_repo("product-repo")?;
     initialize_runtime_home(runtime_home.path(), "runtime_home_user_channel", "{}")?;
+    write_test_installation_profile(runtime_home.path())?;
     register_project(
         runtime_home.path(),
         ProjectRegistration {
@@ -399,6 +466,25 @@ fn run_with_home_env<const N: usize>(
     Ok(command.output()?)
 }
 
+fn run_setup(runtime_home: &Path, mcp_command: &Path) -> Result<Output, Box<dyn Error>> {
+    let mut command = Command::new(volicord_bin());
+    command
+        .args(["setup", "--mcp-command"])
+        .arg(mcp_command)
+        .env("VOLICORD_HOME", runtime_home);
+    Ok(command.output()?)
+}
+
+fn run_setup_json(runtime_home: &Path, mcp_command: &Path) -> Result<Output, Box<dyn Error>> {
+    let mut command = Command::new(volicord_bin());
+    command
+        .args(["setup", "--mcp-command"])
+        .arg(mcp_command)
+        .arg("--json")
+        .env("VOLICORD_HOME", runtime_home);
+    Ok(command.output()?)
+}
+
 fn volicord_bin() -> &'static str {
     env!("CARGO_BIN_EXE_volicord")
 }
@@ -426,6 +512,21 @@ fn json_stdout(output: &Output) -> Result<Value, Box<dyn Error>> {
 
 fn path_text(path: &Path) -> String {
     path.display().to_string()
+}
+
+fn write_test_installation_profile(runtime_home: &Path) -> Result<(), Box<dyn Error>> {
+    write_installation_profile(
+        runtime_home,
+        InstallationProfileRegistration {
+            installation_id: "default".to_owned(),
+            volicord_command: "volicord".to_owned(),
+            volicord_mcp_command: "volicord-mcp".to_owned(),
+            bin_dir: runtime_home.join("bin"),
+            default_connection_mode: CONNECTION_MODE_WORKFLOW.to_owned(),
+            metadata_json: "{}".to_owned(),
+        },
+    )?;
+    Ok(())
 }
 
 #[cfg(unix)]

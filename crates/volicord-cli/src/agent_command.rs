@@ -24,8 +24,9 @@ use volicord_store::{
         VERIFIED_STATUS_COMPLETE, VERIFIED_STATUS_FAILED, VERIFIED_STATUS_NOT_VERIFIED,
     },
     bootstrap::{
-        initialize_runtime_home, list_projects, project_record, register_project,
-        validate_project_id, ProjectRecord, ProjectRegistration, ACTIVE_PROJECT_STATUS,
+        initialize_runtime_home, installation_profile, list_projects, project_record,
+        register_project, validate_project_id, InstallationProfileRecord, ProjectRecord,
+        ProjectRegistration, ACTIVE_PROJECT_STATUS,
     },
     runtime_home::{resolve_runtime_home, RuntimeHomeResolutionError},
     StoreError,
@@ -356,15 +357,15 @@ impl Default for ParsedAgentOptions {
 
 pub fn agent_usage() -> String {
     concat!(
-        "volicord agent connect --host codex|claude-code|claude_code|generic --scope user|project|local|export [--project-id ID] [--repo-root PATH] [--connection-id ID] [--mode read_only|workflow] [--server-name NAME] [--mcp-command PATH] [--runtime-home PATH] [--export-path PATH|--export-dir PATH] [--output text|json] [--dry-run] [--allow-repository-write] [--replace-managed]\n",
-        "volicord agent list [--runtime-home PATH] [--output text|json]\n",
-        "volicord agent status --connection-id ID [--runtime-home PATH] [--output text|json]\n",
-        "volicord agent enable --connection-id ID [--runtime-home PATH] [--output text|json]\n",
-        "volicord agent disable --connection-id ID [--runtime-home PATH] [--output text|json]\n",
-        "volicord agent project add --connection-id ID --project-id ID [--repo-root PATH] [--runtime-home PATH] [--output text|json] [--dry-run]\n",
-        "volicord agent project remove --connection-id ID --project-id ID [--runtime-home PATH] [--output text|json] [--dry-run]\n",
-        "volicord agent verify --connection-id ID [--runtime-home PATH] [--output text|json]\n",
-        "volicord agent uninstall --connection-id ID [--runtime-home PATH] [--output text|json] [--dry-run] [--allow-repository-write]\n"
+        "volicord agent connect --host codex|claude-code|claude_code|generic --scope user|project|local|export [--project-id ID] [--repo-root PATH] [--connection-id ID] [--mode read_only|workflow] [--server-name NAME] [--export-path PATH|--export-dir PATH] [--output text|json] [--dry-run] [--allow-repository-write] [--replace-managed]\n",
+        "volicord agent list [--output text|json]\n",
+        "volicord agent status --connection-id ID [--output text|json]\n",
+        "volicord agent enable --connection-id ID [--output text|json]\n",
+        "volicord agent disable --connection-id ID [--output text|json]\n",
+        "volicord agent project add --connection-id ID --project-id ID [--repo-root PATH] [--output text|json] [--dry-run]\n",
+        "volicord agent project remove --connection-id ID --project-id ID [--output text|json] [--dry-run]\n",
+        "volicord agent verify --connection-id ID [--output text|json]\n",
+        "volicord agent uninstall --connection-id ID [--output text|json] [--dry-run] [--allow-repository-write]\n"
     )
     .to_owned()
 }
@@ -372,11 +373,12 @@ pub fn agent_usage() -> String {
 fn agent_connect_usage() -> String {
     concat!(
         "Usage:\n",
-        "  volicord agent connect --host codex|claude-code|claude_code|generic --scope user|project|local|export [--project-id ID] [--repo-root PATH] [--connection-id ID] [--mode read_only|workflow] [--server-name NAME] [--mcp-command PATH] [--runtime-home PATH] [--export-path PATH|--export-dir PATH] [--output text|json] [--dry-run] [--allow-repository-write] [--replace-managed]\n",
+        "  volicord agent connect --host codex|claude-code|claude_code|generic --scope user|project|local|export [--project-id ID] [--repo-root PATH] [--connection-id ID] [--mode read_only|workflow] [--server-name NAME] [--export-path PATH|--export-dir PATH] [--output text|json] [--dry-run] [--allow-repository-write] [--replace-managed]\n",
         "\n",
         "Defaults:\n",
-        "  --mode defaults to read_only. Use --mode workflow explicitly for workflow tools.\n",
+        "  --mode defaults to the setup profile default, which is workflow after volicord setup.\n",
         "  --server-name defaults to volicord.\n",
+        "  volicord-mcp command location comes from volicord setup.\n",
         "  Project and local scopes allow one selected project by default.\n",
         "  User scope may allow more projects with volicord agent project add.\n"
     )
@@ -432,13 +434,19 @@ fn command_connect(
     let host_scope = required_host_scope(&parsed)?;
     validate_host_scope(host_kind, host_scope)?;
     validate_repository_write_permission(&parsed, host_scope)?;
-    let mode = parse_connection_mode(parsed.mode.as_deref().unwrap_or(CONNECTION_MODE_READ_ONLY))?;
     let server_name = parsed
         .server_name
         .clone()
         .unwrap_or_else(|| DEFAULT_SERVER_NAME.to_owned());
     validate_server_name(&server_name)?;
     let runtime_home = resolve_agent_runtime_home(&parsed, current_dir, process)?;
+    let setup_profile = required_installation_profile(&runtime_home)?;
+    let mode = parse_connection_mode(
+        parsed
+            .mode
+            .as_deref()
+            .unwrap_or(setup_profile.default_connection_mode.as_str()),
+    )?;
     let repo_root = resolve_optional_repo_root(parsed.repo_root.as_deref(), current_dir)?;
     let export_target = resolve_export_target(&parsed, current_dir, None);
 
@@ -507,7 +515,7 @@ fn command_connect(
             &server_name,
         )
     });
-    let mcp_command = resolve_mcp_command(&parsed, host_scope, current_dir, process)?;
+    let mcp_command = resolve_mcp_command(&parsed, host_scope, &setup_profile)?;
     let existing = agent_connection_record(&runtime_home, &connection_id)?;
     let expected_fingerprint = existing
         .as_ref()
@@ -903,8 +911,6 @@ fn connect_allowed_options() -> &'static [&'static str] {
         "connection-id",
         "mode",
         "server-name",
-        "mcp-command",
-        "runtime-home",
         "export-path",
         "export-dir",
         "output",
@@ -915,15 +921,15 @@ fn connect_allowed_options() -> &'static [&'static str] {
 }
 
 fn list_allowed_options() -> &'static [&'static str] {
-    &["runtime-home", "output"]
+    &["output"]
 }
 
 fn status_allowed_options() -> &'static [&'static str] {
-    &["connection-id", "runtime-home", "output"]
+    &["connection-id", "output"]
 }
 
 fn enable_allowed_options() -> &'static [&'static str] {
-    &["connection-id", "runtime-home", "output"]
+    &["connection-id", "output"]
 }
 
 fn project_add_allowed_options() -> &'static [&'static str] {
@@ -931,30 +937,22 @@ fn project_add_allowed_options() -> &'static [&'static str] {
         "connection-id",
         "project-id",
         "repo-root",
-        "runtime-home",
         "output",
         "dry-run",
     ]
 }
 
 fn project_remove_allowed_options() -> &'static [&'static str] {
-    &[
-        "connection-id",
-        "project-id",
-        "runtime-home",
-        "output",
-        "dry-run",
-    ]
+    &["connection-id", "project-id", "output", "dry-run"]
 }
 
 fn verify_allowed_options() -> &'static [&'static str] {
-    &["connection-id", "runtime-home", "output"]
+    &["connection-id", "output"]
 }
 
 fn uninstall_allowed_options() -> &'static [&'static str] {
     &[
         "connection-id",
-        "runtime-home",
         "output",
         "dry-run",
         "allow-repository-write",
@@ -1132,6 +1130,17 @@ fn resolve_agent_runtime_home(
     }
 }
 
+fn required_installation_profile(
+    runtime_home: &Path,
+) -> Result<InstallationProfileRecord, AgentCommandError> {
+    installation_profile(runtime_home)?.ok_or_else(|| {
+        AgentCommandError::runtime(format!(
+            "setup has not been completed for Runtime Home {}; run `volicord setup` before connection workflows",
+            runtime_home.display()
+        ))
+    })
+}
+
 fn resolve_optional_repo_root(
     value: Option<&Path>,
     current_dir: &Path,
@@ -1254,45 +1263,17 @@ fn enforce_single_project_scope(
 fn resolve_mcp_command(
     parsed: &ParsedAgentOptions,
     scope: HostScope,
-    current_dir: &Path,
-    process: &impl AgentProcess,
+    profile: &InstallationProfileRecord,
 ) -> Result<PathBuf, AgentCommandError> {
+    if parsed.mcp_command.is_some() {
+        return Err(AgentCommandError::usage(
+            "MCP command location is recorded by volicord setup; run `volicord setup --mcp-command PATH` to change it",
+        ));
+    }
     if scope == HostScope::Project {
-        if parsed.mcp_command.is_some() {
-            return Err(AgentCommandError::usage(
-                "project-scoped Agent Connections use volicord-mcp from PATH",
-            ));
-        }
         return Ok(PathBuf::from(DEFAULT_MCP_COMMAND));
     }
-    if let Some(command) = &parsed.mcp_command {
-        let command = absolute_path(current_dir, command.clone());
-        if command.is_absolute() {
-            return Ok(command);
-        }
-    }
-    discover_mcp_command(process)
-}
-
-fn discover_mcp_command(process: &impl AgentProcess) -> Result<PathBuf, AgentCommandError> {
-    let current_exe = process.current_exe().map_err(AgentCommandError::runtime)?;
-    if let Some(parent) = current_exe.parent() {
-        let sibling = parent.join(DEFAULT_MCP_COMMAND);
-        if sibling.is_file() {
-            return Ok(sibling);
-        }
-    }
-    if let Some(path) = process.env_var(PATH_ENV) {
-        for dir in std::env::split_paths(&path) {
-            let candidate = dir.join(DEFAULT_MCP_COMMAND);
-            if candidate.is_file() {
-                return Ok(candidate);
-            }
-        }
-    }
-    Err(AgentCommandError::runtime(
-        "volicord-mcp was not found; provide --mcp-command",
-    ))
+    Ok(PathBuf::from(&profile.volicord_mcp_command))
 }
 
 fn connection_target_hint(

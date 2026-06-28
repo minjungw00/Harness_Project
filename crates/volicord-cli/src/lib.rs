@@ -6,6 +6,8 @@
 //! administrative command behavior can be tested without invoking the binary.
 
 pub mod agent_command;
+pub mod doctor_command;
 pub mod host_integration;
 pub mod registration;
+pub mod setup_command;
 pub mod user_command;

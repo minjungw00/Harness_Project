@@ -26,7 +26,7 @@ use volicord_store::{
         AgentConnectionRecord, ConnectionProjectRecord, CONNECTION_MODE_READ_ONLY,
         CONNECTION_MODE_WORKFLOW,
     },
-    bootstrap::{runtime_home_record, ACTIVE_PROJECT_STATUS},
+    bootstrap::{require_installation_profile, runtime_home_record, ACTIVE_PROJECT_STATUS},
     core_pipeline::CoreProjectStore,
     runtime_home::{
         resolve_runtime_home as resolve_shared_runtime_home, RuntimeHomeResolutionError,
@@ -784,6 +784,19 @@ fn resolve_connection_context(
         .ok_or_else(|| {
             McpAdapterError::Environment("Runtime Home is not initialized".to_owned())
         })?;
+    match require_installation_profile(&runtime_home) {
+        Ok(_) => {}
+        Err(StoreError::NotFound {
+            entity: "installation_profile",
+            ..
+        }) => {
+            return Err(McpAdapterError::Environment(format!(
+                "setup has not been completed for Runtime Home {}; run `volicord setup` before starting volicord-mcp",
+                runtime_home.display()
+            )))
+        }
+        Err(error) => return Err(McpAdapterError::Store(error)),
+    }
     validate_identifier_text("connection_id", connection_id)?;
     let connection = agent_connection_record(&runtime_home, connection_id)
         .map_err(McpAdapterError::Store)?

@@ -5,16 +5,19 @@ use std::{
     env, fmt, fs,
     path::{Path, PathBuf},
     process,
-    time::{SystemTime, UNIX_EPOCH},
 };
 
 use volicord_cli::{
     agent_command::{agent_usage, run_agent_command, AgentCommandError, ProductionAgentProcess},
+    doctor_command::{doctor_usage, run_doctor_command, DoctorCommandError},
     registration::ADMIN_METADATA_JSON,
+    setup_command::{
+        run_setup_command, setup_usage, ClosureSetupProcess, CommandOutcome, SetupCommandError,
+    },
     user_command::{run_user_command, user_usage, UserCommandError},
 };
 use volicord_store::bootstrap::{
-    initialize_runtime_home, list_projects, register_project, ProjectRegistration,
+    installation_profile, list_projects, register_project, ProjectRegistration,
     ACTIVE_PROJECT_STATUS,
 };
 use volicord_store::runtime_home::{resolve_runtime_home, RuntimeHomeResolutionError};
@@ -69,13 +72,30 @@ where
                 )))
             }
         }
-        "init" => command_init(&args[2..], env_var, current_dir),
+        "setup" => {
+            let process = ClosureSetupProcess::new(&env_var);
+            command_outcome(run_setup_command(&args[2..], current_dir, &process)?)
+        }
+        "doctor" => command_outcome(run_doctor_command(&args[2..], &env_var, current_dir)?),
         "agent" => {
+            if agent_subcommand_requires_setup(&args[2..]) {
+                require_setup_completed(&env_var, current_dir)?;
+            }
             let mut agent_process = ProductionAgentProcess;
             run_agent_command(&args[2..], current_dir, &mut agent_process).map_err(CliError::from)
         }
-        "user" => run_user_command(&args[2..], env_var, current_dir).map_err(CliError::from),
-        "project" => command_project(&args[2..], env_var, current_dir),
+        "user" => {
+            if user_subcommand_requires_setup(&args[2..]) {
+                require_setup_completed(&env_var, current_dir)?;
+            }
+            run_user_command(&args[2..], env_var, current_dir).map_err(CliError::from)
+        }
+        "project" => {
+            if project_subcommand_requires_setup(&args[2..]) {
+                require_setup_completed(&env_var, current_dir)?;
+            }
+            command_project(&args[2..], env_var, current_dir)
+        }
         other => Err(CliError::usage(format!(
             "unknown command: {other}\n\n{}",
             usage()
@@ -83,23 +103,62 @@ where
     }
 }
 
-fn command_init<F>(args: &[String], env_var: F, current_dir: &Path) -> Result<String, CliError>
+fn agent_subcommand_requires_setup(args: &[String]) -> bool {
+    matches!(
+        args.first().map(String::as_str),
+        Some(
+            "connect"
+                | "list"
+                | "status"
+                | "enable"
+                | "disable"
+                | "project"
+                | "verify"
+                | "uninstall"
+        )
+    )
+}
+
+fn user_subcommand_requires_setup(args: &[String]) -> bool {
+    matches!(
+        args.first().map(String::as_str),
+        Some("status" | "judgment")
+    )
+}
+
+fn project_subcommand_requires_setup(args: &[String]) -> bool {
+    matches!(args.first().map(String::as_str), Some("register" | "list"))
+}
+
+fn command_outcome(outcome: CommandOutcome) -> Result<String, CliError> {
+    if outcome.status.exits_failure() {
+        Err(CliError::FailureOutput(outcome.output))
+    } else {
+        Ok(outcome.output)
+    }
+}
+
+fn require_setup_completed<F>(env_var: &F, current_dir: &Path) -> Result<(), CliError>
 where
     F: Fn(&str) -> Option<std::ffi::OsString>,
 {
-    let options = parse_options(args, &["runtime-home-id"])?;
-    let runtime_home = resolve_runtime_home(env_var, current_dir)?;
-    let runtime_home_id = options
-        .value("runtime-home-id")
-        .unwrap_or_else(|| generated_id("runtime_home"));
-    let record = initialize_runtime_home(&runtime_home, &runtime_home_id, ADMIN_METADATA_JSON)?;
+    let runtime_home = resolve_runtime_home(|name| env_var(name), current_dir)?;
+    match installation_profile(&runtime_home) {
+        Ok(Some(_)) => Ok(()),
+        Ok(None) => Err(CliError::runtime(setup_required_message(&runtime_home))),
+        Err(error) => Err(CliError::runtime(format!(
+            "{}; {}",
+            error,
+            setup_required_message(&runtime_home)
+        ))),
+    }
+}
 
-    Ok(format!(
-        "runtime_home initialized\nruntime_home: {}\nruntime_home_id: {}\nregistry_db: {}\n",
-        display_path(&record.runtime_home),
-        record.runtime_home_id,
-        display_path(&record.registry_db_path)
-    ))
+fn setup_required_message(runtime_home: &Path) -> String {
+    format!(
+        "setup has not been completed for Runtime Home {}; run `volicord setup` before project, connection, export, MCP, or user workflows",
+        runtime_home.display()
+    )
 }
 
 fn command_project<F>(args: &[String], env_var: F, current_dir: &Path) -> Result<String, CliError>
@@ -277,21 +336,15 @@ fn absolute_path(current_dir: &Path, path: PathBuf) -> PathBuf {
     }
 }
 
-fn generated_id(prefix: &str) -> String {
-    let nanos = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|duration| duration.as_nanos())
-        .unwrap_or_default();
-    format!("{prefix}_{nanos}_{}", process::id())
-}
-
 fn display_path(path: &Path) -> String {
     path.display().to_string()
 }
 
 fn usage() -> String {
     format!(
-        "Usage:\n  volicord --help\n  volicord --version\n  volicord init [--runtime-home-id ID]\n  {}\n  {}\n  {}\n\nEnvironment:\n  VOLICORD_HOME  Override Runtime Home path (default: $HOME/.volicord)\n\nAgent Connection commands manage local MCP host connections. User Channel commands record local user judgments.\nThese are local administrative commands, not public Volicord API methods.\n",
+        "Usage:\n  volicord --help\n  volicord --version\n  {}\n  {}\n  {}\n  {}\n  {}\n\nEnvironment:\n  VOLICORD_HOME  Override Runtime Home path (default: $HOME/.volicord)\n\nAgent Connection commands manage local MCP host connections. User Channel commands record local user judgments.\nThese are local administrative commands, not public Volicord API methods.\n",
+        setup_usage().trim_end(),
+        doctor_usage().trim_end(),
         agent_usage().trim_end(),
         user_usage().trim_end(),
         project_usage().trim_end()
@@ -367,15 +420,35 @@ impl From<UserCommandError> for CliError {
     }
 }
 
+impl From<SetupCommandError> for CliError {
+    fn from(error: SetupCommandError) -> Self {
+        match error {
+            SetupCommandError::Usage(message) => Self::Usage(message),
+            SetupCommandError::Runtime(message) => Self::Runtime(message),
+        }
+    }
+}
+
+impl From<DoctorCommandError> for CliError {
+    fn from(error: DoctorCommandError) -> Self {
+        match error {
+            DoctorCommandError::Usage(message) => Self::Usage(message),
+            DoctorCommandError::Runtime(message) => Self::Runtime(message),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::{
         ffi::OsString,
         fs,
+        io::Write,
         path::{Path, PathBuf},
     };
 
     use rusqlite::Connection;
+    use volicord_store::bootstrap::installation_profile as read_installation_profile;
     use volicord_store::sqlite::{project_state_db_path, registry_db_path};
     use volicord_test_support::TempRuntimeHome;
 
@@ -415,6 +488,9 @@ mod tests {
         .expect("help should not need Runtime Home");
 
         assert!(output.contains("volicord --version"));
+        assert!(output.contains("volicord setup"));
+        assert!(output.contains("volicord doctor"));
+        assert!(!output.contains("volicord init"));
     }
 
     #[test]
@@ -436,17 +512,34 @@ mod tests {
     }
 
     #[test]
-    fn init_respects_volicord_home_override() {
-        let runtime_home = TempRuntimeHome::new("cli-init").expect("temp runtime home");
-        let output = run_with_home(
-            runtime_home.path(),
-            ["volicord", "init", "--runtime-home-id", "runtime_home_test"],
+    fn setup_respects_volicord_home_override() {
+        let runtime_home = TempRuntimeHome::new("cli-setup").expect("temp runtime home");
+        let mcp = write_fake_executable(runtime_home.path(), "volicord-mcp")
+            .expect("fake mcp should be created");
+        let output = run_cli(
+            vec![
+                "volicord".to_owned(),
+                "setup".to_owned(),
+                "--mcp-command".to_owned(),
+                display_path(&mcp),
+            ],
+            |name| {
+                if name == "VOLICORD_HOME" {
+                    Some(OsString::from(runtime_home.path()))
+                } else {
+                    None
+                }
+            },
+            Path::new(env!("CARGO_MANIFEST_DIR")),
         )
-        .expect("init should succeed");
+        .expect("setup should succeed");
 
-        assert!(output.contains("runtime_home initialized\n"));
-        assert!(output.contains("runtime_home_id: runtime_home_test\n"));
+        assert!(output.contains("Volicord setup complete\n"));
+        assert!(output.contains("default_connection_mode: workflow\n"));
         assert!(registry_db_path(runtime_home.path()).exists());
+        assert!(read_installation_profile(runtime_home.path())
+            .expect("profile read should work")
+            .is_some());
     }
 
     #[test]
@@ -470,7 +563,7 @@ mod tests {
     }
 
     #[test]
-    fn init_resolves_runtime_home_with_shared_resolver() {
+    fn setup_resolves_runtime_home_with_shared_resolver() {
         let current_dir = TempRuntimeHome::new("cli-cwd").expect("temp current dir");
         let runtime_home = resolve_runtime_home(
             |name| {
@@ -483,13 +576,15 @@ mod tests {
             current_dir.path(),
         )
         .expect("shared resolver should resolve relative Runtime Home");
+        let mcp = write_fake_executable(current_dir.path(), "volicord-mcp")
+            .expect("fake mcp should be created");
 
         let output = run_cli(
-            [
-                "volicord",
-                "init",
-                "--runtime-home-id",
-                "runtime_home_shared",
+            vec![
+                "volicord".to_owned(),
+                "setup".to_owned(),
+                "--mcp-command".to_owned(),
+                display_path(&mcp),
             ],
             |name| {
                 if name == "VOLICORD_HOME" {
@@ -500,7 +595,7 @@ mod tests {
             },
             current_dir.path(),
         )
-        .expect("init should use shared Runtime Home resolution");
+        .expect("setup should use shared Runtime Home resolution");
 
         assert!(output.contains(&format!("runtime_home: {}\n", display_path(&runtime_home))));
         assert!(registry_db_path(runtime_home).exists());
@@ -509,7 +604,7 @@ mod tests {
     #[test]
     fn runtime_home_resolution_errors_are_runtime_errors() {
         let error = run_cli(
-            ["volicord", "init"],
+            ["volicord", "setup"],
             |name| {
                 if name == "VOLICORD_HOME" {
                     Some(OsString::new())
@@ -530,16 +625,7 @@ mod tests {
     #[test]
     fn project_register_creates_registry_and_project_state() {
         let runtime_home = TempRuntimeHome::new("cli-project").expect("temp runtime home");
-        run_with_home(
-            runtime_home.path(),
-            [
-                "volicord",
-                "init",
-                "--runtime-home-id",
-                "runtime_home_project",
-            ],
-        )
-        .expect("init should succeed");
+        setup_runtime_home(&runtime_home).expect("setup should succeed");
 
         let output = run_with_home(
             runtime_home.path(),
@@ -574,16 +660,7 @@ mod tests {
     #[test]
     fn project_register_rejects_repository_under_runtime_home_without_project_state() {
         let runtime_home = TempRuntimeHome::new("cli-project-boundary").expect("temp runtime home");
-        run_with_home(
-            runtime_home.path(),
-            [
-                "volicord",
-                "init",
-                "--runtime-home-id",
-                "runtime_home_project_boundary",
-            ],
-        )
-        .expect("init should succeed");
+        setup_runtime_home(&runtime_home).expect("setup should succeed");
         let repo_root = runtime_home.path().join("product-repo");
         fs::create_dir_all(&repo_root).expect("repo fixture should be created");
 
@@ -614,16 +691,7 @@ mod tests {
     #[test]
     fn project_list_uses_deterministic_order() {
         let runtime_home = TempRuntimeHome::new("cli-project-list").expect("temp runtime home");
-        run_with_home(
-            runtime_home.path(),
-            [
-                "volicord",
-                "init",
-                "--runtime-home-id",
-                "runtime_home_project_list",
-            ],
-        )
-        .expect("init should succeed");
+        setup_runtime_home(&runtime_home).expect("setup should succeed");
 
         for (project_id, repo_name) in [("project_b", "repo-b"), ("project_a", "repo-a")] {
             let repo_root = runtime_home
@@ -662,7 +730,7 @@ mod tests {
     }
 
     #[test]
-    fn project_register_requires_initialized_runtime_home() {
+    fn project_register_requires_setup_profile() {
         let runtime_home = TempRuntimeHome::new("cli-uninitialized").expect("temp runtime home");
         let error = run_with_home(
             runtime_home.path(),
@@ -676,10 +744,10 @@ mod tests {
                 ".",
             ],
         )
-        .expect_err("project register should require init");
+        .expect_err("project register should require setup");
 
         assert!(matches!(error, CliError::Runtime(_)));
-        assert!(error.to_string().contains("runtime_home not found"));
+        assert!(error.to_string().contains("run `volicord setup`"));
     }
 
     fn run_with_home<const N: usize>(
@@ -697,5 +765,49 @@ mod tests {
             },
             Path::new(env!("CARGO_MANIFEST_DIR")),
         )
+    }
+
+    fn setup_runtime_home(runtime_home: &TempRuntimeHome) -> Result<String, CliError> {
+        let mcp = write_fake_executable(runtime_home.path(), "volicord-mcp")
+            .expect("fake mcp should be created");
+        run_cli(
+            vec![
+                "volicord".to_owned(),
+                "setup".to_owned(),
+                "--mcp-command".to_owned(),
+                display_path(&mcp),
+            ],
+            |name| {
+                if name == "VOLICORD_HOME" {
+                    Some(OsString::from(runtime_home.path()))
+                } else {
+                    None
+                }
+            },
+            Path::new(env!("CARGO_MANIFEST_DIR")),
+        )
+    }
+
+    fn write_fake_executable(dir: &Path, name: &str) -> std::io::Result<PathBuf> {
+        fs::create_dir_all(dir)?;
+        let path = dir.join(name);
+        let mut file = fs::File::create(&path)?;
+        writeln!(file, "#!/bin/sh")?;
+        make_executable(&path)?;
+        Ok(path)
+    }
+
+    #[cfg(unix)]
+    fn make_executable(path: &Path) -> std::io::Result<()> {
+        use std::os::unix::fs::PermissionsExt;
+
+        let mut permissions = fs::metadata(path)?.permissions();
+        permissions.set_mode(0o755);
+        fs::set_permissions(path, permissions)
+    }
+
+    #[cfg(not(unix))]
+    fn make_executable(_path: &Path) -> std::io::Result<()> {
+        Ok(())
     }
 }

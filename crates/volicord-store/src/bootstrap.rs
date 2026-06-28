@@ -174,8 +174,8 @@ pub fn write_installation_profile(
     registration: InstallationProfileRegistration,
 ) -> StoreResult<InstallationProfileRecord> {
     validate_identifier("installation_id", &registration.installation_id)?;
-    validate_identifier("volicord_command", &registration.volicord_command)?;
-    validate_identifier("volicord_mcp_command", &registration.volicord_mcp_command)?;
+    validate_command_text("volicord_command", &registration.volicord_command)?;
+    validate_command_text("volicord_mcp_command", &registration.volicord_mcp_command)?;
     validate_connection_mode(&registration.default_connection_mode)?;
     validate_json_object(
         "installation_profile.metadata_json",
@@ -252,6 +252,16 @@ pub fn installation_profile(
 
     let conn = open_registry_database(registry_path)?;
     installation_profile_from_conn_optional(&conn)
+}
+
+/// Reads the installation profile and returns a storage error when setup is incomplete.
+pub fn require_installation_profile(
+    runtime_home: impl AsRef<Path>,
+) -> StoreResult<InstallationProfileRecord> {
+    installation_profile(runtime_home)?.ok_or_else(|| StoreError::NotFound {
+        entity: "installation_profile",
+        id: "singleton".to_owned(),
+    })
 }
 
 /// Registers a Product Repository project and creates its project `state.sqlite`.
@@ -872,6 +882,17 @@ fn validate_identifier(field: &'static str, value: &str) -> StoreResult<()> {
     }
 }
 
+fn validate_command_text(field: &'static str, value: &str) -> StoreResult<()> {
+    validate_identifier(field, value)?;
+    if value.contains('\0') {
+        Err(StoreError::InvalidInput {
+            detail: format!("{field} must not contain NUL"),
+        })
+    } else {
+        Ok(())
+    }
+}
+
 fn validate_path_component(field: &'static str, value: &str) -> StoreResult<()> {
     if value == "."
         || value == ".."
@@ -1076,6 +1097,60 @@ mod tests {
 
         assert!(error.to_string().contains("same path"));
         assert!(!runtime_home.project_state_db_path("project_same").exists());
+        Ok(())
+    }
+
+    #[test]
+    fn installation_profile_accepts_executable_paths() -> Result<(), Box<dyn Error>> {
+        let runtime_home = TempRuntimeHome::new("store-installation-profile")?;
+        initialize_runtime_home(runtime_home.path(), "runtime_home_installation", "{}")?;
+
+        let profile = write_installation_profile(
+            runtime_home.path(),
+            InstallationProfileRegistration {
+                installation_id: "default".to_owned(),
+                volicord_command: "/opt/volicord/bin/volicord".to_owned(),
+                volicord_mcp_command: "/opt/volicord/bin/volicord-mcp".to_owned(),
+                bin_dir: PathBuf::from("/opt/volicord/bin"),
+                default_connection_mode: "workflow".to_owned(),
+                metadata_json: "{}".to_owned(),
+            },
+        )?;
+
+        assert_eq!(profile.volicord_command, "/opt/volicord/bin/volicord");
+        assert_eq!(profile.default_connection_mode, "workflow");
+        assert_eq!(
+            require_installation_profile(runtime_home.path())?.volicord_mcp_command,
+            "/opt/volicord/bin/volicord-mcp"
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn installation_profile_rejects_impossible_command_text() -> Result<(), Box<dyn Error>> {
+        let runtime_home = TempRuntimeHome::new("store-installation-profile-invalid")?;
+        initialize_runtime_home(
+            runtime_home.path(),
+            "runtime_home_installation_invalid",
+            "{}",
+        )?;
+
+        let error = write_installation_profile(
+            runtime_home.path(),
+            InstallationProfileRegistration {
+                installation_id: "default".to_owned(),
+                volicord_command: "volicord\0bad".to_owned(),
+                volicord_mcp_command: "volicord-mcp".to_owned(),
+                bin_dir: PathBuf::from("/opt/volicord/bin"),
+                default_connection_mode: "workflow".to_owned(),
+                metadata_json: "{}".to_owned(),
+            },
+        )
+        .expect_err("NUL command should be rejected");
+
+        assert!(error
+            .to_string()
+            .contains("volicord_command must not contain NUL"));
         Ok(())
     }
 
