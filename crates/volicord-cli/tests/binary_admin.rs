@@ -11,7 +11,8 @@ use serde_json::Value;
 use volicord_core::{CoreService, InvocationContext};
 use volicord_store::agent_connections::{
     agent_connection_record, list_connection_projects, CONNECTION_MODE_READ_ONLY,
-    CONNECTION_MODE_WORKFLOW,
+    CONNECTION_MODE_WORKFLOW, HOST_KIND_GENERIC, HOST_SCOPE_EXPORT,
+    VERIFIED_STATUS_ACTION_REQUIRED,
 };
 use volicord_store::{
     bootstrap::{
@@ -36,9 +37,12 @@ fn binary_help_uses_agent_connection_model() -> Result<(), Box<dyn Error>> {
 
     assert!(text.contains("volicord setup"));
     assert!(text.contains("volicord doctor"));
+    assert!(text.contains("volicord export mcp-config"));
     assert!(text.contains("volicord connect [HOST]"));
     assert!(text.contains("volicord connections [--repo PATH]"));
     assert!(text.contains("volicord connection status [HOST]"));
+    assert!(!text.contains("--export-path"));
+    assert!(!text.contains("--export-dir"));
     assert!(!text.contains("volicord agent connect"));
     assert!(!text.contains("--connection-id ID"));
     assert!(!text.contains("--mode read_only|workflow"));
@@ -53,6 +57,14 @@ fn binary_help_uses_agent_connection_model() -> Result<(), Box<dyn Error>> {
         run_without_home(["user", "not-a-real-command", "--project-id", "project_a"])?;
     assert_eq!(unknown_user.status.code(), Some(2));
     assert!(stderr(&unknown_user).contains("unknown user command: not-a-real-command"));
+
+    let export_help = run_without_home(["export", "mcp-config", "--help"])?;
+    assert_success(&export_help);
+    let export_text = stdout(&export_help);
+    assert!(export_text.contains("volicord export mcp-config"));
+    assert!(export_text.contains("--output PATH"));
+    assert!(!export_text.contains("--export-path"));
+    assert!(!export_text.contains("--export-dir"));
     Ok(())
 }
 
@@ -325,6 +337,123 @@ fn connect_defaults_to_workflow_mode() -> Result<(), Box<dyn Error>> {
     let record = agent_connection_record(runtime_home.path(), connection_id)?
         .expect("connection should be stored");
     assert_eq!(record.mode, CONNECTION_MODE_WORKFLOW);
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn export_mcp_config_writes_default_path_and_connection_context() -> Result<(), Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new("cli-bin-export-default")?;
+    let repo_root = create_git_repo(&runtime_home, "product-repo")?;
+    let bin_dir = runtime_home.path().join("bin");
+    let mcp = write_fake_mcp(&bin_dir)?;
+    assert_success(&run_setup(runtime_home.path(), &mcp)?);
+
+    let output = run_with_home_env_in_dir(
+        runtime_home.path(),
+        ["export", "mcp-config", "--json"],
+        &[],
+        &repo_root,
+    )?;
+    assert_success(&output);
+    let value = json_stdout(&output)?;
+    let output_path = repo_root.join("volicord.mcp.json");
+    let connection_id = value["connection"]["connection_id"]
+        .as_str()
+        .expect("connection_id should be present");
+
+    assert_eq!(value["output_path"], path_text(&output_path));
+    assert_eq!(value["mode"], CONNECTION_MODE_WORKFLOW);
+    assert_eq!(value["connection"]["status"], "created");
+    assert_eq!(value["connection"]["host_kind"], HOST_KIND_GENERIC);
+    assert_eq!(value["connection"]["host_scope"], HOST_SCOPE_EXPORT);
+
+    let config: Value = serde_json::from_str(&fs::read_to_string(&output_path)?)?;
+    let server = &config["mcpServers"]["volicord"];
+    assert_eq!(server["command"], path_text(&mcp));
+    assert_eq!(
+        server["args"],
+        serde_json::json!(["--connection", connection_id])
+    );
+    assert_eq!(
+        server["env"]["VOLICORD_HOME"],
+        path_text(runtime_home.path())
+    );
+
+    let record = agent_connection_record(runtime_home.path(), connection_id)?
+        .expect("generic export connection should be stored");
+    assert_eq!(record.host_kind, HOST_KIND_GENERIC);
+    assert_eq!(record.host_scope, HOST_SCOPE_EXPORT);
+    assert_eq!(record.mode, CONNECTION_MODE_WORKFLOW);
+    assert_eq!(record.config_target, path_text(&output_path));
+    assert_eq!(record.last_verified_status, VERIFIED_STATUS_ACTION_REQUIRED);
+    let projects = list_connection_projects(runtime_home.path(), connection_id)?;
+    assert_eq!(projects.len(), 1);
+    assert_eq!(projects[0].project.repo_root, repo_root);
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn export_mcp_config_explicit_output_read_only_reuses_connection() -> Result<(), Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new("cli-bin-export-explicit")?;
+    let repo_root = create_git_repo(&runtime_home, "product-repo")?;
+    let bin_dir = runtime_home.path().join("bin");
+    let mcp = write_fake_mcp(&bin_dir)?;
+    assert_success(&run_setup(runtime_home.path(), &mcp)?);
+    let output_path = runtime_home.path().join("exports").join("custom.mcp.json");
+
+    let first = run_with_home_env(
+        runtime_home.path(),
+        [
+            "export",
+            "mcp-config",
+            "--repo",
+            path_text(&repo_root).as_str(),
+            "--output",
+            path_text(&output_path).as_str(),
+            "--read-only",
+            "--json",
+        ],
+        &[],
+    )?;
+    assert_success(&first);
+    let first_json = json_stdout(&first)?;
+    let connection_id = first_json["connection"]["connection_id"]
+        .as_str()
+        .expect("connection_id should be present")
+        .to_owned();
+    assert_eq!(first_json["output_path"], path_text(&output_path));
+    assert_eq!(first_json["mode"], CONNECTION_MODE_READ_ONLY);
+    assert_eq!(first_json["connection"]["status"], "created");
+
+    let second = run_with_home_env(
+        runtime_home.path(),
+        [
+            "export",
+            "mcp-config",
+            "--repo",
+            path_text(&repo_root).as_str(),
+            "--output",
+            path_text(&output_path).as_str(),
+            "--read-only",
+            "--json",
+        ],
+        &[],
+    )?;
+    assert_success(&second);
+    let second_json = json_stdout(&second)?;
+    assert_eq!(
+        second_json["connection"]["connection_id"],
+        connection_id.as_str()
+    );
+    assert_eq!(second_json["connection"]["status"], "reused");
+    assert_eq!(
+        agent_connection_record(runtime_home.path(), &connection_id)?
+            .expect("connection should remain")
+            .mode,
+        CONNECTION_MODE_READ_ONLY
+    );
     Ok(())
 }
 

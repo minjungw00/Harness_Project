@@ -8,6 +8,7 @@ use volicord_cli::{
         run_connection_command, run_connections_command, AgentCommandError, ProductionAgentProcess,
     },
     doctor_command::{doctor_usage, run_doctor_command, DoctorCommandError},
+    export_command::{export_usage, run_export_command, ExportCommandError},
     project_context::{project_usage, run_project_command, ProjectCommandError},
     setup_command::{
         run_setup_command, setup_usage, ClosureSetupProcess, CommandOutcome, SetupCommandError,
@@ -70,6 +71,7 @@ where
             command_outcome(run_setup_command(&args[2..], current_dir, &process)?)
         }
         "doctor" => command_outcome(run_doctor_command(&args[2..], &env_var, current_dir)?),
+        "export" => run_export_command(&args[2..], &env_var, current_dir).map_err(CliError::from),
         "connect" => {
             if !simple_help_requested(&args[2..]) {
                 require_setup_completed(&env_var, current_dir)?;
@@ -192,9 +194,10 @@ fn display_path(path: &Path) -> String {
 
 fn usage() -> String {
     format!(
-        "Usage:\n  volicord --help\n  volicord --version\n  {}\n  {}\n  {}\n  {}\n  {}\n  {}\n  {}\n\nEnvironment:\n  VOLICORD_HOME  Override Runtime Home path (default: $HOME/.volicord)\n\nAgent Connection commands manage local MCP host connections. User Channel commands record local user judgments.\nThese are local administrative commands, not public Volicord API methods.\n",
+        "Usage:\n  volicord --help\n  volicord --version\n  {}\n  {}\n  {}\n  {}\n  {}\n  {}\n  {}\n  {}\n\nEnvironment:\n  VOLICORD_HOME  Override Runtime Home path (default: $HOME/.volicord)\n\nAgent Connection commands manage local MCP host connections. User Channel commands record local user judgments.\nThese are local administrative commands, not public Volicord API methods.\n",
         setup_usage().trim_end(),
         doctor_usage().trim_end(),
+        export_usage().trim_end(),
         connect_usage().trim_end(),
         connections_usage().trim_end(),
         connection_usage().trim_end(),
@@ -290,6 +293,15 @@ impl From<DoctorCommandError> for CliError {
         match error {
             DoctorCommandError::Usage(message) => Self::Usage(message),
             DoctorCommandError::Runtime(message) => Self::Runtime(message),
+        }
+    }
+}
+
+impl From<ExportCommandError> for CliError {
+    fn from(error: ExportCommandError) -> Self {
+        match error {
+            ExportCommandError::Usage(message) => Self::Usage(message),
+            ExportCommandError::Runtime(message) => Self::Runtime(message),
         }
     }
 }

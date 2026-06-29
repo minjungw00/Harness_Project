@@ -38,6 +38,7 @@ use volicord_store::{
 use crate::host_integration::{
     claude_code::{ClaudeCodeAdapter, ProductionCommandRunner},
     codex::{CodexAdapter, CodexEnvironment, CodexExistingPlanRequest},
+    export_file_name,
     generic::{GenericAdapter, GenericExportRequest},
     is_valid_server_name,
     verification::{Verification, VerificationStatus},
@@ -359,7 +360,7 @@ impl Default for ParsedAgentOptions {
 
 pub fn agent_usage() -> String {
     concat!(
-        "volicord agent connect --host codex|claude-code|claude_code|generic --scope user|project|local|export [--project-id ID] [--repo-root PATH] [--connection-id ID] [--mode read_only|workflow] [--server-name NAME] [--export-path PATH|--export-dir PATH] [--output text|json] [--dry-run] [--allow-repository-write] [--replace-managed]\n",
+        "volicord agent connect --host codex|claude-code|claude_code --scope user|project|local [--project-id ID] [--repo-root PATH] [--connection-id ID] [--mode read_only|workflow] [--server-name NAME] [--output text|json] [--dry-run] [--allow-repository-write] [--replace-managed]\n",
         "volicord agent list [--output text|json]\n",
         "volicord agent status --connection-id ID [--output text|json]\n",
         "volicord agent enable --connection-id ID [--output text|json]\n",
@@ -375,7 +376,7 @@ pub fn agent_usage() -> String {
 fn agent_connect_usage() -> String {
     concat!(
         "Usage:\n",
-        "  volicord agent connect --host codex|claude-code|claude_code|generic --scope user|project|local|export [--project-id ID] [--repo-root PATH] [--connection-id ID] [--mode read_only|workflow] [--server-name NAME] [--export-path PATH|--export-dir PATH] [--output text|json] [--dry-run] [--allow-repository-write] [--replace-managed]\n",
+        "  volicord agent connect --host codex|claude-code|claude_code --scope user|project|local [--project-id ID] [--repo-root PATH] [--connection-id ID] [--mode read_only|workflow] [--server-name NAME] [--output text|json] [--dry-run] [--allow-repository-write] [--replace-managed]\n",
         "\n",
         "Defaults:\n",
         "  --mode defaults to the setup profile default, which is workflow after volicord setup.\n",
@@ -1857,8 +1858,6 @@ fn connect_allowed_options() -> &'static [&'static str] {
         "connection-id",
         "mode",
         "server-name",
-        "export-path",
-        "export-dir",
         "output",
         "dry-run",
         "allow-repository-write",
@@ -1926,8 +1925,6 @@ fn set_agent_option(
         "host" => parsed.host_kind = Some(parse_host_kind(&value_text(name, value)?)?),
         "scope" => parsed.host_scope = Some(parse_host_scope(&value_text(name, value)?)?),
         "server-name" => parsed.server_name = Some(value_text(name, value)?),
-        "export-path" => parsed.export_path = Some(value_path(name, value)?),
-        "export-dir" => parsed.export_dir = Some(value_path(name, value)?),
         "output" => {
             parsed.output = match value_text(name, value)?.as_str() {
                 "text" => OutputFormat::Text,
@@ -2037,7 +2034,6 @@ fn connection_intent_for_host_scope(
         (HostKind::ClaudeCode, HostScope::Local) => Ok(ConnectionIntent::Personal),
         (HostKind::ClaudeCode, HostScope::Project) => Ok(ConnectionIntent::Shared),
         (HostKind::ClaudeCode, HostScope::User) => Ok(ConnectionIntent::Global),
-        (HostKind::Generic, HostScope::Export) => Ok(ConnectionIntent::Personal),
         _ => Err(AgentCommandError::usage(
             "host and scope must match the supported Agent Connection matrix",
         )),
@@ -2052,7 +2048,6 @@ fn validate_host_scope(host_kind: HostKind, scope: HostScope) -> Result<(), Agen
             | (HostKind::ClaudeCode, HostScope::Local)
             | (HostKind::ClaudeCode, HostScope::Project)
             | (HostKind::ClaudeCode, HostScope::User)
-            | (HostKind::Generic, HostScope::Export)
     );
     if valid {
         Ok(())
@@ -2335,13 +2330,16 @@ fn build_host_plan(
         HostKind::Generic => {
             let adapter = GenericAdapter;
             let output_dir = request.export_dir.unwrap_or(request.current_dir);
+            let target_path = request
+                .export_target
+                .map(Path::to_path_buf)
+                .unwrap_or_else(|| output_dir.join(export_file_name(request.connection_id)));
             adapter
                 .plan_export(GenericExportRequest {
                     connection_id: request.connection_id,
                     installation_profile: request.installation_profile,
                     mode: request.mode,
-                    output_dir,
-                    output_path: request.export_target,
+                    target_path: &target_path,
                     expected_fingerprint: request.expected_fingerprint,
                 })
                 .map_err(Into::into)

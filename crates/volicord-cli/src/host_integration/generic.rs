@@ -4,11 +4,10 @@ use serde_json::{Map, Value};
 
 use super::{
     config_edit::{read_json_object, remove_file_if_fresh, write_json_object_if_fresh},
-    current_entry_fingerprint_from_json, export_file_name, managed_fingerprint,
-    validated_server_name, ConnectionIntent, HostAdapter, HostConfigError, HostConflict,
-    HostConflictKind, HostDetection, HostEffect, HostKind, HostPlan, HostPlanRequest,
-    HostRemoveRequest, HostScope, HostTarget, InstallationProfile, ManagedServerEntry,
-    PlannedChange,
+    current_entry_fingerprint_from_json, managed_fingerprint, validated_server_name,
+    ConnectionIntent, HostAdapter, HostConfigError, HostConflict, HostConflictKind, HostDetection,
+    HostEffect, HostKind, HostPlan, HostPlanRequest, HostRemoveRequest, HostScope, HostTarget,
+    InstallationProfile, ManagedServerEntry, PlannedChange,
 };
 use crate::host_integration::verification::{
     HostConfigurationStatus, HostExecutableStatus, HostGateStatus, ManagedConfigStatus,
@@ -31,26 +30,8 @@ impl GenericAdapter {
         &self,
         request: GenericExportRequest<'_>,
     ) -> Result<HostPlan, HostConfigError> {
-        if !request
-            .installation_profile
-            .volicord_mcp_command
-            .is_absolute()
-        {
-            return Err(HostConfigError::Conflict(HostConflict::new(
-                HostConflictKind::InvalidCommand,
-                "generic export requires an absolute volicord-mcp command path",
-            )));
-        }
-
         let server_name = validated_server_name(request.connection_id, None)?;
-        let target = request
-            .output_path
-            .map(Path::to_path_buf)
-            .unwrap_or_else(|| {
-                request
-                    .output_dir
-                    .join(export_file_name(request.connection_id))
-            });
+        let target = request.target_path.to_path_buf();
         let entry = ManagedServerEntry::new(
             request.connection_id,
             request.installation_profile.volicord_mcp_command,
@@ -229,8 +210,7 @@ pub struct GenericExportRequest<'a> {
     pub connection_id: &'a str,
     pub installation_profile: InstallationProfile<'a>,
     pub mode: &'a str,
-    pub output_dir: &'a Path,
-    pub output_path: Option<&'a Path>,
+    pub target_path: &'a Path,
     pub expected_fingerprint: Option<&'a str>,
 }
 
@@ -329,12 +309,10 @@ mod tests {
         let dir = temp_dir("generic-file")?;
         let adapter = GenericAdapter;
 
-        let plan = adapter.plan_export(request(&dir, None, Path::new("/bin/volicord-mcp")))?;
+        let target = dir.join("volicord.mcp.json");
+        let plan = adapter.plan_export(request(&target, Path::new("/bin/volicord-mcp")))?;
 
-        assert_eq!(
-            plan.target,
-            HostTarget::Export(dir.join("volicord-int_alpha.mcp.json"))
-        );
+        assert_eq!(plan.target, HostTarget::Export(target));
         assert_eq!(plan.entry.command, "/bin/volicord-mcp");
         assert_eq!(plan.entry.args, ["--connection", "int_alpha"]);
         let expected_env =
@@ -372,14 +350,14 @@ mod tests {
     #[test]
     fn unrelated_existing_file_is_a_conflict() -> Result<(), Box<dyn std::error::Error>> {
         let dir = temp_dir("generic-conflict")?;
-        let target = dir.join("volicord-int_alpha.mcp.json");
+        let target = dir.join("volicord.mcp.json");
         fs::write(
             &target,
             "{\"mcpServers\":{\"other\":{\"command\":\"x\"}}}\n",
         )?;
         let adapter = GenericAdapter;
 
-        let plan = adapter.plan_export(request(&dir, None, Path::new("/bin/volicord-mcp")))?;
+        let plan = adapter.plan_export(request(&target, Path::new("/bin/volicord-mcp")))?;
 
         assert_eq!(
             plan.conflicts[0].kind,
@@ -396,15 +374,16 @@ mod tests {
     fn safe_owned_update_and_removal() -> Result<(), Box<dyn std::error::Error>> {
         let dir = temp_dir("generic-owned")?;
         let mut adapter = GenericAdapter;
-        let first = adapter.plan_export(request(&dir, None, Path::new("/bin/volicord-mcp")))?;
+        let target = dir.join("volicord.mcp.json");
+        let first = adapter.plan_export(request(&target, Path::new("/bin/volicord-mcp")))?;
         adapter.apply(&first)?;
         let second = adapter.plan_export(GenericExportRequest {
             expected_fingerprint: Some(&first.fingerprint),
             installation_profile: InstallationProfile {
                 volicord_mcp_command: Path::new("/usr/local/bin/volicord-mcp"),
-                ..request(&dir, None, Path::new("/bin/volicord-mcp")).installation_profile
+                ..request(&target, Path::new("/bin/volicord-mcp")).installation_profile
             },
-            ..request(&dir, None, Path::new("/bin/volicord-mcp"))
+            ..request(&target, Path::new("/bin/volicord-mcp"))
         })?;
         assert_eq!(second.change, PlannedChange::Update);
         adapter.apply(&second)?;
@@ -431,7 +410,8 @@ mod tests {
     fn removal_refuses_fingerprint_mismatch() -> Result<(), Box<dyn std::error::Error>> {
         let dir = temp_dir("generic-remove-mismatch")?;
         let mut adapter = GenericAdapter;
-        let plan = adapter.plan_export(request(&dir, None, Path::new("/bin/volicord-mcp")))?;
+        let target = dir.join("volicord.mcp.json");
+        let plan = adapter.plan_export(request(&target, Path::new("/bin/volicord-mcp")))?;
         adapter.apply(&plan)?;
         let HostTarget::Export(target) = plan.target.clone() else {
             unreachable!("generic target");
@@ -462,7 +442,8 @@ mod tests {
     ) -> Result<(), Box<dyn std::error::Error>> {
         let dir = temp_dir("generic-verify")?;
         let mut adapter = GenericAdapter;
-        let plan = adapter.plan_export(request(&dir, None, Path::new("/bin/volicord-mcp")))?;
+        let target = dir.join("volicord.mcp.json");
+        let plan = adapter.plan_export(request(&target, Path::new("/bin/volicord-mcp")))?;
         assert_eq!(adapter.verify(&plan)?.status.as_str(), "missing");
         adapter.apply(&plan)?;
         let verification = adapter.verify(&plan)?;
@@ -489,11 +470,7 @@ mod tests {
         Ok(())
     }
 
-    fn request<'a>(
-        output_dir: &'a Path,
-        output_path: Option<&'a Path>,
-        mcp_command: &'a Path,
-    ) -> GenericExportRequest<'a> {
+    fn request<'a>(target_path: &'a Path, mcp_command: &'a Path) -> GenericExportRequest<'a> {
         GenericExportRequest {
             connection_id: "int_alpha",
             installation_profile: InstallationProfile {
@@ -503,8 +480,7 @@ mod tests {
                 default_connection_mode: "workflow",
             },
             mode: "workflow",
-            output_dir,
-            output_path,
+            target_path,
             expected_fingerprint: None,
         }
     }

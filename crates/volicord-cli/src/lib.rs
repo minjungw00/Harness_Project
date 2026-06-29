@@ -7,6 +7,7 @@
 
 pub mod agent_command;
 pub mod doctor_command;
+pub mod export_command;
 pub mod host_integration;
 pub mod project_context;
 pub mod registration;
