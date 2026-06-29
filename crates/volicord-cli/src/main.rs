@@ -3,7 +3,10 @@
 use std::{env, fmt, path::Path, process};
 
 use volicord_cli::{
-    agent_command::{agent_usage, run_agent_command, AgentCommandError, ProductionAgentProcess},
+    agent_command::{
+        connect_usage, connection_usage, connections_usage, run_connect_command,
+        run_connection_command, run_connections_command, AgentCommandError, ProductionAgentProcess,
+    },
     doctor_command::{doctor_usage, run_doctor_command, DoctorCommandError},
     project_context::{project_usage, run_project_command, ProjectCommandError},
     setup_command::{
@@ -67,12 +70,28 @@ where
             command_outcome(run_setup_command(&args[2..], current_dir, &process)?)
         }
         "doctor" => command_outcome(run_doctor_command(&args[2..], &env_var, current_dir)?),
-        "agent" => {
-            if agent_subcommand_requires_setup(&args[2..]) {
+        "connect" => {
+            if !simple_help_requested(&args[2..]) {
                 require_setup_completed(&env_var, current_dir)?;
             }
             let mut agent_process = ProductionAgentProcess;
-            run_agent_command(&args[2..], current_dir, &mut agent_process).map_err(CliError::from)
+            run_connect_command(&args[2..], current_dir, &mut agent_process).map_err(CliError::from)
+        }
+        "connections" => {
+            if !simple_help_requested(&args[2..]) {
+                require_setup_completed(&env_var, current_dir)?;
+            }
+            let mut agent_process = ProductionAgentProcess;
+            run_connections_command(&args[2..], current_dir, &mut agent_process)
+                .map_err(CliError::from)
+        }
+        "connection" => {
+            if !connection_help_requested(&args[2..]) {
+                require_setup_completed(&env_var, current_dir)?;
+            }
+            let mut agent_process = ProductionAgentProcess;
+            run_connection_command(&args[2..], current_dir, &mut agent_process)
+                .map_err(CliError::from)
         }
         "user" => {
             if user_subcommand_requires_setup(&args[2..]) {
@@ -93,22 +112,6 @@ where
     }
 }
 
-fn agent_subcommand_requires_setup(args: &[String]) -> bool {
-    matches!(
-        args.first().map(String::as_str),
-        Some(
-            "connect"
-                | "list"
-                | "status"
-                | "enable"
-                | "disable"
-                | "project"
-                | "verify"
-                | "uninstall"
-        )
-    )
-}
-
 fn user_subcommand_requires_setup(args: &[String]) -> bool {
     matches!(
         args.first().map(String::as_str),
@@ -121,6 +124,27 @@ fn project_subcommand_requires_setup(args: &[String]) -> bool {
         args.first().map(String::as_str),
         Some("use" | "current" | "list" | "rename" | "forget")
     )
+}
+
+fn simple_help_requested(args: &[String]) -> bool {
+    matches!(
+        args.first().map(String::as_str),
+        None | Some("-h" | "--help" | "help")
+    )
+}
+
+fn connection_help_requested(args: &[String]) -> bool {
+    match args {
+        [] => true,
+        [first] if matches!(first.as_str(), "-h" | "--help" | "help") => true,
+        [subcommand, help, ..]
+            if matches!(subcommand.as_str(), "status" | "verify" | "mode" | "remove")
+                && matches!(help.as_str(), "-h" | "--help" | "help") =>
+        {
+            true
+        }
+        _ => false,
+    }
 }
 
 fn command_outcome(outcome: CommandOutcome) -> Result<String, CliError> {
@@ -168,10 +192,12 @@ fn display_path(path: &Path) -> String {
 
 fn usage() -> String {
     format!(
-        "Usage:\n  volicord --help\n  volicord --version\n  {}\n  {}\n  {}\n  {}\n  {}\n\nEnvironment:\n  VOLICORD_HOME  Override Runtime Home path (default: $HOME/.volicord)\n\nAgent Connection commands manage local MCP host connections. User Channel commands record local user judgments.\nThese are local administrative commands, not public Volicord API methods.\n",
+        "Usage:\n  volicord --help\n  volicord --version\n  {}\n  {}\n  {}\n  {}\n  {}\n  {}\n  {}\n\nEnvironment:\n  VOLICORD_HOME  Override Runtime Home path (default: $HOME/.volicord)\n\nAgent Connection commands manage local MCP host connections. User Channel commands record local user judgments.\nThese are local administrative commands, not public Volicord API methods.\n",
         setup_usage().trim_end(),
         doctor_usage().trim_end(),
-        agent_usage().trim_end(),
+        connect_usage().trim_end(),
+        connections_usage().trim_end(),
+        connection_usage().trim_end(),
         user_usage().trim_end(),
         project_usage().trim_end()
     )

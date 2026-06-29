@@ -36,9 +36,16 @@ fn binary_help_uses_agent_connection_model() -> Result<(), Box<dyn Error>> {
 
     assert!(text.contains("volicord setup"));
     assert!(text.contains("volicord doctor"));
-    assert!(text.contains("volicord agent connect"));
-    assert!(text.contains("--connection-id ID"));
-    assert!(text.contains("--mode read_only|workflow"));
+    assert!(text.contains("volicord connect [HOST]"));
+    assert!(text.contains("volicord connections [--repo PATH]"));
+    assert!(text.contains("volicord connection status [HOST]"));
+    assert!(!text.contains("volicord agent connect"));
+    assert!(!text.contains("--connection-id ID"));
+    assert!(!text.contains("--mode read_only|workflow"));
+    assert!(!text.contains("--repo-root PATH"));
+    assert!(!text.contains("--server-name"));
+    assert!(!text.contains("--allow-repository-write"));
+    assert!(!text.contains("--replace-managed"));
     assert!(text.contains("volicord user judgment record --project-id ID"));
     assert!(text.contains("User Channel"));
 
@@ -210,33 +217,49 @@ fn project_list_disambiguates_same_basename_repositories() -> Result<(), Box<dyn
 
 #[cfg(unix)]
 #[test]
-fn agent_connect_respects_explicit_read_only_and_writes_connection_config(
-) -> Result<(), Box<dyn Error>> {
+fn connect_respects_explicit_read_only_and_uses_same_dry_run_plan() -> Result<(), Box<dyn Error>> {
     let runtime_home = TempRuntimeHome::new("cli-bin-connection-read-only")?;
     let repo_root = runtime_home.create_product_repo("product-repo")?;
+    fs::create_dir_all(repo_root.join(".git"))?;
     let bin_dir = runtime_home.path().join("bin");
     write_fake_codex(&bin_dir)?;
     let mcp = write_fake_mcp(&bin_dir)?;
     assert_success(&run_setup(runtime_home.path(), &mcp)?);
 
+    let dry_run = run_with_home_env(
+        runtime_home.path(),
+        [
+            "connect",
+            "codex",
+            "--repo",
+            path_text(&repo_root).as_str(),
+            "--shared",
+            "--read-only",
+            "--dry-run",
+            "--json",
+        ],
+        &[("PATH", path_env(&[bin_dir.as_path()]))],
+    )?;
+    assert_success(&dry_run);
+    let dry_run_json = json_stdout(&dry_run)?;
+    assert_eq!(dry_run_json["status"], "dry_run");
+    assert_eq!(
+        dry_run_json["connection"]["mode"],
+        CONNECTION_MODE_READ_ONLY
+    );
+    assert_eq!(dry_run_json["planned_change"], "create");
+    assert_eq!(list_projects(runtime_home.path())?.len(), 0);
+
     let output = run_with_home_env(
         runtime_home.path(),
         [
-            "agent",
             "connect",
-            "--host",
             "codex",
-            "--scope",
-            "project",
-            "--project-id",
-            "project_read_only",
-            "--repo-root",
+            "--repo",
             path_text(&repo_root).as_str(),
-            "--mode",
-            "read_only",
-            "--allow-repository-write",
-            "--output",
-            "json",
+            "--shared",
+            "--read-only",
+            "--json",
         ],
         &[("PATH", path_env(&[bin_dir.as_path()]))],
     )?;
@@ -250,6 +273,8 @@ fn agent_connect_respects_explicit_read_only_and_writes_connection_config(
     assert_eq!(connection["mode"], CONNECTION_MODE_READ_ONLY);
     assert_eq!(connection["host_kind"], "codex");
     assert_eq!(connection["host_scope"], "project");
+    assert_eq!(value["target"], dry_run_json["target"]);
+    assert_eq!(value["planned_change"], dry_run_json["planned_change"]);
     assert_eq!(value["status"], "action_required");
 
     let record = agent_connection_record(runtime_home.path(), connection_id)?
@@ -257,7 +282,7 @@ fn agent_connect_respects_explicit_read_only_and_writes_connection_config(
     assert_eq!(record.mode, CONNECTION_MODE_READ_ONLY);
     let projects = list_connection_projects(runtime_home.path(), connection_id)?;
     assert_eq!(projects.len(), 1);
-    assert_eq!(projects[0].project_id, "project_read_only");
+    assert_eq!(projects[0].project.repo_root, repo_root);
 
     let config = fs::read_to_string(repo_root.join(".codex").join("config.toml"))?;
     assert!(config.contains(&format!("args = [\"--connection\", \"{connection_id}\"]")));
@@ -266,9 +291,10 @@ fn agent_connect_respects_explicit_read_only_and_writes_connection_config(
 
 #[cfg(unix)]
 #[test]
-fn agent_connect_uses_explicit_workflow_mode() -> Result<(), Box<dyn Error>> {
+fn connect_defaults_to_workflow_mode() -> Result<(), Box<dyn Error>> {
     let runtime_home = TempRuntimeHome::new("cli-bin-connection-workflow")?;
     let repo_root = runtime_home.create_product_repo("product-repo")?;
+    fs::create_dir_all(repo_root.join(".git"))?;
     let bin_dir = runtime_home.path().join("bin");
     write_fake_codex(&bin_dir)?;
     let mcp = write_fake_mcp(&bin_dir)?;
@@ -277,23 +303,12 @@ fn agent_connect_uses_explicit_workflow_mode() -> Result<(), Box<dyn Error>> {
     let output = run_with_home_env(
         runtime_home.path(),
         [
-            "agent",
             "connect",
-            "--host",
             "codex",
-            "--scope",
-            "project",
-            "--project-id",
-            "project_workflow",
-            "--repo-root",
+            "--repo",
             path_text(&repo_root).as_str(),
-            "--mode",
-            "workflow",
-            "--server-name",
-            "volicord-workflow",
-            "--allow-repository-write",
-            "--output",
-            "json",
+            "--shared",
+            "--json",
         ],
         &[
             ("PATH", path_env(&[bin_dir.as_path()])),
@@ -315,10 +330,12 @@ fn agent_connect_uses_explicit_workflow_mode() -> Result<(), Box<dyn Error>> {
 
 #[cfg(unix)]
 #[test]
-fn connection_project_enable_disable_and_uninstall_flow() -> Result<(), Box<dyn Error>> {
+fn connection_status_mode_and_remove_use_natural_selectors() -> Result<(), Box<dyn Error>> {
     let runtime_home = TempRuntimeHome::new("cli-bin-connection-lifecycle")?;
     let repo_a = runtime_home.create_product_repo("product-a")?;
     let repo_b = runtime_home.create_product_repo("product-b")?;
+    fs::create_dir_all(repo_a.join(".git"))?;
+    fs::create_dir_all(repo_b.join(".git"))?;
     let bin_dir = runtime_home.path().join("bin");
     let codex_home = runtime_home.path().join("codex-home");
     let mcp = write_fake_mcp(&bin_dir)?;
@@ -328,18 +345,11 @@ fn connection_project_enable_disable_and_uninstall_flow() -> Result<(), Box<dyn 
     let connect = run_with_home_env(
         runtime_home.path(),
         [
-            "agent",
             "connect",
-            "--host",
             "codex",
-            "--scope",
-            "user",
-            "--project-id",
-            "project_a",
-            "--repo-root",
+            "--repo",
             path_text(&repo_a).as_str(),
-            "--output",
-            "json",
+            "--json",
         ],
         &[
             ("PATH", path_env(&[bin_dir.as_path()])),
@@ -355,71 +365,105 @@ fn connection_project_enable_disable_and_uninstall_flow() -> Result<(), Box<dyn 
         .to_owned();
     assert_eq!(connect_json["status"], "complete");
 
-    let add = run_with_home_env(
+    let connect_second = run_with_home_env(
         runtime_home.path(),
         [
-            "agent",
-            "project",
-            "add",
-            "--connection-id",
-            connection_id.as_str(),
-            "--project-id",
-            "project_b",
-            "--repo-root",
+            "connect",
+            "codex",
+            "--repo",
             path_text(&repo_b).as_str(),
-            "--output",
-            "json",
+            "--json",
         ],
-        &[("CODEX_HOME", path_text(&codex_home))],
+        &[
+            ("PATH", path_env(&[bin_dir.as_path()])),
+            ("CODEX_HOME", path_text(&codex_home)),
+            ("VOLICORD_TEST_CONNECTION_MODE", "workflow".to_owned()),
+        ],
     )?;
-    assert_success(&add);
+    assert_success(&connect_second);
+    assert_eq!(
+        json_stdout(&connect_second)?["connection"]["connection_id"],
+        connection_id
+    );
     assert_eq!(
         list_connection_projects(runtime_home.path(), &connection_id)?.len(),
         2
     );
 
-    let disable = run_with_home_env(
+    let status = run_with_home_env(
         runtime_home.path(),
         [
-            "agent",
-            "disable",
-            "--connection-id",
-            connection_id.as_str(),
-            "--output",
-            "json",
+            "connection",
+            "status",
+            "codex",
+            "--repo",
+            path_text(&repo_a).as_str(),
+            "--json",
         ],
         &[("CODEX_HOME", path_text(&codex_home))],
     )?;
-    assert_success(&disable);
-    assert_eq!(json_stdout(&disable)?["connection"]["enabled"], false);
+    assert_success(&status);
+    assert_eq!(
+        json_stdout(&status)?["connection"]["connection_id"],
+        connection_id
+    );
 
-    let enable = run_with_home_env(
+    let mode = run_with_home_env(
         runtime_home.path(),
         [
-            "agent",
-            "enable",
-            "--connection-id",
-            connection_id.as_str(),
-            "--output",
-            "json",
+            "connection",
+            "mode",
+            "codex",
+            "read-only",
+            "--repo",
+            path_text(&repo_a).as_str(),
+            "--json",
         ],
         &[("CODEX_HOME", path_text(&codex_home))],
     )?;
-    assert_success(&enable);
-    assert_eq!(json_stdout(&enable)?["connection"]["enabled"], true);
+    assert_success(&mode);
+    let mode_json = json_stdout(&mode)?;
+    assert_eq!(mode_json["connection"]["mode"], CONNECTION_MODE_READ_ONLY);
+    assert!(mode_json["actions"]
+        .as_array()
+        .expect("actions should be an array")
+        .iter()
+        .any(|action| action["id"] == "reload_required"));
+    assert_eq!(
+        agent_connection_record(runtime_home.path(), &connection_id)?
+            .expect("connection should remain")
+            .mode,
+        CONNECTION_MODE_READ_ONLY
+    );
+
+    let remove_dry_run = run_with_home_env(
+        runtime_home.path(),
+        [
+            "connection",
+            "remove",
+            "codex",
+            "--repo",
+            path_text(&repo_b).as_str(),
+            "--dry-run",
+            "--json",
+        ],
+        &[("CODEX_HOME", path_text(&codex_home))],
+    )?;
+    assert_success(&remove_dry_run);
+    assert_eq!(
+        json_stdout(&remove_dry_run)?["planned_change"],
+        "membership"
+    );
 
     let remove = run_with_home_env(
         runtime_home.path(),
         [
-            "agent",
-            "project",
+            "connection",
             "remove",
-            "--connection-id",
-            connection_id.as_str(),
-            "--project-id",
-            "project_b",
-            "--output",
-            "json",
+            "codex",
+            "--repo",
+            path_text(&repo_b).as_str(),
+            "--json",
         ],
         &[("CODEX_HOME", path_text(&codex_home))],
     )?;
@@ -429,25 +473,78 @@ fn connection_project_enable_disable_and_uninstall_flow() -> Result<(), Box<dyn 
         1
     );
 
-    let uninstall = run_with_home_env(
+    let remove_last = run_with_home_env(
         runtime_home.path(),
         [
-            "agent",
-            "uninstall",
-            "--connection-id",
-            connection_id.as_str(),
-            "--output",
-            "json",
+            "connection",
+            "remove",
+            "codex",
+            "--repo",
+            path_text(&repo_a).as_str(),
+            "--json",
         ],
         &[
             ("PATH", path_env(&[bin_dir.as_path()])),
             ("CODEX_HOME", path_text(&codex_home)),
         ],
     )?;
-    assert_success(&uninstall);
+    assert_success(&remove_last);
     assert!(agent_connection_record(runtime_home.path(), &connection_id)?.is_none());
     let config = fs::read_to_string(codex_home.join("config.toml"))?;
     assert!(!config.contains(&connection_id));
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn ambiguous_connection_selector_reports_actionable_choices() -> Result<(), Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new("cli-bin-connection-ambiguous")?;
+    let repo_root = runtime_home.create_product_repo("product-repo")?;
+    fs::create_dir_all(repo_root.join(".git"))?;
+    let bin_dir = runtime_home.path().join("bin");
+    let codex_home_a = runtime_home.path().join("codex-a");
+    let codex_home_b = runtime_home.path().join("codex-b");
+    let mcp = write_fake_mcp(&bin_dir)?;
+    write_fake_codex(&bin_dir)?;
+    assert_success(&run_setup(runtime_home.path(), &mcp)?);
+
+    for codex_home in [&codex_home_a, &codex_home_b] {
+        let connect = run_with_home_env(
+            runtime_home.path(),
+            [
+                "connect",
+                "codex",
+                "--repo",
+                path_text(&repo_root).as_str(),
+                "--json",
+            ],
+            &[
+                ("PATH", path_env(&[bin_dir.as_path()])),
+                ("CODEX_HOME", path_text(codex_home)),
+                ("VOLICORD_TEST_CONNECTION_MODE", "workflow".to_owned()),
+            ],
+        )?;
+        assert_success(&connect);
+    }
+
+    let status = run_with_home_env(
+        runtime_home.path(),
+        [
+            "connection",
+            "status",
+            "codex",
+            "--repo",
+            path_text(&repo_root).as_str(),
+        ],
+        &[],
+    )?;
+
+    assert_eq!(status.status.code(), Some(1));
+    let diagnostic = stderr(&status);
+    assert!(diagnostic.contains("connection selector is ambiguous"));
+    assert!(diagnostic.contains("choices:"));
+    assert!(diagnostic.contains(&path_text(&codex_home_a.join("config.toml"))));
+    assert!(diagnostic.contains(&path_text(&codex_home_b.join("config.toml"))));
     Ok(())
 }
 

@@ -16,7 +16,7 @@ use volicord_store::{
     agent_connections::{
         add_connection_project, agent_connection_record, ensure_agent_connection,
         list_agent_connections, list_connection_projects, remove_agent_connection_if_unused,
-        remove_connection_project, set_connection_enabled,
+        remove_connection_project, set_connection_enabled, set_connection_mode,
         update_agent_connection_verification_report, AgentConnectionRecord,
         AgentConnectionRegistration, ConnectionProjectRecord, ConnectionProjectRegistration,
         CONNECTION_INTENT_GLOBAL, CONNECTION_INTENT_PERSONAL, CONNECTION_INTENT_SHARED,
@@ -26,9 +26,10 @@ use volicord_store::{
         VERIFIED_STATUS_COMPLETE, VERIFIED_STATUS_FAILED, VERIFIED_STATUS_NOT_VERIFIED,
     },
     bootstrap::{
-        initialize_runtime_home, installation_profile, list_projects, project_record,
-        register_project, validate_project_id, InstallationProfileRecord, ProjectRecord,
-        ProjectRegistration, ACTIVE_PROJECT_STATUS,
+        ensure_project_for_repo, initialize_runtime_home, installation_profile, list_projects,
+        project_record, project_record_by_repo_root, register_project, validate_project_id,
+        InstallationProfileRecord, ProjectRecord, ProjectRegistration, RepoProjectRegistration,
+        ACTIVE_PROJECT_STATUS,
     },
     runtime_home::{resolve_runtime_home, RuntimeHomeResolutionError},
     StoreError,
@@ -384,6 +385,497 @@ fn agent_connect_usage() -> String {
         "  User scope may allow more projects with volicord agent project add.\n"
     )
     .to_owned()
+}
+
+pub fn connect_usage() -> String {
+    "volicord connect [HOST] [--repo PATH] [--shared|--global] [--read-only] [--dry-run] [--json]\n"
+        .to_owned()
+}
+
+pub fn connections_usage() -> String {
+    "volicord connections [--repo PATH] [--json]\n".to_owned()
+}
+
+pub fn connection_usage() -> String {
+    concat!(
+        "volicord connection status [HOST] [--repo PATH] [--shared|--global] [--json]\n",
+        "volicord connection verify [HOST] [--repo PATH] [--shared|--global] [--json]\n",
+        "volicord connection mode [HOST] workflow|read-only [--repo PATH] [--shared|--global] [--json]\n",
+        "volicord connection remove [HOST] [--repo PATH] [--shared|--global] [--dry-run] [--json]\n"
+    )
+    .to_owned()
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+struct ParsedConnectionOptions {
+    host_kind: Option<HostKind>,
+    repo: Option<PathBuf>,
+    shared: bool,
+    global: bool,
+    read_only: bool,
+    dry_run: bool,
+    json: bool,
+    positionals: Vec<String>,
+}
+
+#[derive(Debug, Clone)]
+struct ConnectionSelector {
+    host_kind: HostKind,
+    intent: ConnectionIntent,
+    host_scope: HostScope,
+    repo_root: PathBuf,
+}
+
+pub fn run_connect_command(
+    args: &[String],
+    current_dir: &Path,
+    process: &mut impl AgentProcess,
+) -> Result<String, AgentCommandError> {
+    if is_help_request(args) {
+        return Ok(connect_usage());
+    }
+    let parsed = parse_connection_options(
+        args,
+        &["repo", "shared", "global", "read-only", "dry-run", "json"],
+        1,
+    )?;
+    let host_kind = resolve_connection_host(parsed.host_kind, process)?;
+    let intent = connection_intent_from_flags(&parsed)?;
+    let host_scope = host_scope_for_intent(host_kind, intent)?;
+    let mode = if parsed.read_only {
+        CONNECTION_MODE_READ_ONLY
+    } else {
+        CONNECTION_MODE_WORKFLOW
+    };
+    let runtime_home = resolve_runtime_home(|name| process.env_var(name), current_dir)?;
+    let setup_profile = required_installation_profile(&runtime_home)?;
+    let repo_root = resolve_connection_repo_root(current_dir, parsed.repo.as_deref())?;
+    let server_name = DEFAULT_SERVER_NAME.to_owned();
+    let target_hint = connection_target_hint(
+        host_kind,
+        host_scope,
+        Some(&repo_root),
+        &ParsedAgentOptions::default(),
+        process,
+        &server_name,
+        None,
+    )?;
+    let existing = connection_for_host_target(
+        &runtime_home,
+        host_kind,
+        intent,
+        host_scope,
+        &target_hint,
+        &server_name,
+    )?;
+    let connection_id = existing
+        .as_ref()
+        .map(|connection| connection.connection_id.clone())
+        .unwrap_or_else(|| {
+            deterministic_connection_id(
+                host_kind,
+                host_scope,
+                Some(&path_text(&repo_root)),
+                &target_hint,
+                &server_name,
+            )
+        });
+    let project_hint = project_record_by_repo_root(&runtime_home, &repo_root)
+        .ok()
+        .flatten();
+    let expected_fingerprint = existing
+        .as_ref()
+        .map(|connection| connection.managed_fingerprint.as_str());
+    let host_plan = build_host_plan(
+        BuildHostPlanRequest {
+            host_kind,
+            connection_intent: intent,
+            connection_id: &connection_id,
+            repo_root: Some(&repo_root),
+            project_id: project_hint
+                .as_ref()
+                .map(|project| project.project_id.as_str())
+                .or(Some("planned_project")),
+            project_name: project_hint
+                .as_ref()
+                .map(|project| project.project_name.as_str())
+                .or(Some("planned project")),
+            installation_profile: installation_profile_context(&runtime_home, &setup_profile),
+            mode,
+            expected_fingerprint,
+            export_target: None,
+            export_dir: None,
+            current_dir,
+        },
+        process,
+    )?;
+    if let Some(conflict) = host_plan.conflicts.first() {
+        return Err(AgentCommandError::runtime(conflict.message.clone()));
+    }
+    if parsed.dry_run {
+        return render_simplified_plan_output(SimplifiedPlanOutput {
+            format: connection_output_format(&parsed),
+            action: "connect",
+            status: AgentResultStatus::DryRun,
+            connection_id: &connection_id,
+            host_kind,
+            intent,
+            host_scope,
+            mode,
+            enabled: true,
+            repo_root: Some(&repo_root),
+            plan: &host_plan,
+            projects_remaining: None,
+            user_actions: host_plan.user_actions.clone(),
+        });
+    }
+
+    initialize_runtime_home(
+        &runtime_home,
+        AGENT_RUNTIME_HOME_ID,
+        metadata_json_base()?.as_str(),
+    )?;
+    let project = ensure_project_for_repo(
+        &runtime_home,
+        RepoProjectRegistration {
+            project_name: None,
+            project_alias: None,
+            repo_root: repo_root.clone(),
+            project_home: None,
+            status: ACTIVE_PROJECT_STATUS.to_owned(),
+            metadata_json: metadata_json_base()?,
+        },
+    )?;
+    let existing = connection_for_host_target(
+        &runtime_home,
+        host_kind,
+        intent,
+        host_scope,
+        &target_hint,
+        &server_name,
+    )?;
+    let expected_fingerprint = existing
+        .as_ref()
+        .map(|connection| connection.managed_fingerprint.as_str());
+    let host_plan = build_host_plan(
+        BuildHostPlanRequest {
+            host_kind,
+            connection_intent: intent,
+            connection_id: &connection_id,
+            repo_root: Some(&project.repo_root),
+            project_id: Some(&project.project_id),
+            project_name: Some(&project.project_name),
+            installation_profile: installation_profile_context(&runtime_home, &setup_profile),
+            mode,
+            expected_fingerprint,
+            export_target: None,
+            export_dir: None,
+            current_dir,
+        },
+        process,
+    )?;
+    if let Some(conflict) = host_plan.conflicts.first() {
+        return Err(AgentCommandError::runtime(conflict.message.clone()));
+    }
+    let mcp_command = PathBuf::from(&host_plan.entry.command);
+    let metadata_json = connection_metadata_json(&host_plan, &mcp_command, &runtime_home)?;
+    let mut connection = ensure_agent_connection(
+        &runtime_home,
+        AgentConnectionRegistration {
+            connection_id: connection_id.clone(),
+            host_kind: host_kind.as_str().to_owned(),
+            intent: intent.as_str().to_owned(),
+            host_scope: host_scope.as_str().to_owned(),
+            server_name: host_plan.server_name.clone(),
+            config_target: host_target_text(&host_plan.target),
+            mode: mode.to_owned(),
+            enabled: true,
+            managed_fingerprint: host_plan.fingerprint.clone(),
+            last_verified_status: existing
+                .as_ref()
+                .map(|record| record.last_verified_status.clone())
+                .unwrap_or_else(|| VERIFIED_STATUS_NOT_VERIFIED.to_owned()),
+            last_verification_report_json: existing
+                .as_ref()
+                .map(|record| record.last_verification_report_json.clone())
+                .unwrap_or_else(|| "{}".to_owned()),
+            last_user_actions_json: user_actions_json(&host_plan.user_actions)?,
+            metadata_json,
+        },
+    )?;
+    enforce_single_project_scope(&runtime_home, &connection, &project.project_id)?;
+    add_connection_project(
+        &runtime_home,
+        ConnectionProjectRegistration {
+            connection_id: connection.connection_id.clone(),
+            project_id: project.project_id.clone(),
+        },
+    )?;
+    apply_host_plan(host_kind, &host_plan, process)?;
+    let launch = mcp_launch_from_host_plan(&host_plan, Some(&project.repo_root));
+    let verification = verify_connection(
+        &runtime_home,
+        &connection,
+        &host_plan,
+        &launch,
+        Some(&project.project_id),
+        process,
+    )?;
+    connection = update_agent_connection_verification_report(
+        &runtime_home,
+        &connection.connection_id,
+        verification.status.store_status(),
+        &host_plan.fingerprint,
+        &verification_report_json(&verification)?,
+        &user_actions_json(&verification.host.user_actions)?,
+    )?;
+    let projects = list_connection_projects(&runtime_home, &connection.connection_id)?;
+    render_simplified_connection_output(SimplifiedConnectionOutput {
+        format: connection_output_format(&parsed),
+        action: "connected",
+        status: verification.status,
+        connection: &connection,
+        projects: &projects,
+        verification: Some(&verification),
+        plan: Some(&host_plan),
+        user_actions: verification.host.user_actions.clone(),
+    })
+}
+
+pub fn run_connections_command(
+    args: &[String],
+    current_dir: &Path,
+    process: &mut impl AgentProcess,
+) -> Result<String, AgentCommandError> {
+    if is_help_request(args) {
+        return Ok(connections_usage());
+    }
+    let parsed = parse_connection_options(args, &["repo", "json"], 0)?;
+    let runtime_home = resolve_runtime_home(|name| process.env_var(name), current_dir)?;
+    let repo_root = parsed
+        .repo
+        .as_deref()
+        .map(|repo| resolve_connection_repo_root(current_dir, Some(repo)))
+        .transpose()?;
+    let mut rows = Vec::new();
+    for connection in list_agent_connections(&runtime_home)? {
+        let projects = list_connection_projects(&runtime_home, &connection.connection_id)?;
+        if repo_root.as_ref().is_none_or(|repo_root| {
+            projects
+                .iter()
+                .any(|project| project.project.repo_root == *repo_root)
+        }) {
+            rows.push((connection, projects));
+        }
+    }
+    render_simplified_connections_output(connection_output_format(&parsed), &rows)
+}
+
+pub fn run_connection_command(
+    args: &[String],
+    current_dir: &Path,
+    process: &mut impl AgentProcess,
+) -> Result<String, AgentCommandError> {
+    let Some(subcommand) = args.first().map(String::as_str) else {
+        return Ok(connection_usage());
+    };
+    if matches!(subcommand, "-h" | "--help" | "help") {
+        if args.len() == 1 {
+            return Ok(connection_usage());
+        }
+        return Err(AgentCommandError::usage(format!(
+            "unexpected argument: {}\n\n{}",
+            args[1],
+            connection_usage()
+        )));
+    }
+    match subcommand {
+        "status" => command_connection_status(&args[1..], current_dir, process),
+        "verify" => command_connection_verify(&args[1..], current_dir, process),
+        "mode" => command_connection_mode(&args[1..], current_dir, process),
+        "remove" => command_connection_remove(&args[1..], current_dir, process),
+        other => Err(AgentCommandError::usage(format!(
+            "unknown connection command: {other}\n\n{}",
+            connection_usage()
+        ))),
+    }
+}
+
+fn command_connection_status(
+    args: &[String],
+    current_dir: &Path,
+    process: &mut impl AgentProcess,
+) -> Result<String, AgentCommandError> {
+    if is_help_request(args) {
+        return Ok(connection_usage());
+    }
+    let parsed = parse_connection_options(args, &["repo", "shared", "global", "json"], 1)?;
+    let runtime_home = resolve_runtime_home(|name| process.env_var(name), current_dir)?;
+    let selector = connection_selector(&parsed, current_dir, process)?;
+    let (connection, projects) = select_connection(&runtime_home, &selector)?;
+    render_simplified_connection_output(SimplifiedConnectionOutput {
+        format: connection_output_format(&parsed),
+        action: "status",
+        status: status_from_store(&connection.last_verification_status),
+        user_actions: stored_user_actions(&connection),
+        connection: &connection,
+        projects: &projects,
+        verification: None,
+        plan: None,
+    })
+}
+
+fn command_connection_verify(
+    args: &[String],
+    current_dir: &Path,
+    process: &mut impl AgentProcess,
+) -> Result<String, AgentCommandError> {
+    if is_help_request(args) {
+        return Ok(connection_usage());
+    }
+    let parsed = parse_connection_options(args, &["repo", "shared", "global", "json"], 1)?;
+    let runtime_home = resolve_runtime_home(|name| process.env_var(name), current_dir)?;
+    let selector = connection_selector(&parsed, current_dir, process)?;
+    let (mut connection, _) = select_connection(&runtime_home, &selector)?;
+    let host_plan = existing_host_plan(&connection, &runtime_home, process)?;
+    let launch = mcp_launch_from_host_plan(&host_plan, None);
+    let verification = verify_connection(
+        &runtime_home,
+        &connection,
+        &host_plan,
+        &launch,
+        None,
+        process,
+    )?;
+    connection = update_agent_connection_verification_report(
+        &runtime_home,
+        &connection.connection_id,
+        verification.status.store_status(),
+        &host_plan.fingerprint,
+        &verification_report_json(&verification)?,
+        &user_actions_json(&verification.host.user_actions)?,
+    )?;
+    let projects = list_connection_projects(&runtime_home, &connection.connection_id)?;
+    render_simplified_connection_output(SimplifiedConnectionOutput {
+        format: connection_output_format(&parsed),
+        action: "verified",
+        status: verification.status,
+        user_actions: verification.host.user_actions.clone(),
+        connection: &connection,
+        projects: &projects,
+        verification: Some(&verification),
+        plan: Some(&host_plan),
+    })
+}
+
+fn command_connection_mode(
+    args: &[String],
+    current_dir: &Path,
+    process: &mut impl AgentProcess,
+) -> Result<String, AgentCommandError> {
+    if is_help_request(args) {
+        return Ok(connection_usage());
+    }
+    let parsed = parse_connection_options(args, &["repo", "shared", "global", "json"], 2)?;
+    let (host_kind, mode) = mode_positionals(&parsed, process)?;
+    let parsed = ParsedConnectionOptions {
+        host_kind: Some(host_kind),
+        ..parsed
+    };
+    let runtime_home = resolve_runtime_home(|name| process.env_var(name), current_dir)?;
+    let selector = connection_selector(&parsed, current_dir, process)?;
+    let (connection, _) = select_connection(&runtime_home, &selector)?;
+    let mut connection = set_connection_mode(&runtime_home, &connection.connection_id, &mode)?;
+    let mut actions = stored_or_default_user_actions(
+        &connection,
+        parse_host_kind(&connection.host_kind)?,
+        parse_host_scope(&connection.host_scope)?,
+    );
+    actions.push(UserAction::new(
+        UserActionKind::ReloadRequired,
+        "Restart or reload the host so it refreshes the Volicord tool list for the selected mode",
+    ));
+    connection = update_agent_connection_verification_report(
+        &runtime_home,
+        &connection.connection_id,
+        &connection.last_verification_status,
+        &connection.managed_fingerprint,
+        &connection.last_verification_report_json,
+        &user_actions_json(&actions)?,
+    )?;
+    let projects = list_connection_projects(&runtime_home, &connection.connection_id)?;
+    render_simplified_connection_output(SimplifiedConnectionOutput {
+        format: connection_output_format(&parsed),
+        action: "mode_updated",
+        status: status_from_store(&connection.last_verification_status),
+        user_actions: actions,
+        connection: &connection,
+        projects: &projects,
+        verification: None,
+        plan: None,
+    })
+}
+
+fn command_connection_remove(
+    args: &[String],
+    current_dir: &Path,
+    process: &mut impl AgentProcess,
+) -> Result<String, AgentCommandError> {
+    if is_help_request(args) {
+        return Ok(connection_usage());
+    }
+    let parsed =
+        parse_connection_options(args, &["repo", "shared", "global", "dry-run", "json"], 1)?;
+    let runtime_home = resolve_runtime_home(|name| process.env_var(name), current_dir)?;
+    let selector = connection_selector(&parsed, current_dir, process)?;
+    let (connection, projects) = select_connection(&runtime_home, &selector)?;
+    let selected_project = projects
+        .iter()
+        .find(|project| project.project.repo_root == selector.repo_root)
+        .ok_or_else(|| AgentCommandError::runtime("selected repository is not connected"))?;
+    let remaining_count = projects.len().saturating_sub(1);
+    let host_plan = if remaining_count == 0 {
+        Some(existing_host_plan(&connection, &runtime_home, process)?)
+    } else {
+        None
+    };
+    if parsed.dry_run {
+        let plan = host_plan
+            .as_ref()
+            .map(SimplifiedRemovePlan::Host)
+            .unwrap_or(SimplifiedRemovePlan::MembershipOnly);
+        return render_simplified_remove_dry_run(
+            connection_output_format(&parsed),
+            &connection,
+            &projects,
+            selected_project,
+            plan,
+            remaining_count,
+        );
+    }
+
+    remove_connection_project(
+        &runtime_home,
+        &connection.connection_id,
+        &selected_project.project_id,
+    )?;
+    let remaining_projects = list_connection_projects(&runtime_home, &connection.connection_id)?;
+    if remaining_projects.is_empty() {
+        if let Some(host_plan) = &host_plan {
+            remove_host_configuration(host_plan, &connection, process)?;
+        }
+        remove_agent_connection_if_unused(&runtime_home, &connection.connection_id)?;
+    }
+    render_simplified_connection_output(SimplifiedConnectionOutput {
+        format: connection_output_format(&parsed),
+        action: "removed",
+        status: AgentResultStatus::Complete,
+        user_actions: Vec::new(),
+        connection: &connection,
+        projects: &remaining_projects,
+        verification: None,
+        plan: host_plan.as_ref(),
+    })
 }
 
 pub fn run_agent_command(
@@ -913,6 +1405,447 @@ fn parse_agent_options(
         index += 1;
     }
     Ok(parsed)
+}
+
+fn parse_connection_options(
+    args: &[String],
+    allowed: &[&str],
+    max_positionals: usize,
+) -> Result<ParsedConnectionOptions, AgentCommandError> {
+    let mut parsed = ParsedConnectionOptions::default();
+    let mut seen = BTreeSet::new();
+    let mut index = 0;
+
+    while index < args.len() {
+        let token = &args[index];
+        if token == "-h" || token == "--help" || token == "help" {
+            return Err(AgentCommandError::usage(connection_usage()));
+        }
+        if !token.starts_with("--") {
+            parsed.positionals.push(token.clone());
+            index += 1;
+            continue;
+        }
+        let without_prefix = &token[2..];
+        let (name, value) = if let Some((name, value)) = without_prefix.split_once('=') {
+            (name.to_owned(), Some(value.to_owned()))
+        } else if is_boolean_connection_option(without_prefix) {
+            (without_prefix.to_owned(), None)
+        } else {
+            index += 1;
+            let Some(value) = args.get(index) else {
+                return Err(AgentCommandError::usage(format!(
+                    "missing value for --{without_prefix}"
+                )));
+            };
+            (without_prefix.to_owned(), Some(value.clone()))
+        };
+
+        if !allowed.iter().any(|allowed_name| *allowed_name == name) {
+            return Err(AgentCommandError::usage(format!(
+                "unknown option: --{name}"
+            )));
+        }
+        if !seen.insert(name.clone()) {
+            return Err(AgentCommandError::usage(format!(
+                "duplicate option: --{name}"
+            )));
+        }
+        set_connection_option(&mut parsed, &name, value.as_deref())?;
+        index += 1;
+    }
+
+    if parsed.positionals.len() > max_positionals {
+        return Err(AgentCommandError::usage(format!(
+            "unexpected argument: {}",
+            parsed.positionals[max_positionals]
+        )));
+    }
+    if max_positionals == 1 {
+        if let Some(host) = parsed.positionals.first() {
+            parsed.host_kind = Some(parse_public_host_kind(host)?);
+        }
+    }
+    if parsed.shared && parsed.global {
+        return Err(AgentCommandError::usage(
+            "--shared and --global are mutually exclusive",
+        ));
+    }
+    Ok(parsed)
+}
+
+fn is_boolean_connection_option(name: &str) -> bool {
+    matches!(name, "shared" | "global" | "read-only" | "dry-run" | "json")
+}
+
+fn set_connection_option(
+    parsed: &mut ParsedConnectionOptions,
+    name: &str,
+    value: Option<&str>,
+) -> Result<(), AgentCommandError> {
+    match name {
+        "repo" => parsed.repo = Some(value_path(name, value)?),
+        "shared" => {
+            reject_boolean_value(name, value)?;
+            parsed.shared = true;
+        }
+        "global" => {
+            reject_boolean_value(name, value)?;
+            parsed.global = true;
+        }
+        "read-only" => {
+            reject_boolean_value(name, value)?;
+            parsed.read_only = true;
+        }
+        "dry-run" => {
+            reject_boolean_value(name, value)?;
+            parsed.dry_run = true;
+        }
+        "json" => {
+            reject_boolean_value(name, value)?;
+            parsed.json = true;
+        }
+        _ => {
+            return Err(AgentCommandError::usage(format!(
+                "unknown option: --{name}"
+            )))
+        }
+    }
+    Ok(())
+}
+
+fn reject_boolean_value(name: &str, value: Option<&str>) -> Result<(), AgentCommandError> {
+    if value.is_some() {
+        Err(AgentCommandError::usage(format!(
+            "--{name} does not accept a value"
+        )))
+    } else {
+        Ok(())
+    }
+}
+
+fn connection_output_format(parsed: &ParsedConnectionOptions) -> OutputFormat {
+    if parsed.json {
+        OutputFormat::Json
+    } else {
+        OutputFormat::Text
+    }
+}
+
+fn connection_intent_from_flags(
+    parsed: &ParsedConnectionOptions,
+) -> Result<ConnectionIntent, AgentCommandError> {
+    if parsed.shared && parsed.global {
+        return Err(AgentCommandError::usage(
+            "--shared and --global are mutually exclusive",
+        ));
+    }
+    if parsed.shared {
+        Ok(ConnectionIntent::Shared)
+    } else if parsed.global {
+        Ok(ConnectionIntent::Global)
+    } else {
+        Ok(ConnectionIntent::Personal)
+    }
+}
+
+fn host_scope_for_intent(
+    host_kind: HostKind,
+    intent: ConnectionIntent,
+) -> Result<HostScope, AgentCommandError> {
+    match (host_kind, intent) {
+        (HostKind::Codex, ConnectionIntent::Personal) => Ok(HostScope::User),
+        (HostKind::Codex, ConnectionIntent::Shared) => Ok(HostScope::Project),
+        (HostKind::Codex, ConnectionIntent::Global) => Err(AgentCommandError::usage(
+            "Codex does not support --global; use codex personal/shared or claude-code --global",
+        )),
+        (HostKind::ClaudeCode, ConnectionIntent::Personal) => Ok(HostScope::Local),
+        (HostKind::ClaudeCode, ConnectionIntent::Shared) => Ok(HostScope::Project),
+        (HostKind::ClaudeCode, ConnectionIntent::Global) => Ok(HostScope::User),
+        (HostKind::Generic, _) => Err(AgentCommandError::usage(
+            "generic MCP export is not a host connection; use the export command",
+        )),
+    }
+}
+
+fn resolve_connection_host(
+    explicit: Option<HostKind>,
+    process: &impl AgentProcess,
+) -> Result<HostKind, AgentCommandError> {
+    if let Some(host_kind) = explicit {
+        return Ok(host_kind);
+    }
+    let mut available = Vec::new();
+    if let Ok(detection) = CodexAdapter::new(codex_environment(process)).detect() {
+        if detection.available {
+            available.push(detection.host_kind);
+        }
+    }
+    if let Ok(detection) = ClaudeCodeAdapter::new(ProductionCommandRunner).detect() {
+        if detection.available {
+            available.push(detection.host_kind);
+        }
+    }
+    available.sort_by_key(|host| host.as_str());
+    available.dedup();
+    match available.as_slice() {
+        [host_kind] => Ok(*host_kind),
+        [] => Err(AgentCommandError::usage(
+            "host could not be identified; choose `codex` or `claude-code`",
+        )),
+        _ => Err(AgentCommandError::usage(
+            "host is ambiguous; choose `codex` or `claude-code`",
+        )),
+    }
+}
+
+fn connection_selector(
+    parsed: &ParsedConnectionOptions,
+    current_dir: &Path,
+    process: &impl AgentProcess,
+) -> Result<ConnectionSelector, AgentCommandError> {
+    let host_kind = resolve_connection_host(parsed.host_kind, process)?;
+    let intent = connection_intent_from_flags(parsed)?;
+    let host_scope = host_scope_for_intent(host_kind, intent)?;
+    let repo_root = resolve_connection_repo_root(current_dir, parsed.repo.as_deref())?;
+    Ok(ConnectionSelector {
+        host_kind,
+        intent,
+        host_scope,
+        repo_root,
+    })
+}
+
+fn mode_positionals(
+    parsed: &ParsedConnectionOptions,
+    process: &impl AgentProcess,
+) -> Result<(HostKind, String), AgentCommandError> {
+    match parsed.positionals.as_slice() {
+        [mode] => {
+            if let Ok(mode) = parse_user_connection_mode(mode) {
+                Ok((resolve_connection_host(None, process)?, mode))
+            } else {
+                Err(AgentCommandError::usage(
+                    "missing mode; use `workflow` or `read-only`",
+                ))
+            }
+        }
+        [host, mode] => Ok((
+            parse_public_host_kind(host)?,
+            parse_user_connection_mode(mode)?,
+        )),
+        [] => Err(AgentCommandError::usage(
+            "missing mode; use `workflow` or `read-only`",
+        )),
+        _ => Err(AgentCommandError::usage("unexpected mode arguments")),
+    }
+}
+
+fn parse_public_host_kind(value: &str) -> Result<HostKind, AgentCommandError> {
+    match value {
+        HOST_KIND_CODEX => Ok(HostKind::Codex),
+        "claude-code" | HOST_KIND_CLAUDE_CODE => Ok(HostKind::ClaudeCode),
+        other => Err(AgentCommandError::usage(format!(
+            "unknown host: {other}; choose `codex` or `claude-code`"
+        ))),
+    }
+}
+
+fn parse_user_connection_mode(value: &str) -> Result<String, AgentCommandError> {
+    match value {
+        "workflow" => Ok(CONNECTION_MODE_WORKFLOW.to_owned()),
+        "read-only" => Ok(CONNECTION_MODE_READ_ONLY.to_owned()),
+        other => Err(AgentCommandError::usage(format!(
+            "unknown connection mode: {other}; use `workflow` or `read-only`"
+        ))),
+    }
+}
+
+fn resolve_connection_repo_root(
+    current_dir: &Path,
+    selected_path: Option<&Path>,
+) -> Result<PathBuf, AgentCommandError> {
+    let selected = selected_path.unwrap_or(current_dir);
+    let absolute = absolute_path(current_dir, selected.to_path_buf());
+    let canonical = fs::canonicalize(&absolute).map_err(|error| {
+        AgentCommandError::runtime(format!(
+            "repository path is not accessible: {} ({error})",
+            absolute.display()
+        ))
+    })?;
+    let metadata = fs::metadata(&canonical).map_err(|error| {
+        AgentCommandError::runtime(format!(
+            "repository path is not accessible: {} ({error})",
+            canonical.display()
+        ))
+    })?;
+    let mut cursor = if metadata.is_file() {
+        canonical
+            .parent()
+            .ok_or_else(|| {
+                AgentCommandError::runtime(format!(
+                    "repository path has no parent directory: {}",
+                    canonical.display()
+                ))
+            })?
+            .to_path_buf()
+    } else {
+        canonical
+    };
+
+    loop {
+        let git_path = cursor.join(".git");
+        match git_path.try_exists() {
+            Ok(true) => return Ok(cursor),
+            Ok(false) => {}
+            Err(error) => {
+                return Err(AgentCommandError::runtime(format!(
+                    "failed to inspect Git repository marker {}: {error}",
+                    git_path.display()
+                )));
+            }
+        }
+        if !cursor.pop() {
+            break;
+        }
+    }
+
+    Err(AgentCommandError::runtime(format!(
+        "no Git repository root found from {}; run `volicord project use PATH` from inside a Git repository or pass --repo PATH",
+        absolute.display()
+    )))
+}
+
+fn connection_for_host_target(
+    runtime_home: &Path,
+    host_kind: HostKind,
+    intent: ConnectionIntent,
+    host_scope: HostScope,
+    config_target: &str,
+    server_name: &str,
+) -> Result<Option<AgentConnectionRecord>, AgentCommandError> {
+    let matches = list_agent_connections(runtime_home)?
+        .into_iter()
+        .filter(|connection| {
+            connection.host_kind == host_kind.as_str()
+                && connection.intent == intent.as_str()
+                && connection.host_scope == host_scope.as_str()
+                && connection.config_target == config_target
+                && connection.server_name == server_name
+        })
+        .collect::<Vec<_>>();
+    match matches.as_slice() {
+        [] => Ok(None),
+        [connection] => Ok(Some(connection.clone())),
+        connections => Err(AgentCommandError::runtime(ambiguous_target_message(
+            connections,
+        ))),
+    }
+}
+
+fn select_connection(
+    runtime_home: &Path,
+    selector: &ConnectionSelector,
+) -> Result<(AgentConnectionRecord, Vec<ConnectionProjectRecord>), AgentCommandError> {
+    let mut matches = Vec::new();
+    for connection in list_agent_connections(runtime_home)? {
+        if connection.host_kind != selector.host_kind.as_str()
+            || connection.intent != selector.intent.as_str()
+            || connection.host_scope != selector.host_scope.as_str()
+        {
+            continue;
+        }
+        let projects = list_connection_projects(runtime_home, &connection.connection_id)?;
+        if projects
+            .iter()
+            .any(|project| project.project.repo_root == selector.repo_root)
+        {
+            matches.push((connection, projects));
+        }
+    }
+    match matches.len() {
+        0 => Err(AgentCommandError::runtime(format!(
+            "no Agent Connection matches host {}, intent {}, and repository {}; run `volicord connect {}{} --repo {}`",
+            public_host_label(selector.host_kind),
+            selector.intent.as_str(),
+            selector.repo_root.display(),
+            public_host_label(selector.host_kind),
+            intent_flag_suffix(selector.intent),
+            selector.repo_root.display()
+        ))),
+        1 => Ok(matches.remove(0)),
+        _ => Err(AgentCommandError::runtime(ambiguous_selector_message(
+            selector, &matches,
+        ))),
+    }
+}
+
+fn public_host_label(host_kind: HostKind) -> &'static str {
+    match host_kind {
+        HostKind::Codex => "codex",
+        HostKind::ClaudeCode => "claude-code",
+        HostKind::Generic => "generic",
+    }
+}
+
+fn intent_flag_suffix(intent: ConnectionIntent) -> &'static str {
+    match intent {
+        ConnectionIntent::Personal => "",
+        ConnectionIntent::Shared => " --shared",
+        ConnectionIntent::Global => " --global",
+    }
+}
+
+fn ambiguous_target_message(connections: &[AgentConnectionRecord]) -> String {
+    let mut message = String::from("host target matches multiple Agent Connections; choices:\n");
+    for connection in connections {
+        message.push_str(&format!(
+            "- host: {}; intent: {}; target: {}; mode: {}\n",
+            public_host_name_text(&connection.host_kind),
+            connection.intent,
+            connection.config_target,
+            public_mode_text(&connection.mode)
+        ));
+    }
+    message
+}
+
+fn ambiguous_selector_message(
+    selector: &ConnectionSelector,
+    matches: &[(AgentConnectionRecord, Vec<ConnectionProjectRecord>)],
+) -> String {
+    let mut message = format!(
+        "connection selector is ambiguous for host {}, intent {}, repository {}; choices:\n",
+        public_host_label(selector.host_kind),
+        selector.intent.as_str(),
+        selector.repo_root.display()
+    );
+    for (connection, projects) in matches {
+        message.push_str(&format!(
+            "- target: {}; mode: {}; connected_repositories: {}\n",
+            connection.config_target,
+            public_mode_text(&connection.mode),
+            display_project_roots(projects)
+        ));
+    }
+    message.push_str("Use a more specific repository path or remove the duplicate connection.\n");
+    message
+}
+
+fn public_host_name_text(host_kind: &str) -> &str {
+    match host_kind {
+        HOST_KIND_CODEX => "codex",
+        HOST_KIND_CLAUDE_CODE => "claude-code",
+        other => other,
+    }
+}
+
+fn public_mode_text(mode: &str) -> &str {
+    match mode {
+        CONNECTION_MODE_READ_ONLY => "read-only",
+        CONNECTION_MODE_WORKFLOW => "workflow",
+        other => other,
+    }
 }
 
 fn connect_allowed_options() -> &'static [&'static str] {
@@ -1937,6 +2870,415 @@ fn validate_tools_for_mode(mode: &str, tools: &[String]) -> Result<(), String> {
         }
     }
     Ok(())
+}
+
+struct SimplifiedConnectionOutput<'a> {
+    format: OutputFormat,
+    action: &'a str,
+    status: AgentResultStatus,
+    connection: &'a AgentConnectionRecord,
+    projects: &'a [ConnectionProjectRecord],
+    verification: Option<&'a VerificationReport>,
+    plan: Option<&'a HostPlan>,
+    user_actions: Vec<UserAction>,
+}
+
+struct SimplifiedPlanOutput<'a> {
+    format: OutputFormat,
+    action: &'a str,
+    status: AgentResultStatus,
+    connection_id: &'a str,
+    host_kind: HostKind,
+    intent: ConnectionIntent,
+    host_scope: HostScope,
+    mode: &'a str,
+    enabled: bool,
+    repo_root: Option<&'a Path>,
+    plan: &'a HostPlan,
+    projects_remaining: Option<usize>,
+    user_actions: Vec<UserAction>,
+}
+
+enum SimplifiedRemovePlan<'a> {
+    Host(&'a HostPlan),
+    MembershipOnly,
+}
+
+fn render_simplified_connection_output(
+    data: SimplifiedConnectionOutput<'_>,
+) -> Result<String, AgentCommandError> {
+    let project_ids = data
+        .projects
+        .iter()
+        .map(|project| project.project_id.clone())
+        .collect::<Vec<_>>();
+    let target = data
+        .plan
+        .map(|plan| host_target_text(&plan.target))
+        .unwrap_or_else(|| data.connection.config_target.clone());
+    let planned_change = data.plan.map(|plan| planned_change_text(plan.change));
+    match data.format {
+        OutputFormat::Text => {
+            let mut output = format!(
+                "Agent Connection {}\nhost: {}\nintent: {}\nmode: {}\nenabled: {}\nconnected_repositories: {}\nverification_status: {}\ntarget: {}\n",
+                data.action,
+                public_host_name_text(&data.connection.host_kind),
+                data.connection.intent,
+                public_mode_text(&data.connection.mode),
+                data.connection.enabled,
+                display_project_roots(data.projects),
+                data.status.as_str(),
+                target
+            );
+            if let Some(planned_change) = planned_change {
+                output.push_str(&format!("planned_change: {planned_change}\n"));
+            }
+            if let Some(verification) = data.verification {
+                output.push_str(&format!(
+                    "host_verification: {}\npreflight: {}\nmcp_handshake: {}\n",
+                    verification.host.status.as_str(),
+                    verification.preflight.status.as_str(),
+                    verification.handshake.status.as_str()
+                ));
+            }
+            append_user_actions_text(&mut output, &data.user_actions);
+            Ok(output)
+        }
+        OutputFormat::Json => {
+            let value = json!({
+                "action": data.action,
+                "status": data.status.as_str(),
+                "connection": connection_json(data.connection, &project_ids),
+                "target": target,
+                "planned_change": planned_change,
+                "checks": checks_json(data.connection, data.verification),
+                "actions": actions_json_values(&data.user_actions),
+                "verification": data.verification.map(verification_json),
+            });
+            serde_json::to_string_pretty(&value)
+                .map(|text| format!("{text}\n"))
+                .map_err(|error| AgentCommandError::runtime(error.to_string()))
+        }
+    }
+}
+
+fn render_simplified_plan_output(
+    data: SimplifiedPlanOutput<'_>,
+) -> Result<String, AgentCommandError> {
+    let target = host_target_text(&data.plan.target);
+    let planned_change = planned_change_text(data.plan.change);
+    match data.format {
+        OutputFormat::Text => {
+            let mut output = format!(
+                "Agent Connection {} {}\nhost: {}\nintent: {}\nmode: {}\nenabled: {}\nconnected_repositories: {}\nverification_status: {}\ntarget: {}\nplanned_change: {}\n",
+                data.action,
+                data.status.as_str(),
+                public_host_label(data.host_kind),
+                data.intent.as_str(),
+                public_mode_text(data.mode),
+                data.enabled,
+                data.repo_root
+                    .map(|path| path.display().to_string())
+                    .unwrap_or_default(),
+                data.status.as_str(),
+                target,
+                planned_change
+            );
+            if let Some(remaining) = data.projects_remaining {
+                output.push_str(&format!("remaining_connected_projects: {remaining}\n"));
+            }
+            append_user_actions_text(&mut output, &data.user_actions);
+            Ok(output)
+        }
+        OutputFormat::Json => {
+            let connected_repositories = data
+                .repo_root
+                .into_iter()
+                .map(path_text)
+                .collect::<Vec<_>>();
+            let value = json!({
+                "action": data.action,
+                "status": data.status.as_str(),
+                "connection": {
+                    "connection_id": data.connection_id,
+                    "host_kind": data.host_kind.as_str(),
+                    "connection_intent": data.intent.as_str(),
+                    "host_scope": data.host_scope.as_str(),
+                    "mode": data.mode,
+                    "enabled": data.enabled,
+                    "connected_repositories": connected_repositories,
+                    "verification_status": data.status.as_str(),
+                    "server_name": data.plan.server_name,
+                    "config_target": target,
+                },
+                "target": target,
+                "planned_change": planned_change,
+                "remaining_connected_projects": data.projects_remaining,
+                "checks": [{
+                    "id": "host_plan",
+                    "status": "passed",
+                    "summary": "host plan was built"
+                }],
+                "actions": actions_json_values(&data.user_actions),
+            });
+            serde_json::to_string_pretty(&value)
+                .map(|text| format!("{text}\n"))
+                .map_err(|error| AgentCommandError::runtime(error.to_string()))
+        }
+    }
+}
+
+fn render_simplified_connections_output(
+    format: OutputFormat,
+    rows: &[(AgentConnectionRecord, Vec<ConnectionProjectRecord>)],
+) -> Result<String, AgentCommandError> {
+    match format {
+        OutputFormat::Text => {
+            let mut output = String::from(
+                "host\tintent\tmode\tenabled\tconnected_repositories\tverification_status\ttarget\n",
+            );
+            for (connection, projects) in rows {
+                output.push_str(&format!(
+                    "{}\t{}\t{}\t{}\t{}\t{}\t{}\n",
+                    public_host_name_text(&connection.host_kind),
+                    connection.intent,
+                    public_mode_text(&connection.mode),
+                    connection.enabled,
+                    display_project_roots(projects),
+                    connection.last_verification_status,
+                    connection.config_target
+                ));
+            }
+            Ok(output)
+        }
+        OutputFormat::Json => {
+            let values = rows
+                .iter()
+                .map(|(connection, projects)| {
+                    let project_ids = projects
+                        .iter()
+                        .map(|project| project.project_id.clone())
+                        .collect::<Vec<_>>();
+                    let mut value = connection_json(connection, &project_ids);
+                    if let Some(object) = value.as_object_mut() {
+                        object.insert(
+                            "connected_repositories".to_owned(),
+                            Value::Array(
+                                projects
+                                    .iter()
+                                    .map(|project| {
+                                        Value::String(path_text(&project.project.repo_root))
+                                    })
+                                    .collect(),
+                            ),
+                        );
+                    }
+                    value
+                })
+                .collect::<Vec<_>>();
+            serde_json::to_string_pretty(&json!({
+                "status": "complete",
+                "connections": values,
+                "checks": [],
+                "actions": [],
+            }))
+            .map(|text| format!("{text}\n"))
+            .map_err(|error| AgentCommandError::runtime(error.to_string()))
+        }
+    }
+}
+
+fn render_simplified_remove_dry_run(
+    format: OutputFormat,
+    connection: &AgentConnectionRecord,
+    projects: &[ConnectionProjectRecord],
+    selected_project: &ConnectionProjectRecord,
+    plan: SimplifiedRemovePlan<'_>,
+    remaining_count: usize,
+) -> Result<String, AgentCommandError> {
+    match plan {
+        SimplifiedRemovePlan::Host(host_plan) => {
+            render_simplified_plan_output(SimplifiedPlanOutput {
+                format,
+                action: "remove",
+                status: AgentResultStatus::DryRun,
+                connection_id: &connection.connection_id,
+                host_kind: parse_host_kind(&connection.host_kind)?,
+                intent: parse_connection_intent(&connection.intent)?,
+                host_scope: parse_host_scope(&connection.host_scope)?,
+                mode: &connection.mode,
+                enabled: connection.enabled,
+                repo_root: Some(&selected_project.project.repo_root),
+                plan: host_plan,
+                projects_remaining: Some(remaining_count),
+                user_actions: Vec::new(),
+            })
+        }
+        SimplifiedRemovePlan::MembershipOnly => match format {
+            OutputFormat::Text => Ok(format!(
+                "Agent Connection remove dry_run\nhost: {}\nintent: {}\nmode: {}\nconnected_repositories: {}\nverification_status: dry_run\ntarget: {}\nplanned_change: membership\nremaining_connected_projects: {}\n",
+                public_host_name_text(&connection.host_kind),
+                connection.intent,
+                public_mode_text(&connection.mode),
+                display_project_roots(projects),
+                connection.config_target,
+                remaining_count
+            )),
+            OutputFormat::Json => {
+                let project_ids = projects
+                    .iter()
+                    .map(|project| project.project_id.clone())
+                    .collect::<Vec<_>>();
+                serde_json::to_string_pretty(&json!({
+                    "action": "remove",
+                    "status": AgentResultStatus::DryRun.as_str(),
+                    "connection": connection_json(connection, &project_ids),
+                    "target": connection.config_target,
+                    "planned_change": "membership",
+                    "remaining_connected_projects": remaining_count,
+                    "checks": [{
+                        "id": "connection_membership",
+                        "status": "passed",
+                        "summary": "selected repository membership can be removed"
+                    }],
+                    "actions": [],
+                }))
+                .map(|text| format!("{text}\n"))
+                .map_err(|error| AgentCommandError::runtime(error.to_string()))
+            }
+        },
+    }
+}
+
+fn planned_change_text(change: PlannedChange) -> &'static str {
+    match change {
+        PlannedChange::Create => "create",
+        PlannedChange::Update => "update",
+        PlannedChange::Remove => "remove",
+        PlannedChange::Noop => "noop",
+        PlannedChange::ExternalCommand => "external_command",
+    }
+}
+
+fn display_project_roots(projects: &[ConnectionProjectRecord]) -> String {
+    projects
+        .iter()
+        .map(|project| path_text(&project.project.repo_root))
+        .collect::<Vec<_>>()
+        .join(",")
+}
+
+fn append_user_actions_text(output: &mut String, actions: &[UserAction]) {
+    if actions.is_empty() {
+        return;
+    }
+    output.push_str("actions:\n");
+    for action in actions {
+        output.push_str(&format!(
+            "- {}: {}\n",
+            user_action_id(action.kind),
+            action.message
+        ));
+    }
+}
+
+fn actions_json_values(actions: &[UserAction]) -> Value {
+    Value::Array(
+        actions
+            .iter()
+            .map(|action| {
+                json!({
+                    "id": user_action_id(action.kind),
+                    "instruction": action.message,
+                })
+            })
+            .collect(),
+    )
+}
+
+fn user_action_id(kind: UserActionKind) -> &'static str {
+    match kind {
+        UserActionKind::HostTrustRequired => "host_trust_required",
+        UserActionKind::ProjectApprovalRequired => "project_approval_required",
+        UserActionKind::ReloadRequired => "reload_required",
+    }
+}
+
+fn checks_json(
+    connection: &AgentConnectionRecord,
+    verification: Option<&VerificationReport>,
+) -> Value {
+    if let Some(verification) = verification {
+        return Value::Array(vec![
+            json!({
+                "id": "host",
+                "status": verification.host.status.as_str(),
+                "summary": verification.host.details,
+                "details": {
+                    "host_state": verification.host.host_state.as_str(),
+                    "managed_config": verification.host.managed_config.as_str(),
+                    "host_executable": verification.host.host_executable.as_str(),
+                    "host_gate": verification.host.host_gate.as_str(),
+                    "host_configuration": verification.host.host_configuration.as_str(),
+                }
+            }),
+            json!({
+                "id": "mcp_preflight",
+                "status": verification.preflight.status.as_str(),
+                "summary": verification.preflight.details,
+            }),
+            json!({
+                "id": "mcp_handshake",
+                "status": verification.handshake.status.as_str(),
+                "summary": verification.handshake.details,
+            }),
+        ]);
+    }
+    stored_checks_json(connection)
+}
+
+fn stored_checks_json(connection: &AgentConnectionRecord) -> Value {
+    let report = json_object_text(&connection.last_verification_report_json);
+    let Some(object) = report.as_object() else {
+        return json!([]);
+    };
+    let mut checks = Vec::new();
+    if let Some(host) = object.get("host").and_then(Value::as_object) {
+        checks.push(json!({
+            "id": "host",
+            "status": host.get("status").and_then(Value::as_str).unwrap_or("not_verified"),
+            "summary": host
+                .get("details")
+                .and_then(Value::as_str)
+                .unwrap_or("stored host verification state"),
+            "details": host,
+        }));
+    }
+    if let Some(preflight) = object.get("preflight").and_then(Value::as_object) {
+        checks.push(json!({
+            "id": "mcp_preflight",
+            "status": preflight.get("status").and_then(Value::as_str).unwrap_or("skipped"),
+            "summary": preflight
+                .get("details")
+                .and_then(Value::as_str)
+                .unwrap_or("stored MCP preflight state"),
+        }));
+    }
+    if let Some(handshake) = object.get("mcp_handshake").and_then(Value::as_object) {
+        checks.push(json!({
+            "id": "mcp_handshake",
+            "status": handshake.get("status").and_then(Value::as_str).unwrap_or("skipped"),
+            "summary": handshake
+                .get("details")
+                .and_then(Value::as_str)
+                .unwrap_or("stored MCP handshake state"),
+        }));
+    }
+    Value::Array(checks)
+}
+
+fn stored_user_actions(connection: &AgentConnectionRecord) -> Vec<UserAction> {
+    serde_json::from_str::<Vec<UserAction>>(&connection.last_user_actions_json).unwrap_or_default()
 }
 
 fn terminate_child(child: &mut Child, deadline: Instant) -> Result<(), String> {
