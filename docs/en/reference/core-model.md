@@ -78,7 +78,12 @@ Scope and close-basis revisions are internal current-state coordinates.
 
 ### Concept relationship map
 
-This diagram shows the conceptual authority relationships. It is not a storage ERD or an API schema.
+Diagram role: authority model. It answers the agent and implementer question,
+"which Core concepts depend on, qualify, or remain separate from each other?"
+Arrows show conceptual authority dependency, containment, or eligibility; they
+do not show execution order, storage ownership, API shape, or automatic
+sufficiency. Solid arrows mark direct concept relationships. Dotted arrows mark
+conditional eligibility or request boundaries.
 
 ```mermaid
 flowchart TD
@@ -104,7 +109,10 @@ flowchart TD
     CloseBasis --> CloseReadiness["close readiness"]
 ```
 
-Read the arrows as authority dependency or eligibility, not automatic sufficiency. An artifact is not evidence unless the relevant owners allow and record that use. Final acceptance and residual-risk acceptance are user-owned judgments, and close readiness remains decision support rather than proof of correctness.
+Read the map with the owner boundary above. An artifact is not evidence unless
+the relevant owners allow and record that use. Final acceptance and
+residual-risk acceptance are user-owned judgments, and close readiness remains
+decision support rather than proof of correctness.
 
 ## 3. Core Concepts
 

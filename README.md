@@ -71,8 +71,14 @@ updated Core state.
 
 ## User Workflow
 
-This diagram shows the conversational interaction flow. It is not a storage
-layout or component boundary map.
+Diagram role: user workflow. It answers the first-user question, "where does my
+chat request go when Volicord records work and asks for my judgment?" Arrows
+show conversational handoffs and Core-state updates at guide level; they are
+not a complete API call sequence, storage layout, or component boundary map.
+Exact Core authority concepts, MCP transport behavior, and runtime boundaries
+belong to the [Core Model](docs/en/reference/core-model.md),
+[MCP Transport](docs/en/reference/mcp-transport.md), and
+[Runtime Boundaries](docs/en/reference/runtime-boundaries.md) references.
 
 ```mermaid
 flowchart LR
@@ -105,8 +111,15 @@ has disappeared.
 
 ## Local Component Map
 
-This map shows process, storage, host-configuration, and repository boundaries.
-It is not the user chat workflow.
+Diagram role: component map. It answers the operator question, "which local
+processes, records, host-owned configuration, and repository boundary are
+involved?" Arrows show local launches, configuration loading, Core-record
+access, and repository-context use; they do not show the user chat workflow or
+every storage effect. Exact command, MCP, Agent Connection, and runtime-boundary
+behavior belongs to the [Administrative CLI](docs/en/reference/admin-cli.md),
+[MCP Transport](docs/en/reference/mcp-transport.md),
+[Agent Connection](docs/en/reference/agent-connection.md), and
+[Runtime Boundaries](docs/en/reference/runtime-boundaries.md) references.
 
 ```mermaid
 flowchart LR

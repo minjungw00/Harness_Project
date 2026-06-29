@@ -65,8 +65,13 @@ Codex는 계속 에이전트 호스트입니다. Volicord는 에디터, 셸, 테
 
 ## 사용자 작업 흐름
 
-이 그림은 대화형 상호작용 흐름을 보여 줍니다. 저장소 배치나 구성 요소 경계 지도는
-아닙니다.
+그림 역할: 사용자 작업 흐름입니다. 이 그림은 처음 읽는 사용자의 "Volicord가 작업을
+기록하고 내 판단을 요청할 때 내 대화 요청은 어디로 가는가?"라는 질문에 답합니다.
+화살표는 가이드 수준의 대화 전달과 Core 상태 갱신을 뜻하며, 전체 API 호출 순서,
+저장소 배치, 구성 요소 경계 지도는 아닙니다. 정확한 Core 권한 개념, MCP 전송 동작,
+런타임 경계는 [Core 모델](docs/ko/reference/core-model.md),
+[MCP 전송](docs/ko/reference/mcp-transport.md),
+[런타임 경계](docs/ko/reference/runtime-boundaries.md) 참조가 담당합니다.
 
 ```mermaid
 flowchart LR
@@ -98,8 +103,14 @@ flowchart LR
 
 ## 로컬 구성 요소 지도
 
-이 지도는 프로세스, 저장소, 호스트 설정, 제품 저장소 경계를 보여 줍니다. 사용자
-대화 흐름이 아닙니다.
+그림 역할: 구성 요소 지도입니다. 운영자의 "어떤 로컬 프로세스, 기록, 호스트 소유
+설정, 저장소 경계가 관여하는가?"라는 질문에 답합니다. 화살표는 로컬 실행, 설정
+로드, Core 기록 접근, 저장소 맥락 사용을 뜻하며, 사용자 대화 흐름이나 모든 저장
+효과를 보여 주지는 않습니다. 정확한 명령, MCP, Agent Connection, 런타임 경계
+동작은 [관리 CLI](docs/ko/reference/admin-cli.md),
+[MCP 전송](docs/ko/reference/mcp-transport.md),
+[Agent Connection](docs/ko/reference/agent-connection.md),
+[런타임 경계](docs/ko/reference/runtime-boundaries.md) 참조가 담당합니다.
 
 ```mermaid
 flowchart LR

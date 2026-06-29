@@ -9,6 +9,12 @@ and [MCP Transport](../reference/mcp-transport.md).
 
 ## Topology
 
+Diagram role: component map for a host-level Agent Connection. It answers the
+operator question, "how can one host entry reach more than one explicitly
+connected repository?" Arrows show the configured binding and allowed membership
+relationships; they are not request execution order and do not imply access to
+every project in the Runtime Home.
+
 ```mermaid
 flowchart LR
   host["Host configuration\nCodex personal or Claude Code global"]
@@ -17,10 +23,10 @@ flowchart LR
   a["acme-api\n/work/acme-api"]
   b["billing-api\n/work/billing-api"]
 
-  host --> mcp
-  mcp --> memberships
-  memberships --> a
-  memberships --> b
+  host -- "starts one adapter" --> mcp
+  mcp -- "uses explicit membership" --> memberships
+  memberships -- "allows project" --> a
+  memberships -- "allows project" --> b
 ```
 
 One host entry starts one `volicord-mcp` process for one Agent Connection. That

@@ -9,6 +9,11 @@
 
 ## 토폴로지
 
+그림 역할: 호스트 수준 Agent Connection의 구성 요소 지도입니다. 운영자의 "호스트
+항목 하나가 명시적으로 연결된 둘 이상의 저장소에 어떻게 닿을 수 있는가?"라는
+질문에 답합니다. 화살표는 설정된 바인딩과 허용된 멤버십 관계를 뜻하며, 요청 실행
+순서가 아니고 Runtime Home의 모든 프로젝트에 접근할 수 있음을 뜻하지도 않습니다.
+
 ```mermaid
 flowchart LR
   host["호스트 설정\nCodex personal 또는 Claude Code global"]
@@ -17,10 +22,10 @@ flowchart LR
   a["acme-api\n/work/acme-api"]
   b["billing-api\n/work/billing-api"]
 
-  host --> mcp
-  mcp --> memberships
-  memberships --> a
-  memberships --> b
+  host -- "어댑터 하나 시작" --> mcp
+  mcp -- "명시적 멤버십 사용" --> memberships
+  memberships -- "프로젝트 허용" --> a
+  memberships -- "프로젝트 허용" --> b
 ```
 
 호스트 항목 하나가 Agent Connection 하나에 대한 `volicord-mcp` 프로세스 하나를
