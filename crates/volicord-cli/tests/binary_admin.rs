@@ -292,6 +292,7 @@ fn setup_plain_non_tty_reports_actions_without_prompting_or_shell_edits(
 #[test]
 fn doctor_without_setup_reports_action_required() -> Result<(), Box<dyn Error>> {
     let runtime_home = TempRuntimeHome::new("cli-bin-doctor-missing")?;
+    assert_eq!(fs::read_dir(runtime_home.path())?.count(), 0);
 
     let doctor = run_with_home_env(runtime_home.path(), ["doctor", "--json"], &[])?;
     assert_success(&doctor);
@@ -306,6 +307,7 @@ fn doctor_without_setup_reports_action_required() -> Result<(), Box<dyn Error>> 
         .expect("actions should be an array")
         .iter()
         .any(|action| action["id"] == "run_setup"));
+    assert_eq!(fs::read_dir(runtime_home.path())?.count(), 0);
     Ok(())
 }
 
