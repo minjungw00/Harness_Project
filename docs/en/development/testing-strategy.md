@@ -56,6 +56,59 @@ every small edit runs every listed test.
 | Documentation validator behavior | `xtask` tests and `cargo run -p xtask -- docs-check`. | Add fixture cases when a new deterministic structural rule is introduced. |
 | Developer documentation only | `cargo run -p xtask -- docs-check` plus manual semantic parity, owner-routing, and terminology review. | Run Cargo tests only when requested or when the documentation change depends on source behavior that needs fresh validation. |
 
+## Durable Contract Tests And One-Time Audits
+
+Durable repository tests should verify the current public contract, storage
+contract, schema contract, or maintained documentation rule. A one-time audit
+checks whether a cleanup was completed. Keep those separate.
+
+A repository test is durable when it would still be useful after the cleanup or
+rename that prompted it. Prefer positive assertions against the current allowed
+shape: current command options, documented command examples, current storage
+tables and columns, current MCP-visible schemas, and terminology roles defined
+by `docs/terminology-map.yaml`. String searches for removed artifacts are audit
+procedures. Use them during the change when helpful, report the result, and do
+not turn them into persistent tests whose only value is proving that an old
+string disappeared.
+
+For CLI help, assert the current option allowlist exposed by each command
+rather than checking for removed flags by name. A help test such as
+`connect_help_exposes_only_public_connect_options` should compare the parsed
+help options for `volicord connect` with the supported option set. Documentation
+command-example validation should check executable `volicord` examples against
+the public CLI command contract, as in
+`documented_volicord_commands_match_public_cli_contract`.
+
+For storage, MCP, and terminology checks, assert the stable abstraction that
+current contributors must preserve. Storage schema tests should name the
+current records, columns, indexes, and constraints they expect, as in
+`storage_registry_contains_current_contract_columns`. MCP preflight and public
+schema tests should check current startup and schema behavior; MCP-visible
+schema projection should remain an abstraction contract that hides internal
+envelope fields, as in `mcp_public_schema_hides_internal_envelope_fields`.
+Terminology checks should validate identity-sensitive role metadata such as
+storage internals, MCP process bindings, diagnostics, and public selectors, as
+in `terminology_map_defines_identity_sensitive_roles`; they should not become
+prose-wide bans on identifiers such as `connection_id` or `project_id`.
+
+Name tests after the current product contract they protect. Preferred examples
+include:
+
+- `connect_help_exposes_only_public_connect_options`
+- `documented_volicord_commands_match_public_cli_contract`
+- `export_mcp_config_uses_default_file_when_output_is_omitted`
+- `mcp_public_schema_hides_internal_envelope_fields`
+- `terminology_map_defines_identity_sensitive_roles`
+- `storage_registry_contains_current_contract_columns`
+
+Avoid test names or structures that describe cleanup history instead of the
+current contract:
+
+- `removed_options_are_gone`
+- `legacy_flags_are_removed`
+- `old_strings_do_not_remain`
+- `cleanup_removed_project_id`
+
 ## Tests That Demonstrate Boundaries
 
 Some tests are especially useful for understanding architecture boundaries:

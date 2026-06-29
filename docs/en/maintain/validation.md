@@ -66,6 +66,11 @@ read-only and verifies the machine-checkable shape:
   are preserved. The exact root README pair uses this same local semantic-link
   and fragment parity mechanism. External links, images, and fenced-code text
   are ignored for this parity check.
+- Executable `volicord` command examples in shell fences use supported public
+  CLI command shapes and options.
+- Terminology role metadata for identity-sensitive terms uses the allowed role
+  set and includes the required roles for public selectors, storage internals,
+  MCP process bindings, and diagnostics.
 - `docs/terminology-map.yaml` primary-owner and related-reference paths exist
   and are represented in `doc-index.yaml`.
 - README, route-page, Reference, Development, `AGENTS.md`, and terminology
@@ -116,6 +121,42 @@ review, contract-owner review, technical-accuracy review, translation judgment,
 API example consistency review, or product meaning review. A passing local-link
 parity check only confirms the machine-comparable local reader routes. The
 remaining checks stay manual and owner-routed.
+
+## Durable Tests And One-Time Audits
+
+When a documentation or implementation change suggests a new automated check,
+decide whether it is a durable contract test or a one-time audit. A durable test
+belongs in the repository when it asserts the current allowed contract or
+maintained validation rule. A one-time audit belongs in the change process when
+it only proves that cleanup-specific text, flags, fields, or examples were
+removed.
+
+Do not add permanent tests whose only assertion is a cleanup-specific string
+search such as "the old option name no longer appears." Run those searches as
+audits when useful, then report them outside repository files. If the absence
+matters as a durable contract, test the positive current shape instead:
+
+- CLI help exposes only the current public option allowlist for the command.
+- Maintained shell examples use supported `volicord` commands and options.
+- Storage schema checks assert current tables, columns, indexes, constraints,
+  migrations, and validation behavior.
+- MCP preflight and transport/schema checks assert current startup behavior,
+  public tool exposure, and public schema projection. Public MCP schemas must
+  keep hiding internal envelope and invocation fields as a stable abstraction
+  contract.
+- Terminology validation checks identity-sensitive role metadata instead of
+  adding broad prose forbidden-word searches for identifiers such as
+  `connection_id` or `project_id`.
+
+Name durable tests after the current contract, for example
+`connect_help_exposes_only_public_connect_options`,
+`documented_volicord_commands_match_public_cli_contract`,
+`export_mcp_config_uses_default_file_when_output_is_omitted`,
+`mcp_public_schema_hides_internal_envelope_fields`,
+`terminology_map_defines_identity_sensitive_roles`, or
+`storage_registry_contains_current_contract_columns`. Avoid names and structures
+such as `removed_options_are_gone`, `legacy_flags_are_removed`,
+`old_strings_do_not_remain`, and `cleanup_removed_project_id`.
 
 ## Onboarding Usability Validation
 

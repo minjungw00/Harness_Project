@@ -695,13 +695,14 @@ documents:
   path_en: docs/en/development/testing-strategy.md
   path_ko: docs/ko/development/testing-strategy.md
   kind: explanation
-  summary: Explanation of test organization and validation responsibilities.
+  summary: Explanation of test organization, durable contract-test authoring, and validation
+    responsibilities.
   normative_level: guide
   translation_policy: semantic_parity
   owner_area: developer_documentation
   created_on: '2026-06-20'
-  last_updated_on: '2026-06-28'
-  last_verified_on: '2026-06-28'
+  last_updated_on: '2026-06-30'
+  last_verified_on: '2026-06-30'
   applies_to:
   - volicord_workspace_0_1
   - rust_workspace_1_85
@@ -2218,14 +2219,15 @@ documents:
   path_en: docs/en/maintain/validation.md
   path_ko: docs/ko/maintain/validation.md
   kind: maintenance
-  summary: Maintenance policy for structural checks including root README pair validation, human semantic review,
-    onboarding usability validation, Rust validation, and result reporting.
+  summary: Maintenance policy for structural checks including root README pair validation, durable
+    test and audit boundaries, human semantic review, onboarding usability validation, Rust validation,
+    and result reporting.
   normative_level: maintenance
   translation_policy: semantic_parity
   owner_area: documentation_maintenance
   created_on: '2026-06-20'
-  last_updated_on: '2026-06-24'
-  last_verified_on: '2026-06-24'
+  last_updated_on: '2026-06-30'
+  last_verified_on: '2026-06-30'
   applies_to:
   - volicord_workspace_0_1
   - doc_index_schema_v3
@@ -2239,6 +2241,8 @@ documents:
   canonical_for:
   - Documentation metadata, path, link, terminology, bilingual root README pair, contract-boundary, API example,
     and reporting validation policy.
+  - Durable repository-test and one-time audit boundary guidance for documentation validation and
+    implementation-check reporting.
   - Representative-user onboarding usability validation policy and reporting boundaries.
   - Rust validation routing for documentation work that also changes implementation files.
   depends_on:
