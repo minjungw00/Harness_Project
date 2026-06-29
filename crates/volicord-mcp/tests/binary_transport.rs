@@ -10,11 +10,33 @@ use std::{
 };
 
 use serde_json::{json, Value};
-use volicord_mcp::PUBLIC_METHOD_TOOL_NAMES;
-use volicord_store::core_pipeline::StorageEffectCounts;
+use volicord_store::{
+    agent_connections::{
+        agent_connection_record, ensure_agent_connection, AgentConnectionRegistration,
+        CONNECTION_MODE_READ_ONLY,
+    },
+    core_pipeline::StorageEffectCounts,
+};
 use volicord_test_support::core_fixtures::CoreFixture;
 
 const PROCESS_TIMEOUT: Duration = Duration::from_secs(10);
+const EXPECTED_WORKFLOW_METHOD_TOOLS: [&str; 9] = [
+    "volicord.intake",
+    "volicord.update_scope",
+    "volicord.status",
+    "volicord.prepare_write",
+    "volicord.stage_artifact",
+    "volicord.record_run",
+    "volicord.request_user_judgment",
+    "volicord.check_close",
+    "volicord.close_task",
+];
+const EXPECTED_READ_ONLY_TOOLS: [&str; 3] = [
+    "volicord.status",
+    "volicord.check_close",
+    "volicord.list_projects",
+];
+const LIST_PROJECTS_TOOL_NAME: &str = "volicord.list_projects";
 
 #[test]
 fn volicord_mcp_binary_reports_help_version_and_preflight() -> Result<(), Box<dyn Error>> {
@@ -43,6 +65,24 @@ fn volicord_mcp_binary_reports_help_version_and_preflight() -> Result<(), Box<dy
     )?;
     assert_success_captured(&connection_check);
     let report = captured_stdout(&connection_check);
+    assert_report_line_names(
+        &report,
+        &[
+            "configuration:",
+            "transport:",
+            "runtime_home:",
+            "connection_id:",
+            "mode:",
+            "enabled:",
+            "allowed_projects:",
+            "available_projects:",
+            "verification_scope:",
+            "project[0].project_id:",
+            "project[0].available:",
+            "project[0].unavailable_reason:",
+            "project[0].repo_root:",
+        ],
+    );
     assert_report_line(&report, "configuration: valid");
     assert_report_line(&report, "transport: stdio");
     assert_report_line(
@@ -63,6 +103,7 @@ fn volicord_mcp_binary_reports_help_version_and_preflight() -> Result<(), Box<dy
         &format!("project[0].project_id: {}", fixture.project_id()),
     );
     assert_report_line(&report, "project[0].available: true");
+    assert_report_line(&report, "project[0].unavailable_reason: ");
     assert_eq!(fixture.counts()?, before);
 
     let project_check = run_child(
@@ -147,17 +188,22 @@ fn volicord_mcp_stdio_uses_line_delimited_json_and_reconnects_state() -> Result<
         .map(|tool| tool["name"].as_str().expect("tool name"))
         .collect::<Vec<_>>();
     assert_eq!(
-        &tool_names[..PUBLIC_METHOD_TOOL_NAMES.len()],
-        PUBLIC_METHOD_TOOL_NAMES
+        &tool_names[..EXPECTED_WORKFLOW_METHOD_TOOLS.len()],
+        EXPECTED_WORKFLOW_METHOD_TOOLS
     );
     assert_eq!(
-        tool_names[PUBLIC_METHOD_TOOL_NAMES.len()],
-        "volicord.list_projects"
+        tool_names[EXPECTED_WORKFLOW_METHOD_TOOLS.len()],
+        LIST_PROJECTS_TOOL_NAME
     );
     assert!(!tool_names.contains(&"volicord.record_user_judgment"));
     assert_eq!(
         tool_names.iter().copied().collect::<BTreeSet<_>>().len(),
-        PUBLIC_METHOD_TOOL_NAMES.len() + 1
+        EXPECTED_WORKFLOW_METHOD_TOOLS.len() + 1
+    );
+    assert_public_tool_schemas_hide_internal_fields(
+        responses[&3]["result"]["tools"]
+            .as_array()
+            .expect("tools/list result should be an array"),
     );
 
     assert_eq!(responses[&30]["result"]["isError"], json!(false));
@@ -239,6 +285,55 @@ fn volicord_mcp_stdio_uses_line_delimited_json_and_reconnects_state() -> Result<
         reconnect_status["active_task"]["task_ref"]["record_id"],
         task_id
     );
+
+    Ok(())
+}
+
+#[test]
+fn volicord_mcp_tools_list_respects_connection_mode_and_schema_boundary(
+) -> Result<(), Box<dyn Error>> {
+    let workflow = McpFixture::new("mcp-bin-tools-workflow")?;
+    let workflow_output = run_child(
+        workflow.connection_command(["--connection", workflow.connection_id()]),
+        ChildStdin::WriteAndClose(tools_list_messages(1, 2)?),
+    )?;
+    assert_success_captured(&workflow_output);
+    assert_eq!(captured_stderr(&workflow_output), "");
+    let workflow_responses = responses_by_id(&workflow_output.stdout)?;
+    let workflow_tools = tools_from_response(&workflow_responses[&2]);
+    assert_eq!(
+        tool_names_from_tools(workflow_tools),
+        vec![
+            "volicord.intake",
+            "volicord.update_scope",
+            "volicord.status",
+            "volicord.prepare_write",
+            "volicord.stage_artifact",
+            "volicord.record_run",
+            "volicord.request_user_judgment",
+            "volicord.check_close",
+            "volicord.close_task",
+            "volicord.list_projects",
+        ]
+    );
+    assert_public_tool_schemas_hide_internal_fields(workflow_tools);
+
+    let read_only = McpFixture::new("mcp-bin-tools-read-only")?;
+    read_only.set_connection_mode(CONNECTION_MODE_READ_ONLY)?;
+    let read_only_output = run_child(
+        read_only.connection_command(["--connection", read_only.connection_id()]),
+        ChildStdin::WriteAndClose(tools_list_messages(10, 11)?),
+    )?;
+    assert_success_captured(&read_only_output);
+    assert_eq!(captured_stderr(&read_only_output), "");
+    let read_only_responses = responses_by_id(&read_only_output.stdout)?;
+    let read_only_tools = tools_from_response(&read_only_responses[&11]);
+    let read_only_names = tool_names_from_tools(read_only_tools);
+    assert_eq!(read_only_names.as_slice(), EXPECTED_READ_ONLY_TOOLS);
+    assert!(!read_only_names.contains(&"volicord.intake"));
+    assert!(!read_only_names.contains(&"volicord.close_task"));
+    assert!(!read_only_names.contains(&"volicord.prepare_write"));
+    assert_public_tool_schemas_hide_internal_fields(read_only_tools);
 
     Ok(())
 }
@@ -335,6 +430,30 @@ impl McpFixture {
     fn counts(&self) -> Result<StorageEffectCounts, Box<dyn Error>> {
         Ok(self.fixture.counts()?)
     }
+
+    fn set_connection_mode(&self, mode: &str) -> Result<(), Box<dyn Error>> {
+        let existing = agent_connection_record(self.runtime_home_path(), self.connection_id())?
+            .expect("fixture connection should exist");
+        ensure_agent_connection(
+            self.runtime_home_path(),
+            AgentConnectionRegistration {
+                connection_internal_id: existing.connection_internal_id,
+                host_kind: existing.host_kind,
+                intent: existing.intent,
+                host_scope: existing.host_scope,
+                server_name: existing.server_name,
+                config_target: existing.config_target,
+                mode: mode.to_owned(),
+                enabled: existing.enabled,
+                managed_fingerprint: existing.managed_fingerprint,
+                last_verification_status: existing.last_verification_status,
+                last_verification_report_json: existing.last_verification_report_json,
+                last_user_actions_json: existing.last_user_actions_json,
+                metadata_json: existing.metadata_json,
+            },
+        )?;
+        Ok(())
+    }
 }
 
 fn run_without_binding<const N: usize>(args: [&str; N]) -> Result<Output, Box<dyn Error>> {
@@ -399,6 +518,17 @@ fn tools_call(id: u64, name: &str, arguments: Value) -> Value {
             "arguments": arguments
         }),
     )
+}
+
+fn tools_list_messages(
+    initialize_id: u64,
+    tools_list_id: u64,
+) -> Result<String, serde_json::Error> {
+    json_lines(&[
+        initialize_request(initialize_id),
+        initialized_notification(),
+        request(tools_list_id, "tools/list", json!({})),
+    ])
 }
 
 fn status_arguments(project_selector: Option<&str>) -> Value {
@@ -466,6 +596,74 @@ fn responses_by_id(output: &[u8]) -> Result<BTreeMap<u64, Value>, Box<dyn Error>
         );
     }
     Ok(responses)
+}
+
+fn tools_from_response(response: &Value) -> &[Value] {
+    response["result"]["tools"]
+        .as_array()
+        .expect("tools/list result should be an array")
+}
+
+fn tool_names_from_tools(tools: &[Value]) -> Vec<&str> {
+    tools
+        .iter()
+        .map(|tool| tool["name"].as_str().expect("tool name"))
+        .collect()
+}
+
+fn assert_public_tool_schemas_hide_internal_fields(tools: &[Value]) {
+    let expected_public = EXPECTED_WORKFLOW_METHOD_TOOLS
+        .iter()
+        .copied()
+        .collect::<BTreeSet<_>>();
+    for tool in tools {
+        let name = tool["name"].as_str().expect("tool name");
+        if !expected_public.contains(name) {
+            continue;
+        }
+        let schema = &tool["inputSchema"];
+        assert_eq!(schema["type"], "object", "{name} schema should be object");
+        let properties = schema["properties"]
+            .as_object()
+            .unwrap_or_else(|| panic!("{name} should expose root properties"));
+        assert!(
+            properties.contains_key("project_selector"),
+            "{name} should expose project_selector"
+        );
+        for forbidden in [
+            "envelope",
+            "project_id",
+            "connection_id",
+            "request_id",
+            "idempotency_key",
+            "expected_state_version",
+            "dry_run",
+            "locale",
+            "actor_source",
+            "operation_category",
+            "mode",
+            "verification_basis",
+            "invocation_binding_basis",
+        ] {
+            assert!(
+                !properties.contains_key(forbidden),
+                "{name} should not expose internal argument {forbidden}"
+            );
+        }
+        assert!(
+            !schema_definitions_contain(schema, "ToolEnvelope"),
+            "{name} should not include ToolEnvelope in public schema definitions"
+        );
+    }
+}
+
+fn schema_definitions_contain(schema: &Value, name: &str) -> bool {
+    ["definitions", "$defs"].iter().any(|definitions_key| {
+        schema
+            .get(*definitions_key)
+            .and_then(Value::as_object)
+            .is_some_and(|definitions| definitions.contains_key(name))
+    })
 }
 
 fn volicord_response(response: &Value) -> Result<Value, Box<dyn Error>> {
@@ -630,6 +828,19 @@ fn assert_report_line(report: &str, expected: &str) {
         report.lines().any(|line| line == expected),
         "missing report line `{expected}` in:\n{report}"
     );
+}
+
+fn assert_report_line_names(report: &str, expected: &[&str]) {
+    let actual = report
+        .lines()
+        .map(|line| {
+            let separator = line
+                .find(':')
+                .unwrap_or_else(|| panic!("report line missing `:` separator: {line}"));
+            &line[..=separator]
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(actual, expected, "unexpected preflight report line names");
 }
 
 fn stdout(output: &Output) -> String {

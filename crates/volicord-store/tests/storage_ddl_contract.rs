@@ -85,18 +85,18 @@ fn initial_schemas_satisfy_connection_storage_contract() -> Result<(), Box<dyn E
     let initial_project = initial_project_state_schema()?;
     let initial_project_schema = read_database_schema(&initial_project)?;
 
-    assert!(initial_registry_schema
-        .tables
-        .contains_key("agent_connections"));
-    assert!(initial_registry_schema
-        .tables
-        .contains_key("connection_projects"));
-    assert!(initial_registry_schema
-        .tables
-        .contains_key("installation_profile"));
-    assert!(initial_registry_schema
-        .tables
-        .contains_key("project_aliases"));
+    assert_tables_include(
+        &initial_registry_schema,
+        &[
+            "runtime_home",
+            "installation_profile",
+            "projects",
+            "project_aliases",
+            "agent_connections",
+            "connection_projects",
+            "schema_migrations",
+        ],
+    );
     assert_columns_include(
         &initial_registry_schema,
         "runtime_home",
@@ -124,6 +124,7 @@ fn initial_schemas_satisfy_connection_storage_contract() -> Result<(), Box<dyn E
             "connection_internal_id",
             "intent",
             "project_internal_id",
+            "last_verification_status",
             "last_verification_report_json",
             "last_user_actions_json",
         ],
@@ -132,6 +133,23 @@ fn initial_schemas_satisfy_connection_storage_contract() -> Result<(), Box<dyn E
         &initial_registry_schema,
         "connection_projects",
         &["connection_internal_id", "project_internal_id"],
+    );
+    assert_primary_key_columns(
+        &initial_registry_schema,
+        "connection_projects",
+        &["connection_internal_id", "project_internal_id"],
+    );
+    assert_foreign_key_columns(
+        &initial_registry_schema,
+        "connection_projects",
+        "agent_connections",
+        &[("connection_internal_id", "connection_internal_id")],
+    );
+    assert_foreign_key_columns(
+        &initial_registry_schema,
+        "connection_projects",
+        "projects",
+        &[("project_internal_id", "project_internal_id")],
     );
     assert_unique_index_columns(
         &initial_registry_schema,
@@ -254,6 +272,12 @@ fn initial_project_state_schema() -> Result<Connection, Box<dyn Error>> {
     Ok(conn)
 }
 
+fn assert_tables_include(schema: &DatabaseSchema, tables: &[&str]) {
+    for table in tables {
+        assert!(schema.tables.contains_key(*table), "expected table {table}");
+    }
+}
+
 fn assert_columns_include(schema: &DatabaseSchema, table: &str, columns: &[&str]) {
     let table_schema = schema
         .tables
@@ -265,6 +289,54 @@ fn assert_columns_include(schema: &DatabaseSchema, table: &str, columns: &[&str]
             "expected {table}.{column}"
         );
     }
+}
+
+fn assert_primary_key_columns(schema: &DatabaseSchema, table: &str, columns: &[&str]) {
+    let table_schema = schema
+        .tables
+        .get(table)
+        .unwrap_or_else(|| panic!("expected table {table}"));
+    let mut primary_key_columns = table_schema
+        .columns
+        .iter()
+        .filter(|(_, column)| column.primary_key_position > 0)
+        .map(|(name, column)| (column.primary_key_position, name.as_str()))
+        .collect::<Vec<_>>();
+    primary_key_columns.sort_by_key(|(position, _)| *position);
+    let actual = primary_key_columns
+        .into_iter()
+        .map(|(_, name)| name)
+        .collect::<Vec<_>>();
+    assert_eq!(actual, columns, "unexpected primary key for {table}");
+}
+
+fn assert_foreign_key_columns(
+    schema: &DatabaseSchema,
+    table: &str,
+    parent_table: &str,
+    columns: &[(&str, &str)],
+) {
+    let table_schema = schema
+        .tables
+        .get(table)
+        .unwrap_or_else(|| panic!("expected table {table}"));
+    let expected = columns
+        .iter()
+        .map(|(child, parent)| (*child, *parent))
+        .collect::<Vec<_>>();
+    let found = table_schema.foreign_keys.iter().any(|foreign_key| {
+        foreign_key.parent_table == parent_table
+            && foreign_key
+                .columns
+                .iter()
+                .map(|column| (column.child_column.as_str(), column.parent_column.as_str()))
+                .collect::<Vec<_>>()
+                == expected
+    });
+    assert!(
+        found,
+        "expected {table} foreign key to {parent_table} on {expected:?}"
+    );
 }
 
 fn assert_unique_index_columns(schema: &DatabaseSchema, index: &str, columns: &[&str]) {
