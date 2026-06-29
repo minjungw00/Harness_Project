@@ -71,12 +71,13 @@ volicord connect codex
 ```
 
 Setup 중 Volicord는 이후 터미널과 에이전트 호스트에서 `volicord`와
-`volicord-mcp`를 사용할 수 있는지 확인합니다. 사용할 수 없다면 setup은 명령 링크
-setup이 쓰기 가능하다고 확인한 디렉터리에 명령 링크 만들기, 셸 명령 출력, 링크
-단계 건너뛰기 같은 안전한 선택지를 제공합니다. 새 터미널 또는 에이전트 호스트를
-시작하거나 `volicord connect`를 실행하기 전에 setup의 프롬프트나
-`action_required` 출력을 따릅니다. Volicord는 부모 셸의 현재 `PATH`를 바꿀 수
-없습니다.
+`volicord-mcp`를 사용할 수 있는지 확인합니다. 사용할 수 없다면 setup은 환경을
+확인한 뒤 안전한 선택지를 제공합니다. 예를 들면 쓰기 가능하다고 확인한 디렉터리에
+명령 링크 만들기, `~/.local/bin` 같은 관례적 사용자 명령 디렉터리가 없고 안전하게
+만들 수 있을 때 그 디렉터리를 만들고 링크하기, 셸 명령 출력, 링크 단계 건너뛰기 같은
+선택지입니다. 새 터미널 또는 에이전트 호스트를 시작하거나 `volicord connect`를
+실행하기 전에 setup의 프롬프트나 `action_required` 출력을 따릅니다. Volicord는 부모
+셸의 현재 `PATH`를 바꿀 수 없습니다.
 
 `/path/to/your-product-repo`는 에이전트에게 작업을 요청할 Product Repository의 경로
 예시입니다. `volicord connect codex`는 현재 디렉터리에서 저장소 루트를 감지하고,

@@ -70,6 +70,37 @@ permanently change the parent shell.
 Do not create Runtime Home files by hand. Use setup so the registry and setup
 profile are created together.
 
+## Setup Does Not Offer `~/.local/bin`
+
+Observable symptom: interactive setup reports that commands are not available
+on `PATH`, but it does not offer to create `~/.local/bin`.
+
+Bounded recovery:
+
+Setup offers a conventional user command directory only when it can identify a
+safe candidate under `HOME`, create it safely when missing, and verify
+writability before creating command links. It may leave a manual `PATH` action
+instead when `HOME` is missing or not writable, the shell or platform is not
+supported for that guided choice, the candidate path conflicts with an existing
+unsafe entry, or setup is running in JSON, non-TTY, or explicit `--link-bin`
+mode.
+
+Safe next steps:
+
+- Rerun `volicord setup` in an interactive terminal and follow the prompt or
+  `action_required` output.
+- Run `volicord setup --link-bin PATH` with a command directory you control.
+  Setup creates the directory if needed, verifies it is writable, and does not
+  edit shell startup files by itself.
+- Create `~/.local/bin` manually only when that is the command directory you
+  want to control, then rerun setup.
+
+If setup prints a shell command or names a `PATH` action, run that command in
+the terminal that needs it or update the supported startup file it names.
+Volicord can help make commands available on `PATH`, but it cannot directly
+mutate the current parent shell environment. Already-running agent hosts may
+need restart or reload before they see a new command directory.
+
 ## Repository Is Not Detected
 
 Observable symptom: project or connection commands say no Git repository root

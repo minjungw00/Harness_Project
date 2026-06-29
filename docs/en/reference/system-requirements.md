@@ -55,9 +55,11 @@ do not install commands persistently for future shells or MCP hosts.
 
 The CLI cannot permanently edit the parent shell `PATH`. During setup, Volicord
 can help make its commands available on `PATH` by offering safe choices such as
-command links, a printed shell command, or an explicitly approved managed shell
-startup block when the shell is supported. Existing shells and MCP hosts may
-need restart or reload before they see a changed startup file or command link
+command links, creating a missing conventional user command directory such as
+`~/.local/bin` when that is safe, a printed shell command, or an explicitly
+approved managed shell startup block when the shell is supported. Setup verifies
+writability before placing command links. Existing shells and MCP hosts may need
+restart or reload before they see a changed startup file or command link
 directory.
 
 `VOLICORD_HOME` is different. It is a real Runtime Home selection input for `volicord` administrative commands and `volicord-mcp` process startup, as defined by their owner documents.

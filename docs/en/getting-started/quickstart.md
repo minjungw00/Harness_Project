@@ -18,10 +18,13 @@ volicord connect codex
 ```
 
 Setup checks whether the freshly built `volicord` and `volicord-mcp` commands
-are available for future terminals and agent hosts. If it prompts or reports
-`action_required`, follow the named command-availability step before running
-`volicord connect`, opening a new terminal, or starting the host. Volicord
-cannot change the parent shell's current `PATH`.
+are available for future terminals and agent hosts. When command links are
+needed, setup may offer to create a conventional user command directory such as
+`~/.local/bin` if it is missing and safe to create, then verify writability
+before linking. If it prompts or reports `action_required`, follow the named
+command-availability step before running `volicord connect`, opening a new
+terminal, or starting the host. Volicord cannot change the parent shell's
+current `PATH`.
 `/path/to/your-product-repo` is an example path for the Product Repository where
 you want the agent to work. Volicord detects that repository from the current
 directory and uses the normal CLI defaults for a first host connection. Exact

@@ -51,6 +51,8 @@ the selected executables are not ready on `PATH`:
 
 - create command links in a suggested directory that setup can verify is
   writable
+- create a conventional user command directory such as `~/.local/bin` when it
+  is missing and safe to create, then verify writability before linking
 - create command links and, after explicit approval, add a managed `PATH` block
   to a supported shell startup file
 - create command links and print the shell command to run yourself

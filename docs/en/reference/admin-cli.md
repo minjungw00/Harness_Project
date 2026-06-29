@@ -141,9 +141,9 @@ Setup effects:
 - may prompt in interactive text mode for safe command-availability choices:
   create command links in an existing setup-suggested directory whose
   writability was verified, create links after creating a missing conventional
-  user command directory under `HOME` when setup can safely create it and
-  verifies writability after creation, write an approved shell startup `PATH`
-  block, print a shell command, or skip linking
+  user command directory such as `~/.local/bin` under `HOME` when setup can
+  safely create it and verifies writability after creation, write an approved
+  shell startup `PATH` block, print a shell command, or skip linking
 - may update command links named by `--link-bin` or selected through the
   interactive prompt for both executable roles
 - may write a managed shell startup `PATH` block only after explicit
