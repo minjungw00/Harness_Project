@@ -78,6 +78,7 @@ pub(crate) enum SetupActionKind {
     CommandLinks,
     PathUpdate,
     SelectMcpCommand,
+    ShellStartup,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]

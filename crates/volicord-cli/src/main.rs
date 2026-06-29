@@ -1,6 +1,11 @@
 #![forbid(unsafe_code)]
 
-use std::{env, fmt, path::Path, process};
+use std::{
+    env, fmt,
+    io::{self, IsTerminal},
+    path::Path,
+    process,
+};
 
 use volicord_cli::{
     connection_command::{
@@ -12,7 +17,8 @@ use volicord_cli::{
     export_command::{export_usage, run_export_command, ExportCommandError},
     project_context::{project_usage, run_project_command, ProjectCommandError},
     setup_command::{
-        run_setup_command, setup_usage, ClosureSetupProcess, CommandOutcome, SetupCommandError,
+        run_setup_command, run_setup_command_interactive, setup_usage, ClosureSetupProcess,
+        CommandOutcome, SetupCommandError, StdioSetupTerminal,
     },
     user_command::{run_user_command, user_usage, UserCommandError},
 };
@@ -69,7 +75,20 @@ where
         }
         "setup" => {
             let process = ClosureSetupProcess::new(&env_var);
-            command_outcome(run_setup_command(&args[2..], current_dir, &process)?)
+            if setup_prompt_allowed(&args[2..])
+                && io::stdin().is_terminal()
+                && io::stdout().is_terminal()
+            {
+                let mut terminal = StdioSetupTerminal::new();
+                command_outcome(run_setup_command_interactive(
+                    &args[2..],
+                    current_dir,
+                    &process,
+                    &mut terminal,
+                )?)
+            } else {
+                command_outcome(run_setup_command(&args[2..], current_dir, &process)?)
+            }
         }
         "doctor" => command_outcome(run_doctor_command(&args[2..], &env_var, current_dir)?),
         "export" => run_export_command(&args[2..], &env_var, current_dir).map_err(CliError::from),
@@ -135,6 +154,17 @@ fn simple_help_requested(args: &[String]) -> bool {
         args.first().map(String::as_str),
         None | Some("-h" | "--help" | "help")
     )
+}
+
+fn setup_prompt_allowed(args: &[String]) -> bool {
+    !matches!(
+        args.first().map(String::as_str),
+        Some("-h" | "--help" | "help")
+    ) && !args.iter().any(|arg| {
+        matches!(arg.as_str(), "--json" | "--link-bin")
+            || arg.starts_with("--json=")
+            || arg.starts_with("--link-bin=")
+    })
 }
 
 fn connection_help_requested(args: &[String]) -> bool {
@@ -371,6 +401,23 @@ mod tests {
         assert!(!output.contains("\nvolicord connection verify"));
         assert!(!output.contains("\nvolicord user judgments"));
         assert!(!output.contains("volicord init"));
+    }
+
+    #[test]
+    fn setup_prompt_gate_allows_plain_setup_but_not_noninteractive_options() {
+        assert!(setup_prompt_allowed(&[]));
+        assert!(setup_prompt_allowed(&[
+            "--home".to_owned(),
+            "runtime".to_owned()
+        ]));
+        assert!(!setup_prompt_allowed(&["--help".to_owned()]));
+        assert!(!setup_prompt_allowed(&["--json".to_owned()]));
+        assert!(!setup_prompt_allowed(&["--json=true".to_owned()]));
+        assert!(!setup_prompt_allowed(&[
+            "--link-bin".to_owned(),
+            "bin".to_owned()
+        ]));
+        assert!(!setup_prompt_allowed(&["--link-bin=bin".to_owned()]));
     }
 
     #[test]

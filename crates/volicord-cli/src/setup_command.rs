@@ -1,6 +1,7 @@
 use std::{
     collections::BTreeMap,
     fs, io,
+    io::Write,
     path::{Path, PathBuf},
 };
 
@@ -17,6 +18,7 @@ use volicord_store::{
     StoreError,
 };
 
+use crate::managed_block::{self, ManagedBlockWrite};
 use crate::registration::ADMIN_METADATA_JSON;
 pub(crate) use crate::shell_path::{is_executable_file, mcp_binary_name, volicord_binary_name};
 use crate::{
@@ -25,8 +27,8 @@ use crate::{
         SetupStatus,
     },
     shell_path::{
-        candidate_user_bin_dirs, detect_command_on_path, path_directory_is_on_path,
-        path_directory_is_writable, paths_equivalent, PATH_ENV,
+        candidate_setup_link_dirs, detect_command_on_path, path_directory_is_on_path,
+        paths_equivalent, PATH_ENV,
     },
 };
 
@@ -109,6 +111,42 @@ impl SetupProcess for ProductionSetupProcess {
     fn current_exe(&self) -> Result<PathBuf, String> {
         std::env::current_exe()
             .map_err(|error| format!("failed to read current executable: {error}"))
+    }
+}
+
+pub trait SetupTerminal {
+    fn write_str(&mut self, text: &str) -> io::Result<()>;
+    fn read_line(&mut self, input: &mut String) -> io::Result<usize>;
+}
+
+pub struct StdioSetupTerminal {
+    stdin: io::Stdin,
+    stdout: io::Stdout,
+}
+
+impl StdioSetupTerminal {
+    pub fn new() -> Self {
+        Self {
+            stdin: io::stdin(),
+            stdout: io::stdout(),
+        }
+    }
+}
+
+impl Default for StdioSetupTerminal {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl SetupTerminal for StdioSetupTerminal {
+    fn write_str(&mut self, text: &str) -> io::Result<()> {
+        self.stdout.write_all(text.as_bytes())?;
+        self.stdout.flush()
+    }
+
+    fn read_line(&mut self, input: &mut String) -> io::Result<usize> {
+        self.stdin.read_line(input)
     }
 }
 
@@ -205,6 +243,36 @@ struct DiscoveredCommand {
     source: &'static str,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct ShellStartupPlan {
+    shell_name: String,
+    target_file: PathBuf,
+    block: String,
+    command: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum InteractiveSetupChoice {
+    LinkOnly(PathBuf),
+    LinkAndShell {
+        link_bin: PathBuf,
+        shell: ShellStartupPlan,
+    },
+    Manual {
+        link_bin: Option<PathBuf>,
+        command: String,
+    },
+    Skip,
+    Cancelled(String),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct InteractiveMenuChoice {
+    number: usize,
+    label: String,
+    choice: InteractiveSetupChoice,
+}
+
 pub fn setup_usage() -> String {
     "volicord setup [--home PATH] [--link-bin PATH] [--mcp-command PATH] [--json]\n".to_owned()
 }
@@ -214,13 +282,31 @@ pub fn run_setup_command(
     current_dir: &Path,
     process: &impl SetupProcess,
 ) -> Result<CommandOutcome, SetupCommandError> {
+    run_setup_command_inner(args, current_dir, process, None)
+}
+
+pub fn run_setup_command_interactive(
+    args: &[String],
+    current_dir: &Path,
+    process: &impl SetupProcess,
+    terminal: &mut dyn SetupTerminal,
+) -> Result<CommandOutcome, SetupCommandError> {
+    run_setup_command_inner(args, current_dir, process, Some(terminal))
+}
+
+fn run_setup_command_inner(
+    args: &[String],
+    current_dir: &Path,
+    process: &impl SetupProcess,
+    mut terminal: Option<&mut dyn SetupTerminal>,
+) -> Result<CommandOutcome, SetupCommandError> {
     if is_help_request(args) {
         return Ok(CommandOutcome {
             status: CommandStatus::Complete,
             output: setup_usage(),
         });
     }
-    let parsed = parse_setup_options(args, current_dir)?;
+    let mut parsed = parse_setup_options(args, current_dir)?;
     let runtime_home = resolve_setup_runtime_home(&parsed, current_dir, process)?;
     let runtime_home_id = runtime_home_id_for_path(&runtime_home)?;
     let runtime_home_record =
@@ -245,6 +331,9 @@ pub fn run_setup_command(
     )
     .with_path(&runtime_home_record.runtime_home)];
     let mut link_results = BTreeMap::new();
+    let mut shell_startup_plan = None;
+    let mut interactive_notes = Vec::new();
+    let mut command_links_ready = false;
 
     let volicord_command = match discover_volicord_command(process) {
         Ok(command) => {
@@ -362,6 +451,58 @@ pub fn run_setup_command(
             });
         }
     };
+
+    if parsed.output == OutputFormat::Text && parsed.link_bin.is_none() {
+        let path_env = process.env_var(PATH_ENV);
+        let commands = vec![
+            command_availability(
+                "volicord_command",
+                &volicord_binary_name(),
+                &volicord_command,
+                path_env.as_deref(),
+            ),
+            command_availability(
+                "volicord_mcp_command",
+                &mcp_binary_name(),
+                &volicord_mcp,
+                path_env.as_deref(),
+            ),
+        ];
+        if commands
+            .iter()
+            .any(|command| !command.selected_path_ready())
+        {
+            if let Some(terminal) = terminal.as_mut() {
+                match prompt_command_availability_choice(
+                    *terminal,
+                    process,
+                    &commands,
+                    [&volicord_command.path, &volicord_mcp.path],
+                )? {
+                    InteractiveSetupChoice::LinkOnly(link_bin) => {
+                        parsed.link_bin = Some(link_bin);
+                    }
+                    InteractiveSetupChoice::LinkAndShell { link_bin, shell } => {
+                        parsed.link_bin = Some(link_bin);
+                        shell_startup_plan = Some(shell);
+                    }
+                    InteractiveSetupChoice::Manual { link_bin, command } => {
+                        if let Some(link_bin) = link_bin {
+                            parsed.link_bin = Some(link_bin);
+                        }
+                        interactive_notes.push(format!("manual_path_command: {command}"));
+                    }
+                    InteractiveSetupChoice::Skip => {
+                        interactive_notes.push("command linking was skipped".to_owned());
+                    }
+                    InteractiveSetupChoice::Cancelled(message) => {
+                        interactive_notes.push(message);
+                    }
+                }
+            }
+        }
+    }
+
     let bin_dir = parsed
         .link_bin
         .clone()
@@ -381,6 +522,8 @@ pub fn run_setup_command(
                 );
                 let mcp_link =
                     install_command_link(&link_bin, &mcp_binary_name(), &volicord_mcp.path);
+                command_links_ready =
+                    link_ready_for_path(&volicord_link) && link_ready_for_path(&mcp_link);
                 push_link_check(
                     "link_volicord",
                     "volicord command link",
@@ -434,19 +577,115 @@ pub fn run_setup_command(
         let on_path = path_directory_is_on_path(process.env_var(PATH_ENV).as_deref(), &link_bin);
         link_bin_on_path = Some(on_path);
         if !on_path {
-            if link_bin_usable {
-                actions_required.push(
-                    SetupAction::required(
-                        "add_link_bin_to_path",
-                        SetupActionKind::PathUpdate,
-                        format!(
-                            "Add {} to PATH before starting new shells or MCP hosts.",
-                            link_bin.display()
-                        ),
+            let mut shell_startup_ready = false;
+            if link_bin_usable && command_links_ready {
+                if let Some(plan) = shell_startup_plan.as_ref() {
+                    match managed_block::write_managed_block(&plan.target_file, &plan.block) {
+                        Ok(ManagedBlockWrite::Created(path))
+                        | Ok(ManagedBlockWrite::Updated(path)) => {
+                            shell_startup_ready = true;
+                            checks.push(
+                                DiagnosticCheck::passed(
+                                    "shell_startup_path",
+                                    "shell startup PATH block was written",
+                                )
+                                .with_details(json!({
+                                    "shell": plan.shell_name,
+                                    "path": path_text(&path),
+                                })),
+                            );
+                            actions_performed.push(
+                                SetupAction::performed(
+                                    "write_shell_startup_path",
+                                    SetupActionKind::ShellStartup,
+                                    format!(
+                                        "Shell startup PATH block was written to {}.",
+                                        path.display()
+                                    ),
+                                )
+                                .with_path(&path),
+                            );
+                        }
+                        Ok(ManagedBlockWrite::Unchanged(path)) => {
+                            shell_startup_ready = true;
+                            checks.push(
+                                DiagnosticCheck::passed(
+                                    "shell_startup_path",
+                                    "shell startup PATH block already matches",
+                                )
+                                .with_details(json!({
+                                    "shell": plan.shell_name,
+                                    "path": path_text(&path),
+                                })),
+                            );
+                            actions_performed.push(
+                                SetupAction::performed(
+                                    "reuse_shell_startup_path",
+                                    SetupActionKind::ShellStartup,
+                                    format!(
+                                        "Shell startup PATH block already matches {}.",
+                                        path.display()
+                                    ),
+                                )
+                                .with_path(&path),
+                            );
+                        }
+                        Err(error) => {
+                            checks.push(
+                                DiagnosticCheck::failed(
+                                    "shell_startup_path",
+                                    "shell startup PATH block could not be written",
+                                )
+                                .with_details(json!({
+                                    "shell": plan.shell_name,
+                                    "path": path_text(&plan.target_file),
+                                    "detail": error.to_string(),
+                                })),
+                            );
+                            actions_required.push(
+                                SetupAction::required(
+                                    "repair_shell_startup_path",
+                                    SetupActionKind::ShellStartup,
+                                    format!(
+                                        "Add {} to PATH manually or fix write access for {}.",
+                                        link_bin.display(),
+                                        plan.target_file.display()
+                                    ),
+                                )
+                                .with_command(plan.command.clone())
+                                .with_path(&plan.target_file),
+                            );
+                        }
+                    }
+                }
+            }
+            if link_bin_usable && command_links_ready {
+                if shell_startup_ready {
+                    actions_required.push(
+                        SetupAction::required(
+                            "open_new_shell_for_path",
+                            SetupActionKind::PathUpdate,
+                            format!(
+                                "Open a new shell or restart MCP hosts so PATH includes {}.",
+                                link_bin.display()
+                            ),
+                        )
+                        .with_path(&link_bin),
                     )
-                    .with_command(format!("export PATH=\"{}:$PATH\"", link_bin.display()))
-                    .with_path(&link_bin),
-                )
+                } else {
+                    actions_required.push(
+                        SetupAction::required(
+                            "add_link_bin_to_path",
+                            SetupActionKind::PathUpdate,
+                            format!(
+                                "Add {} to PATH before starting new shells or MCP hosts.",
+                                link_bin.display()
+                            ),
+                        )
+                        .with_command(shell_path_command(process, &link_bin)?)
+                        .with_path(&link_bin),
+                    )
+                }
             }
             checks.push(
                 DiagnosticCheck::warning(
@@ -527,16 +766,18 @@ pub fn run_setup_command(
         actions_performed,
     );
     let status = command_status(report.status);
-    Ok(CommandOutcome {
-        status,
-        output: render_setup_output(
+    let output = append_interactive_notes(
+        render_setup_output(
             parsed.output,
             &report,
             &runtime_home_record,
             Some(&profile),
             &checks,
         )?,
-    })
+        parsed.output,
+        &interactive_notes,
+    );
+    Ok(CommandOutcome { status, output })
 }
 
 fn runtime_home_report_section(record: &RuntimeHomeRecord) -> SetupSectionStatus {
@@ -722,12 +963,335 @@ fn plan_setup_actions(
     }
 }
 
+fn prompt_command_availability_choice(
+    terminal: &mut dyn SetupTerminal,
+    process: &impl SetupProcess,
+    commands: &[CommandAvailability],
+    selected_paths: [&Path; 2],
+) -> Result<InteractiveSetupChoice, SetupCommandError> {
+    terminal.write_str(
+        "Volicord setup can help make these commands available on PATH for future shells and MCP hosts.\n",
+    )?;
+    for command in commands {
+        if !command.selected_path_ready() {
+            terminal.write_str(&format!(
+                "- {}: {}\n",
+                command.command_name,
+                command_availability_summary(command)
+            ))?;
+        }
+    }
+
+    let path_env = process.env_var(PATH_ENV);
+    let link_bin = suggested_link_bin(process);
+    let mut shell_unavailable = None;
+    let mut choices = Vec::new();
+    if let Some(link_bin) = link_bin.clone() {
+        let link_bin_on_path = path_directory_is_on_path(path_env.as_deref(), &link_bin);
+        let link_label = if link_bin_on_path {
+            format!(
+                "Create command links in {} (already on PATH).",
+                link_bin.display()
+            )
+        } else {
+            format!(
+                "Create command links in {}; PATH still needs an update.",
+                link_bin.display()
+            )
+        };
+        push_menu_choice(
+            &mut choices,
+            link_label,
+            InteractiveSetupChoice::LinkOnly(link_bin.clone()),
+        );
+
+        if !link_bin_on_path {
+            match shell_startup_plan(process, &link_bin) {
+                Ok(plan) => push_menu_choice(
+                    &mut choices,
+                    format!(
+                        "Create links and add a managed PATH block to {}.",
+                        plan.target_file.display()
+                    ),
+                    InteractiveSetupChoice::LinkAndShell {
+                        link_bin: link_bin.clone(),
+                        shell: plan,
+                    },
+                ),
+                Err(reason) => shell_unavailable = Some(reason),
+            }
+        }
+
+        push_menu_choice(
+            &mut choices,
+            format!(
+                "Create command links in {} and print the PATH command.",
+                link_bin.display()
+            ),
+            InteractiveSetupChoice::Manual {
+                link_bin: Some(link_bin.clone()),
+                command: shell_path_command(process, &link_bin)?,
+            },
+        );
+    } else {
+        let command =
+            shell_path_command_for_selected_dirs(process, &selected_command_dirs(selected_paths))?;
+        push_menu_choice(
+            &mut choices,
+            "Print the PATH command without modifying files.".to_owned(),
+            InteractiveSetupChoice::Manual {
+                link_bin: None,
+                command,
+            },
+        );
+    }
+    push_menu_choice(
+        &mut choices,
+        "Skip command linking for now.".to_owned(),
+        InteractiveSetupChoice::Skip,
+    );
+
+    if let Some(reason) = shell_unavailable {
+        terminal.write_str(&format!("Shell startup update is unavailable: {reason}\n"))?;
+    }
+    terminal.write_str("Choices:\n")?;
+    for choice in &choices {
+        terminal.write_str(&format!("  {}. {}\n", choice.number, choice.label))?;
+    }
+
+    let skip_number = choices
+        .iter()
+        .find(|choice| matches!(choice.choice, InteractiveSetupChoice::Skip))
+        .map(|choice| choice.number)
+        .unwrap_or(choices.len());
+    loop {
+        terminal.write_str(&format!("Choice [{skip_number}]: "))?;
+        let Some(input) = read_prompt_line(terminal)? else {
+            return Ok(InteractiveSetupChoice::Cancelled(
+                "setup prompt cancelled; no command links or shell startup files were changed"
+                    .to_owned(),
+            ));
+        };
+        let selected_number = if input.trim().is_empty() {
+            skip_number
+        } else if let Ok(number) = input.trim().parse::<usize>() {
+            number
+        } else {
+            terminal.write_str("Enter the number of one setup choice.\n")?;
+            continue;
+        };
+        let Some(choice) = choices
+            .iter()
+            .find(|choice| choice.number == selected_number)
+            .map(|choice| choice.choice.clone())
+        else {
+            terminal.write_str("Enter one of the listed setup choice numbers.\n")?;
+            continue;
+        };
+        return confirm_interactive_choice(terminal, choice);
+    }
+}
+
+fn confirm_interactive_choice(
+    terminal: &mut dyn SetupTerminal,
+    choice: InteractiveSetupChoice,
+) -> Result<InteractiveSetupChoice, SetupCommandError> {
+    match choice {
+        InteractiveSetupChoice::LinkAndShell { link_bin, shell } => {
+            terminal.write_str(&format!(
+                "Shell startup file:\n  {}\n\nManaged block to write:\n{}",
+                shell.target_file.display(),
+                shell.block
+            ))?;
+            terminal.write_str("Write this managed block? [y/N]: ")?;
+            let Some(answer) = read_prompt_line(terminal)? else {
+                return Ok(InteractiveSetupChoice::Cancelled(
+                    "setup prompt cancelled; no command links or shell startup files were changed"
+                        .to_owned(),
+                ));
+            };
+            if is_yes(&answer) {
+                Ok(InteractiveSetupChoice::LinkAndShell { link_bin, shell })
+            } else {
+                Ok(InteractiveSetupChoice::Cancelled(
+                    "shell startup update was not approved; no command links or shell startup files were changed"
+                        .to_owned(),
+                ))
+            }
+        }
+        InteractiveSetupChoice::Manual { link_bin, command } => {
+            terminal.write_str(&format!("Run this command after setup:\n  {command}\n"))?;
+            Ok(InteractiveSetupChoice::Manual { link_bin, command })
+        }
+        other => Ok(other),
+    }
+}
+
+fn push_menu_choice(
+    choices: &mut Vec<InteractiveMenuChoice>,
+    label: String,
+    choice: InteractiveSetupChoice,
+) {
+    choices.push(InteractiveMenuChoice {
+        number: choices.len() + 1,
+        label,
+        choice,
+    });
+}
+
+fn read_prompt_line(terminal: &mut dyn SetupTerminal) -> Result<Option<String>, SetupCommandError> {
+    let mut input = String::new();
+    match terminal.read_line(&mut input) {
+        Ok(0) => Ok(None),
+        Ok(_) => Ok(Some(input.trim().to_owned())),
+        Err(error) if error.kind() == io::ErrorKind::Interrupted => Ok(None),
+        Err(error) => Err(error.into()),
+    }
+}
+
+fn is_yes(input: &str) -> bool {
+    matches!(input.trim().to_ascii_lowercase().as_str(), "y" | "yes")
+}
+
 fn suggested_link_bin(process: &impl SetupProcess) -> Option<PathBuf> {
-    let dirs = candidate_user_bin_dirs(&|name| process.env_var(name));
-    dirs.iter()
-        .find(|path| path_directory_is_writable(path))
-        .cloned()
-        .or_else(|| dirs.into_iter().next())
+    candidate_setup_link_dirs(&|name| process.env_var(name))
+        .into_iter()
+        .next()
+}
+
+fn shell_startup_plan(
+    process: &impl SetupProcess,
+    link_bin: &Path,
+) -> Result<ShellStartupPlan, String> {
+    #[cfg(not(unix))]
+    {
+        let _ = (process, link_bin);
+        Err("shell startup file updates are not supported on this platform".to_owned())
+    }
+    #[cfg(unix)]
+    {
+        let shell_path = process
+            .env_var("SHELL")
+            .filter(|value| !value.is_empty())
+            .ok_or_else(|| "SHELL is not set".to_owned())?;
+        let shell_name = PathBuf::from(shell_path.clone())
+            .file_name()
+            .and_then(|name| name.to_str())
+            .ok_or_else(|| "SHELL does not name a supported shell".to_owned())?
+            .to_owned();
+        let home = process
+            .env_var("HOME")
+            .filter(|value| !value.is_empty())
+            .map(PathBuf::from)
+            .ok_or_else(|| "HOME is not set".to_owned())?;
+        let target_file = match shell_name.as_str() {
+            "bash" => home.join(".bashrc"),
+            "zsh" => home.join(".zshrc"),
+            "sh" => home.join(".profile"),
+            other => {
+                return Err(format!(
+                    "{other} is not supported for automatic shell startup updates"
+                ))
+            }
+        };
+        let path_expr =
+            shell_path_expression(process, link_bin).map_err(|error| error.to_string())?;
+        let command = shell_path_command(process, link_bin).map_err(|error| error.to_string())?;
+        Ok(ShellStartupPlan {
+            shell_name,
+            target_file,
+            block: managed_block::path_export_block(&path_expr),
+            command,
+        })
+    }
+}
+
+fn shell_path_command(
+    process: &impl SetupProcess,
+    dir: &Path,
+) -> Result<String, SetupCommandError> {
+    shell_path_command_for_selected_dirs(process, &[dir.to_path_buf()])
+}
+
+fn shell_path_command_for_selected_dirs(
+    process: &impl SetupProcess,
+    dirs: &[PathBuf],
+) -> Result<String, SetupCommandError> {
+    if dirs.is_empty() {
+        return Err(SetupCommandError::Runtime(
+            "no PATH directory is available for a shell command".to_owned(),
+        ));
+    }
+    #[cfg(windows)]
+    {
+        let rendered = dirs
+            .iter()
+            .map(|dir| dir.display().to_string())
+            .collect::<Vec<_>>()
+            .join(";");
+        let _ = process;
+        Ok(format!("set \"PATH={rendered};%PATH%\""))
+    }
+    #[cfg(not(windows))]
+    {
+        let rendered = dirs
+            .iter()
+            .map(|dir| shell_path_expression(process, dir))
+            .collect::<Result<Vec<_>, _>>()?
+            .join(":");
+        Ok(format!("export PATH=\"{rendered}:$PATH\""))
+    }
+}
+
+fn shell_path_expression(
+    process: &impl SetupProcess,
+    dir: &Path,
+) -> Result<String, SetupCommandError> {
+    if let Some(home) = process
+        .env_var("HOME")
+        .filter(|value| !value.is_empty())
+        .map(PathBuf::from)
+    {
+        if let Ok(relative) = dir.strip_prefix(&home) {
+            if relative.as_os_str().is_empty() {
+                return Ok("$HOME".to_owned());
+            }
+            let relative = relative.to_str().ok_or_else(|| {
+                SetupCommandError::Runtime(
+                    "PATH directory must be valid UTF-8 for shell command output".to_owned(),
+                )
+            })?;
+            return Ok(format!("$HOME/{}", escape_double_quoted_shell(relative)));
+        }
+    }
+    let dir = dir.to_str().ok_or_else(|| {
+        SetupCommandError::Runtime(
+            "PATH directory must be valid UTF-8 for shell command output".to_owned(),
+        )
+    })?;
+    Ok(escape_double_quoted_shell(dir))
+}
+
+fn escape_double_quoted_shell(text: &str) -> String {
+    let mut escaped = String::new();
+    for ch in text.chars() {
+        if matches!(ch, '\\' | '"' | '$' | '`') {
+            escaped.push('\\');
+        }
+        escaped.push(ch);
+    }
+    escaped
+}
+
+fn selected_command_dirs(paths: [&Path; 2]) -> Vec<PathBuf> {
+    let mut dirs: Vec<PathBuf> = Vec::new();
+    for path in paths {
+        let dir = command_parent(path);
+        if !dirs.iter().any(|existing| paths_equivalent(existing, &dir)) {
+            dirs.push(dir);
+        }
+    }
+    dirs
 }
 
 fn push_unique_action(actions: &mut Vec<SetupAction>, action: SetupAction) {
@@ -1106,6 +1670,13 @@ fn link_volicord_status(result: &LinkInstallResult) -> String {
     .to_owned()
 }
 
+fn link_ready_for_path(result: &LinkInstallResult) -> bool {
+    matches!(
+        result,
+        LinkInstallResult::Created(_) | LinkInstallResult::Existing(_)
+    )
+}
+
 fn render_setup_output(
     output: OutputFormat,
     report: &SetupReport,
@@ -1182,6 +1753,16 @@ fn render_setup_output(
             Ok(text)
         }
     }
+}
+
+fn append_interactive_notes(mut output: String, format: OutputFormat, notes: &[String]) -> String {
+    if format == OutputFormat::Text && !notes.is_empty() {
+        output.push_str("interactive_setup:\n");
+        for note in notes {
+            output.push_str(&format!("- {note}\n"));
+        }
+    }
+    output
 }
 
 fn command_availability_summary(command: &CommandAvailability) -> String {
@@ -1265,7 +1846,12 @@ pub(crate) fn absolute_path(current_dir: &Path, path: PathBuf) -> PathBuf {
 
 #[cfg(test)]
 mod tests {
-    use std::{env, ffi::OsString, io::Write};
+    use std::{
+        collections::VecDeque,
+        env,
+        ffi::OsString,
+        io::{self, Write},
+    };
 
     use rusqlite::Connection;
     use volicord_store::{bootstrap::installation_profile, sqlite::registry_db_path};
@@ -1287,6 +1873,296 @@ mod tests {
         fn current_exe(&self) -> Result<PathBuf, String> {
             Ok(self.exe.clone())
         }
+    }
+
+    #[derive(Debug)]
+    struct FakeTerminal {
+        input: VecDeque<String>,
+        output: String,
+    }
+
+    impl FakeTerminal {
+        fn new(lines: &[&str]) -> Self {
+            Self {
+                input: lines.iter().map(|line| format!("{line}\n")).collect(),
+                output: String::new(),
+            }
+        }
+
+        fn output(&self) -> &str {
+            &self.output
+        }
+    }
+
+    impl SetupTerminal for FakeTerminal {
+        fn write_str(&mut self, text: &str) -> io::Result<()> {
+            self.output.push_str(text);
+            Ok(())
+        }
+
+        fn read_line(&mut self, input: &mut String) -> io::Result<usize> {
+            let Some(line) = self.input.pop_front() else {
+                return Ok(0);
+            };
+            input.push_str(&line);
+            Ok(line.len())
+        }
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn setup_interactive_creates_links_in_writable_path_dir(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let fixture = TempRuntimeHome::new("setup-interactive-path-dir")?;
+        let exe_dir = fixture.path().join("exe");
+        let path_dir = fixture.path().join("path-bin");
+        let home = fixture.path().join("home");
+        fs::create_dir_all(&path_dir)?;
+        fs::create_dir_all(&home)?;
+        let volicord = write_executable(&exe_dir, &volicord_binary_name())?;
+        let mcp = write_executable(&exe_dir, &mcp_binary_name())?;
+        let process = FakeProcess {
+            exe: volicord.clone(),
+            env: BTreeMap::from([
+                (PATH_ENV.to_owned(), env::join_paths([path_dir.as_path()])?),
+                ("HOME".to_owned(), home.clone().into_os_string()),
+                ("SHELL".to_owned(), OsString::from("/bin/zsh")),
+            ]),
+        };
+        let mut terminal = FakeTerminal::new(&["1"]);
+
+        let outcome = run_setup_command_interactive(
+            &["--home".to_owned(), path_text(fixture.path())],
+            fixture.path(),
+            &process,
+            &mut terminal,
+        )?;
+
+        assert_eq!(outcome.status, CommandStatus::Complete);
+        assert!(terminal.output().contains("Choices:"));
+        assert_eq!(
+            fs::canonicalize(path_dir.join(volicord_binary_name()))?,
+            volicord
+        );
+        assert_eq!(fs::canonicalize(path_dir.join(mcp_binary_name()))?, mcp);
+        assert!(!home.join(".zshrc").exists());
+        Ok(())
+    }
+
+    #[test]
+    fn setup_interactive_json_never_prompts() -> Result<(), Box<dyn std::error::Error>> {
+        let fixture = TempRuntimeHome::new("setup-interactive-json")?;
+        let bin_dir = fixture.path().join("bin");
+        let volicord = write_executable(&bin_dir, &volicord_binary_name())?;
+        write_executable(&bin_dir, &mcp_binary_name())?;
+        let process = FakeProcess {
+            exe: volicord,
+            env: BTreeMap::new(),
+        };
+        let mut terminal = FakeTerminal::new(&["1"]);
+
+        let outcome = run_setup_command_interactive(
+            &[
+                "--home".to_owned(),
+                path_text(fixture.path()),
+                "--json".to_owned(),
+            ],
+            fixture.path(),
+            &process,
+            &mut terminal,
+        )?;
+
+        assert_eq!(outcome.status, CommandStatus::ActionRequired);
+        assert_eq!(terminal.output(), "");
+        let value: Value = serde_json::from_str(&outcome.output)?;
+        assert_eq!(value["status"], "action_required");
+        Ok(())
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn setup_interactive_link_bin_never_prompts() -> Result<(), Box<dyn std::error::Error>> {
+        let fixture = TempRuntimeHome::new("setup-interactive-link-bin")?;
+        let bin_dir = fixture.path().join("bin");
+        let link_bin = fixture.path().join("links");
+        let volicord = write_executable(&bin_dir, &volicord_binary_name())?;
+        let mcp = write_executable(&bin_dir, &mcp_binary_name())?;
+        let process = FakeProcess {
+            exe: volicord,
+            env: BTreeMap::from([(PATH_ENV.to_owned(), env::join_paths([link_bin.as_path()])?)]),
+        };
+        let mut terminal = FakeTerminal::new(&["1"]);
+
+        let outcome = run_setup_command_interactive(
+            &[
+                "--home".to_owned(),
+                path_text(fixture.path()),
+                "--mcp-command".to_owned(),
+                path_text(&mcp),
+                "--link-bin".to_owned(),
+                path_text(&link_bin),
+            ],
+            fixture.path(),
+            &process,
+            &mut terminal,
+        )?;
+
+        assert_eq!(outcome.status, CommandStatus::Complete);
+        assert_eq!(terminal.output(), "");
+        assert!(link_bin.join(volicord_binary_name()).exists());
+        assert!(link_bin.join(mcp_binary_name()).exists());
+        Ok(())
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn setup_interactive_writes_shell_startup_block_idempotently(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let fixture = TempRuntimeHome::new("setup-interactive-shell")?;
+        let exe_dir = fixture.path().join("exe");
+        let home = fixture.path().join("home");
+        fs::create_dir_all(&home)?;
+        let volicord = write_executable(&exe_dir, &volicord_binary_name())?;
+        write_executable(&exe_dir, &mcp_binary_name())?;
+        let process = FakeProcess {
+            exe: volicord,
+            env: BTreeMap::from([
+                ("HOME".to_owned(), home.clone().into_os_string()),
+                ("SHELL".to_owned(), OsString::from("/bin/zsh")),
+            ]),
+        };
+
+        let mut first_terminal = FakeTerminal::new(&["2", "y"]);
+        let first = run_setup_command_interactive(
+            &["--home".to_owned(), path_text(fixture.path())],
+            fixture.path(),
+            &process,
+            &mut first_terminal,
+        )?;
+        assert_eq!(first.status, CommandStatus::ActionRequired);
+        assert!(first_terminal.output().contains("Managed block to write"));
+
+        let zshrc = home.join(".zshrc");
+        let first_text = fs::read_to_string(&zshrc)?;
+        assert!(first_text.contains("# >>> volicord setup >>>"));
+        assert!(first_text.contains("export PATH=\"$HOME/.local/bin:$PATH\""));
+
+        let mut second_terminal = FakeTerminal::new(&["2", "y"]);
+        run_setup_command_interactive(
+            &["--home".to_owned(), path_text(fixture.path())],
+            fixture.path(),
+            &process,
+            &mut second_terminal,
+        )?;
+        let second_text = fs::read_to_string(&zshrc)?;
+        assert_eq!(second_text.matches("# >>> volicord setup >>>").count(), 1);
+        Ok(())
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn setup_interactive_does_not_add_shell_block_for_unmanaged_link(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let fixture = TempRuntimeHome::new("setup-interactive-unsafe-link")?;
+        let exe_dir = fixture.path().join("exe");
+        let home = fixture.path().join("home");
+        let link_bin = home.join(".local/bin");
+        fs::create_dir_all(&link_bin)?;
+        let volicord = write_executable(&exe_dir, &volicord_binary_name())?;
+        write_executable(&exe_dir, &mcp_binary_name())?;
+        write_executable(&link_bin, &volicord_binary_name())?;
+        let process = FakeProcess {
+            exe: volicord,
+            env: BTreeMap::from([
+                ("HOME".to_owned(), home.clone().into_os_string()),
+                ("SHELL".to_owned(), OsString::from("/bin/zsh")),
+            ]),
+        };
+        let mut terminal = FakeTerminal::new(&["2", "y"]);
+
+        let outcome = run_setup_command_interactive(
+            &["--home".to_owned(), path_text(fixture.path())],
+            fixture.path(),
+            &process,
+            &mut terminal,
+        )?;
+
+        assert_eq!(outcome.status, CommandStatus::ActionRequired);
+        assert!(terminal.output().contains("Managed block to write"));
+        assert!(outcome.output.contains("Move or remove the existing"));
+        assert!(!outcome.output.contains("Open a new shell"));
+        assert!(!home.join(".zshrc").exists());
+        Ok(())
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn setup_interactive_unsupported_shell_uses_manual_action(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let fixture = TempRuntimeHome::new("setup-interactive-unsupported-shell")?;
+        let exe_dir = fixture.path().join("exe");
+        let home = fixture.path().join("home");
+        fs::create_dir_all(&home)?;
+        let volicord = write_executable(&exe_dir, &volicord_binary_name())?;
+        write_executable(&exe_dir, &mcp_binary_name())?;
+        let process = FakeProcess {
+            exe: volicord,
+            env: BTreeMap::from([
+                ("HOME".to_owned(), home.clone().into_os_string()),
+                ("SHELL".to_owned(), OsString::from("/bin/fish")),
+            ]),
+        };
+        let mut terminal = FakeTerminal::new(&["2"]);
+
+        let outcome = run_setup_command_interactive(
+            &["--home".to_owned(), path_text(fixture.path())],
+            fixture.path(),
+            &process,
+            &mut terminal,
+        )?;
+
+        assert_eq!(outcome.status, CommandStatus::ActionRequired);
+        assert!(terminal
+            .output()
+            .contains("Shell startup update is unavailable"));
+        assert!(terminal.output().contains("Run this command after setup"));
+        assert!(!home.join(".config/fish/config.fish").exists());
+        Ok(())
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn setup_interactive_eof_cancels_command_linking() -> Result<(), Box<dyn std::error::Error>> {
+        let fixture = TempRuntimeHome::new("setup-interactive-eof")?;
+        let exe_dir = fixture.path().join("exe");
+        let home = fixture.path().join("home");
+        fs::create_dir_all(&home)?;
+        let volicord = write_executable(&exe_dir, &volicord_binary_name())?;
+        write_executable(&exe_dir, &mcp_binary_name())?;
+        let process = FakeProcess {
+            exe: volicord,
+            env: BTreeMap::from([
+                ("HOME".to_owned(), home.clone().into_os_string()),
+                ("SHELL".to_owned(), OsString::from("/bin/zsh")),
+            ]),
+        };
+        let mut terminal = FakeTerminal::new(&[]);
+
+        let outcome = run_setup_command_interactive(
+            &["--home".to_owned(), path_text(fixture.path())],
+            fixture.path(),
+            &process,
+            &mut terminal,
+        )?;
+
+        assert_eq!(outcome.status, CommandStatus::ActionRequired);
+        assert!(outcome.output.contains("setup prompt cancelled"));
+        assert!(!home
+            .join(".local/bin")
+            .join(volicord_binary_name())
+            .exists());
+        assert!(!home.join(".zshrc").exists());
+        Ok(())
     }
 
     #[test]
