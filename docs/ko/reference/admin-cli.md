@@ -121,7 +121,7 @@ Setup 효과:
 - 별도의 프로젝트 또는 연결 명령이 저장소를 선택하기 전에는 프로젝트를 등록하지 않습니다.
 - 공개 Volicord API 메서드를 만들거나 사용자 소유 판단을 기록하지 않습니다.
 
-`volicord doctor`는 setup 프로필을 위한 읽기 중심 진단 명령입니다. Runtime Home
+`volicord doctor`는 설치 프로필을 위한 읽기 중심 진단 명령입니다. Runtime Home
 접근, registry 스키마, 설치 프로필 존재 여부, 저장된 명령 준비 상태, 링크
 메타데이터가 있을 때의 명령 링크 또는 shim 준비 상태를 확인합니다. 지원 호스트
 감지는 연결 검증이 보고할 문제로 표시합니다. 프로젝트를 만들거나, 호스트 설정을
@@ -318,7 +318,7 @@ Dry-run이 하지 않는 것:
 - SQLite 데이터베이스 생성 또는 수정
 - SQLite WAL 또는 SHM 파일 생성
 - registry 또는 프로젝트 상태 마이그레이션 적용
-- 프로젝트, Agent Connection, Connection Projects, setup 프로필 행, 검증 상태 행
+- 프로젝트, Agent Connection, Connection Projects, 설치 프로필 행, 검증 상태 행
   등록 또는 갱신
 - 호스트 설정 파일 생성, 수정, 제거
 - `Product Repository` 파일이나 디렉터리 생성, 수정, 제거

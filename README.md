@@ -14,7 +14,7 @@ local MCP adapter that agent hosts start.
 
 ## Fast Start
 
-Build the local binaries, create the setup profile, move into a product
+Build the local binaries, create the installation profile, move into a product
 repository, and connect Codex:
 
 ```sh
@@ -27,7 +27,7 @@ volicord connect codex
 What happens:
 
 - `volicord setup` prepares the default `Volicord Runtime Home`, records the
-  setup profile, discovers `volicord-mcp`, and can prepare both `volicord` and
+  installation profile, discovers `volicord-mcp`, and can prepare both `volicord` and
   `volicord-mcp` commands in a bin directory you choose.
 - `volicord connect codex` detects the Git repository root from the current
   directory, registers or reuses that repository project, derives the project
@@ -57,11 +57,11 @@ status or verification command.
 
 | Area | What you provide | What Volicord manages |
 |---|---|---|
-| Setup profile | The `volicord` executable you run, and optionally a link directory or explicit `volicord-mcp` path during setup. | Runtime Home readiness, the stored `volicord` and `volicord-mcp` commands, and setup diagnostics. |
+| Installation profile | The `volicord` executable you run, and optionally a link directory or explicit `volicord-mcp` path during setup. | Runtime Home readiness, the stored `volicord` and `volicord-mcp` commands, and setup diagnostics. |
 | Runtime Home | Usually nothing; the default is used unless `VOLICORD_HOME` or `volicord setup --home` selects another path. | Registry state, project state, Agent Connection records, artifacts, and setup metadata. |
 | Repository project | A Git repository path, usually the current directory. | Project registration, a user-facing project name derived from the repository directory, and internal project identities. |
 | Agent Connection | Host and intent: for example `codex`, `claude-code --shared`, or `claude-code --global`. | Host configuration, connection mode, project membership, internal connection identities, verification state, and required user actions. |
-| MCP config export | An optional output path for hosts Volicord does not manage directly. | A host-neutral MCP config bound to the selected repository and setup profile. |
+| MCP config export | An optional output path for hosts Volicord does not manage directly. | A host-neutral MCP config bound to the selected repository and installation profile. |
 | User Channel | A user choosing a Core-generated option. | Local user judgment commands that keep authority-bearing answers separate from Agent Connections. |
 
 ## Component Diagram
@@ -94,7 +94,7 @@ owned by the relevant host setup flow.
 
 ## Core Workflow
 
-1. Prepare executables and setup profile.
+1. Prepare executables and installation profile.
 
    ```sh
    cargo build --workspace --bins

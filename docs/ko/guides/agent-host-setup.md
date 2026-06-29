@@ -106,7 +106,7 @@ cd /work/acme-api
 volicord export mcp-config --output /tmp/volicord.mcp.json
 ```
 
-Export는 감지된 저장소 프로젝트와 setup 프로필을 사용합니다. 내보낸 설정이
+Export는 감지된 저장소 프로젝트와 설치 프로필을 사용합니다. 내보낸 설정이
 read-only 연결에 묶여야 하면 `--read-only`를 추가합니다. 내보낸 파일은 export 뒤에도
 사용자 관리 파일로 남습니다.
 
@@ -139,7 +139,7 @@ volicord connection remove codex
 
 | 증상 | 다음 문서 |
 |---|---|
-| Setup 프로필, 실행 파일, 저장소 감지가 준비되지 않았습니다. | [설치](../getting-started/installation.md) |
+| 설치 프로필, 실행 파일, 저장소 감지가 준비되지 않았습니다. | [설치](../getting-started/installation.md) |
 | 연결이 `action_required` 또는 `failed`를 보고합니다. | [에이전트 호스트 문제 해결](agent-host-troubleshooting.md) |
 | 정확한 명령 동작이 불분명합니다. | [관리 CLI 참조](../reference/admin-cli.md) |
 | Runtime Home과 Product Repository 경계가 중요합니다. | [런타임 경계](../reference/runtime-boundaries.md) |

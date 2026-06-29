@@ -378,7 +378,7 @@ pub fn run_connect_command(
         CONNECTION_MODE_WORKFLOW
     };
     let runtime_home = resolve_runtime_home(|name| process.env_var(name), current_dir)?;
-    let setup_profile = required_installation_profile(&runtime_home)?;
+    let installation_profile = required_installation_profile(&runtime_home)?;
     let repo_root = resolve_connection_repo_root(current_dir, parsed.repo.as_deref())?;
     let server_name = DEFAULT_SERVER_NAME.to_owned();
     let target_hint = connection_target_hint(host_kind, host_scope, Some(&repo_root), process)?;
@@ -422,7 +422,10 @@ pub fn run_connect_command(
                 .as_ref()
                 .map(|project| project.project_name.as_str())
                 .or(Some("planned project")),
-            installation_profile: installation_profile_context(&runtime_home, &setup_profile),
+            installation_profile: installation_profile_context(
+                &runtime_home,
+                &installation_profile,
+            ),
             mode,
             expected_fingerprint,
             export_target: None,
@@ -487,7 +490,10 @@ pub fn run_connect_command(
             repo_root: Some(&project.repo_root),
             project_id: Some(&project.project_id),
             project_name: Some(&project.project_name),
-            installation_profile: installation_profile_context(&runtime_home, &setup_profile),
+            installation_profile: installation_profile_context(
+                &runtime_home,
+                &installation_profile,
+            ),
             mode,
             expected_fingerprint,
             export_target: None,

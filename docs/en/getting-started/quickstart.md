@@ -89,7 +89,7 @@ config:
 volicord export mcp-config --output /tmp/volicord.mcp.json
 ```
 
-The export uses the detected repository and the setup profile. The exported file
+The export uses the detected repository and the installation profile. The exported file
 is user-managed after export; Volicord does not claim that an arbitrary external
 host loaded or approved it.
 

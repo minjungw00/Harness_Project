@@ -140,7 +140,7 @@ where
     }
     let options = parse_export_options(args)?;
     let runtime_home = resolve_runtime_home(&env_var, current_dir)?;
-    let setup_profile = required_installation_profile(&runtime_home)?;
+    let installation_profile = required_installation_profile(&runtime_home)?;
     initialize_runtime_home(
         &runtime_home,
         EXPORT_RUNTIME_HOME_ID,
@@ -178,7 +178,7 @@ where
     let adapter = GenericAdapter;
     let plan = adapter.plan_export(GenericExportRequest {
         connection_id: &connection_internal_id,
-        installation_profile: installation_profile_context(&runtime_home, &setup_profile),
+        installation_profile: installation_profile_context(&runtime_home, &installation_profile),
         mode,
         target_path: &output_path,
         expected_fingerprint,

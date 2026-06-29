@@ -128,7 +128,7 @@ Startup validation requires:
 - the connection is enabled
 - the connection mode is supported
 - at least one connected project row is readable
-- the setup profile can resolve the MCP command information needed for
+- the installation profile can resolve the MCP command information needed for
   diagnostics
 - registry JSON and metadata needed for startup are valid
 

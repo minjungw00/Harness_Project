@@ -181,11 +181,11 @@ identifier_preservation:
     - "operation_category"
     - "host_kind"
     - "connection_intent"
-    - "setup_profile"
+    - "installation_profile"
     - "server_name"
     - "config_target"
     - "managed_fingerprint"
-    - "last_verified_status"
+    - "last_verification_status"
     - "agent_connections"
     - "connection_projects"
     - "active_change_unit_ref"
@@ -1563,7 +1563,7 @@ terms:
     preserve_as_identifier:
       - "host_kind"
       - "connection_intent"
-      - "last_verified_status"
+      - "last_verification_status"
     primary_owner:
       en: "docs/en/reference/agent-connection.md"
       ko: "docs/ko/reference/agent-connection.md"

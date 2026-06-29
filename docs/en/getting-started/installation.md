@@ -1,7 +1,7 @@
 # Installation
 
 This tutorial prepares the local `volicord` and `volicord-mcp` executables and
-records the setup profile used by later project, connection, export, and
+records the installation profile used by later project, connection, export, and
 `User Channel` commands. It is the setup step before the
 [Quickstart](quickstart.md).
 
@@ -30,14 +30,14 @@ This builds both local executables:
 - `./target/debug/volicord`
 - `./target/debug/volicord-mcp`
 
-Then create the setup profile:
+Then create the installation profile:
 
 ```sh
 ./target/debug/volicord setup --link-bin ~/.local/bin
 ```
 
 `volicord setup` creates or verifies the selected `Volicord Runtime Home`, finds
-`volicord-mcp`, and saves the setup profile. MCP command discovery checks an
+`volicord-mcp`, and saves the installation profile. MCP command discovery checks an
 explicit `--mcp-command PATH` first when supplied, then a sibling
 `volicord-mcp` next to the running `volicord`, then `PATH`.
 
@@ -53,7 +53,7 @@ Check setup readiness:
 volicord doctor
 ```
 
-`doctor` reports `complete` when the Runtime Home, setup profile, stored command
+`doctor` reports `complete` when the Runtime Home, installation profile, stored command
 paths, and applicable command links are usable. `action_required` means the
 command found a specific local repair action, such as rerunning setup or fixing
 an executable path.
@@ -70,7 +70,7 @@ volicord doctor
 Setup discovers the MCP command from the running installation by sibling lookup
 or `PATH` lookup. Use `volicord setup --mcp-command PATH` only when discovery
 cannot find the `volicord-mcp` executable you intend to use. Ordinary
-`volicord connect` commands use the saved setup profile in the resolved Runtime
+`volicord connect` commands use the saved installation profile in the resolved Runtime
 Home; they do not ask for an MCP command path, Runtime Home path, internal
 project identity, internal host value, or registry value.
 

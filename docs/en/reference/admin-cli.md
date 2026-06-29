@@ -130,7 +130,7 @@ Setup effects:
   selects a repository
 - does not create a public Volicord API method or record a user-owned judgment
 
-`volicord doctor` is the read-oriented diagnostic command for the setup profile.
+`volicord doctor` is the read-oriented diagnostic command for the installation profile.
 It verifies Runtime Home access, registry schema, installation profile presence,
 stored command readiness, and command-link or shim readiness when link metadata
 is present. It reports supported host detection as a connection-verification
@@ -271,7 +271,7 @@ normal host connection intent.
 Rules:
 
 - The command resolves or registers the selected repository project by root.
-- It uses the setup profile's stored MCP command unless the setup is invalid,
+- It uses the installation profile's stored MCP command unless the setup is invalid,
   in which case it reports an `action_required` setup diagnostic.
 - It may create or update internal registry state needed for the exported
   command to start a bound `volicord-mcp` process.

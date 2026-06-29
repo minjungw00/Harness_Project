@@ -44,7 +44,7 @@ volicord doctor
 호스트를 시작합니다. Setup은 필요한 `PATH` 동작을 보고할 수 있지만 부모 셸을
 영구적으로 바꿀 수는 없습니다.
 
-Runtime Home 파일을 직접 만들지 않습니다. Registry와 setup 프로필이 함께 만들어지도록
+Runtime Home 파일을 직접 만들지 않습니다. Registry와 설치 프로필이 함께 만들어지도록
 setup을 사용합니다.
 
 ## 저장소가 감지되지 않음

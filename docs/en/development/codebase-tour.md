@@ -300,7 +300,7 @@ Recommended next component:
 Why it exists:
 
 `volicord-cli` implements the local `volicord` administrative executable and
-reusable command modules. It handles setup-profile readiness, Git repository
+reusable command modules. It handles installation profile readiness, Git repository
 project detection, project and Agent Connection registration, Agent Connection
 setup, host-specific MCP configuration, generic MCP config export, local
 `User Channel` commands, and preflight execution.
@@ -334,7 +334,7 @@ Important modules:
   for process dispatch and `run_cli`.
 - [`crates/volicord-cli/src/setup_command.rs`](../../../crates/volicord-cli/src/setup_command.rs)
   and [`crates/volicord-cli/src/doctor_command.rs`](../../../crates/volicord-cli/src/doctor_command.rs)
-  for setup profile creation, executable discovery, and diagnostic checks.
+  for installation profile creation, executable discovery, and diagnostic checks.
 - [`crates/volicord-cli/src/project_context.rs`](../../../crates/volicord-cli/src/project_context.rs)
   for Git repository root detection and `volicord project ...` commands.
 - [`crates/volicord-cli/src/connection_command.rs`](../../../crates/volicord-cli/src/connection_command.rs)

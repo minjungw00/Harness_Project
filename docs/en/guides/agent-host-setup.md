@@ -111,7 +111,7 @@ cd /work/acme-api
 volicord export mcp-config --output /tmp/volicord.mcp.json
 ```
 
-The export uses the detected repository project and the setup profile. Add
+The export uses the detected repository project and the installation profile. Add
 `--read-only` when the exported config should bind a read-only connection. The
 exported file remains user-managed after export.
 
@@ -145,7 +145,7 @@ unrelated host configuration.
 
 | Symptom | Next document |
 |---|---|
-| Setup profile, executable, or repository detection is not ready. | [Installation](../getting-started/installation.md) |
+| Installation profile, executable, or repository detection is not ready. | [Installation](../getting-started/installation.md) |
 | Connection reports `action_required` or `failed`. | [Agent Host Troubleshooting](agent-host-troubleshooting.md) |
 | Exact command behavior is unclear. | [Administrative CLI Reference](../reference/admin-cli.md) |
 | Runtime Home and Product Repository boundaries matter. | [Runtime Boundaries](../reference/runtime-boundaries.md) |
