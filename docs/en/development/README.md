@@ -86,7 +86,7 @@ For public method work, the shortest useful source path is:
 For agent host setup and operator behavior, start instead with
 [`crates/volicord-cli/src/main.rs`](../../../crates/volicord-cli/src/main.rs),
 then
-[`crates/volicord-cli/src/agent_command.rs`](../../../crates/volicord-cli/src/agent_command.rs),
+[`crates/volicord-cli/src/connection_command.rs`](../../../crates/volicord-cli/src/connection_command.rs),
 [`crates/volicord-cli/src/host_integration/`](../../../crates/volicord-cli/src/host_integration/),
 and
 [`crates/volicord-cli/src/registration.rs`](../../../crates/volicord-cli/src/registration.rs).

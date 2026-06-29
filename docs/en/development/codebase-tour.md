@@ -337,7 +337,7 @@ Important modules:
   for setup profile creation, executable discovery, and diagnostic checks.
 - [`crates/volicord-cli/src/project_context.rs`](../../../crates/volicord-cli/src/project_context.rs)
   for Git repository root detection and `volicord project ...` commands.
-- [`crates/volicord-cli/src/agent_command.rs`](../../../crates/volicord-cli/src/agent_command.rs)
+- [`crates/volicord-cli/src/connection_command.rs`](../../../crates/volicord-cli/src/connection_command.rs)
   for `volicord connect`, `volicord connections`, and
   `volicord connection status/verify/mode/remove` orchestration.
 - [`crates/volicord-cli/src/export_command.rs`](../../../crates/volicord-cli/src/export_command.rs)

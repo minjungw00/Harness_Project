@@ -79,7 +79,7 @@ Core는 Volicord 상태를 위한 로컬 기준 기록입니다.
 에이전트 호스트 설정과 운영자 동작을 읽을 때는
 [`crates/volicord-cli/src/main.rs`](../../../crates/volicord-cli/src/main.rs)에서
 시작한 뒤
-[`crates/volicord-cli/src/agent_command.rs`](../../../crates/volicord-cli/src/agent_command.rs),
+[`crates/volicord-cli/src/connection_command.rs`](../../../crates/volicord-cli/src/connection_command.rs),
 [`crates/volicord-cli/src/host_integration/`](../../../crates/volicord-cli/src/host_integration/),
 [`crates/volicord-cli/src/registration.rs`](../../../crates/volicord-cli/src/registration.rs)를
 읽습니다. 로컬 User Channel 동작은 이어서

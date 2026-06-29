@@ -48,7 +48,7 @@ Core 쪽 동작은 `volicord-core`에 있고 공유 타입과 Store에 의존하
   `PUBLIC_METHOD_TOOL_NAMES`, `McpConnectionStartupInspection`,
   `McpConnectionContext`, `McpAdapter`, `McpAdapter::call_tool`,
   `prepare_connection_arguments`.
-- [`crates/volicord-cli/src/agent_command.rs`](../../../../crates/volicord-cli/src/agent_command.rs):
+- [`crates/volicord-cli/src/connection_command.rs`](../../../../crates/volicord-cli/src/connection_command.rs):
   Core/MCP 어댑터 경로 밖의 관리 호스트 설정 오케스트레이션.
 - [`crates/volicord-cli/src/registration.rs`](../../../../crates/volicord-cli/src/registration.rs):
   Agent Connection, Connection Project, 호출 출처 메타데이터 도우미.

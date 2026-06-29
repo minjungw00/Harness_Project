@@ -3,9 +3,10 @@
 use std::{env, fmt, path::Path, process};
 
 use volicord_cli::{
-    agent_command::{
+    connection_command::{
         connect_usage, connection_usage, connections_usage, run_connect_command,
-        run_connection_command, run_connections_command, AgentCommandError, ProductionAgentProcess,
+        run_connection_command, run_connections_command, ConnectionCommandError,
+        ProductionConnectionProcess,
     },
     doctor_command::{doctor_usage, run_doctor_command, DoctorCommandError},
     export_command::{export_usage, run_export_command, ExportCommandError},
@@ -76,23 +77,24 @@ where
             if !simple_help_requested(&args[2..]) {
                 require_setup_completed(&env_var, current_dir)?;
             }
-            let mut agent_process = ProductionAgentProcess;
-            run_connect_command(&args[2..], current_dir, &mut agent_process).map_err(CliError::from)
+            let mut connection_process = ProductionConnectionProcess;
+            run_connect_command(&args[2..], current_dir, &mut connection_process)
+                .map_err(CliError::from)
         }
         "connections" => {
             if !simple_help_requested(&args[2..]) {
                 require_setup_completed(&env_var, current_dir)?;
             }
-            let mut agent_process = ProductionAgentProcess;
-            run_connections_command(&args[2..], current_dir, &mut agent_process)
+            let mut connection_process = ProductionConnectionProcess;
+            run_connections_command(&args[2..], current_dir, &mut connection_process)
                 .map_err(CliError::from)
         }
         "connection" => {
             if !connection_help_requested(&args[2..]) {
                 require_setup_completed(&env_var, current_dir)?;
             }
-            let mut agent_process = ProductionAgentProcess;
-            run_connection_command(&args[2..], current_dir, &mut agent_process)
+            let mut connection_process = ProductionConnectionProcess;
+            run_connection_command(&args[2..], current_dir, &mut connection_process)
                 .map_err(CliError::from)
         }
         "user" => {
@@ -255,12 +257,12 @@ impl From<RuntimeHomeResolutionError> for CliError {
     }
 }
 
-impl From<AgentCommandError> for CliError {
-    fn from(error: AgentCommandError) -> Self {
+impl From<ConnectionCommandError> for CliError {
+    fn from(error: ConnectionCommandError) -> Self {
         match error {
-            AgentCommandError::Usage(message) => Self::Usage(message),
-            AgentCommandError::Runtime(message) => Self::Runtime(message),
-            AgentCommandError::FailureOutput(output) => Self::FailureOutput(output),
+            ConnectionCommandError::Usage(message) => Self::Usage(message),
+            ConnectionCommandError::Runtime(message) => Self::Runtime(message),
+            ConnectionCommandError::FailureOutput(output) => Self::FailureOutput(output),
         }
     }
 }

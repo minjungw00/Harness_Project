@@ -58,7 +58,7 @@ Home이나 Product Repository는 아닙니다.
   `CoreProjectStore` 프로젝트 로컬 Store 접근.
 - [`crates/volicord-store/src/artifacts.rs`](../../../../crates/volicord-store/src/artifacts.rs):
   Runtime Home 아티팩트 스테이징과 영구 본문 검증.
-- [`crates/volicord-cli/src/agent_command.rs`](../../../../crates/volicord-cli/src/agent_command.rs):
+- [`crates/volicord-cli/src/connection_command.rs`](../../../../crates/volicord-cli/src/connection_command.rs):
   에이전트 설정 오케스트레이션과 Runtime Home 준비.
 - [`crates/volicord-cli/src/registration.rs`](../../../../crates/volicord-cli/src/registration.rs):
   Agent Connection, Connection Project, 호출 출처 메타데이터 생성.

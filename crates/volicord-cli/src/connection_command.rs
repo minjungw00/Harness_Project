@@ -14,10 +14,9 @@ use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 use volicord_store::{
     agent_connections::{
-        add_connection_project, agent_connection_record, ensure_agent_connection,
-        list_agent_connections, list_connection_projects, remove_agent_connection_if_unused,
-        remove_connection_project, set_connection_enabled, set_connection_mode,
-        update_agent_connection_verification_report, AgentConnectionRecord,
+        add_connection_project, ensure_agent_connection, list_agent_connections,
+        list_connection_projects, remove_agent_connection_if_unused, remove_connection_project,
+        set_connection_mode, update_agent_connection_verification_report, AgentConnectionRecord,
         AgentConnectionRegistration, ConnectionProjectRecord, ConnectionProjectRegistration,
         CONNECTION_INTENT_GLOBAL, CONNECTION_INTENT_PERSONAL, CONNECTION_INTENT_SHARED,
         CONNECTION_MODE_READ_ONLY, CONNECTION_MODE_WORKFLOW, HOST_KIND_CLAUDE_CODE,
@@ -26,9 +25,8 @@ use volicord_store::{
         VERIFIED_STATUS_COMPLETE, VERIFIED_STATUS_FAILED, VERIFIED_STATUS_NOT_VERIFIED,
     },
     bootstrap::{
-        ensure_project_for_repo, initialize_runtime_home, installation_profile, list_projects,
-        project_record, project_record_by_repo_root, register_project, validate_project_id,
-        InstallationProfileRecord, ProjectRecord, ProjectRegistration, RepoProjectRegistration,
+        ensure_project_for_repo, initialize_runtime_home, installation_profile,
+        project_record_by_repo_root, InstallationProfileRecord, RepoProjectRegistration,
         ACTIVE_PROJECT_STATUS,
     },
     runtime_home::{resolve_runtime_home, RuntimeHomeResolutionError},
@@ -40,7 +38,6 @@ use crate::host_integration::{
     codex::{CodexAdapter, CodexEnvironment, CodexExistingPlanRequest},
     export_file_name,
     generic::{GenericAdapter, GenericExportRequest},
-    is_valid_server_name,
     verification::{Verification, VerificationStatus},
     ConnectionIntent, HostAdapter, HostConfigError, HostKind, HostPlan, HostPlanRequest,
     HostRemoveRequest, HostScope, HostTarget, InstallationProfile, ManagedServerEntry,
@@ -74,13 +71,13 @@ const READ_ONLY_TOOL_NAMES: [&str; 3] = [
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum AgentCommandError {
+pub enum ConnectionCommandError {
     Usage(String),
     Runtime(String),
     FailureOutput(String),
 }
 
-impl AgentCommandError {
+impl ConnectionCommandError {
     fn usage(message: impl Into<String>) -> Self {
         Self::Usage(message.into())
     }
@@ -90,7 +87,7 @@ impl AgentCommandError {
     }
 }
 
-impl fmt::Display for AgentCommandError {
+impl fmt::Display for ConnectionCommandError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Usage(message) | Self::Runtime(message) | Self::FailureOutput(message) => {
@@ -100,28 +97,28 @@ impl fmt::Display for AgentCommandError {
     }
 }
 
-impl std::error::Error for AgentCommandError {}
+impl std::error::Error for ConnectionCommandError {}
 
-impl From<StoreError> for AgentCommandError {
+impl From<StoreError> for ConnectionCommandError {
     fn from(error: StoreError) -> Self {
         Self::runtime(error.to_string())
     }
 }
 
-impl From<RuntimeHomeResolutionError> for AgentCommandError {
+impl From<RuntimeHomeResolutionError> for ConnectionCommandError {
     fn from(error: RuntimeHomeResolutionError) -> Self {
         Self::runtime(error.to_string())
     }
 }
 
-impl From<HostConfigError> for AgentCommandError {
+impl From<HostConfigError> for ConnectionCommandError {
     fn from(error: HostConfigError) -> Self {
         Self::runtime(error.to_string())
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct AgentProcessOutput {
+pub struct ConnectionProcessOutput {
     pub success: bool,
     pub status_code: Option<i32>,
     pub stdout: String,
@@ -136,7 +133,7 @@ pub struct McpLaunch {
     cwd: Option<PathBuf>,
 }
 
-pub trait AgentProcess {
+pub trait ConnectionProcess {
     fn env_var(&self, name: &str) -> Option<OsString>;
     fn current_exe(&self) -> Result<PathBuf, String>;
     fn run_preflight(
@@ -145,7 +142,7 @@ pub trait AgentProcess {
         runtime_home: &Path,
         connection_id: &str,
         project_id: Option<&str>,
-    ) -> Result<AgentProcessOutput, String>;
+    ) -> Result<ConnectionProcessOutput, String>;
     fn verify_mcp_stdio(
         &mut self,
         launch: &McpLaunch,
@@ -155,9 +152,9 @@ pub trait AgentProcess {
     ) -> Result<McpVerification, String>;
 }
 
-pub struct ProductionAgentProcess;
+pub struct ProductionConnectionProcess;
 
-impl AgentProcess for ProductionAgentProcess {
+impl ConnectionProcess for ProductionConnectionProcess {
     fn env_var(&self, name: &str) -> Option<OsString> {
         std::env::var_os(name)
     }
@@ -173,7 +170,7 @@ impl AgentProcess for ProductionAgentProcess {
         runtime_home: &Path,
         connection_id: &str,
         project_id: Option<&str>,
-    ) -> Result<AgentProcessOutput, String> {
+    ) -> Result<ConnectionProcessOutput, String> {
         let mut child = Command::new(&launch.command);
         child.arg("--check").arg("--connection").arg(connection_id);
         if let Some(project_id) = project_id {
@@ -188,7 +185,7 @@ impl AgentProcess for ProductionAgentProcess {
                 connection_id
             )
         })?;
-        Ok(AgentProcessOutput {
+        Ok(ConnectionProcessOutput {
             success: output.status.success(),
             status_code: output.status.code(),
             stdout: String::from_utf8_lossy(&output.stdout).into_owned(),
@@ -320,69 +317,6 @@ struct VerificationReport {
     tools: Vec<String>,
 }
 
-#[derive(Debug, Clone)]
-struct ParsedAgentOptions {
-    runtime_home: Option<PathBuf>,
-    repo_root: Option<PathBuf>,
-    project_id: Option<String>,
-    connection_id: Option<String>,
-    mode: Option<String>,
-    host_kind: Option<HostKind>,
-    host_scope: Option<HostScope>,
-    server_name: Option<String>,
-    export_path: Option<PathBuf>,
-    export_dir: Option<PathBuf>,
-    output: OutputFormat,
-    dry_run: bool,
-    allow_repository_write: bool,
-    replace_managed: bool,
-}
-
-impl Default for ParsedAgentOptions {
-    fn default() -> Self {
-        Self {
-            runtime_home: None,
-            repo_root: None,
-            project_id: None,
-            connection_id: None,
-            mode: None,
-            host_kind: None,
-            host_scope: None,
-            server_name: None,
-            export_path: None,
-            export_dir: None,
-            output: OutputFormat::Text,
-            dry_run: false,
-            allow_repository_write: false,
-            replace_managed: false,
-        }
-    }
-}
-
-pub fn agent_usage() -> String {
-    format!(
-        "{}{}{}",
-        connect_usage(),
-        connections_usage(),
-        connection_usage()
-    )
-}
-
-fn agent_connect_usage() -> String {
-    format!(
-        concat!(
-            "Usage:\n",
-            "  {}\n",
-            "\n",
-            "Defaults:\n",
-            "  workflow is the default connection mode after volicord setup.\n",
-            "  Use --read-only for the explicit read-only path.\n",
-            "  volicord-mcp command location comes from volicord setup.\n"
-        ),
-        connect_usage().trim_end()
-    )
-}
-
 pub fn connect_usage() -> String {
     "volicord connect [HOST] [--repo PATH] [--shared|--global] [--read-only] [--dry-run] [--json]\n"
         .to_owned()
@@ -425,8 +359,8 @@ struct ConnectionSelector {
 pub fn run_connect_command(
     args: &[String],
     current_dir: &Path,
-    process: &mut impl AgentProcess,
-) -> Result<String, AgentCommandError> {
+    process: &mut impl ConnectionProcess,
+) -> Result<String, ConnectionCommandError> {
     if is_help_request(args) {
         return Ok(connect_usage());
     }
@@ -447,15 +381,7 @@ pub fn run_connect_command(
     let setup_profile = required_installation_profile(&runtime_home)?;
     let repo_root = resolve_connection_repo_root(current_dir, parsed.repo.as_deref())?;
     let server_name = DEFAULT_SERVER_NAME.to_owned();
-    let target_hint = connection_target_hint(
-        host_kind,
-        host_scope,
-        Some(&repo_root),
-        &ParsedAgentOptions::default(),
-        process,
-        &server_name,
-        None,
-    )?;
+    let target_hint = connection_target_hint(host_kind, host_scope, Some(&repo_root), process)?;
     let existing = connection_for_host_target(
         &runtime_home,
         host_kind,
@@ -506,7 +432,7 @@ pub fn run_connect_command(
         process,
     )?;
     if let Some(conflict) = host_plan.conflicts.first() {
-        return Err(AgentCommandError::runtime(conflict.message.clone()));
+        return Err(ConnectionCommandError::runtime(conflict.message.clone()));
     }
     if parsed.dry_run {
         return render_simplified_plan_output(SimplifiedPlanOutput {
@@ -571,7 +497,7 @@ pub fn run_connect_command(
         process,
     )?;
     if let Some(conflict) = host_plan.conflicts.first() {
-        return Err(AgentCommandError::runtime(conflict.message.clone()));
+        return Err(ConnectionCommandError::runtime(conflict.message.clone()));
     }
     let mcp_command = PathBuf::from(&host_plan.entry.command);
     let metadata_json = connection_metadata_json(&host_plan, &mcp_command, &runtime_home)?;
@@ -641,8 +567,8 @@ pub fn run_connect_command(
 pub fn run_connections_command(
     args: &[String],
     current_dir: &Path,
-    process: &mut impl AgentProcess,
-) -> Result<String, AgentCommandError> {
+    process: &mut impl ConnectionProcess,
+) -> Result<String, ConnectionCommandError> {
     if is_help_request(args) {
         return Ok(connections_usage());
     }
@@ -670,8 +596,8 @@ pub fn run_connections_command(
 pub fn run_connection_command(
     args: &[String],
     current_dir: &Path,
-    process: &mut impl AgentProcess,
-) -> Result<String, AgentCommandError> {
+    process: &mut impl ConnectionProcess,
+) -> Result<String, ConnectionCommandError> {
     let Some(subcommand) = args.first().map(String::as_str) else {
         return Ok(connection_usage());
     };
@@ -679,7 +605,7 @@ pub fn run_connection_command(
         if args.len() == 1 {
             return Ok(connection_usage());
         }
-        return Err(AgentCommandError::usage(format!(
+        return Err(ConnectionCommandError::usage(format!(
             "unexpected argument: {}\n\n{}",
             args[1],
             connection_usage()
@@ -690,7 +616,7 @@ pub fn run_connection_command(
         "verify" => command_connection_verify(&args[1..], current_dir, process),
         "mode" => command_connection_mode(&args[1..], current_dir, process),
         "remove" => command_connection_remove(&args[1..], current_dir, process),
-        other => Err(AgentCommandError::usage(format!(
+        other => Err(ConnectionCommandError::usage(format!(
             "unknown connection command: {other}\n\n{}",
             connection_usage()
         ))),
@@ -700,8 +626,8 @@ pub fn run_connection_command(
 fn command_connection_status(
     args: &[String],
     current_dir: &Path,
-    process: &mut impl AgentProcess,
-) -> Result<String, AgentCommandError> {
+    process: &mut impl ConnectionProcess,
+) -> Result<String, ConnectionCommandError> {
     if is_help_request(args) {
         return Ok(connection_usage());
     }
@@ -724,8 +650,8 @@ fn command_connection_status(
 fn command_connection_verify(
     args: &[String],
     current_dir: &Path,
-    process: &mut impl AgentProcess,
-) -> Result<String, AgentCommandError> {
+    process: &mut impl ConnectionProcess,
+) -> Result<String, ConnectionCommandError> {
     if is_help_request(args) {
         return Ok(connection_usage());
     }
@@ -767,8 +693,8 @@ fn command_connection_verify(
 fn command_connection_mode(
     args: &[String],
     current_dir: &Path,
-    process: &mut impl AgentProcess,
-) -> Result<String, AgentCommandError> {
+    process: &mut impl ConnectionProcess,
+) -> Result<String, ConnectionCommandError> {
     if is_help_request(args) {
         return Ok(connection_usage());
     }
@@ -815,8 +741,8 @@ fn command_connection_mode(
 fn command_connection_remove(
     args: &[String],
     current_dir: &Path,
-    process: &mut impl AgentProcess,
-) -> Result<String, AgentCommandError> {
+    process: &mut impl ConnectionProcess,
+) -> Result<String, ConnectionCommandError> {
     if is_help_request(args) {
         return Ok(connection_usage());
     }
@@ -828,7 +754,7 @@ fn command_connection_remove(
     let selected_project = projects
         .iter()
         .find(|project| project.project.repo_root == selector.repo_root)
-        .ok_or_else(|| AgentCommandError::runtime("selected repository is not connected"))?;
+        .ok_or_else(|| ConnectionCommandError::runtime("selected repository is not connected"))?;
     let remaining_count = projects.len().saturating_sub(1);
     let host_plan = if remaining_count == 0 {
         Some(existing_host_plan(&connection, &runtime_home, process)?)
@@ -874,479 +800,6 @@ fn command_connection_remove(
     })
 }
 
-pub fn run_agent_command(
-    args: &[String],
-    current_dir: &Path,
-    process: &mut impl AgentProcess,
-) -> Result<String, AgentCommandError> {
-    let Some(subcommand) = args.first().map(String::as_str) else {
-        return Ok(agent_usage());
-    };
-
-    match subcommand {
-        "-h" | "--help" | "help" => {
-            if args.len() == 1 {
-                Ok(agent_usage())
-            } else {
-                Err(AgentCommandError::usage(format!(
-                    "unexpected argument: {}\n\n{}",
-                    args[1],
-                    agent_usage()
-                )))
-            }
-        }
-        "connect" => command_connect(&args[1..], current_dir, process),
-        "list" => command_list(&args[1..], current_dir, process),
-        "status" => command_status(&args[1..], current_dir, process),
-        "enable" => command_enable_disable(&args[1..], current_dir, process, true),
-        "disable" => command_enable_disable(&args[1..], current_dir, process, false),
-        "project" => command_project(&args[1..], current_dir, process),
-        "verify" => command_verify(&args[1..], current_dir, process),
-        "uninstall" => command_uninstall(&args[1..], current_dir, process),
-        other => Err(AgentCommandError::usage(format!(
-            "unknown agent command: {other}\n\n{}",
-            agent_usage()
-        ))),
-    }
-}
-
-fn command_connect(
-    args: &[String],
-    current_dir: &Path,
-    process: &mut impl AgentProcess,
-) -> Result<String, AgentCommandError> {
-    if is_help_request(args) {
-        return Ok(agent_connect_usage());
-    }
-    let parsed = parse_agent_options(args, connect_allowed_options())?;
-    let host_kind = required_host_kind(&parsed)?;
-    let host_scope = required_host_scope(&parsed)?;
-    let connection_intent = connection_intent_for_host_scope(host_kind, host_scope)?;
-    validate_host_scope(host_kind, host_scope)?;
-    validate_repository_write_permission(&parsed, host_scope)?;
-    let server_name = parsed
-        .server_name
-        .clone()
-        .unwrap_or_else(|| DEFAULT_SERVER_NAME.to_owned());
-    validate_server_name(&server_name)?;
-    let runtime_home = resolve_agent_runtime_home(&parsed, current_dir, process)?;
-    let setup_profile = required_installation_profile(&runtime_home)?;
-    let mode = parse_connection_mode(
-        parsed
-            .mode
-            .as_deref()
-            .unwrap_or(setup_profile.default_connection_mode.as_str()),
-    )?;
-    let repo_root = resolve_optional_repo_root(parsed.repo_root.as_deref(), current_dir)?;
-    let export_target = resolve_export_target(&parsed, current_dir, None);
-
-    if parsed.dry_run {
-        let project = resolve_selected_project_for_dry_run(&parsed, repo_root.as_deref())?;
-        let target_hint = connection_target_hint(
-            host_kind,
-            host_scope,
-            project.repo_root.as_deref(),
-            &parsed,
-            process,
-            &server_name,
-            export_target.as_deref(),
-        )?;
-        let connection_id = parsed.connection_id.clone().unwrap_or_else(|| {
-            deterministic_connection_id(
-                host_kind,
-                host_scope,
-                project.project_id.as_deref(),
-                &target_hint,
-                &server_name,
-            )
-        });
-        return render_dry_run_output(
-            parsed.output,
-            DryRunRenderData {
-                action: "connect",
-                connection_id: &connection_id,
-                host_kind,
-                host_scope,
-                mode: &mode,
-                server_name: &server_name,
-                config_target: &target_hint,
-                project_id: project.project_id.as_deref(),
-            },
-        );
-    }
-
-    initialize_runtime_home(
-        &runtime_home,
-        AGENT_RUNTIME_HOME_ID,
-        metadata_json_base()?.as_str(),
-    )?;
-    let project = resolve_or_register_project(
-        &runtime_home,
-        parsed.project_id.as_deref(),
-        repo_root.as_deref(),
-    )?;
-    let export_target =
-        resolve_export_target(&parsed, current_dir, parsed.connection_id.as_deref());
-    let target_hint = connection_target_hint(
-        host_kind,
-        host_scope,
-        Some(&project.repo_root),
-        &parsed,
-        process,
-        &server_name,
-        export_target.as_deref(),
-    )?;
-    let connection_id = parsed.connection_id.clone().unwrap_or_else(|| {
-        deterministic_connection_id(
-            host_kind,
-            host_scope,
-            Some(&project.project_id),
-            &target_hint,
-            &server_name,
-        )
-    });
-    let existing = agent_connection_record(&runtime_home, &connection_id)?;
-    let expected_fingerprint = existing
-        .as_ref()
-        .map(|record| record.managed_fingerprint.as_str());
-    let host_plan = build_host_plan(
-        BuildHostPlanRequest {
-            host_kind,
-            connection_intent,
-            connection_id: &connection_id,
-            repo_root: Some(&project.repo_root),
-            project_id: Some(&project.project_id),
-            project_name: Some(&project.project_name),
-            installation_profile: installation_profile_context(&runtime_home, &setup_profile),
-            mode: &mode,
-            expected_fingerprint,
-            export_target: export_target.as_deref(),
-            export_dir: parsed.export_dir.as_deref(),
-            current_dir,
-        },
-        process,
-    )?;
-    if let Some(conflict) = host_plan.conflicts.first() {
-        return Err(AgentCommandError::runtime(conflict.message.clone()));
-    }
-    let mcp_command = PathBuf::from(&host_plan.entry.command);
-    let metadata_json = connection_metadata_json(&host_plan, &mcp_command, &runtime_home)?;
-    let mut connection = ensure_agent_connection(
-        &runtime_home,
-        AgentConnectionRegistration {
-            connection_id: connection_id.clone(),
-            host_kind: host_kind.as_str().to_owned(),
-            intent: connection_intent.as_str().to_owned(),
-            host_scope: host_scope.as_str().to_owned(),
-            server_name: host_plan.server_name.clone(),
-            config_target: host_target_text(&host_plan.target),
-            mode: mode.clone(),
-            enabled: true,
-            managed_fingerprint: host_plan.fingerprint.clone(),
-            last_verified_status: existing
-                .as_ref()
-                .map(|record| record.last_verified_status.clone())
-                .unwrap_or_else(|| VERIFIED_STATUS_NOT_VERIFIED.to_owned()),
-            last_verification_report_json: existing
-                .as_ref()
-                .map(|record| record.last_verification_report_json.clone())
-                .unwrap_or_else(|| "{}".to_owned()),
-            last_user_actions_json: user_actions_json(&host_plan.user_actions)?,
-            metadata_json,
-        },
-    )?;
-    enforce_single_project_scope(&runtime_home, &connection, &project.project_id)?;
-    add_connection_project(
-        &runtime_home,
-        ConnectionProjectRegistration {
-            connection_id: connection.connection_id.clone(),
-            project_id: project.project_id.clone(),
-        },
-    )?;
-    apply_host_plan(host_kind, &host_plan, process)?;
-    let launch = mcp_launch_from_host_plan(&host_plan, Some(&project.repo_root));
-    let verification = verify_connection(
-        &runtime_home,
-        &connection,
-        &host_plan,
-        &launch,
-        Some(&project.project_id),
-        process,
-    )?;
-    connection = update_agent_connection_verification_report(
-        &runtime_home,
-        &connection.connection_id,
-        verification.status.store_status(),
-        &host_plan.fingerprint,
-        &verification_report_json(&verification)?,
-        &user_actions_json(&verification.host.user_actions)?,
-    )?;
-    let projects = list_connection_projects(&runtime_home, &connection.connection_id)?;
-    render_connection_output(
-        parsed.output,
-        "connected",
-        verification.status,
-        &connection,
-        &projects,
-        Some(&verification),
-    )
-}
-
-fn command_list(
-    args: &[String],
-    current_dir: &Path,
-    process: &mut impl AgentProcess,
-) -> Result<String, AgentCommandError> {
-    let parsed = parse_agent_options(args, list_allowed_options())?;
-    let runtime_home = resolve_agent_runtime_home(&parsed, current_dir, process)?;
-    let connections = list_agent_connections(&runtime_home)?;
-    match parsed.output {
-        OutputFormat::Text => {
-            let mut output = String::from(
-                "connection_id\thost_kind\thost_scope\tmode\tenabled\tconnected_projects\tverification_status\tserver_name\tconfig_target\n",
-            );
-            for connection in connections {
-                let projects = project_ids_or_empty(&runtime_home, &connection.connection_id)?;
-                output.push_str(&format!(
-                    "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n",
-                    connection.connection_id,
-                    connection.host_kind,
-                    connection.host_scope,
-                    connection.mode,
-                    connection.enabled,
-                    projects.join(","),
-                    connection.last_verified_status,
-                    connection.server_name,
-                    connection.config_target
-                ));
-            }
-            Ok(output)
-        }
-        OutputFormat::Json => {
-            let mut values = Vec::new();
-            for connection in connections {
-                let projects = project_ids_or_empty(&runtime_home, &connection.connection_id)?;
-                values.push(connection_json(&connection, &projects));
-            }
-            serde_json::to_string_pretty(&json!({ "connections": values }))
-                .map(|text| format!("{text}\n"))
-                .map_err(|error| AgentCommandError::runtime(error.to_string()))
-        }
-    }
-}
-
-fn command_status(
-    args: &[String],
-    current_dir: &Path,
-    process: &mut impl AgentProcess,
-) -> Result<String, AgentCommandError> {
-    let parsed = parse_agent_options(args, status_allowed_options())?;
-    let runtime_home = resolve_agent_runtime_home(&parsed, current_dir, process)?;
-    let connection_id = required_text(parsed.connection_id.as_deref(), "connection-id")?;
-    let connection = required_connection(&runtime_home, connection_id)?;
-    let projects = list_connection_projects(&runtime_home, connection_id)?;
-    render_connection_output(
-        parsed.output,
-        "status",
-        status_from_store(&connection.last_verified_status),
-        &connection,
-        &projects,
-        None,
-    )
-}
-
-fn command_enable_disable(
-    args: &[String],
-    current_dir: &Path,
-    process: &mut impl AgentProcess,
-    enabled: bool,
-) -> Result<String, AgentCommandError> {
-    let parsed = parse_agent_options(args, enable_allowed_options())?;
-    let runtime_home = resolve_agent_runtime_home(&parsed, current_dir, process)?;
-    let connection_id = required_text(parsed.connection_id.as_deref(), "connection-id")?;
-    let connection = set_connection_enabled(&runtime_home, connection_id, enabled)?;
-    let projects = list_connection_projects(&runtime_home, connection_id)?;
-    render_connection_output(
-        parsed.output,
-        if enabled { "enabled" } else { "disabled" },
-        status_from_store(&connection.last_verified_status),
-        &connection,
-        &projects,
-        None,
-    )
-}
-
-fn command_project(
-    args: &[String],
-    current_dir: &Path,
-    process: &mut impl AgentProcess,
-) -> Result<String, AgentCommandError> {
-    let Some(subcommand) = args.first().map(String::as_str) else {
-        return Err(AgentCommandError::usage(agent_usage()));
-    };
-    match subcommand {
-        "add" => command_project_add(&args[1..], current_dir, process),
-        "remove" => command_project_remove(&args[1..], current_dir, process),
-        "-h" | "--help" | "help" => Ok(agent_usage()),
-        other => Err(AgentCommandError::usage(format!(
-            "unknown agent project command: {other}\n\n{}",
-            agent_usage()
-        ))),
-    }
-}
-
-fn command_project_add(
-    args: &[String],
-    current_dir: &Path,
-    process: &mut impl AgentProcess,
-) -> Result<String, AgentCommandError> {
-    let parsed = parse_agent_options(args, project_add_allowed_options())?;
-    let runtime_home = resolve_agent_runtime_home(&parsed, current_dir, process)?;
-    let connection_id = required_text(parsed.connection_id.as_deref(), "connection-id")?;
-    let project_id = required_text(parsed.project_id.as_deref(), "project-id")?;
-    let connection = required_connection(&runtime_home, connection_id)?;
-    let repo_root = resolve_optional_repo_root(parsed.repo_root.as_deref(), current_dir)?;
-    if parsed.dry_run {
-        return render_project_output(
-            parsed.output,
-            "project_add_dry_run",
-            AgentResultStatus::DryRun,
-            &connection,
-            &[project_id.to_owned()],
-        );
-    }
-    let project =
-        resolve_or_register_project(&runtime_home, Some(project_id), repo_root.as_deref())?;
-    enforce_single_project_scope(&runtime_home, &connection, &project.project_id)?;
-    add_connection_project(
-        &runtime_home,
-        ConnectionProjectRegistration {
-            connection_id: connection_id.to_owned(),
-            project_id: project.project_id.clone(),
-        },
-    )?;
-    let projects = list_connection_projects(&runtime_home, connection_id)?;
-    render_connection_output(
-        parsed.output,
-        "project_added",
-        status_from_store(&connection.last_verified_status),
-        &connection,
-        &projects,
-        None,
-    )
-}
-
-fn command_project_remove(
-    args: &[String],
-    current_dir: &Path,
-    process: &mut impl AgentProcess,
-) -> Result<String, AgentCommandError> {
-    let parsed = parse_agent_options(args, project_remove_allowed_options())?;
-    let runtime_home = resolve_agent_runtime_home(&parsed, current_dir, process)?;
-    let connection_id = required_text(parsed.connection_id.as_deref(), "connection-id")?;
-    let project_id = required_text(parsed.project_id.as_deref(), "project-id")?;
-    let connection = required_connection(&runtime_home, connection_id)?;
-    if parsed.dry_run {
-        return render_project_output(
-            parsed.output,
-            "project_remove_dry_run",
-            AgentResultStatus::DryRun,
-            &connection,
-            &[project_id.to_owned()],
-        );
-    }
-    remove_connection_project(&runtime_home, connection_id, project_id)?;
-    let projects = list_connection_projects(&runtime_home, connection_id)?;
-    render_connection_output(
-        parsed.output,
-        "project_removed",
-        status_from_store(&connection.last_verified_status),
-        &connection,
-        &projects,
-        None,
-    )
-}
-
-fn command_verify(
-    args: &[String],
-    current_dir: &Path,
-    process: &mut impl AgentProcess,
-) -> Result<String, AgentCommandError> {
-    let parsed = parse_agent_options(args, verify_allowed_options())?;
-    let runtime_home = resolve_agent_runtime_home(&parsed, current_dir, process)?;
-    let connection_id = required_text(parsed.connection_id.as_deref(), "connection-id")?;
-    let mut connection = required_connection(&runtime_home, connection_id)?;
-    let host_plan = existing_host_plan(&connection, &runtime_home, process)?;
-    let launch = mcp_launch_from_host_plan(&host_plan, None);
-    let verification = verify_connection(
-        &runtime_home,
-        &connection,
-        &host_plan,
-        &launch,
-        None,
-        process,
-    )?;
-    connection = update_agent_connection_verification_report(
-        &runtime_home,
-        &connection.connection_id,
-        verification.status.store_status(),
-        &host_plan.fingerprint,
-        &verification_report_json(&verification)?,
-        &user_actions_json(&verification.host.user_actions)?,
-    )?;
-    let projects = list_connection_projects(&runtime_home, connection_id)?;
-    render_connection_output(
-        parsed.output,
-        "verified",
-        verification.status,
-        &connection,
-        &projects,
-        Some(&verification),
-    )
-}
-
-fn command_uninstall(
-    args: &[String],
-    current_dir: &Path,
-    process: &mut impl AgentProcess,
-) -> Result<String, AgentCommandError> {
-    let parsed = parse_agent_options(args, uninstall_allowed_options())?;
-    let runtime_home = resolve_agent_runtime_home(&parsed, current_dir, process)?;
-    let connection_id = required_text(parsed.connection_id.as_deref(), "connection-id")?;
-    let connection = required_connection(&runtime_home, connection_id)?;
-    let host_scope = parse_host_scope(&connection.host_scope)?;
-    if host_scope == HostScope::Project && !parsed.dry_run && !parsed.allow_repository_write {
-        return Err(AgentCommandError::usage(
-            "project-scoped Agent Connection uninstall requires --allow-repository-write",
-        ));
-    }
-    let projects = list_connection_projects(&runtime_home, connection_id)?;
-    if parsed.dry_run {
-        return render_connection_output(
-            parsed.output,
-            "uninstall_dry_run",
-            AgentResultStatus::DryRun,
-            &connection,
-            &projects,
-            None,
-        );
-    }
-    let host_plan = existing_host_plan(&connection, &runtime_home, process)?;
-    remove_host_configuration(&host_plan, &connection, process)?;
-    for project in &projects {
-        remove_connection_project(&runtime_home, connection_id, &project.project_id)?;
-    }
-    remove_agent_connection_if_unused(&runtime_home, connection_id)?;
-    render_connection_output(
-        parsed.output,
-        "uninstalled",
-        AgentResultStatus::Complete,
-        &connection,
-        &[],
-        None,
-    )
-}
-
 fn is_help_request(args: &[String]) -> bool {
     matches!(
         args.first().map(String::as_str),
@@ -1354,60 +807,11 @@ fn is_help_request(args: &[String]) -> bool {
     )
 }
 
-fn parse_agent_options(
-    args: &[String],
-    allowed: &[&str],
-) -> Result<ParsedAgentOptions, AgentCommandError> {
-    let mut parsed = ParsedAgentOptions::default();
-    let mut seen = BTreeSet::new();
-    let mut index = 0;
-
-    while index < args.len() {
-        let token = &args[index];
-        if token == "-h" || token == "--help" || token == "help" {
-            return Err(AgentCommandError::usage(agent_usage()));
-        }
-        if !token.starts_with("--") {
-            return Err(AgentCommandError::usage(format!(
-                "unexpected argument: {token}"
-            )));
-        }
-        let without_prefix = &token[2..];
-        let (name, value) = if let Some((name, value)) = without_prefix.split_once('=') {
-            (name.to_owned(), Some(value.to_owned()))
-        } else if is_boolean_agent_option(without_prefix) {
-            (without_prefix.to_owned(), None)
-        } else {
-            index += 1;
-            let Some(value) = args.get(index) else {
-                return Err(AgentCommandError::usage(format!(
-                    "missing value for --{without_prefix}"
-                )));
-            };
-            (without_prefix.to_owned(), Some(value.clone()))
-        };
-
-        if !allowed.iter().any(|allowed_name| *allowed_name == name) {
-            return Err(AgentCommandError::usage(format!(
-                "unknown option: --{name}"
-            )));
-        }
-        if !seen.insert(name.clone()) {
-            return Err(AgentCommandError::usage(format!(
-                "duplicate option: --{name}"
-            )));
-        }
-        set_agent_option(&mut parsed, &name, value.as_deref())?;
-        index += 1;
-    }
-    Ok(parsed)
-}
-
 fn parse_connection_options(
     args: &[String],
     allowed: &[&str],
     max_positionals: usize,
-) -> Result<ParsedConnectionOptions, AgentCommandError> {
+) -> Result<ParsedConnectionOptions, ConnectionCommandError> {
     let mut parsed = ParsedConnectionOptions::default();
     let mut seen = BTreeSet::new();
     let mut index = 0;
@@ -1415,7 +819,7 @@ fn parse_connection_options(
     while index < args.len() {
         let token = &args[index];
         if token == "-h" || token == "--help" || token == "help" {
-            return Err(AgentCommandError::usage(connection_usage()));
+            return Err(ConnectionCommandError::usage(connection_usage()));
         }
         if !token.starts_with("--") {
             parsed.positionals.push(token.clone());
@@ -1430,7 +834,7 @@ fn parse_connection_options(
         } else {
             index += 1;
             let Some(value) = args.get(index) else {
-                return Err(AgentCommandError::usage(format!(
+                return Err(ConnectionCommandError::usage(format!(
                     "missing value for --{without_prefix}"
                 )));
             };
@@ -1438,12 +842,12 @@ fn parse_connection_options(
         };
 
         if !allowed.iter().any(|allowed_name| *allowed_name == name) {
-            return Err(AgentCommandError::usage(format!(
+            return Err(ConnectionCommandError::usage(format!(
                 "unknown option: --{name}"
             )));
         }
         if !seen.insert(name.clone()) {
-            return Err(AgentCommandError::usage(format!(
+            return Err(ConnectionCommandError::usage(format!(
                 "duplicate option: --{name}"
             )));
         }
@@ -1452,7 +856,7 @@ fn parse_connection_options(
     }
 
     if parsed.positionals.len() > max_positionals {
-        return Err(AgentCommandError::usage(format!(
+        return Err(ConnectionCommandError::usage(format!(
             "unexpected argument: {}",
             parsed.positionals[max_positionals]
         )));
@@ -1463,7 +867,7 @@ fn parse_connection_options(
         }
     }
     if parsed.shared && parsed.global {
-        return Err(AgentCommandError::usage(
+        return Err(ConnectionCommandError::usage(
             "--shared and --global are mutually exclusive",
         ));
     }
@@ -1478,7 +882,7 @@ fn set_connection_option(
     parsed: &mut ParsedConnectionOptions,
     name: &str,
     value: Option<&str>,
-) -> Result<(), AgentCommandError> {
+) -> Result<(), ConnectionCommandError> {
     match name {
         "repo" => parsed.repo = Some(value_path(name, value)?),
         "shared" => {
@@ -1502,7 +906,7 @@ fn set_connection_option(
             parsed.json = true;
         }
         _ => {
-            return Err(AgentCommandError::usage(format!(
+            return Err(ConnectionCommandError::usage(format!(
                 "unknown option: --{name}"
             )))
         }
@@ -1510,9 +914,9 @@ fn set_connection_option(
     Ok(())
 }
 
-fn reject_boolean_value(name: &str, value: Option<&str>) -> Result<(), AgentCommandError> {
+fn reject_boolean_value(name: &str, value: Option<&str>) -> Result<(), ConnectionCommandError> {
     if value.is_some() {
-        Err(AgentCommandError::usage(format!(
+        Err(ConnectionCommandError::usage(format!(
             "--{name} does not accept a value"
         )))
     } else {
@@ -1530,9 +934,9 @@ fn connection_output_format(parsed: &ParsedConnectionOptions) -> OutputFormat {
 
 fn connection_intent_from_flags(
     parsed: &ParsedConnectionOptions,
-) -> Result<ConnectionIntent, AgentCommandError> {
+) -> Result<ConnectionIntent, ConnectionCommandError> {
     if parsed.shared && parsed.global {
-        return Err(AgentCommandError::usage(
+        return Err(ConnectionCommandError::usage(
             "--shared and --global are mutually exclusive",
         ));
     }
@@ -1548,17 +952,17 @@ fn connection_intent_from_flags(
 fn host_scope_for_intent(
     host_kind: HostKind,
     intent: ConnectionIntent,
-) -> Result<HostScope, AgentCommandError> {
+) -> Result<HostScope, ConnectionCommandError> {
     match (host_kind, intent) {
         (HostKind::Codex, ConnectionIntent::Personal) => Ok(HostScope::User),
         (HostKind::Codex, ConnectionIntent::Shared) => Ok(HostScope::Project),
-        (HostKind::Codex, ConnectionIntent::Global) => Err(AgentCommandError::usage(
+        (HostKind::Codex, ConnectionIntent::Global) => Err(ConnectionCommandError::usage(
             "Codex does not support --global; use codex personal/shared or claude-code --global",
         )),
         (HostKind::ClaudeCode, ConnectionIntent::Personal) => Ok(HostScope::Local),
         (HostKind::ClaudeCode, ConnectionIntent::Shared) => Ok(HostScope::Project),
         (HostKind::ClaudeCode, ConnectionIntent::Global) => Ok(HostScope::User),
-        (HostKind::Generic, _) => Err(AgentCommandError::usage(
+        (HostKind::Generic, _) => Err(ConnectionCommandError::usage(
             "generic MCP export is not a host connection; use the export command",
         )),
     }
@@ -1566,8 +970,8 @@ fn host_scope_for_intent(
 
 fn resolve_connection_host(
     explicit: Option<HostKind>,
-    process: &impl AgentProcess,
-) -> Result<HostKind, AgentCommandError> {
+    process: &impl ConnectionProcess,
+) -> Result<HostKind, ConnectionCommandError> {
     if let Some(host_kind) = explicit {
         return Ok(host_kind);
     }
@@ -1586,10 +990,10 @@ fn resolve_connection_host(
     available.dedup();
     match available.as_slice() {
         [host_kind] => Ok(*host_kind),
-        [] => Err(AgentCommandError::usage(
+        [] => Err(ConnectionCommandError::usage(
             "host could not be identified; choose `codex` or `claude-code`",
         )),
-        _ => Err(AgentCommandError::usage(
+        _ => Err(ConnectionCommandError::usage(
             "host is ambiguous; choose `codex` or `claude-code`",
         )),
     }
@@ -1598,8 +1002,8 @@ fn resolve_connection_host(
 fn connection_selector(
     parsed: &ParsedConnectionOptions,
     current_dir: &Path,
-    process: &impl AgentProcess,
-) -> Result<ConnectionSelector, AgentCommandError> {
+    process: &impl ConnectionProcess,
+) -> Result<ConnectionSelector, ConnectionCommandError> {
     let host_kind = resolve_connection_host(parsed.host_kind, process)?;
     let intent = connection_intent_from_flags(parsed)?;
     let host_scope = host_scope_for_intent(host_kind, intent)?;
@@ -1614,14 +1018,14 @@ fn connection_selector(
 
 fn mode_positionals(
     parsed: &ParsedConnectionOptions,
-    process: &impl AgentProcess,
-) -> Result<(HostKind, String), AgentCommandError> {
+    process: &impl ConnectionProcess,
+) -> Result<(HostKind, String), ConnectionCommandError> {
     match parsed.positionals.as_slice() {
         [mode] => {
             if let Ok(mode) = parse_user_connection_mode(mode) {
                 Ok((resolve_connection_host(None, process)?, mode))
             } else {
-                Err(AgentCommandError::usage(
+                Err(ConnectionCommandError::usage(
                     "missing mode; use `workflow` or `read-only`",
                 ))
             }
@@ -1630,28 +1034,28 @@ fn mode_positionals(
             parse_public_host_kind(host)?,
             parse_user_connection_mode(mode)?,
         )),
-        [] => Err(AgentCommandError::usage(
+        [] => Err(ConnectionCommandError::usage(
             "missing mode; use `workflow` or `read-only`",
         )),
-        _ => Err(AgentCommandError::usage("unexpected mode arguments")),
+        _ => Err(ConnectionCommandError::usage("unexpected mode arguments")),
     }
 }
 
-fn parse_public_host_kind(value: &str) -> Result<HostKind, AgentCommandError> {
+fn parse_public_host_kind(value: &str) -> Result<HostKind, ConnectionCommandError> {
     match value {
         HOST_KIND_CODEX => Ok(HostKind::Codex),
         "claude-code" | HOST_KIND_CLAUDE_CODE => Ok(HostKind::ClaudeCode),
-        other => Err(AgentCommandError::usage(format!(
+        other => Err(ConnectionCommandError::usage(format!(
             "unknown host: {other}; choose `codex` or `claude-code`"
         ))),
     }
 }
 
-fn parse_user_connection_mode(value: &str) -> Result<String, AgentCommandError> {
+fn parse_user_connection_mode(value: &str) -> Result<String, ConnectionCommandError> {
     match value {
         "workflow" => Ok(CONNECTION_MODE_WORKFLOW.to_owned()),
         "read-only" => Ok(CONNECTION_MODE_READ_ONLY.to_owned()),
-        other => Err(AgentCommandError::usage(format!(
+        other => Err(ConnectionCommandError::usage(format!(
             "unknown connection mode: {other}; use `workflow` or `read-only`"
         ))),
     }
@@ -1660,17 +1064,17 @@ fn parse_user_connection_mode(value: &str) -> Result<String, AgentCommandError> 
 fn resolve_connection_repo_root(
     current_dir: &Path,
     selected_path: Option<&Path>,
-) -> Result<PathBuf, AgentCommandError> {
+) -> Result<PathBuf, ConnectionCommandError> {
     let selected = selected_path.unwrap_or(current_dir);
     let absolute = absolute_path(current_dir, selected.to_path_buf());
     let canonical = fs::canonicalize(&absolute).map_err(|error| {
-        AgentCommandError::runtime(format!(
+        ConnectionCommandError::runtime(format!(
             "repository path is not accessible: {} ({error})",
             absolute.display()
         ))
     })?;
     let metadata = fs::metadata(&canonical).map_err(|error| {
-        AgentCommandError::runtime(format!(
+        ConnectionCommandError::runtime(format!(
             "repository path is not accessible: {} ({error})",
             canonical.display()
         ))
@@ -1679,7 +1083,7 @@ fn resolve_connection_repo_root(
         canonical
             .parent()
             .ok_or_else(|| {
-                AgentCommandError::runtime(format!(
+                ConnectionCommandError::runtime(format!(
                     "repository path has no parent directory: {}",
                     canonical.display()
                 ))
@@ -1695,7 +1099,7 @@ fn resolve_connection_repo_root(
             Ok(true) => return Ok(cursor),
             Ok(false) => {}
             Err(error) => {
-                return Err(AgentCommandError::runtime(format!(
+                return Err(ConnectionCommandError::runtime(format!(
                     "failed to inspect Git repository marker {}: {error}",
                     git_path.display()
                 )));
@@ -1706,7 +1110,7 @@ fn resolve_connection_repo_root(
         }
     }
 
-    Err(AgentCommandError::runtime(format!(
+    Err(ConnectionCommandError::runtime(format!(
         "no Git repository root found from {}; run `volicord project use PATH` from inside a Git repository or pass --repo PATH",
         absolute.display()
     )))
@@ -1719,7 +1123,7 @@ fn connection_for_host_target(
     host_scope: HostScope,
     config_target: &str,
     server_name: &str,
-) -> Result<Option<AgentConnectionRecord>, AgentCommandError> {
+) -> Result<Option<AgentConnectionRecord>, ConnectionCommandError> {
     let matches = list_agent_connections(runtime_home)?
         .into_iter()
         .filter(|connection| {
@@ -1733,7 +1137,7 @@ fn connection_for_host_target(
     match matches.as_slice() {
         [] => Ok(None),
         [connection] => Ok(Some(connection.clone())),
-        connections => Err(AgentCommandError::runtime(ambiguous_target_message(
+        connections => Err(ConnectionCommandError::runtime(ambiguous_target_message(
             connections,
         ))),
     }
@@ -1742,7 +1146,7 @@ fn connection_for_host_target(
 fn select_connection(
     runtime_home: &Path,
     selector: &ConnectionSelector,
-) -> Result<(AgentConnectionRecord, Vec<ConnectionProjectRecord>), AgentCommandError> {
+) -> Result<(AgentConnectionRecord, Vec<ConnectionProjectRecord>), ConnectionCommandError> {
     let mut matches = Vec::new();
     for connection in list_agent_connections(runtime_home)? {
         if connection.host_kind != selector.host_kind.as_str()
@@ -1760,7 +1164,7 @@ fn select_connection(
         }
     }
     match matches.len() {
-        0 => Err(AgentCommandError::runtime(format!(
+        0 => Err(ConnectionCommandError::runtime(format!(
             "no Agent Connection matches host {}, intent {}, and repository {}; run `volicord connect {}{} --repo {}`",
             public_host_label(selector.host_kind),
             selector.intent.as_str(),
@@ -1770,7 +1174,7 @@ fn select_connection(
             selector.repo_root.display()
         ))),
         1 => Ok(matches.remove(0)),
-        _ => Err(AgentCommandError::runtime(ambiguous_selector_message(
+        _ => Err(ConnectionCommandError::runtime(ambiguous_selector_message(
             selector, &matches,
         ))),
     }
@@ -1844,110 +1248,11 @@ fn public_mode_text(mode: &str) -> &str {
     }
 }
 
-fn connect_allowed_options() -> &'static [&'static str] {
-    &[
-        "host",
-        "scope",
-        "project-id",
-        "repo-root",
-        "connection-id",
-        "mode",
-        "server-name",
-        "output",
-        "dry-run",
-        "allow-repository-write",
-        "replace-managed",
-    ]
-}
-
-fn list_allowed_options() -> &'static [&'static str] {
-    &["output"]
-}
-
-fn status_allowed_options() -> &'static [&'static str] {
-    &["connection-id", "output"]
-}
-
-fn enable_allowed_options() -> &'static [&'static str] {
-    &["connection-id", "output"]
-}
-
-fn project_add_allowed_options() -> &'static [&'static str] {
-    &[
-        "connection-id",
-        "project-id",
-        "repo-root",
-        "output",
-        "dry-run",
-    ]
-}
-
-fn project_remove_allowed_options() -> &'static [&'static str] {
-    &["connection-id", "project-id", "output", "dry-run"]
-}
-
-fn verify_allowed_options() -> &'static [&'static str] {
-    &["connection-id", "output"]
-}
-
-fn uninstall_allowed_options() -> &'static [&'static str] {
-    &[
-        "connection-id",
-        "output",
-        "dry-run",
-        "allow-repository-write",
-    ]
-}
-
-fn is_boolean_agent_option(name: &str) -> bool {
-    matches!(
-        name,
-        "dry-run" | "allow-repository-write" | "replace-managed"
-    )
-}
-
-fn set_agent_option(
-    parsed: &mut ParsedAgentOptions,
-    name: &str,
-    value: Option<&str>,
-) -> Result<(), AgentCommandError> {
-    match name {
-        "runtime-home" => parsed.runtime_home = Some(value_path(name, value)?),
-        "repo-root" => parsed.repo_root = Some(value_path(name, value)?),
-        "project-id" => parsed.project_id = Some(value_text(name, value)?),
-        "connection-id" => parsed.connection_id = Some(value_text(name, value)?),
-        "mode" => parsed.mode = Some(value_text(name, value)?),
-        "host" => parsed.host_kind = Some(parse_host_kind(&value_text(name, value)?)?),
-        "scope" => parsed.host_scope = Some(parse_host_scope(&value_text(name, value)?)?),
-        "server-name" => parsed.server_name = Some(value_text(name, value)?),
-        "output" => {
-            parsed.output = match value_text(name, value)?.as_str() {
-                "text" => OutputFormat::Text,
-                "json" => OutputFormat::Json,
-                other => {
-                    return Err(AgentCommandError::usage(format!(
-                        "unknown output format: {other}"
-                    )))
-                }
-            }
-        }
-        "dry-run" => parsed.dry_run = true,
-        "allow-repository-write" => parsed.allow_repository_write = true,
-        "replace-managed" => parsed.replace_managed = true,
-        _ => {
-            return Err(AgentCommandError::usage(format!(
-                "unknown option: --{name}"
-            )))
-        }
-    }
-    Ok(())
-}
-
-fn value_text(name: &str, value: Option<&str>) -> Result<String, AgentCommandError> {
-    let value =
-        value.ok_or_else(|| AgentCommandError::usage(format!("missing value for --{name}")))?;
+fn value_text(name: &str, value: Option<&str>) -> Result<String, ConnectionCommandError> {
+    let value = value
+        .ok_or_else(|| ConnectionCommandError::usage(format!("missing value for --{name}")))?;
     if value.trim().is_empty() {
-        Err(AgentCommandError::usage(format!(
+        Err(ConnectionCommandError::usage(format!(
             "--{name} must not be empty"
         )))
     } else {
@@ -1955,149 +1260,49 @@ fn value_text(name: &str, value: Option<&str>) -> Result<String, AgentCommandErr
     }
 }
 
-fn value_path(name: &str, value: Option<&str>) -> Result<PathBuf, AgentCommandError> {
+fn value_path(name: &str, value: Option<&str>) -> Result<PathBuf, ConnectionCommandError> {
     Ok(PathBuf::from(value_text(name, value)?))
 }
 
-fn required_host_kind(parsed: &ParsedAgentOptions) -> Result<HostKind, AgentCommandError> {
-    parsed
-        .host_kind
-        .ok_or_else(|| AgentCommandError::usage("missing required option: --host"))
-}
-
-fn required_host_scope(parsed: &ParsedAgentOptions) -> Result<HostScope, AgentCommandError> {
-    parsed
-        .host_scope
-        .ok_or_else(|| AgentCommandError::usage("missing required option: --scope"))
-}
-
-fn required_text<'a>(
-    value: Option<&'a str>,
-    field: &'static str,
-) -> Result<&'a str, AgentCommandError> {
-    value
-        .filter(|value| !value.trim().is_empty())
-        .ok_or_else(|| AgentCommandError::usage(format!("missing required option: --{field}")))
-}
-
-fn parse_host_kind(value: &str) -> Result<HostKind, AgentCommandError> {
+fn parse_host_kind(value: &str) -> Result<HostKind, ConnectionCommandError> {
     match value {
         HOST_KIND_CODEX => Ok(HostKind::Codex),
         "claude-code" | HOST_KIND_CLAUDE_CODE => Ok(HostKind::ClaudeCode),
         HOST_KIND_GENERIC => Ok(HostKind::Generic),
-        other => Err(AgentCommandError::usage(format!("unknown host: {other}"))),
+        other => Err(ConnectionCommandError::usage(format!(
+            "unknown host: {other}"
+        ))),
     }
 }
 
-fn parse_host_scope(value: &str) -> Result<HostScope, AgentCommandError> {
+fn parse_host_scope(value: &str) -> Result<HostScope, ConnectionCommandError> {
     match value {
         HOST_SCOPE_USER => Ok(HostScope::User),
         HOST_SCOPE_PROJECT => Ok(HostScope::Project),
         HOST_SCOPE_LOCAL => Ok(HostScope::Local),
         HOST_SCOPE_EXPORT => Ok(HostScope::Export),
-        other => Err(AgentCommandError::usage(format!("unknown scope: {other}"))),
-    }
-}
-
-fn parse_connection_mode(value: &str) -> Result<String, AgentCommandError> {
-    match value {
-        CONNECTION_MODE_READ_ONLY | CONNECTION_MODE_WORKFLOW => Ok(value.to_owned()),
-        other => Err(AgentCommandError::usage(format!(
-            "unknown connection mode: {other}"
+        other => Err(ConnectionCommandError::usage(format!(
+            "unknown scope: {other}"
         ))),
     }
 }
 
-fn parse_connection_intent(value: &str) -> Result<ConnectionIntent, AgentCommandError> {
+fn parse_connection_intent(value: &str) -> Result<ConnectionIntent, ConnectionCommandError> {
     match value {
         CONNECTION_INTENT_PERSONAL => Ok(ConnectionIntent::Personal),
         CONNECTION_INTENT_SHARED => Ok(ConnectionIntent::Shared),
         CONNECTION_INTENT_GLOBAL => Ok(ConnectionIntent::Global),
-        other => Err(AgentCommandError::runtime(format!(
+        other => Err(ConnectionCommandError::runtime(format!(
             "unknown connection intent in registry: {other}"
         ))),
     }
 }
 
-fn connection_intent_for_host_scope(
-    host_kind: HostKind,
-    scope: HostScope,
-) -> Result<ConnectionIntent, AgentCommandError> {
-    match (host_kind, scope) {
-        (HostKind::Codex, HostScope::User) => Ok(ConnectionIntent::Personal),
-        (HostKind::Codex, HostScope::Project) => Ok(ConnectionIntent::Shared),
-        (HostKind::ClaudeCode, HostScope::Local) => Ok(ConnectionIntent::Personal),
-        (HostKind::ClaudeCode, HostScope::Project) => Ok(ConnectionIntent::Shared),
-        (HostKind::ClaudeCode, HostScope::User) => Ok(ConnectionIntent::Global),
-        _ => Err(AgentCommandError::usage(
-            "host and scope must match the supported Agent Connection matrix",
-        )),
-    }
-}
-
-fn validate_host_scope(host_kind: HostKind, scope: HostScope) -> Result<(), AgentCommandError> {
-    let valid = matches!(
-        (host_kind, scope),
-        (HostKind::Codex, HostScope::User)
-            | (HostKind::Codex, HostScope::Project)
-            | (HostKind::ClaudeCode, HostScope::Local)
-            | (HostKind::ClaudeCode, HostScope::Project)
-            | (HostKind::ClaudeCode, HostScope::User)
-    );
-    if valid {
-        Ok(())
-    } else {
-        Err(AgentCommandError::usage(
-            "host and scope must match the supported Agent Connection matrix",
-        ))
-    }
-}
-
-fn validate_server_name(value: &str) -> Result<(), AgentCommandError> {
-    if is_valid_server_name(value) {
-        Ok(())
-    } else {
-        Err(AgentCommandError::usage(format!(
-            "server name must use ASCII letters, numbers, hyphen, or underscore and start with a letter or number: {value}"
-        )))
-    }
-}
-
-fn validate_repository_write_permission(
-    parsed: &ParsedAgentOptions,
-    scope: HostScope,
-) -> Result<(), AgentCommandError> {
-    if scope == HostScope::Project && !parsed.dry_run && !parsed.allow_repository_write {
-        return Err(AgentCommandError::usage(
-            "project-scoped Agent Connection host configuration writes require --allow-repository-write",
-        ));
-    }
-    Ok(())
-}
-
-fn resolve_agent_runtime_home(
-    parsed: &ParsedAgentOptions,
-    current_dir: &Path,
-    process: &impl AgentProcess,
-) -> Result<PathBuf, AgentCommandError> {
-    if let Some(path) = &parsed.runtime_home {
-        if path.is_absolute() {
-            Ok(path.clone())
-        } else {
-            Err(AgentCommandError::usage(
-                "--runtime-home must be an absolute path",
-            ))
-        }
-    } else {
-        resolve_runtime_home(|name| process.env_var(name), current_dir).map_err(Into::into)
-    }
-}
-
 fn required_installation_profile(
     runtime_home: &Path,
-) -> Result<InstallationProfileRecord, AgentCommandError> {
+) -> Result<InstallationProfileRecord, ConnectionCommandError> {
     installation_profile(runtime_home)?.ok_or_else(|| {
-        AgentCommandError::runtime(format!(
+        ConnectionCommandError::runtime(format!(
             "setup has not been completed for Runtime Home {}; run `volicord setup` before connection workflows",
             runtime_home.display()
         ))
@@ -2116,109 +1321,11 @@ fn installation_profile_context<'a>(
     }
 }
 
-fn resolve_optional_repo_root(
-    value: Option<&Path>,
-    current_dir: &Path,
-) -> Result<Option<PathBuf>, AgentCommandError> {
-    value
-        .map(|path| {
-            canonical_existing_dir(&absolute_path(current_dir, path.to_path_buf()), "repo-root")
-        })
-        .transpose()
-}
-
-fn canonical_existing_dir(path: &Path, field: &'static str) -> Result<PathBuf, AgentCommandError> {
-    let path = fs::canonicalize(path).map_err(|error| {
-        AgentCommandError::runtime(format!("{field} is not accessible: {error}"))
-    })?;
-    if path.is_dir() {
-        Ok(path)
-    } else {
-        Err(AgentCommandError::runtime(format!(
-            "{field} must be a directory"
-        )))
-    }
-}
-
-fn resolve_or_register_project(
-    runtime_home: &Path,
-    project_id: Option<&str>,
-    repo_root: Option<&Path>,
-) -> Result<ProjectRecord, AgentCommandError> {
-    match (project_id, repo_root) {
-        (Some(project_id), Some(repo_root)) => {
-            validate_project_id(project_id)?;
-            if let Some(existing) = project_record(runtime_home, project_id)? {
-                if existing.repo_root != repo_root {
-                    return Err(AgentCommandError::runtime(
-                        "--repo-root must match the existing project registration",
-                    ));
-                }
-                Ok(existing)
-            } else {
-                register_project(
-                    runtime_home,
-                    ProjectRegistration {
-                        project_id: project_id.to_owned(),
-                        repo_root: repo_root.to_path_buf(),
-                        project_home: None,
-                        status: ACTIVE_PROJECT_STATUS.to_owned(),
-                        metadata_json: metadata_json_base()?,
-                    },
-                )
-                .map_err(Into::into)
-            }
-        }
-        (Some(project_id), None) => project_record(runtime_home, project_id)?.ok_or_else(|| {
-            AgentCommandError::runtime("project is not registered; provide --repo-root")
-        }),
-        (None, Some(repo_root)) => {
-            let matches = list_projects(runtime_home)?
-                .into_iter()
-                .filter(|project| project.repo_root == repo_root)
-                .collect::<Vec<_>>();
-            match matches.as_slice() {
-                [project] => Ok(project.clone()),
-                [] => Err(AgentCommandError::usage(
-                    "missing required option: --project-id",
-                )),
-                _ => Err(AgentCommandError::usage(
-                    "--repo-root matches multiple projects; provide --project-id",
-                )),
-            }
-        }
-        (None, None) => Err(AgentCommandError::usage(
-            "missing required option: --project-id",
-        )),
-    }
-}
-
-#[derive(Debug, Clone)]
-struct DryRunProject {
-    project_id: Option<String>,
-    repo_root: Option<PathBuf>,
-}
-
-fn resolve_selected_project_for_dry_run(
-    parsed: &ParsedAgentOptions,
-    repo_root: Option<&Path>,
-) -> Result<DryRunProject, AgentCommandError> {
-    if parsed.project_id.is_none() && repo_root.is_none() {
-        return Err(AgentCommandError::usage(
-            "dry-run connect requires --project-id or --repo-root",
-        ));
-    }
-    Ok(DryRunProject {
-        project_id: parsed.project_id.clone(),
-        repo_root: repo_root.map(Path::to_path_buf),
-    })
-}
-
 fn enforce_single_project_scope(
     runtime_home: &Path,
     connection: &AgentConnectionRecord,
     project_id: &str,
-) -> Result<(), AgentCommandError> {
+) -> Result<(), ConnectionCommandError> {
     let scope = parse_host_scope(&connection.host_scope)?;
     if !matches!(scope, HostScope::Project | HostScope::Local) {
         return Ok(());
@@ -2228,7 +1335,7 @@ fn enforce_single_project_scope(
         .iter()
         .any(|project| project.project_id != project_id)
     {
-        return Err(AgentCommandError::runtime(
+        return Err(ConnectionCommandError::runtime(
             "project and local Agent Connections may allow only one project",
         ));
     }
@@ -2239,11 +1346,8 @@ fn connection_target_hint(
     host_kind: HostKind,
     scope: HostScope,
     repo_root: Option<&Path>,
-    parsed: &ParsedAgentOptions,
-    process: &impl AgentProcess,
-    server_name: &str,
-    export_target: Option<&Path>,
-) -> Result<String, AgentCommandError> {
+    process: &impl ConnectionProcess,
+) -> Result<String, ConnectionCommandError> {
     match (host_kind, scope) {
         (HostKind::Codex, HostScope::User) => {
             let path = codex_home(process)?.join("config.toml");
@@ -2251,30 +1355,29 @@ fn connection_target_hint(
         }
         (HostKind::Codex, HostScope::Project) => {
             let repo_root = repo_root.ok_or_else(|| {
-                AgentCommandError::usage("Codex project scope requires --repo-root")
+                ConnectionCommandError::usage("Codex shared connection requires --repo PATH")
             })?;
             Ok(path_text(&repo_root.join(".codex").join("config.toml")))
         }
         (HostKind::ClaudeCode, HostScope::Project) => {
             let repo_root = repo_root.ok_or_else(|| {
-                AgentCommandError::usage("Claude Code project scope requires --repo-root")
+                ConnectionCommandError::usage("Claude Code shared connection requires --repo PATH")
             })?;
             Ok(path_text(&repo_root.join(".mcp.json")))
         }
         (HostKind::ClaudeCode, HostScope::Local) => {
             let repo_root = repo_root.ok_or_else(|| {
-                AgentCommandError::usage("Claude Code local scope requires --repo-root")
+                ConnectionCommandError::usage(
+                    "Claude Code personal connection requires --repo PATH",
+                )
             })?;
             Ok(format!("claude local {}", path_text(repo_root)))
         }
         (HostKind::ClaudeCode, HostScope::User) => Ok("claude user".to_owned()),
-        (HostKind::Generic, HostScope::Export) => {
-            let target = export_target
-                .map(Path::to_path_buf)
-                .unwrap_or_else(|| generic_default_export_target(parsed, server_name));
-            Ok(path_text(&target))
-        }
-        _ => Err(AgentCommandError::usage(
+        (HostKind::Generic, _) => Err(ConnectionCommandError::usage(
+            "generic MCP export is not a host connection; use the export command",
+        )),
+        _ => Err(ConnectionCommandError::usage(
             "host and scope must match the supported Agent Connection matrix",
         )),
     }
@@ -2297,8 +1400,8 @@ struct BuildHostPlanRequest<'a> {
 
 fn build_host_plan(
     request: BuildHostPlanRequest<'_>,
-    process: &impl AgentProcess,
-) -> Result<HostPlan, AgentCommandError> {
+    process: &impl ConnectionProcess,
+) -> Result<HostPlan, ConnectionCommandError> {
     let project = request.repo_root.map(|repo_root| ProjectContext {
         project_id: request.project_id.unwrap_or(""),
         project_name: request.project_name.unwrap_or(""),
@@ -2345,8 +1448,8 @@ fn build_host_plan(
 fn apply_host_plan(
     host_kind: HostKind,
     plan: &HostPlan,
-    process: &impl AgentProcess,
-) -> Result<(), AgentCommandError> {
+    process: &impl ConnectionProcess,
+) -> Result<(), ConnectionCommandError> {
     match host_kind {
         HostKind::Codex => {
             let mut adapter = CodexAdapter::new(codex_environment(process));
@@ -2367,8 +1470,8 @@ fn apply_host_plan(
 fn verify_host_plan(
     host_kind: HostKind,
     plan: &HostPlan,
-    process: &impl AgentProcess,
-) -> Result<Verification, AgentCommandError> {
+    process: &impl ConnectionProcess,
+) -> Result<Verification, ConnectionCommandError> {
     match host_kind {
         HostKind::Codex => {
             let mut adapter = CodexAdapter::new(codex_environment(process));
@@ -2388,8 +1491,8 @@ fn verify_host_plan(
 fn remove_host_configuration(
     plan: &HostPlan,
     connection: &AgentConnectionRecord,
-    process: &impl AgentProcess,
-) -> Result<(), AgentCommandError> {
+    process: &impl ConnectionProcess,
+) -> Result<(), ConnectionCommandError> {
     let host_kind = parse_host_kind(&connection.host_kind)?;
     let request = HostRemoveRequest {
         host_kind,
@@ -2420,8 +1523,8 @@ fn remove_host_configuration(
 fn existing_host_plan(
     connection: &AgentConnectionRecord,
     runtime_home: &Path,
-    process: &impl AgentProcess,
-) -> Result<HostPlan, AgentCommandError> {
+    process: &impl ConnectionProcess,
+) -> Result<HostPlan, ConnectionCommandError> {
     let host_kind = parse_host_kind(&connection.host_kind)?;
     let host_scope = parse_host_scope(&connection.host_scope)?;
     let connection_intent = parse_connection_intent(&connection.intent)?;
@@ -2542,8 +1645,8 @@ fn verify_connection(
     host_plan: &HostPlan,
     launch: &McpLaunch,
     project_id: Option<&str>,
-    process: &mut impl AgentProcess,
-) -> Result<VerificationReport, AgentCommandError> {
+    process: &mut impl ConnectionProcess,
+) -> Result<VerificationReport, ConnectionCommandError> {
     let host_kind = parse_host_kind(&connection.host_kind)?;
     let host = verify_host_plan(host_kind, host_plan, process)?;
     let preflight = run_connection_preflight(
@@ -2606,7 +1709,7 @@ fn aggregate_status(
 }
 
 fn run_connection_preflight(
-    process: &mut impl AgentProcess,
+    process: &mut impl ConnectionProcess,
     launch: &McpLaunch,
     runtime_home: &Path,
     connection_id: &str,
@@ -2899,7 +2002,7 @@ enum SimplifiedRemovePlan<'a> {
 
 fn render_simplified_connection_output(
     data: SimplifiedConnectionOutput<'_>,
-) -> Result<String, AgentCommandError> {
+) -> Result<String, ConnectionCommandError> {
     let project_ids = data
         .projects
         .iter()
@@ -2950,14 +2053,14 @@ fn render_simplified_connection_output(
             });
             serde_json::to_string_pretty(&value)
                 .map(|text| format!("{text}\n"))
-                .map_err(|error| AgentCommandError::runtime(error.to_string()))
+                .map_err(|error| ConnectionCommandError::runtime(error.to_string()))
         }
     }
 }
 
 fn render_simplified_plan_output(
     data: SimplifiedPlanOutput<'_>,
-) -> Result<String, AgentCommandError> {
+) -> Result<String, ConnectionCommandError> {
     let target = host_target_text(&data.plan.target);
     let planned_change = planned_change_text(data.plan.change);
     match data.format {
@@ -3016,7 +2119,7 @@ fn render_simplified_plan_output(
             });
             serde_json::to_string_pretty(&value)
                 .map(|text| format!("{text}\n"))
-                .map_err(|error| AgentCommandError::runtime(error.to_string()))
+                .map_err(|error| ConnectionCommandError::runtime(error.to_string()))
         }
     }
 }
@@ -3024,7 +2127,7 @@ fn render_simplified_plan_output(
 fn render_simplified_connections_output(
     format: OutputFormat,
     rows: &[(AgentConnectionRecord, Vec<ConnectionProjectRecord>)],
-) -> Result<String, AgentCommandError> {
+) -> Result<String, ConnectionCommandError> {
     match format {
         OutputFormat::Text => {
             let mut output = String::from(
@@ -3076,7 +2179,7 @@ fn render_simplified_connections_output(
                 "actions": [],
             }))
             .map(|text| format!("{text}\n"))
-            .map_err(|error| AgentCommandError::runtime(error.to_string()))
+            .map_err(|error| ConnectionCommandError::runtime(error.to_string()))
         }
     }
 }
@@ -3088,7 +2191,7 @@ fn render_simplified_remove_dry_run(
     selected_project: &ConnectionProjectRecord,
     plan: SimplifiedRemovePlan<'_>,
     remaining_count: usize,
-) -> Result<String, AgentCommandError> {
+) -> Result<String, ConnectionCommandError> {
     match plan {
         SimplifiedRemovePlan::Host(host_plan) => {
             render_simplified_plan_output(SimplifiedPlanOutput {
@@ -3137,7 +2240,7 @@ fn render_simplified_remove_dry_run(
                     "actions": [],
                 }))
                 .map(|text| format!("{text}\n"))
-                .map_err(|error| AgentCommandError::runtime(error.to_string()))
+                .map_err(|error| ConnectionCommandError::runtime(error.to_string()))
             }
         },
     }
@@ -3289,134 +2392,6 @@ fn terminate_child(child: &mut Child, deadline: Instant) -> Result<(), String> {
     }
 }
 
-fn render_connection_output(
-    format: OutputFormat,
-    action: &str,
-    status: AgentResultStatus,
-    connection: &AgentConnectionRecord,
-    projects: &[ConnectionProjectRecord],
-    verification: Option<&VerificationReport>,
-) -> Result<String, AgentCommandError> {
-    let project_ids = projects
-        .iter()
-        .map(|project| project.project_id.clone())
-        .collect::<Vec<_>>();
-    match format {
-        OutputFormat::Text => {
-            let mut output = format!(
-                "Agent Connection {action}\nconnection_id: {}\nhost_kind: {}\nhost_scope: {}\nmode: {}\nenabled: {}\nconnected_projects: {}\nverification_status: {}\nserver_name: {}\nconfig_target: {}\n",
-                connection.connection_id,
-                connection.host_kind,
-                connection.host_scope,
-                connection.mode,
-                connection.enabled,
-                display_projects(&project_ids),
-                status.as_str(),
-                connection.server_name,
-                connection.config_target
-            );
-            if let Some(verification) = verification {
-                output.push_str(&format!(
-                    "host_verification: {}\npreflight: {}\nmcp_handshake: {}\n",
-                    verification.host.status.as_str(),
-                    verification.preflight.status.as_str(),
-                    verification.handshake.status.as_str()
-                ));
-            }
-            Ok(output)
-        }
-        OutputFormat::Json => {
-            let value = json!({
-                "action": action,
-                "status": status.as_str(),
-                "connection": connection_json(connection, &project_ids),
-                "verification": verification.map(verification_json)
-            });
-            serde_json::to_string_pretty(&value)
-                .map(|text| format!("{text}\n"))
-                .map_err(|error| AgentCommandError::runtime(error.to_string()))
-        }
-    }
-}
-
-fn render_project_output(
-    format: OutputFormat,
-    action: &str,
-    status: AgentResultStatus,
-    connection: &AgentConnectionRecord,
-    project_ids: &[String],
-) -> Result<String, AgentCommandError> {
-    match format {
-        OutputFormat::Text => Ok(format!(
-            "Agent Connection {action}\nconnection_id: {}\nconnected_projects: {}\nverification_status: {}\n",
-            connection.connection_id,
-            display_projects(project_ids),
-            status.as_str()
-        )),
-        OutputFormat::Json => {
-            let value = json!({
-                "action": action,
-                "status": status.as_str(),
-                "connection_id": connection.connection_id,
-                "connected_projects": project_ids,
-            });
-            serde_json::to_string_pretty(&value)
-                .map(|text| format!("{text}\n"))
-                .map_err(|error| AgentCommandError::runtime(error.to_string()))
-        }
-    }
-}
-
-struct DryRunRenderData<'a> {
-    action: &'a str,
-    connection_id: &'a str,
-    host_kind: HostKind,
-    host_scope: HostScope,
-    mode: &'a str,
-    server_name: &'a str,
-    config_target: &'a str,
-    project_id: Option<&'a str>,
-}
-
-fn render_dry_run_output(
-    format: OutputFormat,
-    data: DryRunRenderData<'_>,
-) -> Result<String, AgentCommandError> {
-    match format {
-        OutputFormat::Text => Ok(format!(
-            "Agent Connection {} dry_run\nconnection_id: {}\nhost_kind: {}\nhost_scope: {}\nmode: {}\nenabled: true\nconnected_projects: {}\nverification_status: dry_run\nserver_name: {}\nconfig_target: {}\n",
-            data.action,
-            data.connection_id,
-            data.host_kind.as_str(),
-            data.host_scope.as_str(),
-            data.mode,
-            data.project_id.unwrap_or(""),
-            data.server_name,
-            data.config_target
-        )),
-        OutputFormat::Json => {
-            let value = json!({
-                "action": data.action,
-                "status": AgentResultStatus::DryRun.as_str(),
-                "connection": {
-                    "connection_id": data.connection_id,
-                    "host_kind": data.host_kind.as_str(),
-                    "host_scope": data.host_scope.as_str(),
-                    "mode": data.mode,
-                    "enabled": true,
-                    "connected_projects": data.project_id.into_iter().collect::<Vec<_>>(),
-                    "verification_status": AgentResultStatus::DryRun.as_str(),
-                    "server_name": data.server_name,
-                    "config_target": data.config_target
-                }
-            });
-            serde_json::to_string_pretty(&value)
-                .map(|text| format!("{text}\n"))
-                .map_err(|error| AgentCommandError::runtime(error.to_string()))
-        }
-    }
-}
-
 fn connection_json(connection: &AgentConnectionRecord, project_ids: &[String]) -> Value {
     json!({
         "connection_id": connection.connection_id,
@@ -3469,15 +2444,16 @@ fn verification_json(report: &VerificationReport) -> Value {
     })
 }
 
-fn verification_report_json(report: &VerificationReport) -> Result<String, AgentCommandError> {
+fn verification_report_json(report: &VerificationReport) -> Result<String, ConnectionCommandError> {
     serde_json::to_string(&verification_json(report))
-        .map_err(|error| AgentCommandError::runtime(error.to_string()))
+        .map_err(|error| ConnectionCommandError::runtime(error.to_string()))
 }
 
 fn user_actions_json(
     actions: &[crate::host_integration::UserAction],
-) -> Result<String, AgentCommandError> {
-    serde_json::to_string(actions).map_err(|error| AgentCommandError::runtime(error.to_string()))
+) -> Result<String, ConnectionCommandError> {
+    serde_json::to_string(actions)
+        .map_err(|error| ConnectionCommandError::runtime(error.to_string()))
 }
 
 fn step_json(step: &VerificationStep) -> Value {
@@ -3485,24 +2461,6 @@ fn step_json(step: &VerificationStep) -> Value {
         "status": step.status.as_str(),
         "details": step.details,
     })
-}
-
-fn display_projects(projects: &[String]) -> String {
-    if projects.is_empty() {
-        String::new()
-    } else {
-        projects.join(",")
-    }
-}
-
-fn project_ids_or_empty(
-    runtime_home: &Path,
-    connection_id: &str,
-) -> Result<Vec<String>, AgentCommandError> {
-    Ok(list_connection_projects(runtime_home, connection_id)?
-        .into_iter()
-        .map(|project| project.project_id)
-        .collect())
 }
 
 fn status_from_store(value: &str) -> AgentResultStatus {
@@ -3514,20 +2472,11 @@ fn status_from_store(value: &str) -> AgentResultStatus {
     }
 }
 
-fn required_connection(
-    runtime_home: &Path,
-    connection_id: &str,
-) -> Result<AgentConnectionRecord, AgentCommandError> {
-    agent_connection_record(runtime_home, connection_id)?.ok_or_else(|| {
-        AgentCommandError::runtime(format!("Agent Connection not found: {connection_id}"))
-    })
-}
-
 fn connection_metadata_json(
     plan: &HostPlan,
     mcp_command: &Path,
     runtime_home: &Path,
-) -> Result<String, AgentCommandError> {
+) -> Result<String, ConnectionCommandError> {
     let mut value = json!({
         "created_by": AGENT_METADATA_CREATED_BY,
         "mcp_command": path_text(mcp_command),
@@ -3566,12 +2515,13 @@ fn connection_metadata_json(
             }
         }
     }
-    serde_json::to_string(&value).map_err(|error| AgentCommandError::runtime(error.to_string()))
+    serde_json::to_string(&value)
+        .map_err(|error| ConnectionCommandError::runtime(error.to_string()))
 }
 
-fn metadata_json_base() -> Result<String, AgentCommandError> {
+fn metadata_json_base() -> Result<String, ConnectionCommandError> {
     serde_json::to_string(&json!({ "created_by": AGENT_METADATA_CREATED_BY }))
-        .map_err(|error| AgentCommandError::runtime(error.to_string()))
+        .map_err(|error| ConnectionCommandError::runtime(error.to_string()))
 }
 
 fn parse_metadata(text: &str) -> BTreeMap<String, String> {
@@ -3683,36 +2633,7 @@ fn short_hash(input: &str) -> String {
     text
 }
 
-fn resolve_export_target(
-    parsed: &ParsedAgentOptions,
-    current_dir: &Path,
-    connection_id: Option<&str>,
-) -> Option<PathBuf> {
-    parsed
-        .export_path
-        .as_ref()
-        .map(|path| absolute_path(current_dir, path.clone()))
-        .or_else(|| {
-            parsed.export_dir.as_ref().map(|dir| {
-                let dir = absolute_path(current_dir, dir.clone());
-                let stem = connection_id.unwrap_or(DEFAULT_SERVER_NAME);
-                dir.join(format!("volicord-{}.mcp.json", sanitize_identifier(stem)))
-            })
-        })
-}
-
-fn generic_default_export_target(parsed: &ParsedAgentOptions, server_name: &str) -> PathBuf {
-    parsed
-        .export_dir
-        .clone()
-        .unwrap_or_else(|| PathBuf::from("."))
-        .join(format!(
-            "volicord-{}.mcp.json",
-            sanitize_identifier(server_name)
-        ))
-}
-
-fn codex_environment(process: &impl AgentProcess) -> CodexEnvironment {
+fn codex_environment(process: &impl ConnectionProcess) -> CodexEnvironment {
     CodexEnvironment {
         home: process.env_var("HOME").map(PathBuf::from),
         codex_home: process.env_var("CODEX_HOME").map(PathBuf::from),
@@ -3720,12 +2641,12 @@ fn codex_environment(process: &impl AgentProcess) -> CodexEnvironment {
     }
 }
 
-fn codex_home(process: &impl AgentProcess) -> Result<PathBuf, AgentCommandError> {
+fn codex_home(process: &impl ConnectionProcess) -> Result<PathBuf, ConnectionCommandError> {
     if let Some(path) = process.env_var("CODEX_HOME") {
         return Ok(PathBuf::from(path));
     }
     let home = process.env_var("HOME").ok_or_else(|| {
-        AgentCommandError::runtime("Codex user configuration requires CODEX_HOME or HOME")
+        ConnectionCommandError::runtime("Codex user configuration requires CODEX_HOME or HOME")
     })?;
     Ok(PathBuf::from(home).join(".codex"))
 }
@@ -3778,16 +2699,16 @@ mod tests {
     }
 
     #[test]
-    fn connection_mode_defaults_and_validates() {
+    fn public_connection_mode_parses_user_labels() {
         assert_eq!(
-            parse_connection_mode(CONNECTION_MODE_READ_ONLY).unwrap(),
+            parse_user_connection_mode("read-only").unwrap(),
             CONNECTION_MODE_READ_ONLY
         );
         assert_eq!(
-            parse_connection_mode(CONNECTION_MODE_WORKFLOW).unwrap(),
+            parse_user_connection_mode("workflow").unwrap(),
             CONNECTION_MODE_WORKFLOW
         );
-        assert!(parse_connection_mode("full").is_err());
+        assert!(parse_user_connection_mode("read_only").is_err());
     }
 
     #[test]

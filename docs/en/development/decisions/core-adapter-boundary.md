@@ -49,7 +49,7 @@ only the structure visible in the repository.
   `PUBLIC_METHOD_TOOL_NAMES`, `McpConnectionStartupInspection`,
   `McpConnectionContext`, `McpAdapter`, `McpAdapter::call_tool`, and
   `prepare_connection_arguments`.
-- [`crates/volicord-cli/src/agent_command.rs`](../../../../crates/volicord-cli/src/agent_command.rs):
+- [`crates/volicord-cli/src/connection_command.rs`](../../../../crates/volicord-cli/src/connection_command.rs):
   administrative host setup orchestration outside the Core/MCP adapter path.
 - [`crates/volicord-cli/src/registration.rs`](../../../../crates/volicord-cli/src/registration.rs):
   registered connection capability and invocation metadata helpers.

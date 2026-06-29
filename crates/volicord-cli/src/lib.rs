@@ -5,7 +5,7 @@
 //! The binary owns process entry/exit. Library modules are kept reusable so
 //! administrative command behavior can be tested without invoking the binary.
 
-pub mod agent_command;
+pub mod connection_command;
 pub mod doctor_command;
 pub mod export_command;
 pub mod host_integration;

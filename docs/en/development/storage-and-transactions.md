@@ -43,7 +43,7 @@ Administrative setup uses Store bootstrap and inspection paths before public
 method execution is available:
 
 1. `volicord-cli` plans administrative setup through
-   [`crates/volicord-cli/src/agent_command.rs`](../../../crates/volicord-cli/src/agent_command.rs)
+   [`crates/volicord-cli/src/connection_command.rs`](../../../crates/volicord-cli/src/connection_command.rs)
    and registration metadata helpers in
    [`crates/volicord-cli/src/registration.rs`](../../../crates/volicord-cli/src/registration.rs).
 2. Store bootstrap initializes Runtime Home metadata and registers projects and

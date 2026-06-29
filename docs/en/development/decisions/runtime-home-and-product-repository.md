@@ -60,7 +60,7 @@ separate location concepts:
   `CoreProjectStore` project-local store access.
 - [`crates/volicord-store/src/artifacts.rs`](../../../../crates/volicord-store/src/artifacts.rs):
   Runtime Home artifact staging and persistent body verification.
-- [`crates/volicord-cli/src/agent_command.rs`](../../../../crates/volicord-cli/src/agent_command.rs):
+- [`crates/volicord-cli/src/connection_command.rs`](../../../../crates/volicord-cli/src/connection_command.rs):
   agent setup orchestration and Runtime Home preparation.
 - [`crates/volicord-cli/src/registration.rs`](../../../../crates/volicord-cli/src/registration.rs):
   registered connection capability and invocation metadata generation.
