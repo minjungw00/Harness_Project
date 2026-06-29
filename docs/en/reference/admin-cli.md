@@ -115,6 +115,12 @@ prompts only when the selected command paths are not ready on `PATH`. In
 noninteractive conditions, JSON mode, or explicit `--link-bin` mode, setup must
 report actions instead of prompting.
 
+The top-level setup status answers whether the guided first-run setup
+experience still needs a named user action. Setup may report `action_required`
+after saving the Runtime Home and installation profile when selected commands
+are not ready for future `PATH` lookup by shells or agent hosts. Setup output
+must keep command-availability details and required actions explicit.
+
 Arguments:
 
 | Argument | Meaning |
@@ -152,12 +158,17 @@ a Volicord-managed block in that file after the user approves the exact block.
 Unsupported shells, unsupported platforms, missing environment variables, or
 write failures leave a manual `PATH` action instead.
 
-`volicord doctor` is the read-oriented diagnostic command for the installation profile.
-It verifies Runtime Home access, registry schema, installation profile presence,
-stored command readiness, and command-link or shim readiness when link metadata
-is present. It reports supported host detection as a connection-verification
-concern. It does not create projects, install host configuration, change
-connection mode, or answer user judgments.
+`volicord doctor` is the read-oriented diagnostic command for the installation
+profile. Its top-level status answers whether the current installation profile
+is usable. It verifies Runtime Home access, registry schema, installation
+profile presence, stored command readiness, command availability through
+`PATH`, and command-link or shim readiness when link metadata is present. When
+stored command paths are executable, doctor may report `complete` while
+reporting command-availability warnings and `actions_recommended` for future
+shells or agent hosts. PATH or command-link recommendations must say when
+existing agent hosts may need restart or reload. Doctor reports supported host
+detection as a connection-verification concern. It does not create projects,
+install host configuration, change connection mode, or answer user judgments.
 
 <a id="project-commands"></a>
 ## Project commands
@@ -390,6 +401,12 @@ Required diagnostic JSON values:
   and optional details
 - `actions[]`: required or suggested user actions, each with a stable action id
   and human-readable command or instruction when one is available
+
+Setup and doctor JSON must include `status_meaning` so diagnostic consumers can
+distinguish first-run setup readiness from installation-profile health.
+Doctor JSON must separate blocking local repairs in `actions_required[]` from
+warning-only follow-up in `actions_recommended[]` when the top-level status
+remains `complete`.
 
 <a id="noninteractive-approval-behavior"></a>
 ## Noninteractive behavior

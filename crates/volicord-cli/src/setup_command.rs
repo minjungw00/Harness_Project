@@ -1692,6 +1692,7 @@ fn render_setup_output(
     match output {
         OutputFormat::Json => serde_json::to_string_pretty(&json!({
             "status": report.status.as_str(),
+            "status_meaning": setup_status_meaning(report.status),
             "runtime_home": path_text(&runtime_home.runtime_home),
             "registry_db": path_text(&runtime_home.registry_db_path),
             "installation_profile": profile.map(profile_json),
@@ -1707,8 +1708,9 @@ fn render_setup_output(
         .map_err(|error| SetupCommandError::Runtime(error.to_string())),
         OutputFormat::Text => {
             let mut text = format!(
-                "Volicord setup {}\nruntime_home: {}\nregistry_db: {}\n",
+                "Volicord setup {}\nstatus_meaning: {}\nruntime_home: {}\nregistry_db: {}\n",
                 report.status.as_str(),
+                setup_status_meaning(report.status),
                 runtime_home.runtime_home.display(),
                 runtime_home.registry_db_path.display(),
             );
@@ -1757,6 +1759,16 @@ fn render_setup_output(
             }
             Ok(text)
         }
+    }
+}
+
+fn setup_status_meaning(status: SetupStatus) -> &'static str {
+    match status {
+        SetupStatus::Complete => "first-run setup experience is complete",
+        SetupStatus::ActionRequired => {
+            "setup still needs a named user action before first-run setup is complete"
+        }
+        SetupStatus::Failed => "setup could not complete the first-run setup experience",
     }
 }
 

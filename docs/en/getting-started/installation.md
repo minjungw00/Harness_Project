@@ -42,6 +42,9 @@ looks for `volicord-mcp`, and checks whether the selected commands are available
 on `PATH` for future terminals and agent hosts. Exact setup options, MCP command
 discovery order, and output behavior belong to
 [Administrative CLI Reference](../reference/admin-cli.md#runtime-home-selection).
+Its status answers whether the guided first-run setup experience still needs a
+named user action, so `action_required` can appear even after the installation
+profile has been saved.
 
 In an interactive terminal, setup may offer command-availability choices when
 the selected executables are not ready on `PATH`:
@@ -86,9 +89,11 @@ setup readiness:
 volicord doctor
 ```
 
-`doctor` reports `complete` when setup is usable. `action_required` names a
-specific local repair action, such as rerunning setup or fixing an executable
-path.
+`doctor` reports installation-profile health, not first-run setup progress. It
+reports `complete` when the saved profile is usable, even if it also reports
+command-availability warnings or recommended `PATH` and command-link actions
+for future shells or agent hosts. `action_required` names a blocking local
+repair action, such as rerunning setup or fixing an executable path.
 
 ## Use Installed Executables
 

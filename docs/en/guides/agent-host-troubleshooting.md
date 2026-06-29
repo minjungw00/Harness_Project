@@ -5,8 +5,10 @@ Use this guide when `volicord setup`, `volicord connect`, `volicord connection
 the simplified command model where Volicord detects repository projects and
 manages internal identities.
 
-Exact result-state meaning belongs to
-[Administrative CLI Reference](../reference/admin-cli.md#agent-connection-result-states).
+Exact setup, doctor, and connection result-state meanings belong to
+[Administrative CLI Reference](../reference/admin-cli.md#runtime-home-selection)
+and
+[Connection result states](../reference/admin-cli.md#agent-connection-result-states).
 
 ## Before You Change Anything
 
@@ -21,6 +23,13 @@ volicord connections
 If the command is being run outside the intended repository, either `cd` into
 the repository or add `--repo PATH` to the project, connection, export, or user
 command you are checking.
+
+`volicord setup` and `volicord doctor` answer different status questions. Setup
+reports whether the guided first-run setup experience still needs a user
+action. Doctor reports whether the saved installation profile is usable. A
+profile can therefore make doctor report `complete` while doctor still shows
+command-availability warnings or recommended `PATH` and command-link actions
+for future shells or agent hosts.
 
 ## Setup Has Not Been Completed
 
@@ -46,8 +55,8 @@ cargo build --workspace --bins
 Follow setup's prompt or `action_required` output if it asks how to make
 `volicord` and `volicord-mcp` available. If it prints a shell command, run that
 command in the terminal that will continue the setup. If it writes or asks you
-to update a shell startup file, open a new shell or restart the MCP host before
-checking again:
+to update a shell startup file, open a new shell or restart or reload the agent
+host before checking again:
 
 ```sh
 volicord doctor

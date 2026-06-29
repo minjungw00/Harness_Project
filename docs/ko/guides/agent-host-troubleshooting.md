@@ -5,8 +5,9 @@
 사용합니다. 이 가이드는 Volicord가 저장소 프로젝트를 감지하고 내부 식별 정보를 관리하는
 단순화된 명령 모델을 전제로 합니다.
 
-정확한 결과 상태 의미는
-[관리 CLI 참조](../reference/admin-cli.md#agent-connection-result-states)가 담당합니다.
+정확한 setup, doctor, 연결 결과 상태 의미는
+[관리 CLI 참조](../reference/admin-cli.md#runtime-home-selection)와
+[연결 결과 상태](../reference/admin-cli.md#agent-connection-result-states)가 담당합니다.
 
 ## 변경 전에
 
@@ -20,6 +21,12 @@ volicord connections
 
 명령을 의도한 저장소 밖에서 실행하고 있다면 그 저장소로 `cd`하거나, 확인하려는
 project, connection, export, user 명령에 `--repo PATH`를 추가합니다.
+
+`volicord setup`과 `volicord doctor`는 서로 다른 상태 질문에 답합니다. setup은
+안내형 첫 실행 설정 경험에 사용자 동작이 아직 필요한지를 보고합니다. doctor는 저장된
+설치 프로필을 사용할 수 있는지를 보고합니다. 따라서 프로필을 사용할 수 있으면
+doctor가 `complete`를 보고하면서도 이후 셸이나 에이전트 호스트를 위한 명령 가용성
+경고 또는 권장 `PATH`와 명령 링크 동작을 함께 보여 줄 수 있습니다.
 
 ## 설정이 완료되지 않음
 
@@ -45,7 +52,7 @@ cargo build --workspace --bins
 Setup이 `volicord`와 `volicord-mcp`를 사용할 수 있게 만드는 방법을 묻거나
 `action_required`를 보고하면 그 안내를 따릅니다. 셸 명령을 출력했다면 setup을 계속할
 터미널에서 그 명령을 실행합니다. 셸 시작 파일을 쓰거나 갱신하라고 했다면 새 셸을
-열거나 MCP 호스트를 restart한 뒤 다시 확인합니다.
+열거나 에이전트 호스트를 restart 또는 reload한 뒤 다시 확인합니다.
 
 ```sh
 volicord doctor

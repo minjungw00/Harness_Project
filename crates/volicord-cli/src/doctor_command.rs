@@ -1,4 +1,5 @@
 use std::{
+    ffi::OsStr,
     fs,
     path::{Path, PathBuf},
 };
@@ -17,8 +18,8 @@ use volicord_store::{
 use crate::{
     setup_command::{path_text, CommandOutcome, CommandStatus},
     shell_path::{
-        is_executable_file, mcp_binary_name, path_directory_is_on_path, volicord_binary_name,
-        PATH_ENV,
+        detect_command_on_path, is_executable_file, mcp_binary_name, path_directory_is_on_path,
+        paths_equivalent, volicord_binary_name, PATH_ENV,
     },
 };
 
@@ -384,7 +385,24 @@ fn inspect_installation_profile<F>(
         checks,
         actions,
     );
-    inspect_path_or_shim(profile, env_var, checks, actions);
+    let path_env = env_var(PATH_ENV);
+    inspect_command_availability(
+        "volicord_command_availability",
+        &volicord_binary_name(),
+        &PathBuf::from(&profile.volicord_command),
+        path_env.as_deref(),
+        checks,
+        actions,
+    );
+    inspect_command_availability(
+        "volicord_mcp_command_availability",
+        &mcp_binary_name(),
+        &PathBuf::from(&profile.volicord_mcp_command),
+        path_env.as_deref(),
+        checks,
+        actions,
+    );
+    inspect_path_or_shim(profile, path_env.as_deref(), checks, actions);
 }
 
 fn inspect_command_path(
@@ -414,16 +432,64 @@ fn inspect_command_path(
     }
 }
 
-fn inspect_path_or_shim<F>(
-    profile: &InstallationProfileInspectionRecord,
-    env_var: &F,
+fn inspect_command_availability(
+    id: &str,
+    command_name: &str,
+    profile_command: &Path,
+    path_env: Option<&OsStr>,
     checks: &mut Vec<DiagnosticCheck>,
     actions: &mut Vec<DiagnosticAction>,
-) where
-    F: Fn(&str) -> Option<std::ffi::OsString>,
-{
-    let path_env = env_var(PATH_ENV);
-    let bin_dir_on_path = path_directory_is_on_path(path_env.as_deref(), &profile.bin_dir);
+) {
+    let path_match = detect_command_on_path(command_name, path_env);
+    let profile_command_directory_on_path = profile_command
+        .parent()
+        .is_some_and(|directory| path_directory_is_on_path(path_env, directory));
+    let path_matches_profile = path_match
+        .as_deref()
+        .is_some_and(|path| paths_equivalent(path, profile_command));
+    let details = json!({
+        "command_name": command_name,
+        "profile_command": path_text(profile_command),
+        "available_on_path": path_match.is_some(),
+        "path_matches_profile": path_matches_profile,
+        "profile_command_directory_on_path": profile_command_directory_on_path,
+        "path_match": path_match.as_deref().map(path_text),
+        "agent_host_restart_or_reload_may_be_needed": !path_matches_profile,
+    });
+
+    if path_matches_profile {
+        checks.push(
+            DiagnosticCheck::passed(
+                id,
+                format!("{command_name} resolves to the installation profile command on PATH"),
+            )
+            .with_details(details),
+        );
+    } else if path_match.is_some() {
+        checks.push(
+            DiagnosticCheck::warning(
+                id,
+                format!("{command_name} resolves to a different executable on PATH"),
+            )
+            .with_details(details),
+        );
+        push_command_availability_action(actions);
+    } else {
+        checks.push(
+            DiagnosticCheck::warning(id, format!("{command_name} is not available on PATH"))
+                .with_details(details),
+        );
+        push_command_availability_action(actions);
+    }
+}
+
+fn inspect_path_or_shim(
+    profile: &InstallationProfileInspectionRecord,
+    path_env: Option<&OsStr>,
+    checks: &mut Vec<DiagnosticCheck>,
+    actions: &mut Vec<DiagnosticAction>,
+) {
+    let bin_dir_on_path = path_directory_is_on_path(path_env, &profile.bin_dir);
     let volicord_link = profile.bin_dir.join(volicord_binary_name());
     let mcp_link = profile.bin_dir.join(mcp_binary_name());
     let link_ready = is_executable_file(&volicord_link) && is_executable_file(&mcp_link);
@@ -438,6 +504,7 @@ fn inspect_path_or_shim<F>(
                 "bin_dir": path_text(&profile.bin_dir),
                 "volicord": path_text(&volicord_link),
                 "volicord_mcp": path_text(&mcp_link),
+                "agent_host_restart_or_reload_may_be_needed": false,
             })),
         );
     } else if bin_dir_on_path {
@@ -450,7 +517,22 @@ fn inspect_path_or_shim<F>(
                 "bin_dir": path_text(&profile.bin_dir),
                 "volicord_link_ready": is_executable_file(&volicord_link),
                 "volicord_mcp_link_ready": is_executable_file(&mcp_link),
+                "agent_host_restart_or_reload_may_be_needed": true,
             })),
+        );
+        push_unique_diagnostic_action(
+            actions,
+            DiagnosticAction {
+                id: "repair_command_links".to_owned(),
+                instruction: format!(
+                    "Run volicord setup --link-bin {} to repair command links; restart or reload existing agent hosts after command-link changes.",
+                    profile.bin_dir.display()
+                ),
+                command: Some(format!(
+                    "volicord setup --link-bin {}",
+                    profile.bin_dir.display()
+                )),
+            },
         );
     } else if link_ready {
         checks.push(
@@ -458,26 +540,45 @@ fn inspect_path_or_shim<F>(
                 "path_or_shim",
                 "command links exist, but the link directory is not on PATH",
             )
-            .with_details(json!({ "bin_dir": path_text(&profile.bin_dir) })),
+            .with_details(json!({
+                "bin_dir": path_text(&profile.bin_dir),
+                "agent_host_restart_or_reload_may_be_needed": true,
+            })),
         );
-        actions.push(DiagnosticAction {
-            id: "add_link_bin_to_path".to_owned(),
-            instruction: format!(
-                "Add {} to PATH before starting new shells or MCP hosts.",
-                profile.bin_dir.display()
-            ),
-            command: Some(format!(
-                "export PATH=\"{}:$PATH\"",
-                profile.bin_dir.display()
-            )),
-        });
+        push_unique_diagnostic_action(
+            actions,
+            DiagnosticAction {
+                id: "add_link_bin_to_path".to_owned(),
+                instruction: format!(
+                    "Add {} to PATH before starting new shells or agent hosts; restart or reload existing agent hosts after the PATH change.",
+                    profile.bin_dir.display()
+                ),
+                command: Some(format!(
+                    "export PATH=\"{}:$PATH\"",
+                    profile.bin_dir.display()
+                )),
+            },
+        );
     } else {
         checks.push(
             DiagnosticCheck::warning(
                 "path_or_shim",
                 "no command link directory is active for this shell",
             )
-            .with_details(json!({ "bin_dir": path_text(&profile.bin_dir) })),
+            .with_details(json!({
+                "bin_dir": path_text(&profile.bin_dir),
+                "agent_host_restart_or_reload_may_be_needed": true,
+            })),
+        );
+        push_unique_diagnostic_action(
+            actions,
+            DiagnosticAction {
+                id: "create_command_links".to_owned(),
+                instruction:
+                    "Run volicord setup --link-bin PATH for a command-link directory you keep on PATH; restart or reload existing agent hosts after PATH or command-link changes."
+                        .to_owned(),
+                command: Some("volicord setup --link-bin PATH".to_owned()),
+            },
         );
     }
 }
@@ -506,18 +607,35 @@ fn render_doctor_output(
     actions: &[DiagnosticAction],
 ) -> Result<String, DoctorCommandError> {
     match output {
-        OutputFormat::Json => serde_json::to_string_pretty(&json!({
-            "status": status.as_str(),
-            "runtime_home": path_text(runtime_home),
-            "checks": checks,
-            "actions": actions,
-        }))
-        .map(|text| format!("{text}\n"))
-        .map_err(|error| DoctorCommandError::Runtime(error.to_string())),
+        OutputFormat::Json => {
+            let actions_required = if status == CommandStatus::Complete {
+                Vec::new()
+            } else {
+                actions.iter().collect::<Vec<_>>()
+            };
+            let actions_recommended = if status == CommandStatus::Complete {
+                actions.iter().collect::<Vec<_>>()
+            } else {
+                Vec::new()
+            };
+            serde_json::to_string_pretty(&json!({
+                "status": status.as_str(),
+                "status_meaning": doctor_status_meaning(status, checks),
+                "runtime_home": path_text(runtime_home),
+                "checks": checks,
+                "warning_count": checks.iter().filter(|check| check.status == "warning").count(),
+                "actions": actions,
+                "actions_required": actions_required,
+                "actions_recommended": actions_recommended,
+            }))
+            .map(|text| format!("{text}\n"))
+            .map_err(|error| DoctorCommandError::Runtime(error.to_string()))
+        }
         OutputFormat::Text => {
             let mut text = format!(
-                "Volicord doctor {}\nruntime_home: {}\n",
+                "Volicord doctor {}\nstatus_meaning: {}\nruntime_home: {}\n",
                 status.as_str(),
+                doctor_status_meaning(status, checks),
                 runtime_home.display()
             );
             text.push_str("checks:\n");
@@ -528,13 +646,30 @@ fn render_doctor_output(
                 ));
             }
             if !actions.is_empty() {
-                text.push_str("actions:\n");
+                if status == CommandStatus::Complete {
+                    text.push_str("recommended_actions:\n");
+                } else {
+                    text.push_str("actions_required:\n");
+                }
                 for action in actions {
                     text.push_str(&format!("- {}\n", action.instruction));
                 }
             }
             Ok(text)
         }
+    }
+}
+
+fn doctor_status_meaning(status: CommandStatus, checks: &[DiagnosticCheck]) -> &'static str {
+    match status {
+        CommandStatus::Complete if checks.iter().any(|check| check.status == "warning") => {
+            "installation profile is usable; warnings name recommended follow-up actions"
+        }
+        CommandStatus::Complete => "installation profile is usable",
+        CommandStatus::ActionRequired => {
+            "local setup or profile repair is required before Volicord workflows are usable"
+        }
+        CommandStatus::Failed => "a blocking diagnostic failed before the profile is usable",
     }
 }
 
@@ -545,6 +680,25 @@ fn run_setup_action() -> DiagnosticAction {
             "Run volicord setup before project, connection, export, MCP, or user workflows."
                 .to_owned(),
         command: Some("volicord setup".to_owned()),
+    }
+}
+
+fn push_command_availability_action(actions: &mut Vec<DiagnosticAction>) {
+    push_unique_diagnostic_action(
+        actions,
+        DiagnosticAction {
+            id: "make_profile_commands_available".to_owned(),
+            instruction:
+                "Run volicord setup --link-bin PATH or update PATH so volicord and volicord-mcp resolve to the installation profile commands; restart or reload existing agent hosts after PATH or command-link changes."
+                    .to_owned(),
+            command: Some("volicord setup --link-bin PATH".to_owned()),
+        },
+    );
+}
+
+fn push_unique_diagnostic_action(actions: &mut Vec<DiagnosticAction>, action: DiagnosticAction) {
+    if !actions.iter().any(|existing| existing.id == action.id) {
+        actions.push(action);
     }
 }
 

@@ -159,6 +159,10 @@ fn setup_and_doctor_report_installation_profile() -> Result<(), Box<dyn Error>> 
     assert_success(&setup);
     let setup_json = json_stdout(&setup)?;
     assert_eq!(setup_json["status"], "action_required");
+    assert_eq!(
+        setup_json["status_meaning"],
+        "setup still needs a named user action before first-run setup is complete"
+    );
     assert_eq!(setup_json["setup_report"]["status"], "action_required");
     assert_eq!(
         setup_json["setup_report"]["installation_profile"]["status"],
@@ -191,11 +195,59 @@ fn setup_and_doctor_report_installation_profile() -> Result<(), Box<dyn Error>> 
     assert_success(&doctor);
     let doctor_json = json_stdout(&doctor)?;
     assert_eq!(doctor_json["status"], "complete");
+    assert_eq!(
+        doctor_json["status_meaning"],
+        "installation profile is usable; warnings name recommended follow-up actions"
+    );
+    assert_eq!(
+        doctor_json["actions_required"]
+            .as_array()
+            .expect("actions_required should be an array")
+            .len(),
+        0
+    );
+    assert!(
+        doctor_json["warning_count"]
+            .as_u64()
+            .expect("warning_count should be numeric")
+            >= 1
+    );
     assert!(doctor_json["checks"]
         .as_array()
         .expect("checks should be an array")
         .iter()
         .any(|check| check["id"] == "installation_profile" && check["status"] == "passed"));
+    let mcp_availability = doctor_json["checks"]
+        .as_array()
+        .expect("checks should be an array")
+        .iter()
+        .find(|check| check["id"] == "volicord_mcp_command_availability")
+        .expect("doctor should report volicord-mcp command availability");
+    assert_eq!(mcp_availability["status"], "warning");
+    assert_eq!(
+        mcp_availability["details"]["profile_command"],
+        path_text(&mcp)
+    );
+    assert_eq!(mcp_availability["details"]["path_matches_profile"], false);
+    assert_eq!(
+        mcp_availability["details"]["agent_host_restart_or_reload_may_be_needed"],
+        true
+    );
+    assert!(doctor_json["actions_recommended"]
+        .as_array()
+        .expect("actions_recommended should be an array")
+        .iter()
+        .any(|action| action["id"] == "make_profile_commands_available"));
+
+    let doctor_text = run_with_home_env(runtime_home.path(), ["doctor"], &[])?;
+    assert_success(&doctor_text);
+    let text = stdout(&doctor_text);
+    assert!(text.contains("Volicord doctor complete"));
+    assert!(text.contains(
+        "status_meaning: installation profile is usable; warnings name recommended follow-up actions"
+    ));
+    assert!(text.contains("recommended_actions:"));
+    assert!(text.contains("restart or reload existing agent hosts"));
     Ok(())
 }
 
@@ -224,6 +276,9 @@ fn setup_plain_non_tty_reports_actions_without_prompting_or_shell_edits(
     assert_success(&output);
     let text = stdout(&output);
     assert!(text.contains("Volicord setup action_required"));
+    assert!(text.contains(
+        "status_meaning: setup still needs a named user action before first-run setup is complete"
+    ));
     assert!(text.contains("optional_actions:"));
     assert!(!text.contains("Choices:"));
     assert!(!text.contains("Choice ["));
