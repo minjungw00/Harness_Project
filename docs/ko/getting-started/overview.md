@@ -48,7 +48,7 @@ Agent setup은 다음을 할 수 있습니다.
 - Runtime Home 기록 생성 또는 재사용
 - `Product Repository` 등록 또는 재사용
 - Agent Connection 생성 또는 재사용
-- `volicord agent connect` 중 선택된 Project 하나 연결
+- 각 `volicord connect` 호출에서 선택된 저장소 프로젝트 하나 연결
 - Codex 또는 Claude Code 호스트 설정 설치, 또는 일반 MCP 설정 내보내기
 - setup 검증을 실행하고 `complete`, `action_required`, `failed` 보고
 

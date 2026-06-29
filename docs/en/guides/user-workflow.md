@@ -95,20 +95,23 @@ authority meaning belongs to [Core Model](../reference/core-model.md), and
 Agent Connection boundaries belong to
 [Agent Connection Reference](../reference/agent-connection.md).
 
-Then use this sequence when a task has a pending judgment:
+Then use this sequence from the selected repository when a task has a pending
+judgment:
 
 ```sh
-volicord user status --project-id acme-api
-volicord user judgment list --project-id acme-api
-volicord user judgment show --project-id acme-api --judgment-id JUDGMENT_ID
-volicord user judgment record --project-id acme-api --judgment-id JUDGMENT_ID --option-id OPTION_ID
+volicord user status
+volicord user judgments
+volicord user judgment show 1
+volicord user judgment answer 1 1
 ```
 
 Use `volicord user status` to check the current task status and pending
-judgment count. Use `volicord user judgment list` to see pending judgments for
-the active or selected task. Use `volicord user judgment show` to inspect the
-stored request, context summary, and Core-generated options. Record only an
-`OPTION_ID` shown by Core for that judgment.
+judgment count. Use `volicord user judgments` to see pending judgments for the
+active or selected task. Use `volicord user judgment show` to inspect the stored
+request, context summary, and Core-generated options. Use
+`volicord user judgment answer` to record only an option shown by Core for that
+judgment. Use `--repo PATH` only when the current directory is not the intended
+repository, and `--task ID` only when the active task is not the intended task.
 
 Recording one option resolves only that addressed judgment. Broad natural
 language such as "approved", "looks good", or "go ahead" does not imply every

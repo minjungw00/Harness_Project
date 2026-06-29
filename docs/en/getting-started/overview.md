@@ -48,7 +48,8 @@ Agent setup can:
 - create or reuse Runtime Home records
 - register or reuse a `Product Repository`
 - create or reuse an Agent Connection
-- connect exactly one selected Project during `volicord agent connect`
+- connect one selected repository project during each `volicord connect`
+  invocation
 - install Codex or Claude Code host configuration, or export generic MCP configuration
 - run setup verification and report `complete`, `action_required`, or `failed`
 

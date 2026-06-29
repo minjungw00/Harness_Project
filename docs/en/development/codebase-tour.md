@@ -300,19 +300,22 @@ Recommended next component:
 Why it exists:
 
 `volicord-cli` implements the local `volicord` administrative executable and
-reusable agent setup modules. It handles Runtime Home initialization, project
-and Agent Connection registration, Agent Connection setup, host-specific
-MCP configuration, connection-project membership, and preflight execution.
+reusable command modules. It handles setup-profile readiness, Git repository
+project detection, project and Agent Connection registration, Agent Connection
+setup, host-specific MCP configuration, generic MCP config export, local
+`User Channel` commands, and preflight execution.
 
 Owns in the implementation:
 
 - Process entry and administrative command dispatch for the `volicord` binary.
-- `volicord agent` option parsing, storage preparation, host plan construction,
-  preflight invocation, connect/status/verify/project membership/uninstall
-  commands, and output.
+- `volicord connect`, `volicord connections`, and `volicord connection ...`
+  parsing, storage preparation, host plan construction, preflight invocation,
+  status, verification, mode, removal, and output.
+- Setup, doctor, project, export, and local User Channel command parsing and
+  output.
 - Codex, Claude Code, and generic export host integration planning.
 - Managed host configuration planning and safety checks.
-- Agent Connection and invocation metadata generation.
+- Agent Connection, Connection Projects, and invocation metadata generation.
 
 Does not own:
 
@@ -328,10 +331,17 @@ Recommended first file:
 Important modules:
 
 - [`crates/volicord-cli/src/main.rs`](../../../crates/volicord-cli/src/main.rs)
-  for process dispatch, `run_cli`, `command_init`, and `command_project`.
+  for process dispatch and `run_cli`.
+- [`crates/volicord-cli/src/setup_command.rs`](../../../crates/volicord-cli/src/setup_command.rs)
+  and [`crates/volicord-cli/src/doctor_command.rs`](../../../crates/volicord-cli/src/doctor_command.rs)
+  for setup profile creation, executable discovery, and diagnostic checks.
+- [`crates/volicord-cli/src/project_context.rs`](../../../crates/volicord-cli/src/project_context.rs)
+  for Git repository root detection and `volicord project ...` commands.
 - [`crates/volicord-cli/src/agent_command.rs`](../../../crates/volicord-cli/src/agent_command.rs)
-  for `volicord agent` connection, project membership, status, verification,
-  and uninstall command orchestration.
+  for `volicord connect`, `volicord connections`, and
+  `volicord connection status/verify/mode/remove` orchestration.
+- [`crates/volicord-cli/src/export_command.rs`](../../../crates/volicord-cli/src/export_command.rs)
+  for `volicord export mcp-config`.
 - [`crates/volicord-cli/src/host_integration/`](../../../crates/volicord-cli/src/host_integration/)
   for Codex, Claude Code, and generic host integration adapters.
 - [`crates/volicord-cli/src/registration.rs`](../../../crates/volicord-cli/src/registration.rs)
@@ -342,11 +352,12 @@ Important modules:
 Important current symbols:
 
 - `run_cli`, `CliError`
-- `run_agent_command`, `agent_usage`, `AgentCommandError`,
-  `AgentProcessOutput`
-- `command_connect`, `command_status`, `command_verify`,
-  `command_uninstall`
-- `command_project_add`, `command_project_remove`
+- `run_setup_command`, `run_doctor_command`
+- `run_project_command`, `resolve_repository_root`
+- `run_connect_command`, `run_connections_command`, `run_connection_command`,
+  `connect_usage`, `connections_usage`, `connection_usage`
+- `run_export_command`, `run_user_command`
+- `AgentCommandError`, `AgentProcessOutput`
 - `HostKind`, `HostScope`, `HostPlan`, `HostAdapter`, `Verification`
 - `AgentConnectionRegistration`, `ConnectionProjectRegistration`,
   `AgentConnectionRecord`
@@ -356,9 +367,9 @@ Important current symbols:
 Most relevant tests:
 
 - [`crates/volicord-cli/tests/binary_admin.rs`](../../../crates/volicord-cli/tests/binary_admin.rs)
-  exercises the `volicord` binary for administrative setup, dry-run behavior,
-  `volicord agent` host setup, connection-project membership, setup-command rejection,
-  preflight handling, and config-file safety.
+  exercises the `volicord` binary for setup, doctor, project detection,
+  dry-run behavior, `volicord connect`, connection status/verification/mode/removal,
+  generic export, User Channel commands, preflight handling, and config-file safety.
 - Colocated unit tests in CLI modules cover parsing, planning, rendering,
   registration metadata, and host-configuration behavior.
 
@@ -366,7 +377,7 @@ Recommended next component:
 
 - Read `volicord-store` for bootstrap, inspection, and registry storage calls.
   Read `volicord-mcp` for the `volicord-mcp --check --connection` preflight path
-  that agent setup validates.
+  that connection setup validates.
 
 ## `crates/volicord-mcp`
 

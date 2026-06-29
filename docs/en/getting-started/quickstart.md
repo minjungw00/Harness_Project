@@ -1,188 +1,118 @@
 # Quickstart
 
-This tutorial is the shortest supported first setup path for a real local agent host. It starts after [Installation](installation.md), uses one `Product Repository`, and gives you a clear choice between a personal Codex user-scope connection and a project-scoped Claude Code `.mcp.json` connection.
+This tutorial gets from a fresh source checkout to one working Agent Connection.
+It assumes you are connecting a local host to a normal Git product repository.
 
-For complete host setup options, dry-run previews, multi-project operation, removal, and troubleshooting, see [Agent Host Setup](../guides/agent-host-setup.md).
+Exact command contracts belong to
+[Administrative CLI Reference](../reference/admin-cli.md). Agent Connection
+meaning belongs to [Agent Connection Reference](../reference/agent-connection.md).
 
-## Audience, Goal, And Completion
-
-Audience: first-time users or operators who have already verified local `volicord` and `volicord-mcp` executables and want one agent host path to work before expanding setup.
-
-Goal: create one Agent Connection, recognize whether the first result is `complete` or `action_required`, and run an independent verification command for the chosen path.
-
-Completion state: the chosen path is complete when `volicord agent verify --connection-id <connection_id>` reports `status: complete`. If the command reports `action_required`, complete the named host-owned trust, approval, reload, or restart action and rerun verification.
-
-## Starting State And Example Values
-
-Before running these commands:
-
-- Complete [Installation](installation.md) in a POSIX-style shell.
-- Keep `VOLICORD_BIN` set to the verified absolute directory containing both executables.
-- Choose a `Product Repository` that is not the `Volicord Runtime Home` and is not inside or above it.
-- Replace every example path and ID below with your real value.
-
-Check focused command help before applying setup:
+## Fast Path
 
 ```sh
-"$VOLICORD_BIN/volicord" agent connect --help
+cargo build --workspace --bins
+./target/debug/volicord setup --link-bin ~/.local/bin
+cd /work/acme-api
+volicord connect codex
 ```
 
-The examples use these values:
+The repository is detected from the current directory. The project name comes
+from the repository directory, so `/work/acme-api` becomes the visible project
+name `acme-api` unless that name needs to be made unique. The default connection
+intent is `personal`, the default mode is `workflow`, and internal ids are
+managed by Volicord.
 
-| Value | Kind | How this walkthrough uses it |
+## Confirm The Setup
+
+```sh
+volicord doctor
+volicord project current
+volicord connection status codex
+volicord connection verify codex
+```
+
+Completion state: the connection is ready when status or verification reports
+`complete`. If it reports `action_required`, complete the named host-owned
+trust, approval, reload, restart, or setup repair action, then rerun
+verification.
+
+## Choose A Host Intent
+
+Use the shortest command that matches where the host configuration should live:
+
+| Intent | Command shape | Use when |
 |---|---|---|
-| `VOLICORD_BIN="/absolute/path/to/selected/bin"` | Tutorial shell variable | Selected absolute directory containing both `volicord` and `volicord-mcp`. |
-| `/Users/alex/.volicord` | Example path | `Volicord Runtime Home`; keep it distinct from the `Product Repository`. |
-| `/work/acme-api` | Example path | Product Repository A. |
-| `acme-api` | Example identifier | Stable logical project ID for Product Repository A. |
-| `conn-codex-team`, `conn-claude-acme` | Example identifiers | Predictable `connection_id` values used by later verify, status, configuration, and related commands. |
-| `volicord-main` | Example server name | Human-readable host MCP server key. |
+| `personal` | `volicord connect codex` or `volicord connect claude-code` | The connection is for the current user's local host setup. |
+| `shared` | `volicord connect codex --shared` or `volicord connect claude-code --shared` | The repository should carry an explicit project-shared host integration file. |
+| `global` | `volicord connect claude-code --global` | The selected host supports user-wide configuration while project access remains constrained by Volicord records. |
 
-## Choose One Host Path
-
-| Path | Choose when | Consequence |
-|---|---|---|
-| Path A: Codex `user` scope | One personal Codex MCP entry should serve this repository now and may later serve more explicitly connected repositories. | Host configuration lives in the Codex user config and stores an absolute `volicord-mcp` command path plus `VOLICORD_HOME`. |
-| Path B: Claude Code `project` scope | Product Repository A should carry a team-shared Claude Code `.mcp.json` entry. | The project file uses portable `volicord-mcp`, omits personal `VOLICORD_HOME`, requires `--allow-repository-write` on the real apply command, and may remain `action_required` until Claude Code approval is complete. |
-
-Use `--mode workflow` when the agent host should expose workflow tools. Omit it only when a read-only connection is intended.
-
-## Path A: Codex User-Scope Setup
-
-Use this when one personal Codex MCP entry should serve one or more explicitly connected `Product Repository` registrations.
+Use `--read-only` only when the host should expose read-oriented behavior
+instead of workflow tools:
 
 ```sh
-"$VOLICORD_BIN/volicord" agent connect \
-  --host codex \
-  --scope user \
-  --server-name volicord-main \
-  --connection-id conn-codex-team \
-  --mode workflow \
-  --project-id acme-api \
-  --repo-root /work/acme-api \
-  --runtime-home /Users/alex/.volicord \
-  --mcp-command "$VOLICORD_BIN/volicord-mcp"
+volicord connect codex --read-only
 ```
 
-Locations that may change:
+Use `--repo PATH` only when the current directory is not the repository you want
+to connect:
 
-| Location | What may change |
+```sh
+volicord connect codex --repo /work/acme-api
+```
+
+## Inspect Or Change The Connection
+
+```sh
+volicord connections
+volicord connection status codex
+volicord connection verify codex
+volicord connection mode codex read-only
+volicord connection mode codex workflow
+```
+
+Removing the selected repository from the connection uses the same host and
+intent selection:
+
+```sh
+volicord connection remove codex --dry-run
+volicord connection remove codex
+```
+
+`--dry-run` reports the plan without persistent changes.
+
+## Export Generic MCP Config
+
+For an MCP host that Volicord does not manage directly, export a host-neutral
+config:
+
+```sh
+volicord export mcp-config --output /tmp/volicord.mcp.json
+```
+
+The export uses the detected repository and the setup profile. The exported file
+is user-managed after export; Volicord does not claim that an arbitrary external
+host loaded or approved it.
+
+## Record User Judgment
+
+Agent Connections may request or show focused judgment needs, but
+authority-bearing user answers go through the local `User Channel`:
+
+```sh
+volicord user status
+volicord user judgments
+volicord user judgment show 1
+volicord user judgment answer 1 1
+```
+
+Use `--repo PATH` only when you need to answer for a repository other than the
+current one. Use `--task ID` when the active task is not the intended task.
+
+## Next Steps
+
+| Need | Read |
 |---|---|
-| `/Users/alex/.volicord` | Runtime Home registry, Agent Connection, connected project, and project state records. |
-| Codex user config, normally `~/.codex/config.toml` or `CODEX_HOME/config.toml` | A `[mcp_servers.volicord-main]` table. |
-| `/work/acme-api` | No file change from this command. |
-
-Expected generated Codex shape:
-
-```toml
-[mcp_servers.volicord-main]
-command = "/absolute/path/to/selected/bin/volicord-mcp"
-args = ["--connection", "conn-codex-team"]
-
-[mcp_servers.volicord-main.env]
-VOLICORD_HOME = "/Users/alex/.volicord"
-```
-
-Independent completion check:
-
-```sh
-"$VOLICORD_BIN/volicord" agent verify \
-  --connection-id conn-codex-team \
-  --runtime-home /Users/alex/.volicord
-```
-
-Path A is complete when verification reports `status: complete`. If verification reports `action_required`, read the named action. A common Codex user-scope cause is that `codex` is missing from the administrative command `PATH` or cannot run `codex --version`.
-
-## Path B: Claude Code Project-Scope Setup
-
-Use this when Product Repository A should carry a team-shared Claude Code `.mcp.json` entry.
-
-Optional dry-run before writing the project file:
-
-```sh
-VOLICORD_HOME=/Users/alex/.volicord \
-PATH="$VOLICORD_BIN:$PATH" \
-"$VOLICORD_BIN/volicord" agent connect \
-  --host claude-code \
-  --scope project \
-  --server-name volicord-main \
-  --connection-id conn-claude-acme \
-  --mode workflow \
-  --project-id acme-api \
-  --repo-root /work/acme-api \
-  --dry-run \
-  --output json
-```
-
-Apply the setup:
-
-```sh
-VOLICORD_HOME=/Users/alex/.volicord \
-PATH="$VOLICORD_BIN:$PATH" \
-"$VOLICORD_BIN/volicord" agent connect \
-  --host claude-code \
-  --scope project \
-  --server-name volicord-main \
-  --connection-id conn-claude-acme \
-  --mode workflow \
-  --project-id acme-api \
-  --repo-root /work/acme-api \
-  --allow-repository-write
-```
-
-Expected `.mcp.json` shape:
-
-```json
-{
-  "mcpServers": {
-    "volicord-main": {
-      "command": "volicord-mcp",
-      "args": ["--connection", "conn-claude-acme"]
-    }
-  }
-}
-```
-
-The project file is not Core authority. It is selected host configuration stored inside the `Product Repository`. Runtime records remain in the Runtime Home.
-
-Independent completion check:
-
-```sh
-VOLICORD_HOME=/Users/alex/.volicord \
-PATH="$VOLICORD_BIN:$PATH" \
-"$VOLICORD_BIN/volicord" agent verify \
-  --connection-id conn-claude-acme
-```
-
-Project-scoped Claude Code setup may report `action_required` until Claude Code approves the project MCP server, reloads, or restarts. Complete only the named host-owned action, then rerun verification.
-
-## MCP Startup Check
-
-For either path, `volicord-mcp --check` validates only local adapter startup for one Agent Connection:
-
-```sh
-VOLICORD_HOME=/Users/alex/.volicord \
-"$VOLICORD_BIN/volicord-mcp" --check --connection conn-codex-team
-```
-
-A successful startup check is not proof that Codex or Claude Code loaded, trusted, approved, or exposed the server.
-
-## What The Agent Can Do
-
-The Agent Connection can access only explicitly connected Projects. In this quickstart, there is exactly one connected Project, so MCP calls may omit `project_id`. After more Projects are connected to the same connection, MCP calls must include an explicit `project_id` unless the agent is calling `volicord.list_projects`.
-
-`read_only` mode exposes read and project-discovery operations. `workflow` mode exposes agent workflow operations, but it does not expose `volicord.record_user_judgment`; user judgment recording belongs to the User Channel.
-
-`Write Check` is Core-state compatibility for one product-file write attempt. It is not OS permission, OS sandboxing, filesystem ACLs, network policy, or secret isolation.
-
-## Common Next Steps
-
-| Need | Route |
-|---|---|
-| Add another Project to a user-scope connection. | [Multi-Repository Agent Setup](../guides/multi-repository-agent-setup.md) |
-| Inspect connection state. | `volicord agent status --connection-id <connection_id>` |
-| See available Projects from MCP. | `volicord.list_projects` |
-| Record a pending user judgment. | [User Channel commands](../reference/admin-cli.md#user-channel-commands) |
-| Setup cannot resolve `volicord-mcp`. | [Missing executable troubleshooting](../guides/agent-host-troubleshooting.md#missing-volicord-mcp) |
-| Result is `action_required`. | [Action-required troubleshooting](../guides/agent-host-troubleshooting.md#status-action_required) |
-| Result is `failed`. | [Failed troubleshooting](../guides/agent-host-troubleshooting.md#status-failed) |
+| Host setup details | [Agent Host Setup](../guides/agent-host-setup.md) |
+| Troubleshooting `action_required` or `failed` | [Agent Host Troubleshooting](../guides/agent-host-troubleshooting.md) |
+| User workflow and judgment boundaries | [User Guide](../guides/user-workflow.md) |
+| Agent workflow boundaries | [Agent Guide](../guides/agent-workflow.md) |

@@ -193,14 +193,17 @@ If the user's answer must become authority-bearing Core state, route the user to
 the local `User Channel`. The stable local CLI route is:
 
 ```sh
-volicord user judgment show --project-id PROJECT_ID --judgment-id JUDGMENT_ID
-volicord user judgment record --project-id PROJECT_ID --judgment-id JUDGMENT_ID --option-id OPTION_ID
+volicord user judgments
+volicord user judgment show 1
+volicord user judgment answer 1 1
 ```
 
 An Agent Connection must not call `volicord.record_user_judgment`, supply User
 Channel provenance, or convert a chat reply into authority-bearing acceptance.
 If the answer has not been recorded through the User Channel, name the needed
 user action and continue only with work that does not depend on that judgment.
+Use `--repo PATH` only when the current directory is not the intended
+repository, and `--task ID` only when the active task is not the intended task.
 
 Status summaries, generated Markdown, rendered projections, and chat text can
 display a pending judgment or option list. They are support context only; they

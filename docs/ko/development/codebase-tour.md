@@ -290,19 +290,21 @@ Core 변이 원자 커밋이 여기에 속합니다.
 
 존재 이유:
 
-`volicord-cli`는 로컬 `volicord` 관리 실행 파일과 재사용 가능한 에이전트 설정
-모듈을 구현합니다. Runtime Home 초기화, 프로젝트와 Agent Connection 등록,
-Agent Connection 설정, 호스트별 MCP 설정, Connection Project 멤버십, 사전 점검
-실행을 처리합니다.
+`volicord-cli`는 로컬 `volicord` 관리 실행 파일과 재사용 가능한 명령 모듈을
+구현합니다. Setup 프로필 준비 상태, Git 저장소 프로젝트 감지, 프로젝트와
+Agent Connection 등록, Agent Connection 설정, 호스트별 MCP 설정, generic MCP
+config export, 로컬 `User Channel` 명령, 사전 점검 실행을 처리합니다.
 
 구현에서 담당하는 것:
 
 - `volicord` 바이너리의 프로세스 진입과 관리 명령 디스패치.
-- `volicord agent` 옵션 파싱, 저장소 준비, 호스트 계획 구성, 사전 점검
-  호출, connect/status/verify/project membership/uninstall 명령, 출력.
+- `volicord connect`, `volicord connections`, `volicord connection ...` 파싱,
+  저장소 준비, 호스트 계획 구성, 사전 점검 호출, status, verification, mode,
+  removal, 출력.
+- Setup, doctor, project, export, 로컬 User Channel 명령 파싱과 출력.
 - Codex, Claude Code, generic export 호스트 통합 계획.
 - 관리 호스트 설정 계획과 안전성 점검.
-- Agent Connection, Connection Project, 호출 출처 메타데이터 생성.
+- Agent Connection, Connection Projects, 호출 출처 메타데이터 생성.
 
 담당하지 않는 것:
 
@@ -318,10 +320,17 @@ Agent Connection 설정, 호스트별 MCP 설정, Connection Project 멤버십, 
 중요 모듈:
 
 - [`crates/volicord-cli/src/main.rs`](../../../crates/volicord-cli/src/main.rs):
-  프로세스 디스패치, `run_cli`, `command_init`, `command_project`.
+  프로세스 디스패치와 `run_cli`.
+- [`crates/volicord-cli/src/setup_command.rs`](../../../crates/volicord-cli/src/setup_command.rs)와
+  [`crates/volicord-cli/src/doctor_command.rs`](../../../crates/volicord-cli/src/doctor_command.rs):
+  setup 프로필 생성, 실행 파일 발견, 진단 점검.
+- [`crates/volicord-cli/src/project_context.rs`](../../../crates/volicord-cli/src/project_context.rs):
+  Git 저장소 루트 감지와 `volicord project ...` 명령.
 - [`crates/volicord-cli/src/agent_command.rs`](../../../crates/volicord-cli/src/agent_command.rs):
-  `volicord agent` 연결, project membership, status, verification, uninstall
-  명령 오케스트레이션.
+  `volicord connect`, `volicord connections`,
+  `volicord connection status/verify/mode/remove` 오케스트레이션.
+- [`crates/volicord-cli/src/export_command.rs`](../../../crates/volicord-cli/src/export_command.rs):
+  `volicord export mcp-config`.
 - [`crates/volicord-cli/src/host_integration/`](../../../crates/volicord-cli/src/host_integration/):
   Codex, Claude Code, generic 호스트 통합 어댑터.
 - [`crates/volicord-cli/src/registration.rs`](../../../crates/volicord-cli/src/registration.rs):
@@ -332,11 +341,12 @@ Agent Connection 설정, 호스트별 MCP 설정, Connection Project 멤버십, 
 중요한 현재 심볼:
 
 - `run_cli`, `CliError`
-- `run_agent_command`, `agent_usage`, `AgentCommandError`,
-  `AgentProcessOutput`
-- `command_connect`, `command_status`, `command_verify`,
-  `command_uninstall`
-- `command_project_add`, `command_project_remove`
+- `run_setup_command`, `run_doctor_command`
+- `run_project_command`, `resolve_repository_root`
+- `run_connect_command`, `run_connections_command`, `run_connection_command`,
+  `connect_usage`, `connections_usage`, `connection_usage`
+- `run_export_command`, `run_user_command`
+- `AgentCommandError`, `AgentProcessOutput`
 - `HostKind`, `HostScope`, `HostPlan`, `HostAdapter`, `Verification`
 - `AgentConnectionRegistration`, `ConnectionProjectRegistration`,
   `AgentConnectionRecord`
@@ -346,9 +356,9 @@ Agent Connection 설정, 호스트별 MCP 설정, Connection Project 멤버십, 
 가장 관련 있는 테스트:
 
 - [`crates/volicord-cli/tests/binary_admin.rs`](../../../crates/volicord-cli/tests/binary_admin.rs)는
-  `volicord` 바이너리의 관리 설정, dry-run 동작, `volicord agent` 호스트
-  설정, Connection Project 멤버십, 설정 명령 거부, 사전 점검 처리, 설정 파일 안전성을
-  실행합니다.
+  `volicord` 바이너리의 setup, doctor, 프로젝트 감지, dry-run 동작,
+  `volicord connect`, connection status/verification/mode/removal, generic export,
+  User Channel 명령, 사전 점검 처리, 설정 파일 안전성을 실행합니다.
 - CLI 모듈 안의 단위 테스트는 파싱, 계획, 렌더링, 등록 메타데이터,
   호스트 설정 동작을 다룹니다.
 
