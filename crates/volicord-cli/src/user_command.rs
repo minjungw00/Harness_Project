@@ -17,7 +17,11 @@ use volicord_types::{
     OperationCategory, PersistedUserJudgmentOptions, ProjectId, RecordUserJudgmentPayload,
     RecordUserJudgmentRequest, RequestId, SensitiveActionScope, StatusInclude, StatusRequest,
     TaskId, ToolEnvelope, UserJudgmentContext, UserJudgmentId, UserJudgmentOption,
-    UserJudgmentOptionId, VERIFICATION_BASIS_CLI_DIRECT_USER_CHANNEL,
+    VERIFICATION_BASIS_CLI_DIRECT_USER_CHANNEL,
+};
+
+use crate::project_context::{
+    registered_project_for_repo, resolve_repository_root, ProjectCommandError,
 };
 
 type UserOptions = BTreeMap<String, Vec<String>>;
@@ -56,6 +60,15 @@ impl From<CorePipelineError> for UserCommandError {
     }
 }
 
+impl From<ProjectCommandError> for UserCommandError {
+    fn from(error: ProjectCommandError) -> Self {
+        match error {
+            ProjectCommandError::Usage(message) => Self::Usage(message),
+            ProjectCommandError::Runtime(message) => Self::Runtime(message),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 enum OutputFormat {
     #[default]
@@ -65,24 +78,38 @@ enum OutputFormat {
 
 #[derive(Debug, Clone, Default)]
 struct ParsedUserOptions {
-    project_id: Option<String>,
-    task_id: Option<String>,
-    judgment_id: Option<String>,
-    option_id: Option<String>,
-    request_id: Option<String>,
-    idempotency_key: Option<String>,
-    expected_state_version: Option<u64>,
+    repo: Option<PathBuf>,
+    task: TaskSelector,
     note: Option<String>,
-    runtime_home: Option<PathBuf>,
     output: OutputFormat,
+    positionals: Vec<String>,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+enum TaskSelector {
+    #[default]
+    Active,
+    Id(String),
+}
+
+#[derive(Debug, Clone)]
+struct ResolvedUserProject {
+    runtime_home: PathBuf,
+    project_id: String,
+}
+
+#[derive(Debug, Clone)]
+struct SelectedJudgment {
+    record: UserJudgmentRecord,
+    display_index: Option<usize>,
 }
 
 pub fn user_usage() -> String {
     concat!(
-        "volicord user status --project-id ID [--task-id ID] [--runtime-home PATH] [--output text|json]\n",
-        "volicord user judgment list --project-id ID [--task-id ID] [--runtime-home PATH] [--output text|json]\n",
-        "volicord user judgment show --project-id ID --judgment-id ID [--runtime-home PATH] [--output text|json]\n",
-        "volicord user judgment record --project-id ID --judgment-id ID --option-id ID [--request-id ID] [--idempotency-key KEY] [--expected-state-version VERSION] [--note TEXT] [--runtime-home PATH] [--output text|json]\n"
+        "volicord user status [--repo PATH] [--task active|ID] [--json]\n",
+        "volicord user judgments [--repo PATH] [--task active|ID] [--json]\n",
+        "volicord user judgment show INDEX_OR_ID [--repo PATH] [--json]\n",
+        "volicord user judgment answer INDEX_OR_ID OPTION_INDEX_OR_ID [--repo PATH] [--note TEXT] [--json]\n"
     )
     .to_owned()
 }
@@ -112,6 +139,7 @@ where
             }
         }
         "status" => command_status(&args[1..], env_var, current_dir),
+        "judgments" => command_judgments(&args[1..], env_var, current_dir),
         "judgment" => command_judgment(&args[1..], env_var, current_dir),
         other => Err(UserCommandError::Usage(format!(
             "unknown user command: {other}\n\n{}",
@@ -128,14 +156,18 @@ fn command_status<F>(
 where
     F: Fn(&str) -> Option<std::ffi::OsString>,
 {
-    let parsed = parse_user_options(args, status_allowed_options(), current_dir)?;
-    let project_id = required_text(parsed.project_id.as_deref(), "project-id")?;
-    let runtime_home = resolve_user_runtime_home(&parsed, env_var, current_dir)?;
-    let response = CoreService::new(&runtime_home).status(
+    let parsed = parse_user_options(args, true, false, 0, current_dir)?;
+    let resolved = resolve_user_project(&parsed, env_var, current_dir)?;
+    let store = CoreProjectStore::open(
+        &resolved.runtime_home,
+        &ProjectId::new(&resolved.project_id),
+    )?;
+    let task_id = selected_or_active_task_id(&store, &parsed.task)?;
+    let response = CoreService::new(&resolved.runtime_home).status(
         StatusRequest {
             envelope: envelope(
-                project_id,
-                parsed.task_id.as_deref(),
+                &resolved.project_id,
+                task_id.as_deref(),
                 generated_id("req_user_status"),
                 None,
                 None,
@@ -150,9 +182,27 @@ where
                 continuity: true,
             },
         },
-        invocation(project_id, OperationCategory::Read),
+        invocation(&resolved.project_id, OperationCategory::Read),
     )?;
     render_status_response(&response, parsed.output)
+}
+
+fn command_judgments<F>(
+    args: &[String],
+    env_var: F,
+    current_dir: &Path,
+) -> Result<String, UserCommandError>
+where
+    F: Fn(&str) -> Option<std::ffi::OsString>,
+{
+    let parsed = parse_user_options(args, true, false, 0, current_dir)?;
+    let resolved = resolve_user_project(&parsed, env_var, current_dir)?;
+    let store = CoreProjectStore::open(
+        &resolved.runtime_home,
+        &ProjectId::new(&resolved.project_id),
+    )?;
+    let records = pending_judgment_records_for_task(&store, &parsed.task)?;
+    render_judgment_records(&records, parsed.output)
 }
 
 fn command_judgment<F>(
@@ -167,34 +217,14 @@ where
         return Err(UserCommandError::Usage(user_usage()));
     };
     match subcommand {
-        "list" => command_judgment_list(&args[1..], env_var, current_dir),
         "show" => command_judgment_show(&args[1..], env_var, current_dir),
-        "record" => command_judgment_record(&args[1..], env_var, current_dir),
+        "answer" => command_judgment_answer(&args[1..], env_var, current_dir),
         "-h" | "--help" | "help" => Ok(user_usage()),
         other => Err(UserCommandError::Usage(format!(
             "unknown user judgment command: {other}\n\n{}",
             user_usage()
         ))),
     }
-}
-
-fn command_judgment_list<F>(
-    args: &[String],
-    env_var: F,
-    current_dir: &Path,
-) -> Result<String, UserCommandError>
-where
-    F: Fn(&str) -> Option<std::ffi::OsString>,
-{
-    let parsed = parse_user_options(args, list_allowed_options(), current_dir)?;
-    let project_id = required_text(parsed.project_id.as_deref(), "project-id")?;
-    let runtime_home = resolve_user_runtime_home(&parsed, env_var, current_dir)?;
-    let store = CoreProjectStore::open(&runtime_home, &ProjectId::new(project_id))?;
-    let Some(task_id) = selected_or_active_task_id(&store, parsed.task_id.as_deref())? else {
-        return render_judgment_records(Vec::new(), parsed.output);
-    };
-    let records = store.pending_user_judgment_records(&TaskId::new(task_id))?;
-    render_judgment_records(records, parsed.output)
 }
 
 fn command_judgment_show<F>(
@@ -205,15 +235,18 @@ fn command_judgment_show<F>(
 where
     F: Fn(&str) -> Option<std::ffi::OsString>,
 {
-    let parsed = parse_user_options(args, show_allowed_options(), current_dir)?;
-    let project_id = required_text(parsed.project_id.as_deref(), "project-id")?;
-    let judgment_id = required_text(parsed.judgment_id.as_deref(), "judgment-id")?;
-    let runtime_home = resolve_user_runtime_home(&parsed, env_var, current_dir)?;
-    let record = read_judgment_record(&runtime_home, project_id, judgment_id)?;
-    render_judgment_record(&record, parsed.output)
+    let parsed = parse_user_options(args, false, false, 1, current_dir)?;
+    let selector = required_positional(&parsed, 0, "INDEX_OR_ID")?;
+    let resolved = resolve_user_project(&parsed, env_var, current_dir)?;
+    let store = CoreProjectStore::open(
+        &resolved.runtime_home,
+        &ProjectId::new(&resolved.project_id),
+    )?;
+    let selected = select_judgment(&store, selector, false)?;
+    render_judgment_record(&selected.record, selected.display_index, parsed.output)
 }
 
-fn command_judgment_record<F>(
+fn command_judgment_answer<F>(
     args: &[String],
     env_var: F,
     current_dir: &Path,
@@ -221,213 +254,326 @@ fn command_judgment_record<F>(
 where
     F: Fn(&str) -> Option<std::ffi::OsString>,
 {
-    let parsed = parse_user_options(args, record_allowed_options(), current_dir)?;
-    let project_id = required_text(parsed.project_id.as_deref(), "project-id")?;
-    let judgment_id = required_text(parsed.judgment_id.as_deref(), "judgment-id")?;
-    let option_id = required_text(parsed.option_id.as_deref(), "option-id")?;
-    let runtime_home = resolve_user_runtime_home(&parsed, env_var, current_dir)?;
-    let store = CoreProjectStore::open(&runtime_home, &ProjectId::new(project_id))?;
+    let parsed = parse_user_options(args, false, true, 2, current_dir)?;
+    let judgment_selector = required_positional(&parsed, 0, "INDEX_OR_ID")?;
+    let option_selector = required_positional(&parsed, 1, "OPTION_INDEX_OR_ID")?;
+    let resolved = resolve_user_project(&parsed, env_var, current_dir)?;
+    let store = CoreProjectStore::open(
+        &resolved.runtime_home,
+        &ProjectId::new(&resolved.project_id),
+    )?;
     let state_version = store.project_state()?.state_version;
-    let record = store.user_judgment_record(judgment_id)?.ok_or_else(|| {
-        UserCommandError::Runtime(format!("UserJudgment not found: {judgment_id}"))
-    })?;
+    let selected_judgment = select_judgment(&store, judgment_selector, true)?;
+    let record = selected_judgment.record;
     if record.status != "pending" {
         return Err(UserCommandError::Runtime(format!(
-            "UserJudgment is not pending: {judgment_id}"
+            "selected judgment is not pending (status: {}); refresh `volicord user judgments`",
+            record.status
         )));
     }
     let judgment_kind = parse_judgment_kind(&record.judgment_kind)?;
     let context = decode_json::<UserJudgmentContext>("context_json", &record.context_json)?;
     let options = decode_options(&record)?;
-    let selected_option = options
-        .iter()
-        .find(|option| option.option_id.as_str() == option_id)
-        .ok_or_else(|| {
-            UserCommandError::Usage(format!(
-                "--option-id must name one of the pending judgment options: {option_id}"
-            ))
-        })?;
-    let request_id = parsed
-        .request_id
-        .clone()
-        .unwrap_or_else(|| generated_id("req_user_judgment_record"));
-    let idempotency_key = parsed
-        .idempotency_key
-        .clone()
-        .unwrap_or_else(|| generated_id("idem_user_judgment_record"));
-    let expected_state_version = parsed.expected_state_version.unwrap_or(state_version);
-    let response = CoreService::new(&runtime_home).record_user_judgment(
+    let selected_option = select_option(&options, option_selector)?;
+    let request_id = generated_id("req_user_judgment_record");
+    let idempotency_key = generated_id("idem_user_judgment_record");
+    let response = CoreService::new(&resolved.runtime_home).record_user_judgment(
         RecordUserJudgmentRequest {
             envelope: envelope(
-                project_id,
+                &resolved.project_id,
                 Some(&record.task_id),
                 request_id,
                 Some(idempotency_key),
-                Some(expected_state_version),
+                Some(state_version),
             ),
-            user_judgment_id: UserJudgmentId::new(judgment_id),
+            user_judgment_id: UserJudgmentId::new(&record.judgment_id),
             judgment_kind,
-            selected_option_id: UserJudgmentOptionId::new(option_id),
-            answer: answer_payload_for_record(judgment_kind, selected_option, &record, &context)?,
-            rationale: rationale_for_selected_option(judgment_kind, selected_option),
+            selected_option_id: selected_option.option_id.clone(),
+            answer: answer_payload_for_record(judgment_kind, &selected_option, &record, &context)?,
+            rationale: rationale_for_selected_option(judgment_kind, &selected_option),
             note: parsed.note.into(),
-            accepted_risks: accepted_risks_for_record(judgment_kind, selected_option, &context),
+            accepted_risks: accepted_risks_for_record(judgment_kind, &selected_option, &context),
         },
-        invocation(project_id, OperationCategory::UserOnly),
+        invocation(&resolved.project_id, OperationCategory::UserOnly),
     )?;
-    render_record_response(&response, parsed.output)
+    render_record_response(&response, parsed.output, &selected_option)
 }
 
 fn parse_user_options(
     args: &[String],
-    allowed: &[&str],
+    allow_task: bool,
+    allow_note: bool,
+    max_positionals: usize,
     current_dir: &Path,
 ) -> Result<ParsedUserOptions, UserCommandError> {
-    let options = parse_options(args, allowed)?;
-    let expected_state_version = options
-        .value("expected-state-version")
-        .map(|value| {
-            value.parse::<u64>().map_err(|_| {
-                UserCommandError::Usage("--expected-state-version must be an integer".to_owned())
-            })
-        })
-        .transpose()?;
-    let runtime_home = options
-        .value("runtime-home")
-        .map(PathBuf::from)
-        .map(|path| absolute_path(current_dir, path));
-    let output = match options.value("output").as_deref().unwrap_or("text") {
-        "text" => OutputFormat::Text,
-        "json" => OutputFormat::Json,
-        other => {
-            return Err(UserCommandError::Usage(format!(
-                "unknown output format: {other}"
-            )))
-        }
-    };
+    let options = parse_options(args, allow_task, allow_note)?;
+    if options.positionals.len() > max_positionals {
+        return Err(UserCommandError::Usage(format!(
+            "unexpected argument: {}",
+            options.positionals[max_positionals]
+        )));
+    }
     Ok(ParsedUserOptions {
-        project_id: options.value("project-id"),
-        task_id: options.value("task-id"),
-        judgment_id: options.value("judgment-id"),
-        option_id: options.value("option-id"),
-        request_id: options.value("request-id"),
-        idempotency_key: options.value("idempotency-key"),
-        expected_state_version,
+        repo: options
+            .value("repo")
+            .map(PathBuf::from)
+            .map(|path| absolute_path(current_dir, path)),
+        task: match options.value("task").as_deref() {
+            None | Some("active") => TaskSelector::Active,
+            Some(value) if value.trim().is_empty() => {
+                return Err(UserCommandError::Usage(
+                    "--task must not be empty".to_owned(),
+                ));
+            }
+            Some(value) => TaskSelector::Id(value.to_owned()),
+        },
         note: options.value("note"),
-        runtime_home,
-        output,
+        output: if options.value("json").is_some() {
+            OutputFormat::Json
+        } else {
+            OutputFormat::Text
+        },
+        positionals: options.positionals,
     })
 }
 
-fn parse_options(args: &[String], allowed: &[&str]) -> Result<UserOptions, UserCommandError> {
-    let mut options = BTreeMap::new();
+#[derive(Debug, Clone, Default)]
+struct ParsedRawOptions {
+    values: UserOptions,
+    positionals: Vec<String>,
+}
+
+impl ParsedRawOptions {
+    fn value(&self, name: &str) -> Option<String> {
+        self.values
+            .get(name)
+            .and_then(|values| values.first())
+            .cloned()
+    }
+}
+
+fn parse_options(
+    args: &[String],
+    allow_task: bool,
+    allow_note: bool,
+) -> Result<ParsedRawOptions, UserCommandError> {
+    let mut parsed = ParsedRawOptions::default();
     let mut index = 0;
     while index < args.len() {
         let token = &args[index];
         if token == "-h" || token == "--help" || token == "help" {
             return Err(UserCommandError::Usage(user_usage()));
         }
-        if !token.starts_with("--") {
-            return Err(UserCommandError::Usage(format!(
-                "unexpected argument: {token}"
-            )));
-        }
-        let without_prefix = &token[2..];
-        let (name, value) = if let Some((name, value)) = without_prefix.split_once('=') {
-            (name.to_owned(), value.to_owned())
-        } else {
+        if token == "--json" {
+            set_option(&mut parsed.values, "json", "true".to_owned())?;
+        } else if token.starts_with("--json=") {
+            return Err(UserCommandError::Usage(
+                "--json does not accept a value".to_owned(),
+            ));
+        } else if token == "--repo" {
             index += 1;
             let Some(value) = args.get(index) else {
-                return Err(UserCommandError::Usage(format!(
-                    "missing value for --{without_prefix}"
-                )));
+                return Err(UserCommandError::Usage(
+                    "missing value for --repo".to_owned(),
+                ));
             };
-            (without_prefix.to_owned(), value.clone())
-        };
-        if !allowed.iter().any(|allowed_name| *allowed_name == name) {
-            return Err(UserCommandError::Usage(format!("unknown option: --{name}")));
-        }
-        if options.insert(name.clone(), vec![value]).is_some() {
-            return Err(UserCommandError::Usage(format!(
-                "duplicate option: --{name}"
-            )));
+            set_nonempty_option(&mut parsed.values, "repo", value)?;
+        } else if let Some(value) = token.strip_prefix("--repo=") {
+            set_nonempty_option(&mut parsed.values, "repo", value)?;
+        } else if token == "--task" {
+            if !allow_task {
+                return Err(UserCommandError::Usage("unknown option: --task".to_owned()));
+            }
+            index += 1;
+            let Some(value) = args.get(index) else {
+                return Err(UserCommandError::Usage(
+                    "missing value for --task".to_owned(),
+                ));
+            };
+            set_nonempty_option(&mut parsed.values, "task", value)?;
+        } else if let Some(value) = token.strip_prefix("--task=") {
+            if !allow_task {
+                return Err(UserCommandError::Usage("unknown option: --task".to_owned()));
+            }
+            set_nonempty_option(&mut parsed.values, "task", value)?;
+        } else if token == "--note" {
+            if !allow_note {
+                return Err(UserCommandError::Usage("unknown option: --note".to_owned()));
+            }
+            index += 1;
+            let Some(value) = args.get(index) else {
+                return Err(UserCommandError::Usage(
+                    "missing value for --note".to_owned(),
+                ));
+            };
+            set_option(&mut parsed.values, "note", value.clone())?;
+        } else if let Some(value) = token.strip_prefix("--note=") {
+            if !allow_note {
+                return Err(UserCommandError::Usage("unknown option: --note".to_owned()));
+            }
+            set_option(&mut parsed.values, "note", value.to_owned())?;
+        } else if token.starts_with("--") {
+            return Err(UserCommandError::Usage(format!("unknown option: {token}")));
+        } else {
+            parsed.positionals.push(token.clone());
         }
         index += 1;
     }
-    Ok(options)
+    Ok(parsed)
 }
 
-trait UserOptionsExt {
-    fn value(&self, name: &str) -> Option<String>;
-}
-
-impl UserOptionsExt for UserOptions {
-    fn value(&self, name: &str) -> Option<String> {
-        self.get(name).and_then(|values| values.first()).cloned()
+fn set_nonempty_option(
+    options: &mut UserOptions,
+    name: &'static str,
+    value: &str,
+) -> Result<(), UserCommandError> {
+    if value.trim().is_empty() {
+        return Err(UserCommandError::Usage(format!(
+            "--{name} must not be empty"
+        )));
     }
+    set_option(options, name, value.to_owned())
 }
 
-fn status_allowed_options() -> &'static [&'static str] {
-    &["project-id", "task-id", "runtime-home", "output"]
+fn set_option(
+    options: &mut UserOptions,
+    name: &'static str,
+    value: String,
+) -> Result<(), UserCommandError> {
+    if options.insert(name.to_owned(), vec![value]).is_some() {
+        return Err(UserCommandError::Usage(format!(
+            "duplicate option: --{name}"
+        )));
+    }
+    Ok(())
 }
 
-fn list_allowed_options() -> &'static [&'static str] {
-    &["project-id", "task-id", "runtime-home", "output"]
-}
-
-fn show_allowed_options() -> &'static [&'static str] {
-    &["project-id", "judgment-id", "runtime-home", "output"]
-}
-
-fn record_allowed_options() -> &'static [&'static str] {
-    &[
-        "project-id",
-        "judgment-id",
-        "option-id",
-        "request-id",
-        "idempotency-key",
-        "expected-state-version",
-        "note",
-        "runtime-home",
-        "output",
-    ]
-}
-
-fn resolve_user_runtime_home<F>(
+fn resolve_user_project<F>(
     parsed: &ParsedUserOptions,
     env_var: F,
     current_dir: &Path,
-) -> Result<PathBuf, UserCommandError>
+) -> Result<ResolvedUserProject, UserCommandError>
 where
     F: Fn(&str) -> Option<std::ffi::OsString>,
 {
-    if let Some(path) = &parsed.runtime_home {
-        Ok(path.clone())
-    } else {
-        resolve_runtime_home(env_var, current_dir).map_err(Into::into)
-    }
-}
-
-fn read_judgment_record(
-    runtime_home: &Path,
-    project_id: &str,
-    judgment_id: &str,
-) -> Result<UserJudgmentRecord, UserCommandError> {
-    let store = CoreProjectStore::open(runtime_home, &ProjectId::new(project_id))?;
-    store
-        .user_judgment_record(judgment_id)?
-        .ok_or_else(|| UserCommandError::Runtime(format!("UserJudgment not found: {judgment_id}")))
+    let runtime_home = resolve_runtime_home(env_var, current_dir)?;
+    let repo_root = resolve_repository_root(current_dir, parsed.repo.as_deref())?;
+    let project = registered_project_for_repo(&runtime_home, &repo_root)?;
+    Ok(ResolvedUserProject {
+        runtime_home,
+        project_id: project.project_internal_id.clone(),
+    })
 }
 
 fn selected_or_active_task_id(
     store: &CoreProjectStore,
-    selected: Option<&str>,
+    selected: &TaskSelector,
 ) -> Result<Option<String>, UserCommandError> {
-    if let Some(task_id) = selected {
-        Ok(Some(task_id.to_owned()))
-    } else {
-        Ok(store.project_state()?.active_task_id)
+    match selected {
+        TaskSelector::Active => Ok(store.project_state()?.active_task_id),
+        TaskSelector::Id(task_id) => Ok(Some(task_id.clone())),
     }
+}
+
+fn pending_judgment_records_for_task(
+    store: &CoreProjectStore,
+    selected: &TaskSelector,
+) -> Result<Vec<UserJudgmentRecord>, UserCommandError> {
+    let Some(task_id) = selected_or_active_task_id(store, selected)? else {
+        return Ok(Vec::new());
+    };
+    store
+        .pending_user_judgment_records(&TaskId::new(task_id))
+        .map_err(Into::into)
+}
+
+fn select_judgment(
+    store: &CoreProjectStore,
+    selector: &str,
+    require_pending: bool,
+) -> Result<SelectedJudgment, UserCommandError> {
+    if let Some(index) = parse_positive_index(selector)? {
+        let records = pending_judgment_records_for_task(store, &TaskSelector::Active)?;
+        let Some(record) = records.get(index - 1).cloned() else {
+            return Err(UserCommandError::Usage(format!(
+                "judgment number {index} is out of range for the current pending list; run `volicord user judgments` to refresh"
+            )));
+        };
+        if let Some(by_id) = store.user_judgment_record(selector)? {
+            if by_id.judgment_id != record.judgment_id {
+                return Err(UserCommandError::Usage(format!(
+                    "judgment selector `{selector}` is ambiguous: it matches a list number and an explicit judgment id"
+                )));
+            }
+        }
+        return Ok(SelectedJudgment {
+            record,
+            display_index: Some(index),
+        });
+    }
+
+    let record = store
+        .user_judgment_record(selector)?
+        .ok_or_else(|| UserCommandError::Runtime("selected judgment was not found".to_owned()))?;
+    if require_pending && record.status != "pending" {
+        return Err(UserCommandError::Runtime(format!(
+            "selected judgment is not pending (status: {}); refresh `volicord user judgments`",
+            record.status
+        )));
+    }
+    Ok(SelectedJudgment {
+        record,
+        display_index: None,
+    })
+}
+
+fn select_option(
+    options: &[UserJudgmentOption],
+    selector: &str,
+) -> Result<UserJudgmentOption, UserCommandError> {
+    if let Some(index) = parse_positive_index(selector)? {
+        let Some(option) = options.get(index - 1).cloned() else {
+            return Err(UserCommandError::Usage(format!(
+                "option number {index} is out of range for the selected judgment"
+            )));
+        };
+        if let Some(by_id) = options
+            .iter()
+            .find(|option| option.option_id.as_str() == selector)
+        {
+            if by_id.option_id != option.option_id {
+                return Err(UserCommandError::Usage(format!(
+                    "option selector `{selector}` is ambiguous: it matches an option number and an explicit option id"
+                )));
+            }
+        }
+        return Ok(option);
+    }
+
+    options
+        .iter()
+        .find(|option| option.option_id.as_str() == selector)
+        .cloned()
+        .ok_or_else(|| {
+            UserCommandError::Usage(format!(
+                "option selector `{selector}` does not match a numbered option or option id"
+            ))
+        })
+}
+
+fn parse_positive_index(selector: &str) -> Result<Option<usize>, UserCommandError> {
+    if selector.is_empty() || !selector.chars().all(|ch| ch.is_ascii_digit()) {
+        return Ok(None);
+    }
+    let index = selector.parse::<usize>().map_err(|_| {
+        UserCommandError::Usage(format!("selector `{selector}` is not a valid list number"))
+    })?;
+    if index == 0 {
+        return Err(UserCommandError::Usage(
+            "list numbers start at 1".to_owned(),
+        ));
+    }
+    Ok(Some(index))
 }
 
 fn envelope(
@@ -618,64 +764,60 @@ fn render_status_response(
     if let Some(summary) = response.response_value["status_summary"].as_str() {
         output.push_str(&format!("summary: {summary}\n"));
     }
-    if let Some(state_version) = response.response_value["base"]["state_version"].as_u64() {
-        output.push_str(&format!("state_version: {state_version}\n"));
-    }
     let pending = response.response_value["pending_user_judgments"]
         .as_array()
         .map(Vec::as_slice)
         .unwrap_or(&[]);
-    output.push_str(&format!("pending_user_judgments: {}\n", pending.len()));
-    for item in pending {
-        if let Some(record_id) = item["record_id"].as_str() {
-            output.push_str(&format!("- {record_id}\n"));
-        }
-    }
+    output.push_str(&format!("pending judgments: {}\n", pending.len()));
     Ok(output)
 }
 
 fn render_judgment_records(
-    records: Vec<UserJudgmentRecord>,
+    records: &[UserJudgmentRecord],
     output: OutputFormat,
 ) -> Result<String, UserCommandError> {
     if output == OutputFormat::Json {
         let values = records
             .iter()
-            .map(judgment_record_json)
+            .enumerate()
+            .map(|(index, record)| judgment_record_json(record, Some(index + 1)))
             .collect::<Result<Vec<_>, _>>()?;
         return serde_json::to_string_pretty(&json!({ "pending_user_judgments": values }))
             .map(|text| format!("{text}\n"))
             .map_err(|error| UserCommandError::Runtime(error.to_string()));
     }
 
-    let mut text = String::from("judgment_id\ttask_id\tjudgment_kind\tstatus\tquestion\toptions\n");
-    for record in records {
+    if records.is_empty() {
+        return Ok("No pending judgments.\n".to_owned());
+    }
+
+    let mut text = String::from("Pending judgments\n");
+    for (index, record) in records.iter().enumerate() {
         let request: volicord_types::PersistedUserJudgmentRequest =
             decode_json("request_json", &record.request_json)?;
-        let options = decode_options(&record)?
-            .into_iter()
-            .map(|option| option.option_id.into_inner())
-            .collect::<Vec<_>>()
-            .join(",");
-        text.push_str(&format!(
-            "{}\t{}\t{}\t{}\t{}\t{}\n",
-            record.judgment_id,
-            record.task_id,
-            record.judgment_kind,
-            record.status,
-            request.question,
-            options
-        ));
+        let options = decode_options(record)?;
+        text.push_str(&format!("{}. {}\n", index + 1, request.question));
+        text.push_str(&format!("   kind: {}\n", record.judgment_kind));
+        text.push_str("   options:\n");
+        for (option_index, option) in options.iter().enumerate() {
+            text.push_str(&format!(
+                "   {}. {} ({})\n",
+                option_index + 1,
+                option.label,
+                outcome_value(option.resolution_outcome)
+            ));
+        }
     }
     Ok(text)
 }
 
 fn render_judgment_record(
     record: &UserJudgmentRecord,
+    display_index: Option<usize>,
     output: OutputFormat,
 ) -> Result<String, UserCommandError> {
     if output == OutputFormat::Json {
-        return serde_json::to_string_pretty(&judgment_record_json(record)?)
+        return serde_json::to_string_pretty(&judgment_record_json(record, display_index)?)
             .map(|text| format!("{text}\n"))
             .map_err(|error| UserCommandError::Runtime(error.to_string()));
     }
@@ -683,21 +825,18 @@ fn render_judgment_record(
         decode_json("request_json", &record.request_json)?;
     let context: UserJudgmentContext = decode_json("context_json", &record.context_json)?;
     let options = decode_options(record)?;
+    let heading = display_index
+        .map(|index| format!("User judgment {index}\n"))
+        .unwrap_or_else(|| "User judgment\n".to_owned());
     let mut text = format!(
-        "UserJudgment {}\nproject_id: {}\ntask_id: {}\nstatus: {}\njudgment_kind: {}\nquestion: {}\ncontext: {}\n",
-        record.judgment_id,
-        record.project_id,
-        record.task_id,
-        record.status,
-        record.judgment_kind,
-        request.question,
-        context.summary
+        "{heading}status: {}\nkind: {}\nquestion: {}\ncontext: {}\n",
+        record.status, record.judgment_kind, request.question, context.summary
     );
     text.push_str("options:\n");
-    for option in options {
+    for (index, option) in options.iter().enumerate() {
         text.push_str(&format!(
-            "- {}: {} ({})\n  {}\n",
-            option.option_id,
+            "{}. {} ({})\n   {}\n",
+            index + 1,
             option.label,
             outcome_value(option.resolution_outcome),
             option.consequence
@@ -709,6 +848,7 @@ fn render_judgment_record(
 fn render_record_response(
     response: &PipelineResponse,
     output: OutputFormat,
+    selected_option: &UserJudgmentOption,
 ) -> Result<String, UserCommandError> {
     if output == OutputFormat::Json {
         return pretty_response(response);
@@ -716,31 +856,11 @@ fn render_record_response(
     if response_kind(response) != Some("result") {
         return render_rejected_or_json(response);
     }
-    let judgment = &response.response_value["user_judgment"];
-    let resolution = &judgment["resolution"];
     let mut text = String::from("User Channel judgment recorded\n");
-    if let Some(state_version) = response.response_value["base"]["state_version"].as_u64() {
-        text.push_str(&format!("state_version: {state_version}\n"));
-    }
     text.push_str(&format!(
-        "judgment_id: {}\n",
-        judgment["judgment_id"].as_str().unwrap_or("unknown")
-    ));
-    text.push_str(&format!(
-        "selected_option_id: {}\n",
-        resolution["selected_option_id"]
-            .as_str()
-            .unwrap_or("unknown")
-    ));
-    text.push_str(&format!(
-        "resolved_by_actor_source: {}\n",
-        resolution["resolved_by_actor_source"]
-            .as_str()
-            .unwrap_or("unknown")
-    ));
-    text.push_str(&format!(
-        "operation_category: {}\n",
-        OperationCategory::UserOnly.as_str()
+        "selected: {}\noutcome: {}\n",
+        selected_option.label,
+        outcome_value(selected_option.resolution_outcome)
     ));
     Ok(text)
 }
@@ -770,38 +890,63 @@ fn render_rejected_or_json(response: &PipelineResponse) -> Result<String, UserCo
     }
 }
 
-fn judgment_record_json(record: &UserJudgmentRecord) -> Result<Value, UserCommandError> {
+fn judgment_record_json(
+    record: &UserJudgmentRecord,
+    display_index: Option<usize>,
+) -> Result<Value, UserCommandError> {
     let request: volicord_types::PersistedUserJudgmentRequest =
         decode_json("request_json", &record.request_json)?;
     let context: UserJudgmentContext = decode_json("context_json", &record.context_json)?;
     let options = decode_options(record)?;
     Ok(json!({
-        "project_id": record.project_id,
-        "judgment_id": record.judgment_id,
-        "task_id": record.task_id,
-        "change_unit_id": record.change_unit_id,
-        "judgment_kind": record.judgment_kind,
-        "status": record.status,
-        "basis_status": record.basis_status,
+        "index": display_index,
+        "project_internal_id": &record.project_id,
+        "judgment_id": &record.judgment_id,
+        "task_id": &record.task_id,
+        "change_unit_id": &record.change_unit_id,
+        "judgment_kind": &record.judgment_kind,
+        "status": &record.status,
+        "basis_status": &record.basis_status,
         "question": request.question,
         "context_summary": context.summary,
-        "options": options,
-        "requested_by_actor_source": record.requested_by_actor_source,
-        "requested_at": record.requested_at,
+        "options": options
+            .iter()
+            .enumerate()
+            .map(|(index, option)| judgment_option_json(index + 1, option))
+            .collect::<Vec<_>>(),
+        "requested_by_actor_source": &record.requested_by_actor_source,
+        "requested_at": &record.requested_at,
     }))
+}
+
+fn judgment_option_json(index: usize, option: &UserJudgmentOption) -> Value {
+    json!({
+        "index": index,
+        "option_id": option.option_id.as_str(),
+        "label": &option.label,
+        "description": &option.description,
+        "consequence": &option.consequence,
+        "machine_action": option.machine_action,
+        "resolution_outcome": option.resolution_outcome,
+        "is_default": option.is_default,
+    })
 }
 
 fn response_kind(response: &PipelineResponse) -> Option<&str> {
     response.response_value["base"]["response_kind"].as_str()
 }
 
-fn required_text<'a>(
-    value: Option<&'a str>,
-    field: &'static str,
+fn required_positional<'a>(
+    parsed: &'a ParsedUserOptions,
+    index: usize,
+    label: &'static str,
 ) -> Result<&'a str, UserCommandError> {
-    value
+    parsed
+        .positionals
+        .get(index)
+        .map(String::as_str)
         .filter(|value| !value.trim().is_empty())
-        .ok_or_else(|| UserCommandError::Usage(format!("missing required option: --{field}")))
+        .ok_or_else(|| UserCommandError::Usage(format!("missing required argument: {label}")))
 }
 
 fn absolute_path(current_dir: &Path, path: PathBuf) -> PathBuf {

@@ -117,7 +117,7 @@ where
 fn user_subcommand_requires_setup(args: &[String]) -> bool {
     matches!(
         args.first().map(String::as_str),
-        Some("status" | "judgment")
+        Some("status" | "judgments" | "judgment")
     )
 }
 

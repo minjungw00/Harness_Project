@@ -283,7 +283,7 @@ fn output_format(options: &ProjectOptions) -> OutputFormat {
     }
 }
 
-fn resolve_repository_root(
+pub(crate) fn resolve_repository_root(
     current_dir: &Path,
     selected_path: Option<&Path>,
 ) -> Result<PathBuf, ProjectCommandError> {
@@ -353,7 +353,7 @@ fn selector_is_path(selector: &str, current_dir: &Path) -> Result<bool, ProjectC
     })
 }
 
-fn registered_project_for_repo(
+pub(crate) fn registered_project_for_repo(
     runtime_home: &Path,
     repo_root: &Path,
 ) -> Result<ProjectRecord, ProjectCommandError> {

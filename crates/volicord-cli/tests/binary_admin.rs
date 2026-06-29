@@ -50,11 +50,11 @@ fn binary_help_uses_agent_connection_model() -> Result<(), Box<dyn Error>> {
     assert!(!text.contains("--server-name"));
     assert!(!text.contains("--allow-repository-write"));
     assert!(!text.contains("--replace-managed"));
-    assert!(text.contains("volicord user judgment record --project-id ID"));
+    assert!(text.contains("volicord user judgment answer INDEX_OR_ID OPTION_INDEX_OR_ID"));
+    assert!(!text.contains("--project-id ID"));
     assert!(text.contains("User Channel"));
 
-    let unknown_user =
-        run_without_home(["user", "not-a-real-command", "--project-id", "project_a"])?;
+    let unknown_user = run_without_home(["user", "not-a-real-command", "--repo", "."])?;
     assert_eq!(unknown_user.status.code(), Some(2));
     assert!(stderr(&unknown_user).contains("unknown user command: not-a-real-command"));
 
@@ -682,13 +682,14 @@ fn user_channel_records_pending_judgment_with_local_user_provenance() -> Result<
 {
     let runtime_home = TempRuntimeHome::new("cli-bin-user-channel")?;
     let repo_root = runtime_home.create_product_repo("product-repo")?;
+    fs::create_dir_all(repo_root.join(".git"))?;
     initialize_runtime_home(runtime_home.path(), "runtime_home_user_channel", "{}")?;
     write_test_installation_profile(runtime_home.path())?;
     register_project(
         runtime_home.path(),
         ProjectRegistration {
             project_id: "project_user_channel".to_owned(),
-            repo_root,
+            repo_root: repo_root.clone(),
             project_home: None,
             status: ACTIVE_PROJECT_STATUS.to_owned(),
             metadata_json: "{}".to_owned(),
@@ -711,48 +712,73 @@ fn user_channel_records_pending_judgment_with_local_user_provenance() -> Result<
     )?;
     let judgment_id = record_id(&judgment.response_value["user_judgment_ref"])?;
 
-    let show = run_with_home_env(
+    let status =
+        run_with_home_env_in_dir(runtime_home.path(), ["user", "status"], &[], &repo_root)?;
+    assert_success(&status);
+    assert!(stdout(&status).contains("User Channel status"));
+    assert!(stdout(&status).contains("pending judgments: 1"));
+
+    let list =
+        run_with_home_env_in_dir(runtime_home.path(), ["user", "judgments"], &[], &repo_root)?;
+    assert_success(&list);
+    let list_text = stdout(&list);
+    assert!(list_text.contains("Pending judgments"));
+    assert!(list_text.contains("1. Should the focused CLI user-channel choice be accepted?"));
+    assert!(list_text.contains("1. Accept focused choice (accepted)"));
+    assert!(!list_text.contains("project_user_channel"));
+    assert!(!list_text.contains(judgment_id.as_str()));
+
+    let list_json = run_with_home_env_in_dir(
         runtime_home.path(),
-        [
-            "user",
-            "judgment",
-            "show",
-            "--project-id",
-            "project_user_channel",
-            "--judgment-id",
-            judgment_id.as_str(),
-        ],
+        ["user", "judgments", "--json"],
         &[],
+        &repo_root,
+    )?;
+    assert_success(&list_json);
+    let list_value = json_stdout(&list_json)?;
+    let first = &list_value["pending_user_judgments"][0];
+    assert_eq!(first["index"], 1);
+    assert_eq!(first["project_internal_id"], "project_user_channel");
+    assert_eq!(first["judgment_id"], judgment_id.as_str());
+    assert_eq!(first["options"][0]["index"], 1);
+    assert_eq!(first["options"][0]["option_id"], "accept");
+
+    let show = run_with_home_env_in_dir(
+        runtime_home.path(),
+        ["user", "judgment", "show", "1"],
+        &[],
+        &repo_root,
     )?;
     assert_success(&show);
-    assert!(stdout(&show).contains("UserJudgment"));
-    assert!(stdout(&show).contains("- accept: Accept focused choice"));
+    let show_text = stdout(&show);
+    assert!(show_text.contains("User judgment 1"));
+    assert!(show_text.contains("1. Accept focused choice (accepted)"));
+    assert!(!show_text.contains("project_user_channel"));
+    assert!(!show_text.contains(judgment_id.as_str()));
 
-    let record = run_with_home_env(
+    let record_note = "Recorded from numbered CLI";
+    let record = run_with_home_env_in_dir(
         runtime_home.path(),
         [
             "user",
             "judgment",
-            "record",
-            "--project-id",
-            "project_user_channel",
-            "--judgment-id",
-            judgment_id.as_str(),
-            "--option-id",
-            "accept",
-            "--expected-state-version",
-            "2",
-            "--request-id",
-            "req_cli_user_record",
-            "--idempotency-key",
-            "idem_cli_user_record",
+            "answer",
+            "1",
+            "1",
+            "--note",
+            record_note,
         ],
         &[],
+        &repo_root,
     )?;
     assert_success(&record);
     let text = stdout(&record);
-    assert!(text.contains("resolved_by_actor_source: local_user"));
-    assert!(text.contains("operation_category: user_only"));
+    assert!(text.contains("User Channel judgment recorded"));
+    assert!(text.contains("selected: Accept focused choice"));
+    assert!(text.contains("outcome: accepted"));
+    assert!(!text.contains("project_user_channel"));
+    assert!(!text.contains(judgment_id.as_str()));
+    assert!(!text.contains("operation_category"));
 
     let store =
         CoreProjectStore::open(runtime_home.path(), &ProjectId::new("project_user_channel"))?;
@@ -772,6 +798,13 @@ fn user_channel_records_pending_judgment_with_local_user_provenance() -> Result<
         persisted.resolved_assurance_level.as_deref(),
         Some("local_user_channel")
     );
+    let resolution_json: Value = serde_json::from_str(
+        persisted
+            .resolution_json
+            .as_deref()
+            .expect("resolution_json should be stored"),
+    )?;
+    assert_eq!(resolution_json["note"], record_note);
     Ok(())
 }
 
