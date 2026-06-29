@@ -47,10 +47,10 @@ README와 나머지 문서에서 반복해서 나오는 이름들입니다.
 
 | 용어 | 첫 읽기 의미 |
 |---|---|
-| Product repository | 에이전트가 작업하기를 원하는 코드 저장소입니다. Volicord 참조 문서의 정확한 제품 라벨은 `Product Repository`입니다. |
+| `Product Repository` | 에이전트에게 작업을 요청할 코드 저장소입니다. Volicord 참조 문서는 이 정확한 제품 라벨을 사용합니다. |
 | Agent host | 사용자가 대화하는 에이전트 환경입니다. 예를 들면 Codex나 Claude Code입니다. 호스트는 작업 중 로컬 MCP 도구를 시작할 수 있습니다. |
 | `volicord-mcp` | 에이전트 호스트가 Volicord와 통신할 때 사용하는 로컬 stdio MCP 어댑터입니다. |
-| `Volicord Runtime Home` | Volicord가 작업 기록과 런타임 데이터를 저장하는 로컬 위치입니다. 제품 저장소와 분리됩니다. |
+| `Volicord Runtime Home` | Volicord가 작업 기록과 런타임 데이터를 저장하는 로컬 위치입니다. Product Repository와는 분리됩니다. |
 | `Core` | Volicord 상태를 위한 로컬 기준 기록입니다. 대화 요약과 생성 문서는 Core 상태를 설명할 수 있지만 대신하지는 않습니다. |
 | `Agent Connection` | 한 호스트가 저장소 작업에 Volicord를 사용할 수 있게 하는 로컬 연결 기록입니다. |
 | `User Channel` | 에이전트가 만들어 내거나 대신 기록하면 안 되는 사용자 결정을 사용자가 기록하는 경로입니다. 현재 로컬 CLI 경로는 `volicord user`입니다. |
@@ -61,7 +61,7 @@ README와 나머지 문서에서 반복해서 나오는 이름들입니다.
 ## 빠른 시작
 
 이 Volicord 소스 체크아웃에서 로컬 바이너리를 빌드하고, 안내형 setup을 실행한 뒤,
-에이전트가 작업할 제품 저장소에서 Codex를 연결합니다.
+에이전트에게 작업을 요청할 Product Repository에서 Codex를 연결합니다.
 
 ```sh
 cargo build --workspace --bins
@@ -77,11 +77,10 @@ Setup 중 Volicord는 이후 터미널과 에이전트 호스트에서 `volicord
 프롬프트나 `action_required` 출력을 따릅니다. Volicord는 부모 셸의 현재 `PATH`를
 바꿀 수 없습니다.
 
-`/path/to/your-product-repo`는 사용자의 제품 저장소 경로를 뜻합니다. Volicord 용어나
-필수 디렉터리 이름이 아닙니다. `volicord connect codex`는 현재 디렉터리에서 저장소
-루트를 감지하고, 해당 저장소 프로젝트를 등록하거나 재사용하고, 일치하는
-`Agent Connection`을 만들거나 갱신하며, 그 연결에 맞는 지원 Codex 호스트 설정을
-설치합니다.
+`/path/to/your-product-repo`는 에이전트에게 작업을 요청할 Product Repository의 경로
+예시입니다. `volicord connect codex`는 현재 디렉터리에서 저장소 루트를 감지하고,
+해당 저장소 프로젝트를 등록하거나 재사용하고, 일치하는 `Agent Connection`을 만들거나
+갱신하며, 그 연결에 맞는 지원 Codex 호스트 설정을 설치합니다.
 
 정확한 setup, 연결, 옵션, 출력 동작은
 [관리 CLI 참조](docs/ko/reference/admin-cli.md)가 담당합니다. 더 자세한 튜토리얼은

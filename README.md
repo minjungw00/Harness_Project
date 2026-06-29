@@ -50,10 +50,10 @@ These terms appear throughout the README and the rest of the documentation:
 
 | Term | First-read meaning |
 |---|---|
-| Product repository | The code repository where you want the agent to work. In Volicord references this exact product label is `Product Repository`. |
+| `Product Repository` | The code repository where you want the agent to work. Volicord reference docs use this exact product label. |
 | Agent host | The environment you chat with, such as Codex or Claude Code. The host may start local MCP tools while it works. |
 | `volicord-mcp` | The local stdio MCP adapter that an agent host uses to talk to Volicord. |
-| `Volicord Runtime Home` | The local place where Volicord stores workflow records and runtime data. It is separate from your product repository. |
+| `Volicord Runtime Home` | The local place where Volicord stores workflow records and runtime data. It is separate from the Product Repository. |
 | `Core` | The local authority record for Volicord state. Chat summaries and generated documents can describe Core state, but they do not replace it. |
 | `Agent Connection` | The local connection record that lets one host use Volicord for repository work. |
 | `User Channel` | The path where the user records decisions that the agent must not invent or impersonate. The current local CLI path is `volicord user`. |
@@ -65,7 +65,7 @@ For exact term ownership, use the
 ## Quick Start
 
 From this Volicord source checkout, build the local binaries, run guided setup,
-then connect Codex from the product repository you want the agent to work on:
+then connect Codex from the Product Repository where you want the agent to work:
 
 ```sh
 cargo build --workspace --bins
@@ -81,11 +81,11 @@ skipping the link step. Follow setup's prompt or action-required output before
 running `volicord connect`, starting a new terminal, or starting an agent host;
 Volicord cannot change the parent shell's current `PATH`.
 
-`/path/to/your-product-repo` means the path to your own product repository, not
-a Volicord term or required directory name. `volicord connect codex` detects the
-repository root from the current directory, registers or reuses that repository
-project, creates or updates the matching `Agent Connection`, and installs the
-supported Codex host configuration for that connection.
+`/path/to/your-product-repo` is an example path for the Product Repository where
+you want the agent to work. `volicord connect codex` detects the repository root
+from the current directory, registers or reuses that repository project, creates
+or updates the matching `Agent Connection`, and installs the supported Codex
+host configuration for that connection.
 
 Exact setup, connection, option, and output behavior belongs to the
 [Administrative CLI Reference](docs/en/reference/admin-cli.md). For a fuller

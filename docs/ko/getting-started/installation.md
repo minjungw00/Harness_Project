@@ -12,7 +12,7 @@
 
 - [시스템 요구사항](../reference/system-requirements.md)에 적힌 Rust 1.85 이상.
 - Cargo와 로컬 바이너리를 실행할 수 있는 셸.
-- 호스트를 연결할 준비가 되었을 때 사용할 Git 기반 제품 저장소.
+- 호스트를 연결할 준비가 되었을 때 Product Repository로 사용할 Git 저장소.
 
 ## 소스에서 빌드하기
 
@@ -101,8 +101,8 @@ volicord doctor
 
 ## 설정이 하지 않는 일
 
-`volicord setup`은 제품 저장소를 등록하지 않고 호스트 설정을 설치하지도 않습니다. 프로젝트
-등록은 Git 저장소 안에서 `volicord project use`나 `volicord connect` 같은 명령을
+`volicord setup`은 Product Repository를 등록하지 않고 호스트 설정을 설치하지도 않습니다.
+프로젝트 등록은 Git 저장소 안에서 `volicord project use`나 `volicord connect` 같은 명령을
 실행할 때 이루어집니다.
 
 프로젝트 이름과 내부 식별 정보 동작은 [관리 CLI
@@ -111,14 +111,15 @@ Volicord가 저장하며 첫 설정 입력이 아닙니다.
 
 ## 다음 단계
 
-제품 저장소로 이동해 호스트를 연결합니다.
+Product Repository로 이동해 호스트를 연결합니다.
 
 ```sh
 cd /path/to/your-product-repo
 volicord connect codex
 ```
 
-`/path/to/your-product-repo`는 호스트가 작업할 Git 제품 저장소를 가리키는 자리표시자입니다.
+`/path/to/your-product-repo`는 호스트가 작업할 Product Repository의 경로
+예시입니다.
 
 전체 첫 실행 경로는 [빠른 시작](quickstart.md)을 계속 읽습니다. 호스트별
 세부사항은 [에이전트 호스트 설정](../guides/agent-host-setup.md)을 봅니다.

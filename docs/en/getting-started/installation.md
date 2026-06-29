@@ -14,8 +14,8 @@ repository separation belong to [Runtime Boundaries](../reference/runtime-bounda
 - Rust 1.85 or newer, as listed in
   [System Requirements](../reference/system-requirements.md).
 - A shell that can run Cargo and local binaries.
-- A product repository that is a Git repository when you are ready to connect a
-  host.
+- A Git repository to use as the Product Repository when you are ready to
+  connect a host.
 
 ## Build From Source
 
@@ -109,7 +109,7 @@ the saved installation profile.
 
 ## What Setup Does Not Do
 
-Setup does not register a product repository and does not install host
+Setup does not register a Product Repository and does not install host
 configuration. Project registration happens when you run `volicord project use`
 or a command such as `volicord connect` from inside a Git repository.
 
@@ -119,15 +119,15 @@ Internal identities are stored by Volicord and are not first-time setup inputs.
 
 ## Next Step
 
-Move into the product repository and connect a host:
+Move into the Product Repository and connect a host:
 
 ```sh
 cd /path/to/your-product-repo
 volicord connect codex
 ```
 
-`/path/to/your-product-repo` is a placeholder for the Git product repository
-you want the host to work on.
+`/path/to/your-product-repo` is an example path for the Product Repository where
+you want the host to work.
 
 For the full first-run path, continue with the [Quickstart](quickstart.md). For
 host-specific details, see [Agent Host Setup](../guides/agent-host-setup.md).

@@ -1,7 +1,8 @@
 # Quickstart
 
 This tutorial gets from a fresh source checkout to one working Agent Connection.
-It assumes you are connecting a local host to a normal Git product repository.
+It assumes you are connecting a local host to a normal Git repository used as
+the Product Repository.
 
 Exact command contracts belong to
 [Administrative CLI Reference](../reference/admin-cli.md). Agent Connection
@@ -21,8 +22,8 @@ are available for future terminals and agent hosts. If it prompts or reports
 `action_required`, follow the named command-availability step before running
 `volicord connect`, opening a new terminal, or starting the host. Volicord
 cannot change the parent shell's current `PATH`.
-`/path/to/your-product-repo` is a placeholder for the Git product repository
-you want the host to work on. Volicord detects that repository from the current
+`/path/to/your-product-repo` is an example path for the Product Repository where
+you want the host to work. Volicord detects that repository from the current
 directory and uses the normal CLI defaults for a first host connection. Exact
 project naming, connection defaults, and internal identity behavior belong to
 [Administrative CLI Reference](../reference/admin-cli.md).
@@ -57,8 +58,8 @@ Use `--read-only` only when the host should expose read-oriented behavior:
 volicord connect codex --read-only
 ```
 
-Use `--repo PATH` only when the current directory is not the repository you want
-to connect:
+Use `--repo PATH` only when the current directory is not the target Product
+Repository:
 
 ```sh
 volicord connect codex --repo /path/to/your-product-repo
@@ -74,8 +75,8 @@ volicord connection mode codex read-only
 volicord connection mode codex workflow
 ```
 
-Removing the selected repository from the connection uses the same host and
-intent selection:
+Removing the selected Product Repository from the connection uses the same host
+and intent selection:
 
 ```sh
 volicord connection remove codex --dry-run
@@ -93,8 +94,8 @@ config:
 volicord export mcp-config --output /tmp/volicord.mcp.json
 ```
 
-The export uses the detected repository and the installation profile. Exact
-output defaults belong to
+The export uses the detected Product Repository and the installation profile.
+Exact output defaults belong to
 [Administrative CLI Reference](../reference/admin-cli.md#generic-mcp-config-export).
 The exported file is user-managed after export; Volicord does not claim that an
 arbitrary external host loaded or approved it.
@@ -111,8 +112,9 @@ volicord user judgment show 1
 volicord user judgment answer 1 1
 ```
 
-Use `--repo PATH` only when you need to answer for a repository other than the
-current one. Use `--task ID` when the active task is not the intended task.
+Use `--repo PATH` only when you need to answer for a Product Repository other
+than the current one. Use `--task ID` when the active task is not the intended
+task.
 
 ## Next Steps
 
