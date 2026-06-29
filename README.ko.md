@@ -2,18 +2,18 @@
 
 AI가 움직여도, 판단은 사용자에게.
 
-Volicord는 AI 지원 제품 작업을 위한 로컬 작업 권한 시스템입니다. 에이전트가
-일반 제품 저장소에서 작업하는 동안 범위, 증거, 쓰기 준비 상태, 사용자 판단,
-닫기 결정을 볼 수 있게 유지합니다.
+Volicord는 AI 지원 제품 작업을 위한 로컬 작업 권한 시스템입니다. 사용자가
+에이전트 호스트에게 제품 저장소 변경을 요청했을 때 작업의 중요한 기록이 대화,
+셸 출력, 호스트 설정, 임시 메모, 기억에 흩어지지 않도록 하기 위해 존재합니다.
 
-Core는 Volicord 상태의 로컬 기준 기록입니다. `volicord` 관리 CLI는 로컬 설정을
-준비하고, 저장소 프로젝트를 감지하고, 에이전트 호스트를 연결하고, MCP 설정을
-내보내며, 사용자 소유 판단을 위한 로컬 `User Channel` 경로를 제공합니다.
-`volicord-mcp` 프로세스는 에이전트 호스트가 시작하는 로컬 MCP 어댑터입니다.
+Volicord는 범위, 증거, 쓰기 준비 상태, 실행 기록, 대기 중인 사용자 판단, 닫기
+준비 상태에 대한 지속 로컬 기록을 유지합니다. Core는 Volicord 상태를 위한 로컬
+기준 기록입니다. 대화 메시지, 생성된 Markdown, 상태 요약, 상태 보기는 Core
+상태를 설명할 수 있지만 대신하지는 않습니다.
 
 ## 빠른 시작
 
-로컬 바이너리를 빌드하고, 설치 프로필을 만들고, 제품 저장소로 이동한 뒤 Codex를
+로컬 바이너리를 빌드하고, 설치 프로필을 준비하고, 제품 저장소로 이동한 뒤 Codex를
 연결합니다.
 
 ```sh
@@ -23,18 +23,12 @@ cd /work/acme-api
 volicord connect codex
 ```
 
-일어나는 일:
+이 흐름은 선택된 `Volicord Runtime Home`을 준비하고, 이후 흐름이 사용할
+`volicord`와 `volicord-mcp` 명령 위치를 저장하며, 현재 디렉터리에서 Git 저장소
+루트를 감지하고, 그 저장소 프로젝트를 등록하거나 재사용하고, 일치하는
+`Agent Connection`을 위한 지원 Codex 호스트 설정을 설치합니다.
 
-- `volicord setup`은 선택된 `Volicord Runtime Home`을 준비하고 이후 CLI, 호스트
-  연결, export, MCP 시작 흐름이 사용할 설치 프로필을 기록합니다.
-- `volicord connect codex`는 현재 디렉터리에서 Git 저장소 루트를 감지하고, 해당
-  저장소 프로젝트를 등록하거나 재사용하며, 저장소 디렉터리에서 프로젝트 이름을
-  파생하고, 일치하는 `Agent Connection`을 만들거나 갱신한 뒤 관리 호스트 설정을
-  설치합니다.
-- 정확한 setup 동작, 연결 기본값, 옵션 의미, 출력 동작은 [관리 CLI
-  참조](docs/ko/reference/admin-cli.md)가 담당합니다.
-
-결과를 확인합니다.
+로컬 설정과 연결을 확인합니다.
 
 ```sh
 volicord doctor
@@ -44,122 +38,127 @@ volicord connection verify codex
 ```
 
 `--link-bin`으로 setup한 뒤 셸이 `volicord`를 찾지 못하면 그 링크 디렉터리를 셸
-설정에 추가하고 새 셸이나 MCP 호스트를 시작합니다.
+설정에 추가하고 새 셸이나 MCP 호스트를 시작합니다. 명령이 `action_required`를
+보고하면 이름 붙은 호스트 소유 trust, approval, reload, restart, setup repair
+동작을 완료한 뒤 관련 status 또는 verification 명령을 다시 실행합니다.
 
-명령이 `action_required`를 보고하면 이름 붙은 호스트 소유 trust, approval,
-reload, restart, setup repair 동작을 완료한 뒤 관련 status 또는 verification
-명령을 다시 실행합니다.
+정확한 setup 동작, 연결 기본값, 옵션 의미, 출력 동작은
+[관리 CLI 참조](docs/ko/reference/admin-cli.md)가 담당합니다.
 
-## Volicord가 관리하는 것
+## 사용자 요청의 실제 흐름
 
-| 영역 | 사용자가 제공하는 것 | Volicord가 관리하는 것 |
-|---|---|---|
-| 설치 프로필 | 실행한 `volicord` 실행 파일, 선택적으로 setup 때 지정하는 링크 디렉터리나 명시적 `volicord-mcp` 경로. | Runtime Home 준비 상태, 저장된 `volicord`와 `volicord-mcp` 명령, setup 진단. |
-| Runtime Home | 보통 없음. `VOLICORD_HOME`이나 `volicord setup --home`이 다른 경로를 고르지 않으면 기본값을 사용합니다. | Registry 상태, 프로젝트 상태, Agent Connection 기록, 아티팩트, setup 메타데이터. |
-| 저장소 프로젝트 | 보통 현재 디렉터리인 Git 저장소 경로. | 프로젝트 등록, 저장소 디렉터리에서 파생한 사용자 대상 프로젝트 이름, 내부 프로젝트 식별 정보. |
-| Agent Connection | 호스트와 의도. 예: `codex`, `claude-code --shared`, `claude-code --global`. | 호스트 설정, 연결 모드, 프로젝트 멤버십, 내부 연결 식별 정보, 검증 상태, 필요한 사용자 동작. |
-| MCP 설정 내보내기 | Volicord가 직접 관리하지 않는 호스트를 위한 선택적 출력 경로. | 선택된 저장소와 설치 프로필에 묶인 호스트 중립 MCP 설정. |
-| User Channel | Core가 생성한 선택지를 고르는 사용자. | 권한을 지니는 답변을 Agent Connection과 분리하는 로컬 사용자 판단 명령. |
+`/work/acme-api`에서 Codex에게 "결제 생성에 idempotency key 지원을 추가하고,
+테스트를 갱신한 뒤 닫을 준비가 되었을 때 알려 줘"라고 요청한다고 생각해 봅니다.
+Codex는 계속 에이전트 호스트입니다. Volicord는 에디터, 셸, 테스트 실행기, 대화를
+대체하지 않습니다. 대신 호스트가 지속 작업 기록이 필요할 때 MCP를 통해 Volicord에
+닿게 합니다.
 
-## 구성 요소 그림
+에이전트 호스트는 관리 호스트 설정에서 로컬 `volicord-mcp` stdio 어댑터를
+시작합니다. 어댑터는 선택된 `Agent Connection`을 검증하고, 허용된 저장소 프로젝트
+맥락을 사용하며, 도구 호출을 `Volicord Runtime Home` 안의 Core 기록으로 전달합니다.
+
+작업에 제품 결정, 범위 변경, 민감 단계, 최종 수락, 잔여 위험 수락, 취소가 필요하면
+에이전트는 초점이 맞춰진 판단을 요청할 수 있습니다. 하지만 답을 만들어 내거나 사용자를
+대신해 권한을 지니는 답을 기록할 수는 없습니다. 답은 예를 들어 `volicord user ...` 같은
+로컬 `User Channel`을 통해 기록되고, 그 뒤 에이전트는 갱신된 Core 상태에서 계속 작업할
+수 있습니다.
+
+## 사용자 작업 흐름
+
+이 그림은 대화형 상호작용 흐름을 보여 줍니다. 저장소 배치나 구성 요소 경계 지도는
+아닙니다.
+
+```mermaid
+flowchart LR
+  request["사용자 대화 요청<br/>저장소 안의 제품 작업"]
+  host["에이전트 호스트<br/>Codex / Claude Code"]
+  mcp["volicord-mcp<br/>로컬 stdio MCP 어댑터"]
+  records["Volicord Runtime Home 기록<br/>범위, 증거, 쓰기 준비 상태, 실행 기록,<br/>대기 판단, 닫기 준비 상태"]
+  decision{"사용자 소유<br/>판단이 필요한가?"}
+  channel["User Channel<br/>로컬 사용자가 답을 기록"]
+  continue["계속되는 에이전트 작업<br/>현재 적용 범위 안에서"]
+  close["닫기 준비 상태 검토<br/>차단 사유를 계속 드러냄"]
+
+  request --> host
+  host --> mcp
+  mcp --> records
+  records --> decision
+  decision -- "아니요" --> continue
+  decision -- "예: Core가 만든 선택지" --> channel
+  channel --> records
+  records --> continue
+  continue --> host
+  host --> mcp
+  mcp --> close
+```
+
+닫기 준비 상태는 현재 `Task`를 닫을 때 해결되지 않은 Volicord 요구사항을 숨기지
+않아도 되는지를 묻습니다. 이는 판단을 돕는 기록이지, 제품 결과가 객관적으로
+옳다거나, 테스트가 충분하다거나, 위험이 사라졌다는 증명이 아닙니다.
+
+## 로컬 구성 요소 지도
+
+이 지도는 프로세스, 저장소, 호스트 설정, 제품 저장소 경계를 보여 줍니다. 사용자
+대화 흐름이 아닙니다.
 
 ```mermaid
 flowchart LR
   user["사용자 터미널"]
-  cli["volicord CLI"]
-  host["에이전트 호스트\nCodex / Claude Code / generic"]
-  mcp["volicord-mcp\nstdio 어댑터"]
-  runtime["Volicord Runtime Home\nCore 기록과 registry"]
-  repo["Product Repository\nGit 저장소 루트"]
-  export["MCP config export"]
+  cli["volicord<br/>관리 CLI"]
+  host["에이전트 호스트<br/>Codex / Claude Code / generic"]
+  mcp["volicord-mcp<br/>stdio 자식 프로세스"]
+  runtime["Volicord Runtime Home<br/>Core 기록, registry, 아티팩트"]
+  repo["Product Repository<br/>제품 파일; 명시적 통합 파일만"]
+  hostcfg["외부 MCP 호스트 설정<br/>호스트 소유 또는 내보낸 설정"]
 
   user --> cli
-  cli -- setup, doctor, project, connect, user --> runtime
-  cli -- 저장소 루트 감지 --> repo
-  cli -- 관리 호스트 설정 설치 --> host
-  cli -- export mcp-config --> export
-  export -. 사용자가 관리하는 호스트가 로드 .-> host
-  host -- 로컬 stdio 프로세스 시작 --> mcp
-  mcp -- Agent Connection과 프로젝트 멤버십 검증 --> runtime
-  mcp -- 선택된 프로젝트 맥락 사용 --> repo
+  cli -- "setup, doctor, project, connect, user" --> runtime
+  cli -- "Git 저장소 루트 감지" --> repo
+  cli -- "호스트 설정 설치 또는 내보내기" --> hostcfg
+  hostcfg -. "호스트가 로드" .-> host
+  host -- "로컬 stdio 프로세스 시작" --> mcp
+  mcp -- "Agent Connection 검증<br/>및 Core 호출 라우팅" --> runtime
+  mcp -- "허용된 프로젝트 맥락 사용" --> repo
 ```
 
-`Volicord Runtime Home`은 `Product Repository`와 분리됩니다. Volicord가 관리하는
-런타임 기록은 프로젝트 파일 안에 살지 않습니다. 공유 호스트 설정은 관련 호스트
-setup 흐름이 담당하는 명시적 통합 파일을 통해서만 저장소에 나타날 수 있습니다.
+`Volicord Runtime Home`은 `Product Repository`와 분리됩니다. Volicord 런타임 기록,
+SQLite 파일, 생성 기록, 로그, QA 결과, 수락 기록, 닫기 준비 상태, 잔여 위험
+기록은 제품 파일 안에 두지 않습니다. `Product Repository`에는 프로젝트 범위 호스트
+설정이나 관리 지침처럼 지원되는 setup 흐름이 담당하는 명시적 통합 파일만 들어갈 수
+있습니다.
 
-## 핵심 흐름
+## Volicord가 관리하는 것
 
-1. 실행 파일과 설치 프로필을 준비합니다.
+Volicord가 관리하는 것:
 
-   ```sh
-   cargo build --workspace --bins
-   ./target/debug/volicord setup --link-bin ~/.local/bin
-   volicord doctor
-   ```
+- 로컬 설치 프로필과 Runtime Home 준비 상태
+- 저장소 루트 기반 프로젝트 등록과 로컬 작업을 위한 프로젝트 선택
+- `Agent Connection` 기록, Connection Projects 멤버십, 지원되는 호스트 설정 또는
+  MCP 설정 내보내기
+- 범위, 증거, `Write Check` 호환성, 실행 기록, 대기 중인 사용자 판단, 차단 사유,
+  닫기 준비 상태에 대한 Core 기록
+- 권한을 지니는 사용자 판단을 기록하는 로컬 `User Channel` 경로
 
-2. 제품 저장소로 들어갑니다.
+Volicord가 관리하지 않는 것:
 
-   ```sh
-   cd /work/acme-api
-   volicord project current
-   ```
+- 제품 정확성, 테스트 충분성, QA 완료, 배포 성공, 위험이 없는 결과
+- OS 권한, 셸 권한, 네트워크 접근, 샌드박싱, 비밀값 격리, 호스트 신뢰
+- 제품 판단, 기술 판단, 범위 판단, 민감 동작 판단, 최종 수락, 잔여 위험 수락,
+  취소에 대한 사용자 자신의 결정 자체
+- 현재 에이전트, 호스트, 에디터, 셸, 저장소 작업 흐름 밖의 일반 제품 파일 편집
+- 외부 MCP 호스트의 로드, trust, approval, reload, restart, OAuth 동작
 
-   아직 프로젝트가 등록되지 않았다면 `volicord connect ...`나
-   `volicord project use`가 감지된 Git 루트에서 등록할 수 있습니다.
-
-3. 에이전트 호스트를 연결합니다.
-
-   ```sh
-   volicord connect codex
-   ```
-
-   프로젝트 공유, 사용자 전체, 읽기 중심 연결 변형은
-   [Quickstart](docs/ko/getting-started/quickstart.md)를 계속 봅니다. 정확한 옵션
-   의미는 [관리 CLI 참조](docs/ko/reference/admin-cli.md)가 담당합니다.
-
-4. 연결 상태를 조회하고 검증합니다.
-
-   ```sh
-   volicord connections
-   volicord connection status codex
-   volicord connection verify codex
-   ```
-
-5. Volicord가 직접 관리하지 않는 호스트에 설정 파일이 필요하면 generic MCP 설정을
-   내보냅니다.
-
-   ```sh
-   volicord export mcp-config --output /tmp/volicord.mcp.json
-   ```
-
-6. 사용자 소유 판단은 User Channel에 남깁니다.
-
-   ```sh
-   volicord user status
-   volicord user judgments
-   volicord user judgment show 1
-   volicord user judgment answer 1 1
-   ```
-
-   Agent Connection은 초점이 맞춰진 판단 필요를 요청하거나 보여 줄 수 있지만,
-   권한을 지니는 사용자 답변을 기록하지 않습니다. Core가 생성한 선택지가 사용자의
-   기록된 판단이 되어야 하면 `volicord user ...`를 사용합니다.
-
-## 문서 경로
+## 다음에 볼 문서
 
 | 필요 | 읽을 문서 |
 |---|---|
-| 실행 파일 설치와 확인 | [설치](docs/ko/getting-started/installation.md) |
-| 첫 호스트 연결 성공 | [Quickstart](docs/ko/getting-started/quickstart.md) |
-| 호스트 설정 세부사항과 연결 의도 | [에이전트 호스트 Setup](docs/ko/guides/agent-host-setup.md) |
-| 호스트 복구와 `action_required` 상태 | [에이전트 호스트 문제 해결](docs/ko/guides/agent-host-troubleshooting.md) |
-| 사용자 소유 판단과 닫기 흐름 | [사용자 가이드](docs/ko/guides/user-workflow.md) |
-| 에이전트 동작 경계 | [에이전트 가이드](docs/ko/guides/agent-workflow.md) |
-| 정확한 CLI 동작 | [관리 CLI 참조](docs/ko/reference/admin-cli.md) |
-| Runtime Home과 저장소 경계 | [런타임 경계](docs/ko/reference/runtime-boundaries.md) |
-| MCP 프로세스 동작 | [MCP 전송](docs/ko/reference/mcp-transport.md) |
-| 소스 코드 학습 경로 | [코드베이스 둘러보기](docs/ko/development/codebase-tour.md) |
+| 실행 파일 설치와 확인 | [설치](docs/ko/getting-started/installation.md), 그다음 [Quickstart](docs/ko/getting-started/quickstart.md) |
+| 사용자 작업 흐름 이해 | [사용자 가이드](docs/ko/guides/user-workflow.md) |
+| 에이전트 호스트 설정 또는 복구 | [에이전트 호스트 Setup](docs/ko/guides/agent-host-setup.md)과 [에이전트 호스트 문제 해결](docs/ko/guides/agent-host-troubleshooting.md) |
+| 에이전트 동작 경계 이해 | [에이전트 가이드](docs/ko/guides/agent-workflow.md) |
+| 정확한 CLI, MCP, 런타임 계약 확인 | [관리 CLI 참조](docs/ko/reference/admin-cli.md), [MCP 전송](docs/ko/reference/mcp-transport.md), [런타임 경계](docs/ko/reference/runtime-boundaries.md) |
+| Core 권한 개념 이해 | [Core 모델](docs/ko/reference/core-model.md) |
+| 구현 학습 | [코드베이스 둘러보기](docs/ko/development/codebase-tour.md) |
 
 Volicord 명령은 로컬 관리 명령이며 공개 Volicord API 메서드가 아닙니다. 정확한 공개
 API 동작은 [참조 색인](docs/ko/reference/README.md)이 담당합니다.
