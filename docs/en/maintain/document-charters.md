@@ -17,8 +17,10 @@ page.
 
 - Use each charter as a scope check before adding detail to a high-traffic
   document.
-- Keep examples and diagrams at the document's reader level. Label what a
-  diagram answers, and link to Reference owners for exact behavior.
+- Keep examples and diagrams at the document's reader level. Explain what a
+  diagram answers in natural prose or a caption, and link to Reference owners
+  for exact behavior. Do not expose review labels such as `Diagram role:` in
+  ordinary reader-facing documents.
 - Prefer links at the moment a reader needs deeper precision. Avoid turning a
   landing page into a complete reference index.
 - Keep maintenance wording durable. Do not add task history, migration notes,
@@ -33,15 +35,21 @@ Document: [Root README](../../../README.md)
   documentation router and not a reference manual.
 - Intended reader: New users, operators, agent integrators, and source-code
   learners who need the product story before choosing a deeper path.
-- Should own: Problem framing, a concrete scenario, quick start, user workflow
-  diagram, local component map, Core boundaries at overview level, what
-  Volicord manages and does not manage, and navigation to deeper documents.
+- Should own: Problem framing, user value in ordinary language, a concrete
+  scenario, quick start, beginner concept introductions, user workflow diagram,
+  local component map, Core boundaries at overview level, what Volicord manages
+  and does not manage, and navigation to deeper documents.
 - Should not own: Full CLI option references, full host matrices, storage DDL,
   MCP preflight line lists, complete troubleshooting catalogs, full API method
   references, or exact security guarantee wording.
+- Beginner concept rule: Introduce first-read meanings before workflow prose or
+  diagrams depend on Volicord-specific terms such as `Volicord Runtime Home`,
+  `Agent Connection`, `volicord-mcp`, and `User Channel`.
 - Acceptable diagrams: Guide-level user workflow and local component maps.
-  Diagrams should state their role and avoid presenting a complete API call
-  sequence, storage layout, or contract boundary map.
+  The root README should include both, with surrounding prose that naturally
+  explains what each diagram shows and what it omits. Avoid presenting a
+  complete API call sequence, storage layout, or contract boundary map, and do
+  not expose diagram-role metadata as reader-facing labels.
 - Link deeper by: Sending setup detail to [Installation](../getting-started/installation.md),
   first host use to [Quickstart](../getting-started/quickstart.md), workflow
   practice to [User Workflow](../guides/user-workflow.md) and

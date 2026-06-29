@@ -67,6 +67,10 @@ maintaining diagrams. It defines diagram categories, caption expectations,
 arrow-semantics guidance, accuracy-owner expectations, and placement boundaries
 so workflow diagrams, component maps, runtime sequences, authority models,
 storage lifecycles, connection setup flows, and dependency graphs stay distinct.
+It also keeps authoring and review metadata separate from reader-facing prose:
+ordinary README, guide, Reference, and Development pages should explain a
+diagram's purpose in natural captions or surrounding prose instead of exposing
+literal labels such as `Diagram role:`.
 
 ## Ownership Boundaries
 

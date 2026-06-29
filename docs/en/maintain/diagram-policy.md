@@ -13,10 +13,13 @@ close-readiness state, or residual-risk decisions.
 ## Purpose
 
 Every diagram must have one reader job. Choose the diagram category before
-drawing arrows, and keep that category visible in the surrounding prose or
-caption. If one picture needs to show workflow order, component responsibility,
-authority, runtime calls, and storage movement at the same time, split it into
-smaller diagrams or move the detail to the focused owner document.
+drawing arrows, and make that reader job clear in the surrounding prose or
+caption. Diagram categories and any role metadata are authoring and review
+aids; they help maintainers decide placement, caption scope, and validation
+expectations. They are not required reader-facing labels. If one picture needs
+to show workflow order, component responsibility, authority, runtime calls, and
+storage movement at the same time, split it into smaller diagrams or move the
+detail to the focused owner document.
 
 Diagrams are explanatory aids, not replacement contracts. When exact behavior,
 storage effects, schema meaning, security wording, API behavior, or Core
@@ -30,6 +33,7 @@ Simple diagrams may satisfy these requirements in one concise caption. Dense
 Mermaid diagrams, diagrams in Reference documents, and diagrams with multiple
 arrow styles should use a short caption plus a nearby note or legend.
 
+Captions should explain what the diagram shows and, when useful, what it omits.
 When relevant, the caption or adjacent prose must clarify:
 
 - the question answered by the diagram
@@ -40,6 +44,25 @@ When relevant, the caption or adjacent prose must clarify:
 
 Do not rely on the diagram title alone. If readers need to inspect the source
 to understand the arrow semantics, the caption is not complete.
+
+## Reader-Facing Captions And Role Metadata
+
+Role metadata belongs in authoring notes, review comments, or maintain-policy
+discussion when it helps reviewers understand why a diagram belongs in a
+document. It should not be pasted into ordinary reader-facing prose.
+
+Avoid literal policy labels such as `Diagram role:` or `그림 역할:` in README,
+Getting Started, Guides, Reference, and Development pages. Reader-facing
+documents should state the same purpose naturally, for example:
+
+- "This workflow shows how the user, agent host, and Volicord hand off a
+  decision; it omits storage layout and API call order."
+- "This map shows the local components a host starts or reads from; it is not a
+  complete runtime sequence."
+
+It is acceptable to say "workflow" or "component map" when that is the clearest
+reader-facing description. Do not make ordinary readers parse maintenance
+metadata before they can understand the diagram.
 
 ## Diagram Categories
 
@@ -58,6 +81,9 @@ to understand the arrow semantics, the caption is not complete.
 - Match the diagram category to the document charter. A first-time onboarding
   page should not carry a dense implementation sequence, and a Reference page
   should not use a broad orientation diagram as the source of exact behavior.
+- Keep review metadata separate from reader prose. Reader-facing captions should
+  explain the diagram's purpose, arrow meaning, and omissions without exposing
+  maintenance labels.
 - Use one arrow meaning per arrow style. If execution flow and authority
   dependency both appear, use distinct styles with a legend or separate the
   diagrams.
