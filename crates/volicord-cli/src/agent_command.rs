@@ -360,33 +360,27 @@ impl Default for ParsedAgentOptions {
 }
 
 pub fn agent_usage() -> String {
-    concat!(
-        "volicord agent connect --host codex|claude-code|claude_code --scope user|project|local [--project-id ID] [--repo-root PATH] [--connection-id ID] [--mode read_only|workflow] [--server-name NAME] [--output text|json] [--dry-run] [--allow-repository-write] [--replace-managed]\n",
-        "volicord agent list [--output text|json]\n",
-        "volicord agent status --connection-id ID [--output text|json]\n",
-        "volicord agent enable --connection-id ID [--output text|json]\n",
-        "volicord agent disable --connection-id ID [--output text|json]\n",
-        "volicord agent project add --connection-id ID --project-id ID [--repo-root PATH] [--output text|json] [--dry-run]\n",
-        "volicord agent project remove --connection-id ID --project-id ID [--output text|json] [--dry-run]\n",
-        "volicord agent verify --connection-id ID [--output text|json]\n",
-        "volicord agent uninstall --connection-id ID [--output text|json] [--dry-run] [--allow-repository-write]\n"
+    format!(
+        "{}{}{}",
+        connect_usage(),
+        connections_usage(),
+        connection_usage()
     )
-    .to_owned()
 }
 
 fn agent_connect_usage() -> String {
-    concat!(
-        "Usage:\n",
-        "  volicord agent connect --host codex|claude-code|claude_code --scope user|project|local [--project-id ID] [--repo-root PATH] [--connection-id ID] [--mode read_only|workflow] [--server-name NAME] [--output text|json] [--dry-run] [--allow-repository-write] [--replace-managed]\n",
-        "\n",
-        "Defaults:\n",
-        "  --mode defaults to the setup profile default, which is workflow after volicord setup.\n",
-        "  --server-name defaults to volicord.\n",
-        "  volicord-mcp command location comes from volicord setup.\n",
-        "  Project and local scopes allow one selected project by default.\n",
-        "  User scope may allow more projects with volicord agent project add.\n"
+    format!(
+        concat!(
+            "Usage:\n",
+            "  {}\n",
+            "\n",
+            "Defaults:\n",
+            "  workflow is the default connection mode after volicord setup.\n",
+            "  Use --read-only for the explicit read-only path.\n",
+            "  volicord-mcp command location comes from volicord setup.\n"
+        ),
+        connect_usage().trim_end()
     )
-    .to_owned()
 }
 
 pub fn connect_usage() -> String {

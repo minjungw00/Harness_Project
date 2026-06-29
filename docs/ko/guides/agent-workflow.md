@@ -107,14 +107,14 @@ Core는 Volicord 상태의 로컬 기준 기록입니다. 상태, 승인, 증거
 
 공개 Volicord 도구 호출에서는 아래를 따릅니다.
 
-- 대상 프로젝트가 알려져 있으면 `ToolEnvelope.project_id`를 사용합니다.
-- 대상이 불분명하면 `volicord.list_projects`를 호출하고 목록에 있는 `project_id` 하나를 고릅니다.
-- 연결되어 사용 가능한 프로젝트가 정확히 하나이면 생략된 `project_id`가 그 프로젝트로 라우팅될 수 있습니다. 그 밖의 경우에는 명시적 `project_id`를 사용합니다.
+- 대상 프로젝트가 알려져 있고 MCP 도구 스키마가 노출한다면 `project_selector`를 사용합니다.
+- 대상이 불분명하면 `volicord.list_projects`를 호출하고 목록에 있는 `project_selector` 하나를 고릅니다.
+- 연결되어 사용 가능한 프로젝트가 정확히 하나이면 프로젝트 선택을 생략해도 그 프로젝트로 라우팅될 수 있습니다. 그 밖의 경우에는 명시적 `project_selector`를 사용합니다.
 - 폴더 이름, 현재 작업 디렉터리, MCP roots, 호스트 라벨, 기억에서 프로젝트를 추측하지 않습니다.
 
 `volicord.list_projects`는 읽기 전용 MCP 어댑터 유틸리티입니다. 바인딩된 Agent Connection에 명시적으로 연결된 프로젝트만 나열하며 공개 Core API 메서드가 아닙니다.
 
-여러 프로젝트를 사용할 수 있고 명시적 프로젝트가 없으면, 어댑터는 Core 실행 전에 호출을 거부하고 에이전트에게 `volicord.list_projects`를 호출하라고 알려줍니다. 이를 에이전트가 해결할 수 있는 경로 지정 문제로 다룹니다. 프로젝트를 나열하고, 의도한 프로젝트를 선택하고, `envelope.project_id`와 함께 다시 시도합니다.
+여러 프로젝트를 사용할 수 있고 명시적 프로젝트가 없으면, 어댑터는 Core 실행 전에 호출을 거부하고 에이전트에게 `volicord.list_projects`를 호출하라고 알려줍니다. 이를 에이전트가 해결할 수 있는 경로 지정 문제로 다룹니다. 프로젝트를 나열하고, 의도한 프로젝트를 선택하고, 반환된 `project_selector`로 다시 시도합니다. MCP에 보이는 공개 스키마는 Core 래퍼 필드를 숨깁니다.
 
 <a id="instructions-and-guidance"></a>
 ## `instructions`와 지침은 조언으로 다루기

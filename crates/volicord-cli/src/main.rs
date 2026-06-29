@@ -194,16 +194,20 @@ fn display_path(path: &Path) -> String {
 
 fn usage() -> String {
     format!(
-        "Usage:\n  volicord --help\n  volicord --version\n  {}\n  {}\n  {}\n  {}\n  {}\n  {}\n  {}\n  {}\n\nEnvironment:\n  VOLICORD_HOME  Override Runtime Home path (default: $HOME/.volicord)\n\nAgent Connection commands manage local MCP host connections. User Channel commands record local user judgments.\nThese are local administrative commands, not public Volicord API methods.\n",
-        setup_usage().trim_end(),
-        doctor_usage().trim_end(),
-        export_usage().trim_end(),
-        connect_usage().trim_end(),
-        connections_usage().trim_end(),
-        connection_usage().trim_end(),
-        user_usage().trim_end(),
-        project_usage().trim_end()
+        "Usage:\n  volicord --help\n  volicord --version\n{}{}{}{}{}{}{}{}\nEnvironment:\n  VOLICORD_HOME  Override Runtime Home path (default: $HOME/.volicord)\n\nAgent Connection commands manage local MCP host connections. User Channel commands record local user judgments.\nThese are local administrative commands, not public Volicord API methods.\n",
+        indent_usage_block(&setup_usage()),
+        indent_usage_block(&doctor_usage()),
+        indent_usage_block(&export_usage()),
+        indent_usage_block(&connect_usage()),
+        indent_usage_block(&connections_usage()),
+        indent_usage_block(&connection_usage()),
+        indent_usage_block(&user_usage()),
+        indent_usage_block(&project_usage())
     )
+}
+
+fn indent_usage_block(block: &str) -> String {
+    block.lines().map(|line| format!("  {line}\n")).collect()
 }
 
 fn version() -> String {
@@ -360,6 +364,10 @@ mod tests {
         assert!(output.contains("volicord --version"));
         assert!(output.contains("volicord setup"));
         assert!(output.contains("volicord doctor"));
+        assert!(output.contains("\n  volicord connection verify"));
+        assert!(output.contains("\n  volicord user judgments"));
+        assert!(!output.contains("\nvolicord connection verify"));
+        assert!(!output.contains("\nvolicord user judgments"));
         assert!(!output.contains("volicord init"));
     }
 

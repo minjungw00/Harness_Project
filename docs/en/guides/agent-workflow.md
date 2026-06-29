@@ -76,14 +76,14 @@ In the current MCP path, the `volicord-mcp` process is bound to one Agent Connec
 
 For public Volicord tool calls:
 
-- Use `ToolEnvelope.project_id` when the target project is known.
-- If the target is unclear, call `volicord.list_projects` and choose one listed `project_id`.
-- If exactly one connected project is available, omitted `project_id` may route to that project; otherwise use an explicit `project_id`.
+- Use `project_selector` when the target project is known and the MCP tool schema exposes it.
+- If the target is unclear, call `volicord.list_projects` and choose one listed `project_selector`.
+- If exactly one connected project is available, omitted project selection may route to that project; otherwise use an explicit `project_selector`.
 - Never guess a project from folder names, current working directory, MCP roots, host labels, or memory.
 
 `volicord.list_projects` is a read-only MCP adapter utility. It lists only projects explicitly connected to the bound Agent Connection and is not a public Core API method.
 
-When multiple projects are available and no explicit project is supplied, the adapter rejects the call before Core execution and tells the agent to call `volicord.list_projects`. Treat that as an agent-resolvable routing issue: list projects, select the intended project, and retry with `envelope.project_id`.
+When multiple projects are available and no explicit project is supplied, the adapter rejects the call before Core execution and tells the agent to call `volicord.list_projects`. Treat that as an agent-resolvable routing issue: list projects, select the intended project, and retry with the returned `project_selector`. MCP-visible public schemas hide Core envelope fields.
 
 <a id="instructions-and-guidance"></a>
 ## Treat instructions and guidance as advisory
