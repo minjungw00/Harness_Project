@@ -273,6 +273,12 @@ struct InteractiveMenuChoice {
     choice: InteractiveSetupChoice,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct InteractiveMenuPlan {
+    choices: Vec<InteractiveMenuChoice>,
+    shell_unavailable: Option<String>,
+}
+
 pub fn setup_usage() -> String {
     "volicord setup [--home PATH] [--link-bin PATH] [--mcp-command PATH] [--json]\n".to_owned()
 }
@@ -987,30 +993,71 @@ fn prompt_command_availability_choice(
         }
     }
 
+    let menu = plan_interactive_menu_choices(process, selected_paths)?;
+
+    if let Some(reason) = &menu.shell_unavailable {
+        terminal.write_str(&format!("Shell startup update is unavailable: {reason}\n"))?;
+    }
+    terminal.write_str("Choices:\n")?;
+    for choice in &menu.choices {
+        terminal.write_str(&format!("  {}. {}\n", choice.number, choice.label))?;
+    }
+
+    let skip_number = menu
+        .choices
+        .iter()
+        .find(|choice| matches!(choice.choice, InteractiveSetupChoice::Skip))
+        .map(|choice| choice.number)
+        .unwrap_or(menu.choices.len());
+    loop {
+        terminal.write_str(&format!("Choice [{skip_number}]: "))?;
+        let Some(input) = read_prompt_line(terminal)? else {
+            return Ok(InteractiveSetupChoice::Cancelled(
+                "setup prompt cancelled; no command links or shell startup files were changed"
+                    .to_owned(),
+            ));
+        };
+        let selected_number = if input.trim().is_empty() {
+            skip_number
+        } else if let Ok(number) = input.trim().parse::<usize>() {
+            number
+        } else {
+            terminal.write_str("Enter the number of one setup choice.\n")?;
+            continue;
+        };
+        let Some(choice) = menu
+            .choices
+            .iter()
+            .find(|choice| choice.number == selected_number)
+            .map(|choice| choice.choice.clone())
+        else {
+            terminal.write_str("Enter one of the listed setup choice numbers.\n")?;
+            continue;
+        };
+        return confirm_interactive_choice(terminal, choice);
+    }
+}
+
+fn plan_interactive_menu_choices(
+    process: &impl SetupProcess,
+    selected_paths: [&Path; 2],
+) -> Result<InteractiveMenuPlan, SetupCommandError> {
     let path_env = process.env_var(PATH_ENV);
     let link_bin = suggested_link_bin(process);
     let mut shell_unavailable = None;
     let mut choices = Vec::new();
     if let Some(link_bin) = link_bin.clone() {
         let link_bin_on_path = path_directory_is_on_path(path_env.as_deref(), &link_bin);
-        let link_label = if link_bin_on_path {
-            format!(
-                "Create command links in {} (already on PATH).",
-                link_bin.display()
-            )
+        if link_bin_on_path {
+            push_menu_choice(
+                &mut choices,
+                format!(
+                    "Create command links in {} (already on PATH).",
+                    link_bin.display()
+                ),
+                InteractiveSetupChoice::LinkOnly(link_bin.clone()),
+            );
         } else {
-            format!(
-                "Create command links in {}; PATH still needs an update.",
-                link_bin.display()
-            )
-        };
-        push_menu_choice(
-            &mut choices,
-            link_label,
-            InteractiveSetupChoice::LinkOnly(link_bin.clone()),
-        );
-
-        if !link_bin_on_path {
             match shell_startup_plan(process, &link_bin) {
                 Ok(plan) => push_menu_choice(
                     &mut choices,
@@ -1025,6 +1072,14 @@ fn prompt_command_availability_choice(
                 ),
                 Err(reason) => shell_unavailable = Some(reason),
             }
+            push_menu_choice(
+                &mut choices,
+                format!(
+                    "Create command links in {}; PATH still needs an update.",
+                    link_bin.display()
+                ),
+                InteractiveSetupChoice::LinkOnly(link_bin.clone()),
+            );
         }
 
         push_menu_choice(
@@ -1056,45 +1111,10 @@ fn prompt_command_availability_choice(
         InteractiveSetupChoice::Skip,
     );
 
-    if let Some(reason) = shell_unavailable {
-        terminal.write_str(&format!("Shell startup update is unavailable: {reason}\n"))?;
-    }
-    terminal.write_str("Choices:\n")?;
-    for choice in &choices {
-        terminal.write_str(&format!("  {}. {}\n", choice.number, choice.label))?;
-    }
-
-    let skip_number = choices
-        .iter()
-        .find(|choice| matches!(choice.choice, InteractiveSetupChoice::Skip))
-        .map(|choice| choice.number)
-        .unwrap_or(choices.len());
-    loop {
-        terminal.write_str(&format!("Choice [{skip_number}]: "))?;
-        let Some(input) = read_prompt_line(terminal)? else {
-            return Ok(InteractiveSetupChoice::Cancelled(
-                "setup prompt cancelled; no command links or shell startup files were changed"
-                    .to_owned(),
-            ));
-        };
-        let selected_number = if input.trim().is_empty() {
-            skip_number
-        } else if let Ok(number) = input.trim().parse::<usize>() {
-            number
-        } else {
-            terminal.write_str("Enter the number of one setup choice.\n")?;
-            continue;
-        };
-        let Some(choice) = choices
-            .iter()
-            .find(|choice| choice.number == selected_number)
-            .map(|choice| choice.choice.clone())
-        else {
-            terminal.write_str("Enter one of the listed setup choice numbers.\n")?;
-            continue;
-        };
-        return confirm_interactive_choice(terminal, choice);
-    }
+    Ok(InteractiveMenuPlan {
+        choices,
+        shell_unavailable,
+    })
 }
 
 fn confirm_interactive_choice(
@@ -1893,15 +1913,41 @@ mod tests {
     }
 
     #[derive(Debug)]
+    enum FakeTerminalInput {
+        Line(String),
+        MenuChoiceContaining(String),
+    }
+
+    impl FakeTerminalInput {
+        fn line(line: impl Into<String>) -> Self {
+            Self::Line(line.into())
+        }
+
+        fn menu_choice_containing(label: impl Into<String>) -> Self {
+            Self::MenuChoiceContaining(label.into())
+        }
+    }
+
+    #[derive(Debug)]
     struct FakeTerminal {
-        input: VecDeque<String>,
+        input: VecDeque<FakeTerminalInput>,
         output: String,
     }
 
     impl FakeTerminal {
         fn new(lines: &[&str]) -> Self {
             Self {
-                input: lines.iter().map(|line| format!("{line}\n")).collect(),
+                input: lines
+                    .iter()
+                    .map(|line| FakeTerminalInput::line(*line))
+                    .collect(),
+                output: String::new(),
+            }
+        }
+
+        fn with_inputs(inputs: Vec<FakeTerminalInput>) -> Self {
+            Self {
+                input: inputs.into(),
                 output: String::new(),
             }
         }
@@ -1918,12 +1964,233 @@ mod tests {
         }
 
         fn read_line(&mut self, input: &mut String) -> io::Result<usize> {
-            let Some(line) = self.input.pop_front() else {
+            let Some(next_input) = self.input.pop_front() else {
                 return Ok(0);
             };
+            let line = match next_input {
+                FakeTerminalInput::Line(line) => line,
+                FakeTerminalInput::MenuChoiceContaining(label) => {
+                    menu_choice_number_containing(&self.output, &label)
+                        .unwrap_or_else(|| panic!("menu choice containing {label:?} not found"))
+                        .to_string()
+                }
+            };
+            let line = format!("{line}\n");
             input.push_str(&line);
             Ok(line.len())
         }
+    }
+
+    fn menu_choice_number_containing(output: &str, label_fragment: &str) -> Option<usize> {
+        output.lines().find_map(|line| {
+            let trimmed = line.trim_start();
+            let (number, label) = trimmed.split_once(". ")?;
+            label
+                .contains(label_fragment)
+                .then(|| number.parse::<usize>().ok())
+                .flatten()
+        })
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum InteractiveChoiceKind {
+        LinkOnly,
+        LinkAndShell,
+        Manual,
+        Skip,
+        Cancelled,
+    }
+
+    fn interactive_choice_kinds(choices: &[InteractiveMenuChoice]) -> Vec<InteractiveChoiceKind> {
+        choices
+            .iter()
+            .map(|choice| match &choice.choice {
+                InteractiveSetupChoice::LinkOnly(_) => InteractiveChoiceKind::LinkOnly,
+                InteractiveSetupChoice::LinkAndShell { .. } => InteractiveChoiceKind::LinkAndShell,
+                InteractiveSetupChoice::Manual { .. } => InteractiveChoiceKind::Manual,
+                InteractiveSetupChoice::Skip => InteractiveChoiceKind::Skip,
+                InteractiveSetupChoice::Cancelled(_) => InteractiveChoiceKind::Cancelled,
+            })
+            .collect()
+    }
+
+    #[test]
+    fn setup_action_planner_reports_stable_action_kinds() -> Result<(), Box<dyn std::error::Error>>
+    {
+        let fixture = TempRuntimeHome::new("setup-action-planner-kinds")?;
+        let home = fixture.path().join("home");
+        let local_bin = home.join(".local").join("bin");
+        fs::create_dir_all(&local_bin)?;
+        let command_path = fixture.path().join("exe").join(volicord_binary_name());
+        let process = FakeProcess {
+            exe: command_path.clone(),
+            env: BTreeMap::from([("HOME".to_owned(), home.clone().into_os_string())]),
+        };
+        let parsed = ParsedSetupOptions {
+            runtime_home: None,
+            link_bin: None,
+            mcp_command: None,
+            output: OutputFormat::Text,
+        };
+        let commands = vec![CommandAvailability {
+            id: "volicord_command".to_owned(),
+            command_name: volicord_binary_name(),
+            discovered: true,
+            discovered_path: Some(path_text(&command_path)),
+            discovery_source: Some("test".to_owned()),
+            available_on_path: false,
+            path_matches_discovered: false,
+            discovered_directory_on_path: false,
+            path_match: None,
+        }];
+        let mut actions_required = Vec::new();
+        let mut actions_optional = Vec::new();
+
+        plan_setup_actions(
+            &commands,
+            &parsed,
+            &process,
+            None,
+            &mut actions_required,
+            &mut actions_optional,
+        );
+
+        assert_eq!(
+            actions_required
+                .iter()
+                .map(|action| action.kind)
+                .collect::<Vec<_>>(),
+            vec![SetupActionKind::CommandAvailability]
+        );
+        assert_eq!(
+            actions_optional
+                .iter()
+                .map(|action| action.kind)
+                .collect::<Vec<_>>(),
+            vec![SetupActionKind::CommandLinks]
+        );
+        assert_eq!(actions_optional[0].path, Some(path_text(&local_bin)));
+        Ok(())
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn interactive_menu_plan_prefers_existing_path_link() -> Result<(), Box<dyn std::error::Error>>
+    {
+        let fixture = TempRuntimeHome::new("setup-menu-path-dir")?;
+        let path_dir = fixture.path().join("path-bin");
+        let home = fixture.path().join("home");
+        let local_bin = home.join(".local").join("bin");
+        fs::create_dir_all(&path_dir)?;
+        fs::create_dir_all(&local_bin)?;
+        let process = FakeProcess {
+            exe: fixture.path().join("volicord"),
+            env: BTreeMap::from([
+                (PATH_ENV.to_owned(), env::join_paths([path_dir.as_path()])?),
+                ("HOME".to_owned(), home.into_os_string()),
+                ("SHELL".to_owned(), OsString::from("/bin/zsh")),
+            ]),
+        };
+        let selected = [
+            fixture.path().join(volicord_binary_name()),
+            fixture.path().join(mcp_binary_name()),
+        ];
+
+        let menu = plan_interactive_menu_choices(
+            &process,
+            [selected[0].as_path(), selected[1].as_path()],
+        )?;
+
+        assert_eq!(
+            interactive_choice_kinds(&menu.choices),
+            vec![
+                InteractiveChoiceKind::LinkOnly,
+                InteractiveChoiceKind::Manual,
+                InteractiveChoiceKind::Skip,
+            ]
+        );
+        assert!(menu.choices[0].label.contains("already on PATH"));
+        assert!(menu.shell_unavailable.is_none());
+        Ok(())
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn interactive_menu_plan_orders_shell_update_before_user_bin_only(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let fixture = TempRuntimeHome::new("setup-menu-shell-order")?;
+        let home = fixture.path().join("home");
+        fs::create_dir_all(home.join(".local").join("bin"))?;
+        let process = FakeProcess {
+            exe: fixture.path().join("volicord"),
+            env: BTreeMap::from([
+                ("HOME".to_owned(), home.clone().into_os_string()),
+                ("SHELL".to_owned(), OsString::from("/bin/zsh")),
+            ]),
+        };
+        let selected = [
+            fixture.path().join(volicord_binary_name()),
+            fixture.path().join(mcp_binary_name()),
+        ];
+
+        let menu = plan_interactive_menu_choices(
+            &process,
+            [selected[0].as_path(), selected[1].as_path()],
+        )?;
+
+        assert_eq!(
+            interactive_choice_kinds(&menu.choices),
+            vec![
+                InteractiveChoiceKind::LinkAndShell,
+                InteractiveChoiceKind::LinkOnly,
+                InteractiveChoiceKind::Manual,
+                InteractiveChoiceKind::Skip,
+            ]
+        );
+        assert!(menu.choices[0].label.contains("managed PATH block"));
+        assert!(menu.choices[1].label.contains("PATH still needs an update"));
+        assert!(menu.shell_unavailable.is_none());
+        Ok(())
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn interactive_menu_plan_keeps_manual_and_skip_when_shell_is_unsupported(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let fixture = TempRuntimeHome::new("setup-menu-unsupported-shell")?;
+        let home = fixture.path().join("home");
+        fs::create_dir_all(home.join(".local").join("bin"))?;
+        let process = FakeProcess {
+            exe: fixture.path().join("volicord"),
+            env: BTreeMap::from([
+                ("HOME".to_owned(), home.into_os_string()),
+                ("SHELL".to_owned(), OsString::from("/bin/fish")),
+            ]),
+        };
+        let selected = [
+            fixture.path().join(volicord_binary_name()),
+            fixture.path().join(mcp_binary_name()),
+        ];
+
+        let menu = plan_interactive_menu_choices(
+            &process,
+            [selected[0].as_path(), selected[1].as_path()],
+        )?;
+
+        assert_eq!(
+            interactive_choice_kinds(&menu.choices),
+            vec![
+                InteractiveChoiceKind::LinkOnly,
+                InteractiveChoiceKind::Manual,
+                InteractiveChoiceKind::Skip,
+            ]
+        );
+        assert!(menu
+            .shell_unavailable
+            .as_deref()
+            .is_some_and(|reason| reason.contains("fish is not supported")));
+        assert!(menu.choices[1].label.contains("print the PATH command"));
+        Ok(())
     }
 
     #[cfg(unix)]
@@ -1946,7 +2213,10 @@ mod tests {
                 ("SHELL".to_owned(), OsString::from("/bin/zsh")),
             ]),
         };
-        let mut terminal = FakeTerminal::new(&["1"]);
+        let mut terminal =
+            FakeTerminal::with_inputs(vec![FakeTerminalInput::menu_choice_containing(
+                "already on PATH",
+            )]);
 
         let outcome = run_setup_command_interactive(
             &["--home".to_owned(), path_text(fixture.path())],
@@ -1976,7 +2246,7 @@ mod tests {
             exe: volicord,
             env: BTreeMap::new(),
         };
-        let mut terminal = FakeTerminal::new(&["1"]);
+        let mut terminal = FakeTerminal::new(&[]);
 
         let outcome = run_setup_command_interactive(
             &[
@@ -2008,7 +2278,7 @@ mod tests {
             exe: volicord,
             env: BTreeMap::from([(PATH_ENV.to_owned(), env::join_paths([link_bin.as_path()])?)]),
         };
-        let mut terminal = FakeTerminal::new(&["1"]);
+        let mut terminal = FakeTerminal::new(&[]);
 
         let outcome = run_setup_command_interactive(
             &[
@@ -2049,7 +2319,10 @@ mod tests {
             ]),
         };
 
-        let mut first_terminal = FakeTerminal::new(&["2", "y"]);
+        let mut first_terminal = FakeTerminal::with_inputs(vec![
+            FakeTerminalInput::menu_choice_containing("managed PATH block"),
+            FakeTerminalInput::line("y"),
+        ]);
         let first = run_setup_command_interactive(
             &["--home".to_owned(), path_text(fixture.path())],
             fixture.path(),
@@ -2064,7 +2337,10 @@ mod tests {
         assert!(first_text.contains("# >>> volicord setup >>>"));
         assert!(first_text.contains("export PATH=\"$HOME/.local/bin:$PATH\""));
 
-        let mut second_terminal = FakeTerminal::new(&["2", "y"]);
+        let mut second_terminal = FakeTerminal::with_inputs(vec![
+            FakeTerminalInput::menu_choice_containing("managed PATH block"),
+            FakeTerminalInput::line("y"),
+        ]);
         run_setup_command_interactive(
             &["--home".to_owned(), path_text(fixture.path())],
             fixture.path(),
@@ -2095,7 +2371,10 @@ mod tests {
                 ("SHELL".to_owned(), OsString::from("/bin/zsh")),
             ]),
         };
-        let mut terminal = FakeTerminal::new(&["2", "y"]);
+        let mut terminal = FakeTerminal::with_inputs(vec![
+            FakeTerminalInput::menu_choice_containing("managed PATH block"),
+            FakeTerminalInput::line("y"),
+        ]);
 
         let outcome = run_setup_command_interactive(
             &["--home".to_owned(), path_text(fixture.path())],
@@ -2129,7 +2408,10 @@ mod tests {
                 ("SHELL".to_owned(), OsString::from("/bin/fish")),
             ]),
         };
-        let mut terminal = FakeTerminal::new(&["2"]);
+        let mut terminal =
+            FakeTerminal::with_inputs(vec![FakeTerminalInput::menu_choice_containing(
+                "print the PATH command",
+            )]);
 
         let outcome = run_setup_command_interactive(
             &["--home".to_owned(), path_text(fixture.path())],
@@ -2164,7 +2446,10 @@ mod tests {
                 ("SHELL".to_owned(), OsString::from("/bin/zsh")),
             ]),
         };
-        let mut terminal = FakeTerminal::new(&["4"]);
+        let mut terminal =
+            FakeTerminal::with_inputs(vec![FakeTerminalInput::menu_choice_containing(
+                "Skip command linking",
+            )]);
 
         let outcome = run_setup_command_interactive(
             &["--home".to_owned(), path_text(fixture.path())],
@@ -2201,7 +2486,10 @@ mod tests {
                 ("SHELL".to_owned(), OsString::from("/bin/zsh")),
             ]),
         };
-        let mut terminal = FakeTerminal::new(&["1"]);
+        let mut terminal =
+            FakeTerminal::with_inputs(vec![FakeTerminalInput::menu_choice_containing(
+                "PATH still needs an update",
+            )]);
 
         let outcome = run_setup_command_interactive(
             &["--home".to_owned(), path_text(fixture.path())],
@@ -2244,7 +2532,10 @@ mod tests {
                 ("SHELL".to_owned(), OsString::from("/bin/zsh")),
             ]),
         };
-        let mut terminal = FakeTerminal::new(&["2", "n"]);
+        let mut terminal = FakeTerminal::with_inputs(vec![
+            FakeTerminalInput::menu_choice_containing("managed PATH block"),
+            FakeTerminalInput::line("n"),
+        ]);
 
         let outcome = run_setup_command_interactive(
             &["--home".to_owned(), path_text(fixture.path())],
