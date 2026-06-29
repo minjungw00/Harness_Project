@@ -144,7 +144,7 @@ Volicord 구현은 이 저장소가 유지하는 구현 집합을 뜻합니다. 
 
 ### Agent Connections와 Connection Projects
 
-Agent Connection은 `volicord-mcp`를 위한 로컬 MCP 호스트 연결 단위입니다. 연결은 `connection_internal_id`, `personal`, `shared`, `global` 중 하나의 연결 의도, 호스트 범위, `connection.mode=workflow` 또는 `connection.mode=read_only`를 가지며, Connection Projects 허용 목록에 명시된 `project_internal_id` 값만 다룰 수 있습니다. 사용자 대상 관리 명령은 내부 식별 정보를 요구하지 않고 호스트, 의도, 저장소 루트 또는 Volicord가 반환한 `project_selector`로 연결을 선택합니다.
+Agent Connection은 `volicord-mcp`를 위한 로컬 MCP 호스트 연결 단위입니다. 연결은 `connection_internal_id`, `personal`, `shared`, `global` 중 하나의 연결 의도, 호스트 범위, `connection.mode=workflow` 또는 `connection.mode=read_only`를 가지며, Connection Projects 허용 목록에 명시된 `project_internal_id` 값만 다룰 수 있습니다. 사용자 대상 관리 명령은 내부 식별 정보를 요구하지 않고 호스트, 의도, 저장소 루트로 연결을 선택합니다. MCP에 보이는 프로젝트 선택은 Volicord가 반환한 `project_selector`를 사용합니다.
 
 Agent Connection은 지원되는 API 경로를 통해 사용자 판단을 요청할 수 있지만, 권한을 지니는 사용자 판단을 기록할 수 없습니다. 그런 판단은 `User Channel`을 통해 `actor_source=local_user`로 기록됩니다.
 

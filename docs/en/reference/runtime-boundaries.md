@@ -144,7 +144,7 @@ Exact executable behavior, environment variables, framing, startup validation or
 
 ### Agent Connections and Connection Projects
 
-An Agent Connection is the local MCP host connection unit for `volicord-mcp`. The connection has `connection_internal_id`, a connection intent of `personal`, `shared`, or `global`, host scope, `connection.mode=workflow` or `connection.mode=read_only`, and can address only the explicitly allowed `project_internal_id` values in its Connection Projects allowlist. User-facing administrative commands select the connection by host, intent, and repository root or by a `project_selector` returned by Volicord rather than requiring internal identities.
+An Agent Connection is the local MCP host connection unit for `volicord-mcp`. The connection has `connection_internal_id`, a connection intent of `personal`, `shared`, or `global`, host scope, `connection.mode=workflow` or `connection.mode=read_only`, and can address only the explicitly allowed `project_internal_id` values in its Connection Projects allowlist. User-facing administrative commands select the connection by host, intent, and repository root rather than requiring internal identities. MCP-visible project selection uses a `project_selector` returned by Volicord.
 
 An Agent Connection can request user judgments through supported API paths, but it cannot record authority-bearing user judgments. Those judgments are recorded through the `User Channel` with `actor_source=local_user`.
 
