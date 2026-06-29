@@ -11,6 +11,36 @@ use std::{
 pub(crate) const PATH_ENV: &str = "PATH";
 static WRITE_PROBE_COUNTER: AtomicU64 = AtomicU64::new(0);
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum SetupLinkDirCandidate {
+    ExistingVerifiedWritable(PathBuf),
+    MissingCreatableUserBin(PathBuf),
+    ExistingNotWritable(PathBuf),
+    Unavailable(PathBuf),
+}
+
+impl SetupLinkDirCandidate {
+    pub(crate) fn path(&self) -> &Path {
+        match self {
+            Self::ExistingVerifiedWritable(path)
+            | Self::MissingCreatableUserBin(path)
+            | Self::ExistingNotWritable(path)
+            | Self::Unavailable(path) => path,
+        }
+    }
+
+    pub(crate) fn is_usable(&self) -> bool {
+        matches!(
+            self,
+            Self::ExistingVerifiedWritable(_) | Self::MissingCreatableUserBin(_)
+        )
+    }
+
+    pub(crate) fn requires_creation(&self) -> bool {
+        matches!(self, Self::MissingCreatableUserBin(_))
+    }
+}
+
 pub(crate) fn detect_command_on_path(
     command_name: &str,
     path_env: Option<&OsStr>,
@@ -119,33 +149,119 @@ where
     dirs
 }
 
-pub(crate) fn candidate_setup_link_dirs<F>(env_var: &F) -> Vec<PathBuf>
+pub(crate) fn setup_link_dir_candidates<F>(env_var: &F) -> Vec<SetupLinkDirCandidate>
 where
     F: Fn(&str) -> Option<OsString>,
 {
-    let mut dirs = Vec::new();
+    let mut candidates = Vec::new();
     if let Some(path_env) = env_var(PATH_ENV) {
         for dir in env::split_paths(&path_env) {
-            if path_directory_is_verified_writable(&dir) {
-                push_unique_path(&mut dirs, dir);
+            if let Some(candidate) = classify_path_candidate(&dir) {
+                push_unique_candidate(&mut candidates, candidate);
             }
         }
     }
+    let home = env_var("HOME")
+        .filter(|value| !value.is_empty())
+        .map(PathBuf::from);
     for dir in candidate_user_bin_dirs(env_var) {
-        if path_directory_is_verified_writable(&dir) {
-            push_unique_path(&mut dirs, dir);
-        }
+        push_unique_candidate(
+            &mut candidates,
+            classify_user_bin_candidate(&dir, home.as_deref()),
+        );
     }
-    dirs
+    candidates
 }
 
-fn push_unique_path(paths: &mut Vec<PathBuf>, path: PathBuf) {
-    if !paths
-        .iter()
-        .any(|existing| paths_equivalent(existing, &path))
-    {
-        paths.push(path);
+fn classify_path_candidate(path: &Path) -> Option<SetupLinkDirCandidate> {
+    match fs::metadata(path) {
+        Ok(metadata) if metadata.is_dir() => {
+            if path_directory_is_verified_writable(path) {
+                Some(SetupLinkDirCandidate::ExistingVerifiedWritable(
+                    path.to_path_buf(),
+                ))
+            } else {
+                Some(SetupLinkDirCandidate::ExistingNotWritable(
+                    path.to_path_buf(),
+                ))
+            }
+        }
+        Ok(_) => Some(SetupLinkDirCandidate::Unavailable(path.to_path_buf())),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => None,
+        Err(_) => Some(SetupLinkDirCandidate::Unavailable(path.to_path_buf())),
     }
+}
+
+fn classify_user_bin_candidate(path: &Path, home: Option<&Path>) -> SetupLinkDirCandidate {
+    match fs::metadata(path) {
+        Ok(metadata) if metadata.is_dir() => {
+            if path_directory_is_verified_writable(path) {
+                SetupLinkDirCandidate::ExistingVerifiedWritable(path.to_path_buf())
+            } else {
+                SetupLinkDirCandidate::ExistingNotWritable(path.to_path_buf())
+            }
+        }
+        Ok(_) => SetupLinkDirCandidate::Unavailable(path.to_path_buf()),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => {
+            if home.is_some_and(|home| missing_user_bin_is_safely_creatable(home, path)) {
+                SetupLinkDirCandidate::MissingCreatableUserBin(path.to_path_buf())
+            } else {
+                SetupLinkDirCandidate::Unavailable(path.to_path_buf())
+            }
+        }
+        Err(_) => SetupLinkDirCandidate::Unavailable(path.to_path_buf()),
+    }
+}
+
+fn missing_user_bin_is_safely_creatable(home: &Path, path: &Path) -> bool {
+    if !home.is_absolute() || !path.is_absolute() {
+        return false;
+    }
+    match fs::symlink_metadata(path) {
+        Err(error) if error.kind() == io::ErrorKind::NotFound => {}
+        _ => return false,
+    }
+    match fs::metadata(home) {
+        Ok(metadata) if metadata.is_dir() => {}
+        _ => return false,
+    }
+
+    let Ok(relative) = path.strip_prefix(home) else {
+        return false;
+    };
+    if relative == Path::new("bin") {
+        return verify_directory_writable(home).is_ok();
+    }
+    if relative != Path::new(".local").join("bin") {
+        return false;
+    }
+
+    let local_dir = home.join(".local");
+    match fs::symlink_metadata(&local_dir) {
+        Ok(metadata) if metadata.is_dir() && !metadata.file_type().is_symlink() => {
+            verify_directory_writable(&local_dir).is_ok()
+        }
+        Err(error) if error.kind() == io::ErrorKind::NotFound => {
+            verify_directory_writable(home).is_ok()
+        }
+        _ => false,
+    }
+}
+
+fn push_unique_candidate(
+    candidates: &mut Vec<SetupLinkDirCandidate>,
+    candidate: SetupLinkDirCandidate,
+) {
+    if !candidates
+        .iter()
+        .any(|existing| paths_equivalent_or_equal(existing.path(), candidate.path()))
+    {
+        candidates.push(candidate);
+    }
+}
+
+fn paths_equivalent_or_equal(left: &Path, right: &Path) -> bool {
+    left == right || paths_equivalent(left, right)
 }
 
 pub(crate) fn paths_equivalent(left: &Path, right: &Path) -> bool {
@@ -190,7 +306,12 @@ pub(crate) fn mcp_binary_name() -> String {
 
 #[cfg(test)]
 mod tests {
-    use std::{collections::BTreeMap, fs, io::Write, path::Path};
+    use std::{
+        collections::BTreeMap,
+        fs,
+        io::Write,
+        path::{Path, PathBuf},
+    };
 
     use volicord_test_support::TempRuntimeHome;
 
@@ -224,7 +345,8 @@ mod tests {
             ("HOME".to_owned(), home.clone().into_os_string()),
         ]);
 
-        let dirs = candidate_setup_link_dirs(&|name| env.get(name).cloned());
+        let candidates = setup_link_dir_candidates(&|name| env.get(name).cloned());
+        let dirs = usable_candidate_dirs(&candidates);
 
         assert_eq!(dirs.first(), Some(&path_dir));
         assert!(dirs.contains(&local_bin));
@@ -249,7 +371,8 @@ mod tests {
             ("HOME".to_owned(), home.clone().into_os_string()),
         ]);
 
-        let dirs = candidate_setup_link_dirs(&|name| env.get(name).cloned());
+        let candidates = setup_link_dir_candidates(&|name| env.get(name).cloned());
+        let dirs = usable_candidate_dirs(&candidates);
 
         assert_eq!(dirs.first(), Some(&local_bin));
         assert!(dirs.contains(&home_bin));
@@ -260,18 +383,102 @@ mod tests {
     }
 
     #[test]
-    fn candidate_setup_link_dirs_omits_missing_user_bin_dirs(
+    fn candidate_setup_link_dirs_offers_missing_creatable_user_bin_dirs(
     ) -> Result<(), Box<dyn std::error::Error>> {
         let fixture = TempRuntimeHome::new("shell-path-missing-user-bin")?;
         let home = fixture.path().join("home");
         fs::create_dir_all(&home)?;
         let env = BTreeMap::from([("HOME".to_owned(), home.clone().into_os_string())]);
 
-        let dirs = candidate_setup_link_dirs(&|name| env.get(name).cloned());
+        let candidates = setup_link_dir_candidates(&|name| env.get(name).cloned());
+        let dirs = usable_candidate_dirs(&candidates);
 
-        assert!(dirs.is_empty());
+        assert_eq!(
+            dirs,
+            vec![home.join(".local").join("bin"), home.join("bin")]
+        );
+        assert!(
+            candidates.contains(&SetupLinkDirCandidate::MissingCreatableUserBin(
+                home.join(".local").join("bin")
+            ))
+        );
+        assert!(
+            candidates.contains(&SetupLinkDirCandidate::MissingCreatableUserBin(
+                home.join("bin")
+            ))
+        );
         assert!(!home.join(".local").exists());
         assert!(!home.join("bin").exists());
+        Ok(())
+    }
+
+    #[test]
+    fn candidate_setup_link_dirs_does_not_offer_arbitrary_missing_path_dirs(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let fixture = TempRuntimeHome::new("shell-path-missing-path-dir")?;
+        let home = fixture.path().join("home");
+        let missing_path_dir = fixture.path().join("missing-path-bin");
+        fs::create_dir_all(&home)?;
+        let env = BTreeMap::from([
+            (
+                PATH_ENV.to_owned(),
+                env::join_paths([missing_path_dir.as_path()])?,
+            ),
+            ("HOME".to_owned(), home.clone().into_os_string()),
+        ]);
+
+        let candidates = setup_link_dir_candidates(&|name| env.get(name).cloned());
+        let dirs = usable_candidate_dirs(&candidates);
+
+        assert!(!dirs.contains(&missing_path_dir));
+        assert!(!candidates
+            .iter()
+            .any(|candidate| candidate.path() == missing_path_dir.as_path()));
+        assert!(dirs.contains(&home.join(".local").join("bin")));
+        assert!(!missing_path_dir.exists());
+        Ok(())
+    }
+
+    #[test]
+    fn candidate_setup_link_dirs_marks_user_bin_with_unsafe_parent_unavailable(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let fixture = TempRuntimeHome::new("shell-path-unsafe-user-bin")?;
+        let home = fixture.path().join("home");
+        fs::create_dir_all(&home)?;
+        fs::write(home.join(".local"), "not a directory")?;
+        let env = BTreeMap::from([("HOME".to_owned(), home.clone().into_os_string())]);
+
+        let candidates = setup_link_dir_candidates(&|name| env.get(name).cloned());
+        let dirs = usable_candidate_dirs(&candidates);
+
+        assert!(!dirs.contains(&home.join(".local").join("bin")));
+        assert!(dirs.contains(&home.join("bin")));
+        assert!(candidates.contains(&SetupLinkDirCandidate::Unavailable(
+            home.join(".local").join("bin")
+        )));
+        assert!(!home.join("bin").exists());
+        Ok(())
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn candidate_setup_link_dirs_marks_broken_user_bin_symlink_unavailable(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        use std::os::unix::fs::symlink;
+
+        let fixture = TempRuntimeHome::new("shell-path-broken-user-bin-symlink")?;
+        let home = fixture.path().join("home");
+        let local = home.join(".local");
+        let local_bin = local.join("bin");
+        fs::create_dir_all(&local)?;
+        symlink(home.join("missing-target"), &local_bin)?;
+        let env = BTreeMap::from([("HOME".to_owned(), home.clone().into_os_string())]);
+
+        let candidates = setup_link_dir_candidates(&|name| env.get(name).cloned());
+        let dirs = usable_candidate_dirs(&candidates);
+
+        assert!(!dirs.contains(&local_bin));
+        assert!(candidates.contains(&SetupLinkDirCandidate::Unavailable(local_bin)));
         Ok(())
     }
 
@@ -312,12 +519,21 @@ mod tests {
             (PATH_ENV.to_owned(), env::join_paths([path_dir.as_path()])?),
             ("HOME".to_owned(), home.clone().into_os_string()),
         ]);
-        let dirs = candidate_setup_link_dirs(&|name| env.get(name).cloned());
+        let candidates = setup_link_dir_candidates(&|name| env.get(name).cloned());
+        let dirs = usable_candidate_dirs(&candidates);
 
         restore_writable_dir(&path_dir)?;
         assert_eq!(dirs.first(), Some(&local_bin));
         assert!(!dirs.contains(&path_dir));
         Ok(())
+    }
+
+    fn usable_candidate_dirs(candidates: &[SetupLinkDirCandidate]) -> Vec<PathBuf> {
+        candidates
+            .iter()
+            .filter(|candidate| candidate.is_usable())
+            .map(|candidate| candidate.path().to_path_buf())
+            .collect()
     }
 
     fn write_executable(dir: &Path, name: &str) -> Result<PathBuf, Box<dyn std::error::Error>> {

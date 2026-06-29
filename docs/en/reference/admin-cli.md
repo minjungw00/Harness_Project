@@ -139,15 +139,19 @@ Setup effects:
 - inspects whether selected command paths resolve through the current process
   `PATH`
 - may prompt in interactive text mode for safe command-availability choices:
-  create command links in a setup-suggested directory whose writability was
-  verified, write an approved shell startup `PATH` block, print a shell
-  command, or skip linking
+  create command links in an existing setup-suggested directory whose
+  writability was verified, create links after creating a missing conventional
+  user command directory under `HOME` when setup can safely create it and
+  verifies writability after creation, write an approved shell startup `PATH`
+  block, print a shell command, or skip linking
 - may update command links named by `--link-bin` or selected through the
   interactive prompt for both executable roles
 - may write a managed shell startup `PATH` block only after explicit
   interactive approval
 - reports a `PATH` action when a link directory is not visible to the current
   process; existing shells and agent host processes may need restart or reload
+- does not offer arbitrary missing paths as automatic interactive command-link
+  choices; use `--link-bin PATH` for an explicit missing directory
 - does not register a project unless a separate project or connection command
   selects a repository
 - does not create a public Volicord API method or record a user-owned judgment

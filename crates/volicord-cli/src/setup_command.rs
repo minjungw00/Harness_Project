@@ -27,8 +27,8 @@ use crate::{
         SetupStatus,
     },
     shell_path::{
-        candidate_setup_link_dirs, detect_command_on_path, path_directory_is_on_path,
-        paths_equivalent, verify_directory_writable, PATH_ENV,
+        detect_command_on_path, path_directory_is_on_path, paths_equivalent,
+        setup_link_dir_candidates, verify_directory_writable, SetupLinkDirCandidate, PATH_ENV,
     },
 };
 
@@ -1043,28 +1043,24 @@ fn plan_interactive_menu_choices(
     selected_paths: [&Path; 2],
 ) -> Result<InteractiveMenuPlan, SetupCommandError> {
     let path_env = process.env_var(PATH_ENV);
-    let link_bin = suggested_link_bin(process);
+    let link_candidate = suggested_link_bin_candidate(process);
     let mut shell_unavailable = None;
     let mut choices = Vec::new();
-    if let Some(link_bin) = link_bin.clone() {
+    if let Some(link_candidate) = link_candidate {
+        let link_bin = link_candidate.path().to_path_buf();
+        let requires_creation = link_candidate.requires_creation();
         let link_bin_on_path = path_directory_is_on_path(path_env.as_deref(), &link_bin);
         if link_bin_on_path {
             push_menu_choice(
                 &mut choices,
-                format!(
-                    "Create command links in {} (already on PATH).",
-                    link_bin.display()
-                ),
+                link_only_label(&link_bin, requires_creation, "already on PATH"),
                 InteractiveSetupChoice::LinkOnly(link_bin.clone()),
             );
         } else {
             match shell_startup_plan(process, &link_bin) {
                 Ok(plan) => push_menu_choice(
                     &mut choices,
-                    format!(
-                        "Create links and add a managed PATH block to {}.",
-                        plan.target_file.display()
-                    ),
+                    link_and_shell_label(&link_bin, requires_creation, &plan.target_file),
                     InteractiveSetupChoice::LinkAndShell {
                         link_bin: link_bin.clone(),
                         shell: plan,
@@ -1074,20 +1070,14 @@ fn plan_interactive_menu_choices(
             }
             push_menu_choice(
                 &mut choices,
-                format!(
-                    "Create command links in {}; PATH still needs an update.",
-                    link_bin.display()
-                ),
+                link_only_label(&link_bin, requires_creation, "PATH still needs an update"),
                 InteractiveSetupChoice::LinkOnly(link_bin.clone()),
             );
         }
 
         push_menu_choice(
             &mut choices,
-            format!(
-                "Create command links in {} and print the PATH command.",
-                link_bin.display()
-            ),
+            manual_link_label(&link_bin, requires_creation),
             InteractiveSetupChoice::Manual {
                 link_bin: Some(link_bin.clone()),
                 command: shell_path_command(process, &link_bin)?,
@@ -1115,6 +1105,49 @@ fn plan_interactive_menu_choices(
         choices,
         shell_unavailable,
     })
+}
+
+fn link_and_shell_label(link_bin: &Path, requires_creation: bool, target_file: &Path) -> String {
+    if requires_creation {
+        format!(
+            "Create {}, create links, and add a managed PATH block to {}.",
+            link_bin.display(),
+            target_file.display()
+        )
+    } else {
+        format!(
+            "Create links and add a managed PATH block to {}.",
+            target_file.display()
+        )
+    }
+}
+
+fn link_only_label(link_bin: &Path, requires_creation: bool, path_status: &str) -> String {
+    if requires_creation {
+        format!(
+            "Create {} and command links; {path_status}.",
+            link_bin.display()
+        )
+    } else {
+        format!(
+            "Create command links in {}; {path_status}.",
+            link_bin.display()
+        )
+    }
+}
+
+fn manual_link_label(link_bin: &Path, requires_creation: bool) -> String {
+    if requires_creation {
+        format!(
+            "Create {}, create links, and print the PATH command.",
+            link_bin.display()
+        )
+    } else {
+        format!(
+            "Create command links in {} and print the PATH command.",
+            link_bin.display()
+        )
+    }
 }
 
 fn confirm_interactive_choice(
@@ -1179,9 +1212,13 @@ fn is_yes(input: &str) -> bool {
 }
 
 fn suggested_link_bin(process: &impl SetupProcess) -> Option<PathBuf> {
-    candidate_setup_link_dirs(&|name| process.env_var(name))
+    suggested_link_bin_candidate(process).map(|candidate| candidate.path().to_path_buf())
+}
+
+fn suggested_link_bin_candidate(process: &impl SetupProcess) -> Option<SetupLinkDirCandidate> {
+    setup_link_dir_candidates(&|name| process.env_var(name))
         .into_iter()
-        .next()
+        .find(SetupLinkDirCandidate::is_usable)
 }
 
 fn shell_startup_plan(
@@ -2020,7 +2057,7 @@ mod tests {
         let fixture = TempRuntimeHome::new("setup-action-planner-kinds")?;
         let home = fixture.path().join("home");
         let local_bin = home.join(".local").join("bin");
-        fs::create_dir_all(&local_bin)?;
+        fs::create_dir_all(&home)?;
         let command_path = fixture.path().join("exe").join(volicord_binary_name());
         let process = FakeProcess {
             exe: command_path.clone(),
@@ -2070,6 +2107,7 @@ mod tests {
             vec![SetupActionKind::CommandLinks]
         );
         assert_eq!(actions_optional[0].path, Some(path_text(&local_bin)));
+        assert!(!local_bin.exists());
         Ok(())
     }
 
@@ -2120,7 +2158,8 @@ mod tests {
     ) -> Result<(), Box<dyn std::error::Error>> {
         let fixture = TempRuntimeHome::new("setup-menu-shell-order")?;
         let home = fixture.path().join("home");
-        fs::create_dir_all(home.join(".local").join("bin"))?;
+        let local_bin = home.join(".local").join("bin");
+        fs::create_dir_all(&home)?;
         let process = FakeProcess {
             exe: fixture.path().join("volicord"),
             env: BTreeMap::from([
@@ -2148,8 +2187,10 @@ mod tests {
             ]
         );
         assert!(menu.choices[0].label.contains("managed PATH block"));
+        assert!(menu.choices[0].label.contains("Create "));
         assert!(menu.choices[1].label.contains("PATH still needs an update"));
         assert!(menu.shell_unavailable.is_none());
+        assert!(!local_bin.exists());
         Ok(())
     }
 
@@ -2266,6 +2307,47 @@ mod tests {
         Ok(())
     }
 
+    #[test]
+    fn setup_json_reports_missing_user_bin_action_without_creating_it(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let fixture = TempRuntimeHome::new("setup-json-missing-user-bin")?;
+        let bin_dir = fixture.path().join("bin");
+        let home = fixture.path().join("home");
+        let local_bin = home.join(".local").join("bin");
+        fs::create_dir_all(&home)?;
+        let volicord = write_executable(&bin_dir, &volicord_binary_name())?;
+        write_executable(&bin_dir, &mcp_binary_name())?;
+        let process = FakeProcess {
+            exe: volicord,
+            env: BTreeMap::from([("HOME".to_owned(), home.clone().into_os_string())]),
+        };
+
+        let outcome = run_setup_command(
+            &[
+                "--home".to_owned(),
+                path_text(fixture.path()),
+                "--json".to_owned(),
+            ],
+            fixture.path(),
+            &process,
+        )?;
+
+        assert_eq!(outcome.status, CommandStatus::ActionRequired);
+        let value: Value = serde_json::from_str(&outcome.output)?;
+        assert_eq!(value["status"], "action_required");
+        assert!(value["actions_optional"]
+            .as_array()
+            .expect("actions_optional should be an array")
+            .iter()
+            .any(|action| action["id"] == "create_command_links"
+                && action["path"] == path_text(&local_bin)
+                && action["command"]
+                    .as_str()
+                    .is_some_and(|command| command.contains("--link-bin"))));
+        assert!(!local_bin.exists());
+        Ok(())
+    }
+
     #[cfg(unix)]
     #[test]
     fn setup_interactive_link_bin_never_prompts() -> Result<(), Box<dyn std::error::Error>> {
@@ -2308,9 +2390,10 @@ mod tests {
         let fixture = TempRuntimeHome::new("setup-interactive-shell")?;
         let exe_dir = fixture.path().join("exe");
         let home = fixture.path().join("home");
-        fs::create_dir_all(home.join(".local").join("bin"))?;
+        let link_bin = home.join(".local").join("bin");
+        fs::create_dir_all(&home)?;
         let volicord = write_executable(&exe_dir, &volicord_binary_name())?;
-        write_executable(&exe_dir, &mcp_binary_name())?;
+        let mcp = write_executable(&exe_dir, &mcp_binary_name())?;
         let process = FakeProcess {
             exe: volicord,
             env: BTreeMap::from([
@@ -2332,6 +2415,11 @@ mod tests {
         assert_eq!(first.status, CommandStatus::ActionRequired);
         assert!(first_terminal.output().contains("Managed block to write"));
 
+        assert_eq!(
+            fs::canonicalize(link_bin.join(volicord_binary_name()))?,
+            process.exe
+        );
+        assert_eq!(fs::canonicalize(link_bin.join(mcp_binary_name()))?, mcp);
         let zshrc = home.join(".zshrc");
         let first_text = fs::read_to_string(&zshrc)?;
         assert!(first_text.contains("# >>> volicord setup >>>"));
@@ -2398,7 +2486,7 @@ mod tests {
         let fixture = TempRuntimeHome::new("setup-interactive-unsupported-shell")?;
         let exe_dir = fixture.path().join("exe");
         let home = fixture.path().join("home");
-        fs::create_dir_all(home.join(".local").join("bin"))?;
+        fs::create_dir_all(&home)?;
         let volicord = write_executable(&exe_dir, &volicord_binary_name())?;
         write_executable(&exe_dir, &mcp_binary_name())?;
         let process = FakeProcess {
@@ -2436,7 +2524,7 @@ mod tests {
         let fixture = TempRuntimeHome::new("setup-interactive-skip")?;
         let exe_dir = fixture.path().join("exe");
         let home = fixture.path().join("home");
-        fs::create_dir_all(home.join(".local").join("bin"))?;
+        fs::create_dir_all(&home)?;
         let volicord = write_executable(&exe_dir, &volicord_binary_name())?;
         write_executable(&exe_dir, &mcp_binary_name())?;
         let process = FakeProcess {
@@ -2461,10 +2549,7 @@ mod tests {
         assert_eq!(outcome.status, CommandStatus::ActionRequired);
         assert!(terminal.output().contains("Skip command linking for now."));
         assert!(outcome.output.contains("command linking was skipped"));
-        assert!(!home
-            .join(".local/bin")
-            .join(volicord_binary_name())
-            .exists());
+        assert!(!home.join(".local").exists());
         assert!(!home.join(".zshrc").exists());
         Ok(())
     }
@@ -2476,7 +2561,7 @@ mod tests {
         let fixture = TempRuntimeHome::new("setup-interactive-link-only")?;
         let exe_dir = fixture.path().join("exe");
         let home = fixture.path().join("home");
-        fs::create_dir_all(home.join(".local").join("bin"))?;
+        fs::create_dir_all(&home)?;
         let volicord = write_executable(&exe_dir, &volicord_binary_name())?;
         let mcp = write_executable(&exe_dir, &mcp_binary_name())?;
         let process = FakeProcess {
@@ -2501,6 +2586,7 @@ mod tests {
         assert_eq!(outcome.status, CommandStatus::ActionRequired);
         assert!(!terminal.output().contains("Managed block to write"));
         let link_bin = home.join(".local/bin");
+        assert!(link_bin.is_dir());
         assert_eq!(
             fs::canonicalize(link_bin.join(volicord_binary_name()))?,
             volicord
@@ -2519,7 +2605,7 @@ mod tests {
         let fixture = TempRuntimeHome::new("setup-interactive-decline-shell")?;
         let exe_dir = fixture.path().join("exe");
         let home = fixture.path().join("home");
-        fs::create_dir_all(home.join(".local").join("bin"))?;
+        fs::create_dir_all(&home)?;
         let zshrc = home.join(".zshrc");
         let original_zshrc = "export PATH=\"$HOME/bin:$PATH\"\n";
         fs::write(&zshrc, original_zshrc)?;
@@ -2550,10 +2636,7 @@ mod tests {
             .output
             .contains("shell startup update was not approved"));
         assert_eq!(fs::read_to_string(&zshrc)?, original_zshrc);
-        assert!(!home
-            .join(".local/bin")
-            .join(volicord_binary_name())
-            .exists());
+        assert!(!home.join(".local").exists());
         Ok(())
     }
 
@@ -2563,7 +2646,7 @@ mod tests {
         let fixture = TempRuntimeHome::new("setup-interactive-eof")?;
         let exe_dir = fixture.path().join("exe");
         let home = fixture.path().join("home");
-        fs::create_dir_all(home.join(".local").join("bin"))?;
+        fs::create_dir_all(&home)?;
         let volicord = write_executable(&exe_dir, &volicord_binary_name())?;
         write_executable(&exe_dir, &mcp_binary_name())?;
         let process = FakeProcess {
@@ -2584,10 +2667,7 @@ mod tests {
 
         assert_eq!(outcome.status, CommandStatus::ActionRequired);
         assert!(outcome.output.contains("setup prompt cancelled"));
-        assert!(!home
-            .join(".local/bin")
-            .join(volicord_binary_name())
-            .exists());
+        assert!(!home.join(".local").exists());
         assert!(!home.join(".zshrc").exists());
         Ok(())
     }
