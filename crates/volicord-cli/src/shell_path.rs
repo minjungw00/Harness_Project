@@ -412,6 +412,78 @@ mod tests {
         Ok(())
     }
 
+    #[cfg(unix)]
+    #[test]
+    fn candidate_setup_link_dirs_does_not_offer_missing_user_bins_when_home_is_unwritable(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        use std::os::unix::fs::PermissionsExt;
+
+        let fixture = TempRuntimeHome::new("shell-path-unwritable-home-user-bin")?;
+        let home = fixture.path().join("home");
+        let local_bin = home.join(".local").join("bin");
+        let home_bin = home.join("bin");
+        fs::create_dir_all(&home)?;
+        let mut permissions = fs::metadata(&home)?.permissions();
+        permissions.set_mode(0o555);
+        fs::set_permissions(&home, permissions)?;
+
+        if path_directory_is_verified_writable(&home) {
+            restore_writable_dir(&home)?;
+            return Ok(());
+        }
+
+        let env = BTreeMap::from([("HOME".to_owned(), home.clone().into_os_string())]);
+        let candidates = setup_link_dir_candidates(&|name| env.get(name).cloned());
+        let dirs = usable_candidate_dirs(&candidates);
+
+        restore_writable_dir(&home)?;
+        assert!(dirs.is_empty());
+        assert!(candidates.contains(&SetupLinkDirCandidate::Unavailable(local_bin.clone())));
+        assert!(candidates.contains(&SetupLinkDirCandidate::Unavailable(home_bin.clone())));
+        assert!(!local_bin.exists());
+        assert!(!home_bin.exists());
+        Ok(())
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn candidate_setup_link_dirs_does_not_offer_missing_local_bin_when_parent_is_unwritable(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        use std::os::unix::fs::PermissionsExt;
+
+        let fixture = TempRuntimeHome::new("shell-path-unwritable-local-user-bin")?;
+        let home = fixture.path().join("home");
+        let local = home.join(".local");
+        let local_bin = local.join("bin");
+        let home_bin = home.join("bin");
+        fs::create_dir_all(&local)?;
+        let mut permissions = fs::metadata(&local)?.permissions();
+        permissions.set_mode(0o555);
+        fs::set_permissions(&local, permissions)?;
+
+        if path_directory_is_verified_writable(&local) {
+            restore_writable_dir(&local)?;
+            return Ok(());
+        }
+
+        let env = BTreeMap::from([("HOME".to_owned(), home.clone().into_os_string())]);
+        let candidates = setup_link_dir_candidates(&|name| env.get(name).cloned());
+        let dirs = usable_candidate_dirs(&candidates);
+
+        restore_writable_dir(&local)?;
+        assert!(!dirs.contains(&local_bin));
+        assert!(dirs.contains(&home_bin));
+        assert!(candidates.contains(&SetupLinkDirCandidate::Unavailable(local_bin.clone())));
+        assert!(
+            candidates.contains(&SetupLinkDirCandidate::MissingCreatableUserBin(
+                home_bin.clone()
+            ))
+        );
+        assert!(!local_bin.exists());
+        assert!(!home_bin.exists());
+        Ok(())
+    }
+
     #[test]
     fn candidate_setup_link_dirs_does_not_offer_arbitrary_missing_path_dirs(
     ) -> Result<(), Box<dyn std::error::Error>> {
