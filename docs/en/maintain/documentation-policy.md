@@ -62,6 +62,12 @@ turn the metadata model into practical scope guidance for high-traffic
 documents; they do not move exact product contracts out of focused Reference
 owners.
 
+Use [Diagram Policy](diagram-policy.md) when creating, reviewing, captioning, or
+maintaining diagrams. It defines diagram categories, caption expectations,
+arrow-semantics guidance, accuracy-owner expectations, and placement boundaries
+so workflow diagrams, component maps, runtime sequences, authority models,
+storage lifecycles, connection setup flows, and dependency graphs stay distinct.
+
 ## Ownership Boundaries
 
 Exact product contracts stay in the focused Reference owners selected from

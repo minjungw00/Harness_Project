@@ -206,8 +206,8 @@ shared_documents:
   normative_level: guide
   owner_area: onboarding
   created_on: '2026-04-23'
-  last_updated_on: '2026-06-24'
-  last_verified_on: '2026-06-24'
+  last_updated_on: '2026-06-30'
+  last_verified_on: '2026-06-30'
   applies_to:
   - volicord_workspace_0_1
   primary_audience:
@@ -2100,6 +2100,46 @@ documents:
   - Diagram-role and deeper-document linking guidance for major maintained documents.
   depends_on:
   - maintain.documentation-policy
+  - maintain.translation-policy
+  - maintain.diagram-policy
+  - maintain.validation
+  - maintain.brand-guidelines
+  - docs.doc-index
+  - terminology.map
+  - reference.index
+- doc_id: maintain.diagram-policy
+  path_en: docs/en/maintain/diagram-policy.md
+  path_ko: docs/ko/maintain/diagram-policy.md
+  kind: maintenance
+  summary: Maintenance policy for diagram categories, caption context, arrow semantics, accuracy owners,
+    placement boundaries, and diagram review.
+  normative_level: maintenance
+  translation_policy: semantic_parity
+  owner_area: documentation_maintenance
+  created_on: '2026-06-30'
+  last_updated_on: '2026-06-30'
+  last_verified_on: '2026-06-30'
+  applies_to:
+  - volicord_workspace_0_1
+  - doc_index_schema_v3
+  primary_audience:
+  - agents
+  - maintainers
+  - translators
+  - reviewers
+  - implementers
+  journeys:
+  - maintain
+  canonical_for:
+  - Diagram category selection for user workflow diagrams, component maps, runtime sequences, authority models,
+    storage lifecycles, connection setup flows, and dependency graphs.
+  - Diagram caption expectations for answered question, target reader, arrow semantics, owner or source of truth,
+    and omitted detail.
+  - Diagram placement boundaries, review rules, and accuracy-maintenance expectations for maintained
+    documentation.
+  depends_on:
+  - maintain.documentation-policy
+  - maintain.document-charters
   - maintain.translation-policy
   - maintain.validation
   - maintain.brand-guidelines

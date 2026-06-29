@@ -237,17 +237,19 @@ Document family: [Developer Documentation](../development/README.md),
 ## Maintain Documents
 
 Document family: [Documentation policy](documentation-policy.md),
-[Translation policy](translation-policy.md), [Brand Guidelines](brand-guidelines.md),
-[Validation](validation.md), this page, [`docs/doc-index.yaml`](../../doc-index.yaml),
-and [`docs/terminology-map.yaml`](../../terminology-map.yaml).
+[Translation policy](translation-policy.md), [Diagram Policy](diagram-policy.md),
+[Brand Guidelines](brand-guidelines.md), [Validation](validation.md), this page,
+[`docs/doc-index.yaml`](../../doc-index.yaml), and
+[`docs/terminology-map.yaml`](../../terminology-map.yaml).
 
 - Primary goal: Help authors, translators, reviewers, and agents keep the
   documentation set accurate, scoped, discoverable, and bilingual by meaning.
 - Intended reader: Documentation maintainers, translators, reviewers, agents,
   and implementers doing documentation-adjacent work.
 - Should own: Documentation governance, metadata use, terminology controls,
-  translation expectations, validation checks, brand presentation, document
-  charters, and repository working-rule interaction.
+  translation expectations, diagram category and caption rules, validation
+  checks, brand presentation, document charters, and repository working-rule
+  interaction.
 - Should not own: Product behavior, public API behavior, storage effects,
   security guarantees, schemas, Core authority semantics, runtime homes,
   generated records, QA results, acceptance decisions, close-readiness state,
