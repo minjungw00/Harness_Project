@@ -393,8 +393,11 @@ Required diagnostic JSON values:
 <a id="noninteractive-approval-behavior"></a>
 ## Noninteractive behavior
 
-Noninteractive commands must fail instead of prompting when required user input
-or host-controlled action is missing.
+Noninteractive commands must not prompt for missing user input or
+host-controlled action. They must report the missing condition through the
+normal result model: recoverable user or host action as `action_required`,
+usage mistakes as exit code `2`, and conflicts or runtime failures as exit
+code `1`.
 
 Rules:
 
