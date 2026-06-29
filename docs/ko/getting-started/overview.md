@@ -52,7 +52,7 @@ Volicord는 이런 대체를 보이게 하려고 존재합니다. 범위, 사용
 - Runtime Home 기록 생성 또는 재사용
 - `Product Repository` 등록 또는 재사용
 - Agent Connection 생성 또는 재사용
-- 각 `volicord connect` 호출에서 선택된 저장소 프로젝트 하나 연결
+- 각 `volicord connect` 호출에서 선택된 Product Repository 하나 연결
 - Codex 또는 Claude Code 호스트 설정 설치, 또는 일반 MCP 설정 내보내기
 - 설정 검증을 실행하고 `complete`, `action_required`, `failed` 보고
 

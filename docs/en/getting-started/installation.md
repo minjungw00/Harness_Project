@@ -133,7 +133,7 @@ volicord connect codex
 ```
 
 `/path/to/your-product-repo` is an example path for the Product Repository where
-you want the host to work.
+you want the agent to work.
 
 For the full first-run path, continue with the [Quickstart](quickstart.md). For
 host-specific details, see [Agent Host Setup](../guides/agent-host-setup.md).

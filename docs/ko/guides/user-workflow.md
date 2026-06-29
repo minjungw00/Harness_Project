@@ -94,7 +94,7 @@ Volicord는 사용자가 평소 말로 일하면서도 판단 경계를 볼 수 
 [Core 모델](../reference/core-model.md)이 담당하며, Agent Connection 경계는
 [Agent Connection 참조](../reference/agent-connection.md)가 담당합니다.
 
-작업에 대기 중인 판단이 있으면 선택된 저장소에서 아래 순서로 진행합니다.
+작업에 대기 중인 판단이 있으면 선택된 Product Repository에서 아래 순서로 진행합니다.
 
 ```sh
 volicord user status
@@ -107,9 +107,8 @@ volicord user judgment answer 1 1
 활성 작업 또는 선택된 작업의 대기 판단은 `volicord user judgments`로 봅니다.
 저장된 판단 요청, 맥락 요약, Core 생성 선택지는 `volicord user judgment show`로
 확인합니다. 기록할 때는 `volicord user judgment answer`로 그 판단에 대해 Core가
-보여 준 선택지만 기록합니다. 현재 디렉터리가 의도한 저장소가 아닐 때만
-`--repo PATH`를 사용하고, 활성 작업이 의도한 작업이 아닐 때만 `--task ID`를
-사용합니다.
+보여 준 선택지만 기록합니다. 현재 디렉터리가 의도한 Product Repository가 아닐 때만
+`--repo PATH`를 사용하고, 활성 작업이 의도한 작업이 아닐 때만 `--task ID`를 사용합니다.
 
 선택지 하나를 기록하면 그 판단 하나만 해결됩니다. "승인", "좋아 보여",
 "진행해" 같은 넓은 자연어가 모든 대기 권한 결과를 뜻하지는 않습니다. 설명용

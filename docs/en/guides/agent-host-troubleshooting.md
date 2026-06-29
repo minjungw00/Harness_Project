@@ -2,7 +2,7 @@
 
 Use this guide when `volicord setup`, `volicord connect`, `volicord connection
 ...`, or `volicord export mcp-config` reports a host setup problem. It assumes
-the simplified command model where Volicord detects repository projects and
+the simplified command model where Volicord detects Product Repositories and
 manages internal identities.
 
 Exact setup, doctor, and connection result-state meanings belong to
@@ -20,9 +20,9 @@ volicord project current
 volicord connections
 ```
 
-If the command is being run outside the intended repository, either `cd` into
-the repository or add `--repo PATH` to the project, connection, export, or user
-command you are checking.
+If the command is being run outside the intended Product Repository, either `cd`
+into that repository or add `--repo PATH` to the project, connection, export, or
+user command you are checking.
 
 `volicord setup` and `volicord doctor` answer different status questions. Setup
 reports whether the guided first-run setup experience still needs a user
@@ -83,15 +83,15 @@ volicord project current
 volicord project use
 ```
 
-Or select the repository explicitly:
+Or select the Product Repository explicitly:
 
 ```sh
 volicord project use /path/to/your-product-repo
 volicord connect codex --repo /path/to/your-product-repo
 ```
 
-`/path/to/your-product-repo` is an example Product Repository path for the Git
-repository you intended to use. The user-facing project name comes from the
+`/path/to/your-product-repo` is an example path for the Product Repository where
+you want the agent to work. The user-facing project name comes from the
 repository directory. Internal project identities are not recovery inputs.
 
 ## Host Cannot Be Selected
@@ -148,7 +148,7 @@ Bounded recovery:
 2. Fix the first failed setup or executable check it names.
 3. Rerun the original command with `--dry-run` when the command supports it.
 4. Rerun the real command only after the dry-run plan names the expected host
-   and repository.
+   and Product Repository.
 
 Use the exact failure text to choose the next action. Do not delete Runtime Home
 state or host configuration by hand unless an owner document or human operator
@@ -215,7 +215,7 @@ configuration process. The exported file is user-managed after export.
 
 Observable symptom: `volicord connection remove ...` reports that host
 configuration could not be removed, or a connection still appears for another
-repository.
+Product Repository.
 
 Bounded recovery:
 
@@ -225,7 +225,7 @@ volicord connection status codex
 volicord connections
 ```
 
-Removal first removes the selected repository membership. It removes the Agent
+Removal first removes the selected Product Repository membership. It removes the Agent
 Connection and managed host configuration only when no owned membership remains
 and safety checks permit it. It must not remove the `Product Repository`,
 project state, Core records, artifact storage, or unrelated host entries.

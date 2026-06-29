@@ -2,7 +2,7 @@
 
 `volicord setup`, `volicord connect`, `volicord connection ...`,
 `volicord export mcp-config`가 호스트 설정 문제를 보고할 때 이 가이드를
-사용합니다. 이 가이드는 Volicord가 저장소 프로젝트를 감지하고 내부 식별 정보를 관리하는
+사용합니다. 이 가이드는 Volicord가 Product Repository를 감지하고 내부 식별 정보를 관리하는
 단순화된 명령 모델을 전제로 합니다.
 
 정확한 setup, doctor, 연결 결과 상태 의미는
@@ -19,8 +19,8 @@ volicord project current
 volicord connections
 ```
 
-명령을 의도한 저장소 밖에서 실행하고 있다면 그 저장소로 `cd`하거나, 확인하려는
-project, connection, export, user 명령에 `--repo PATH`를 추가합니다.
+명령을 의도한 Product Repository 밖에서 실행하고 있다면 그 저장소로 `cd`하거나,
+확인하려는 project, connection, export, user 명령에 `--repo PATH`를 추가합니다.
 
 `volicord setup`과 `volicord doctor`는 서로 다른 상태 질문에 답합니다. setup은
 안내형 첫 실행 설정 경험에 사용자 동작이 아직 필요한지를 보고합니다. doctor는 저장된
@@ -78,15 +78,15 @@ volicord project current
 volicord project use
 ```
 
-또는 저장소를 명시적으로 선택합니다.
+또는 Product Repository를 명시적으로 선택합니다.
 
 ```sh
 volicord project use /path/to/your-product-repo
 volicord connect codex --repo /path/to/your-product-repo
 ```
 
-`/path/to/your-product-repo`는 사용하려던 Git 저장소의 Product Repository 예시
-경로입니다. 사용자에게 보이는 프로젝트 이름은 저장소 디렉터리에서 나옵니다. 내부
+`/path/to/your-product-repo`는 에이전트에게 작업을 요청할 Product Repository의 경로
+예시입니다. 사용자에게 보이는 프로젝트 이름은 저장소 디렉터리에서 나옵니다. 내부
 프로젝트 식별 정보는 복구 입력이 아닙니다.
 
 ## 호스트를 선택할 수 없음
@@ -141,7 +141,7 @@ volicord connection verify codex
 1. `volicord doctor`를 실행합니다.
 2. 이 명령이 이름 붙인 첫 실패 setup 또는 실행 파일 점검을 고칩니다.
 3. 원래 명령이 지원한다면 `--dry-run`으로 다시 실행합니다.
-4. Dry-run 계획이 기대한 호스트와 저장소를 이름 붙인 뒤에만 실제 명령을 다시
+4. Dry-run 계획이 기대한 호스트와 Product Repository를 이름 붙인 뒤에만 실제 명령을 다시
    실행합니다.
 
 정확한 실패 문구를 사용해 다음 동작을 고릅니다. 담당 문서나 인간 운영자가 의도한
@@ -206,7 +206,7 @@ volicord doctor
 ## 제거가 일부만 완료됨
 
 관찰 증상: `volicord connection remove ...`가 호스트 설정을 제거하지 못했다고
-보고하거나, 다른 저장소에 대한 연결이 계속 보입니다.
+보고하거나, 다른 Product Repository에 대한 연결이 계속 보입니다.
 
 제한된 복구:
 
@@ -216,7 +216,7 @@ volicord connection status codex
 volicord connections
 ```
 
-제거는 먼저 선택된 저장소 멤버십을 제거합니다. 소유 멤버십이 남지 않고 안전 점검이
+제거는 먼저 선택된 Product Repository 멤버십을 제거합니다. 소유 멤버십이 남지 않고 안전 점검이
 허용할 때만 Agent Connection과 관리 호스트 설정을 제거합니다. `Product Repository`,
 프로젝트 상태, Core 기록, 아티팩트 저장소, 관련 없는 호스트 항목을 제거하면 안
 됩니다.

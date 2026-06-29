@@ -9,10 +9,11 @@ and [MCP Transport](../reference/mcp-transport.md).
 
 ## Topology
 
-This topology map shows how one host entry can reach more than one explicitly
-connected repository through a host-level Agent Connection. Arrows show the
-configured binding and allowed membership relationships; they are not request
-execution order and do not imply access to every project in the Runtime Home.
+This topology map shows how one host entry can reach multiple explicitly
+connected Product Repositories through a host-level Agent Connection. Arrows
+show the configured binding and allowed membership relationships; they are not
+request execution order and do not imply access to every project in the Runtime
+Home.
 
 ```mermaid
 flowchart LR
@@ -29,21 +30,22 @@ flowchart LR
 ```
 
 One host entry starts one `volicord-mcp` process for one Agent Connection. That
-connection can route only to repositories explicitly connected to it. Adding one
-repository does not grant access to every project registered in the Runtime
-Home.
+connection can route only to Product Repositories explicitly connected to it.
+Adding one Product Repository does not grant access to every project registered
+in the Runtime Home.
 
 This topology fits host-level configuration:
 
 - Codex personal connection: `volicord connect codex`
 - Claude Code global connection: `volicord connect claude-code --global`
 
-Project-shared and host-local connections remain single-repository flows.
+Project-shared and host-local connections remain flows for one Product
+Repository.
 
-The paths below are example Product Repository paths for your own Git
-repositories.
+The paths below are example Product Repository paths for repositories where you
+want the agent to work.
 
-## Connect The First Repository
+## Connect The First Product Repository
 
 From the first Product Repository:
 
@@ -65,7 +67,7 @@ The command detects the Git repository root, registers or reuses the repository
 project, derives the visible project name from the repository directory, and
 stores internal registry identities in the Runtime Home.
 
-## Add Another Repository
+## Add Another Product Repository
 
 Run the same host and intent from the second Product Repository:
 
@@ -75,7 +77,7 @@ volicord connect codex
 volicord connection status codex
 ```
 
-Or select it explicitly:
+Or select the Product Repository explicitly:
 
 ```sh
 volicord connect codex --repo /path/to/billing-api
@@ -83,7 +85,7 @@ volicord connection status codex --repo /path/to/billing-api
 ```
 
 For the same host-level target, Volicord reuses the matching Agent Connection
-and adds the selected repository to Connection Projects. It does not require the
+and adds the selected Product Repository to Connection Projects. It does not require the
 operator to handle the internal connection identity.
 
 ## Inspect The Connection
@@ -101,7 +103,7 @@ symptom-specific recovery, use [Agent Host Troubleshooting](agent-host-troublesh
 
 ## What The Agent Should Do
 
-When a user asks which repositories are available, the agent calls:
+When a user asks which Product Repositories are available, the agent calls:
 
 ```json
 {"name":"volicord.list_projects","arguments":{}}
@@ -109,7 +111,7 @@ When a user asks which repositories are available, the agent calls:
 
 The MCP result lists only projects connected to the bound Agent Connection. Once
 more than one project is connected, a public Volicord method call that targets
-one repository must include an explicit `project_selector` returned by
+one Product Repository must include an explicit `project_selector` returned by
 `volicord.list_projects`:
 
 ```json
@@ -123,16 +125,16 @@ one repository must include an explicit `project_selector` returned by
 ```
 
 The agent must not invent a project from folder names, current working
-directory, MCP roots, host labels, repository labels, or memory. If a call
+directory, MCP roots, host labels, Product Repository labels, or memory. If a call
 without `project_selector` is rejected as ambiguous, call
 `volicord.list_projects`, choose the intended project, and retry with the
 returned value. Public MCP tool arguments do not require or accept Core request
 metadata such as `request_id`, `idempotency_key`, `expected_state_version`,
 `dry_run`, or `locale`.
 
-## Remove One Repository
+## Remove One Product Repository
 
-From the repository to remove:
+From the Product Repository to remove:
 
 ```sh
 cd /path/to/billing-api
@@ -140,25 +142,25 @@ volicord connection remove codex --dry-run
 volicord connection remove codex
 ```
 
-Or select it explicitly:
+Or select the Product Repository explicitly:
 
 ```sh
 volicord connection remove codex --repo /path/to/billing-api --dry-run
 volicord connection remove codex --repo /path/to/billing-api
 ```
 
-Removing one repository removes that repository's Connection Projects
-membership. It does not delete the `Product Repository`, project registration,
+Removing one Product Repository removes that Product Repository's Connection
+Projects membership. It does not delete the `Product Repository`, project registration,
 project state, Core task/evidence/run/artifact records, or unrelated host
-configuration. If other connected repositories remain, the host entry remains.
-If none remain, Volicord removes the matching managed host configuration when
-ownership and safety checks permit it.
+configuration. If other connected Product Repositories remain, the host entry
+remains. If none remain, Volicord removes the matching managed host
+configuration when ownership and safety checks permit it.
 
 ## Boundaries
 
-- Agent Connections access only explicitly connected repositories.
-- Multiple connected repositories require explicit `project_selector` in public
-  MCP tool calls unless the call is `volicord.list_projects`.
+- Agent Connections access only explicitly connected Product Repositories.
+- Multiple connected Product Repositories require explicit `project_selector`
+  in public MCP tool calls unless the call is `volicord.list_projects`.
 - A `Product Repository` is a product-file boundary and may contain selected
   shared host configuration, but it is not Core authority.
 - `Write Check` is Core-state compatibility, not OS permission.

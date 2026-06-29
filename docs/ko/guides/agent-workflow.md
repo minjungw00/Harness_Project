@@ -110,7 +110,7 @@ Core는 Volicord 상태의 로컬 기준 기록입니다. 상태, 승인, 증거
 - 대상 프로젝트가 알려져 있고 MCP 도구 스키마가 노출한다면 `project_selector`를 사용합니다.
 - 대상이 불분명하면 `volicord.list_projects`를 호출하고 목록에 있는 `project_selector` 하나를 고릅니다.
 - 연결된 프로젝트가 정확히 하나이면 프로젝트 선택을 생략해도 그 프로젝트로 라우팅될 수 있습니다. 그 밖의 경우에는 명시적 `project_selector`를 사용합니다.
-- 폴더 이름, 현재 작업 디렉터리, MCP roots, 호스트 라벨, 저장소 라벨, 기억에서 프로젝트를 추측하지 않습니다.
+- 폴더 이름, 현재 작업 디렉터리, MCP roots, 호스트 라벨, Product Repository 라벨, 기억에서 프로젝트를 추측하지 않습니다.
 
 `volicord.list_projects`는 읽기 전용 MCP 어댑터 유틸리티입니다. 바인딩된 Agent Connection에 명시적으로 연결된 프로젝트만 나열하며 공개 Core API 메서드가 아닙니다.
 
@@ -266,9 +266,8 @@ volicord user judgment answer 1 1
 Agent Connection은 `volicord.record_user_judgment`를 호출하거나, User Channel
 출처를 제공하거나, 채팅 답변을 권한을 지니는 수락으로 바꾸면 안 됩니다.
 답변이 User Channel을 통해 기록되지 않았다면 필요한 사용자 행동을 이름 붙이고, 그 판단에
-의존하지 않는 작업만 계속합니다. 현재 디렉터리가 의도한 저장소가 아닐 때만
-`--repo PATH`를 사용하고, 활성 작업이 의도한 작업이 아닐 때만 `--task ID`를
-사용합니다.
+의존하지 않는 작업만 계속합니다. 현재 디렉터리가 의도한 Product Repository가 아닐 때만
+`--repo PATH`를 사용하고, 활성 작업이 의도한 작업이 아닐 때만 `--task ID`를 사용합니다.
 
 상태 요약, 생성된 Markdown, 렌더링된 상태 보기, 채팅 문장은 대기 판단이나 선택지
 목록을 표시할 수 있습니다. 이것들은 지원 맥락일 뿐입니다. 최종 수락, 잔여 위험

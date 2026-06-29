@@ -95,8 +95,8 @@ authority meaning belongs to [Core Model](../reference/core-model.md), and
 Agent Connection boundaries belong to
 [Agent Connection Reference](../reference/agent-connection.md).
 
-Then use this sequence from the selected repository when a task has a pending
-judgment:
+Then use this sequence from the selected Product Repository when a task has a
+pending judgment:
 
 ```sh
 volicord user status
@@ -111,7 +111,8 @@ active or selected task. Use `volicord user judgment show` to inspect the stored
 request, context summary, and Core-generated options. Use
 `volicord user judgment answer` to record only an option shown by Core for that
 judgment. Use `--repo PATH` only when the current directory is not the intended
-repository, and `--task ID` only when the active task is not the intended task.
+Product Repository, and `--task ID` only when the active task is not the
+intended task.
 
 Recording one option resolves only that addressed judgment. Broad natural
 language such as "approved", "looks good", or "go ahead" does not imply every

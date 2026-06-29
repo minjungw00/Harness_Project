@@ -1,7 +1,7 @@
 # 에이전트 호스트 설정
 
 이 가이드는 Codex, Claude Code, 일반 MCP 호스트를 Volicord에 연결할 때
-사용합니다. 일반 경로는 호스트, 저장소, 연결 의도에서 시작하며, 내부 호스트와
+사용합니다. 일반 경로는 호스트, Product Repository, 연결 의도에서 시작하며, 내부 호스트와
 registry 값은 Volicord가 관리합니다.
 
 정확한 CLI 동작은 [관리 CLI 참조](../reference/admin-cli.md)가 담당합니다.
@@ -21,12 +21,12 @@ volicord connection status codex
 ```
 
 `export PATH=...` 줄은 현재 터미널 세션에만 영향을 줍니다.
-`/path/to/your-product-repo`는 호스트가 작업할 Git 저장소의 Product Repository
-예시 경로입니다. 연결 명령은 현재 디렉터리에서 Git 저장소 루트를 감지하고, 해당
+`/path/to/your-product-repo`는 에이전트에게 작업을 요청할 Product Repository의 경로
+예시입니다. 연결 명령은 현재 디렉터리에서 Git 저장소 루트를 감지하고, 해당
 저장소 프로젝트를 등록하거나 재사용하며, 저장소 디렉터리에서 보이는 프로젝트 이름을
 파생하고, 내부 registry 식별 정보를 선택된 `Volicord Runtime Home`에 저장합니다.
 
-프로세스 현재 디렉터리가 연결하려는 저장소가 아닐 때만 `--repo PATH`를 사용합니다.
+프로세스 현재 디렉터리가 대상 Product Repository가 아닐 때만 `--repo PATH`를 사용합니다.
 
 ```sh
 volicord connect codex --repo /path/to/your-product-repo
@@ -109,7 +109,7 @@ cd /path/to/your-product-repo
 volicord export mcp-config --output /tmp/volicord.mcp.json
 ```
 
-내보내기는 감지된 저장소 프로젝트와 설치 프로필을 사용합니다. 내보낸 설정이
+내보내기는 감지된 Product Repository와 설치 프로필을 사용합니다. 내보낸 설정이
 read-only 연결에 묶여야 하면 `--read-only`를 추가합니다. 내보낸 파일은 내보내기 뒤에도
 사용자 관리 파일로 남습니다.
 
@@ -127,7 +127,7 @@ volicord user judgment answer 1 1
 
 ## 제거
 
-선택한 저장소를 연결에서 제거합니다.
+선택한 Product Repository를 연결에서 제거합니다.
 
 ```sh
 volicord connection remove codex --dry-run
@@ -142,7 +142,7 @@ volicord connection remove codex
 
 | 증상 | 다음 문서 |
 |---|---|
-| 설치 프로필, 실행 파일, 저장소 감지가 준비되지 않았습니다. | [설치](../getting-started/installation.md) |
+| 설치 프로필, 실행 파일, Product Repository 감지가 준비되지 않았습니다. | [설치](../getting-started/installation.md) |
 | 연결이 `action_required` 또는 `failed`를 보고합니다. | [에이전트 호스트 문제 해결](agent-host-troubleshooting.md) |
 | 정확한 명령 동작이 불분명합니다. | [관리 CLI 참조](../reference/admin-cli.md) |
 | Runtime Home과 Product Repository 경계가 중요합니다. | [런타임 경계](../reference/runtime-boundaries.md) |

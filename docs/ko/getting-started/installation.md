@@ -123,7 +123,7 @@ cd /path/to/your-product-repo
 volicord connect codex
 ```
 
-`/path/to/your-product-repo`는 호스트가 작업할 Product Repository의 경로
+`/path/to/your-product-repo`는 에이전트에게 작업을 요청할 Product Repository의 경로
 예시입니다.
 
 전체 첫 실행 경로는 [빠른 시작](quickstart.md)을 계속 읽습니다. 호스트별

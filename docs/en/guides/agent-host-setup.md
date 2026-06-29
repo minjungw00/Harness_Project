@@ -1,8 +1,8 @@
 # Agent Host Setup
 
 Use this guide to connect Codex, Claude Code, or a generic MCP host to
-Volicord. The ordinary path starts with the host, repository, and connection
-intent; Volicord manages the internal host and registry values.
+Volicord. The ordinary path starts with the host, Product Repository, and
+connection intent; Volicord manages the internal host and registry values.
 
 Exact CLI behavior belongs to
 [Administrative CLI Reference](../reference/admin-cli.md). Agent Connection
@@ -23,14 +23,14 @@ volicord connection status codex
 ```
 
 The `export PATH=...` line affects only the current terminal session.
-`/path/to/your-product-repo` is an example Product Repository path for the Git
-repository you want the host to work on. The connection command detects the
+`/path/to/your-product-repo` is an example path for the Product Repository where
+you want the agent to work. The connection command detects the
 repository root from the current directory, registers or reuses that repository
 project, derives the visible project name from the repository directory, and
 stores internal registry identities in the selected `Volicord Runtime Home`.
 
-Use `--repo PATH` only when the process current directory is not the repository
-you intend to connect:
+Use `--repo PATH` only when the process current directory is not the target
+Product Repository:
 
 ```sh
 volicord connect codex --repo /path/to/your-product-repo
@@ -114,7 +114,7 @@ cd /path/to/your-product-repo
 volicord export mcp-config --output /tmp/volicord.mcp.json
 ```
 
-The export uses the detected repository project and the installation profile. Add
+The export uses the detected Product Repository and the installation profile. Add
 `--read-only` when the exported config should bind a read-only connection. The
 exported file remains user-managed after export.
 
@@ -132,7 +132,7 @@ volicord user judgment answer 1 1
 
 ## Removal
 
-Remove the selected repository from a connection:
+Remove the selected Product Repository from a connection:
 
 ```sh
 volicord connection remove codex --dry-run
@@ -148,7 +148,7 @@ unrelated host configuration.
 
 | Symptom | Next document |
 |---|---|
-| Installation profile, executable, or repository detection is not ready. | [Installation](../getting-started/installation.md) |
+| Installation profile, executable, or Product Repository detection is not ready. | [Installation](../getting-started/installation.md) |
 | Connection reports `action_required` or `failed`. | [Agent Host Troubleshooting](agent-host-troubleshooting.md) |
 | Exact command behavior is unclear. | [Administrative CLI Reference](../reference/admin-cli.md) |
 | Runtime Home and Product Repository boundaries matter. | [Runtime Boundaries](../reference/runtime-boundaries.md) |

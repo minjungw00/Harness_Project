@@ -23,7 +23,7 @@ are available for future terminals and agent hosts. If it prompts or reports
 `volicord connect`, opening a new terminal, or starting the host. Volicord
 cannot change the parent shell's current `PATH`.
 `/path/to/your-product-repo` is an example path for the Product Repository where
-you want the host to work. Volicord detects that repository from the current
+you want the agent to work. Volicord detects that repository from the current
 directory and uses the normal CLI defaults for a first host connection. Exact
 project naming, connection defaults, and internal identity behavior belong to
 [Administrative CLI Reference](../reference/admin-cli.md).
@@ -45,8 +45,8 @@ to [Administrative CLI Reference](../reference/admin-cli.md#agent-connection-res
 ## Choose A Host Intent
 
 Start with the default command when you are connecting the current user's local
-host setup. Add `--shared` only when the selected repository should carry the
-project-shared integration file, and use `--global` only for a host path that
+host setup. Add `--shared` only when the selected Product Repository should
+carry the project-shared integration file, and use `--global` only for a host path that
 supports user-wide configuration. Exact intent semantics belong to
 [Administrative CLI Reference](../reference/admin-cli.md#connection-intents-and-hosts);
 host availability requirements belong to

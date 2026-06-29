@@ -79,7 +79,7 @@ For public Volicord tool calls:
 - Use `project_selector` when the target project is known and the MCP tool schema exposes it.
 - If the target is unclear, call `volicord.list_projects` and choose one listed `project_selector`.
 - If exactly one project is connected, omitted project selection may route to that project; otherwise use an explicit `project_selector`.
-- Never guess a project from folder names, current working directory, MCP roots, host labels, repository labels, or memory.
+- Never guess a project from folder names, current working directory, MCP roots, host labels, Product Repository labels, or memory.
 
 `volicord.list_projects` is a read-only MCP adapter utility. It lists only projects explicitly connected to the bound Agent Connection and is not a public Core API method.
 
@@ -202,8 +202,8 @@ An Agent Connection must not call `volicord.record_user_judgment`, supply User
 Channel provenance, or convert a chat reply into authority-bearing acceptance.
 If the answer has not been recorded through the User Channel, name the needed
 user action and continue only with work that does not depend on that judgment.
-Use `--repo PATH` only when the current directory is not the intended
-repository, and `--task ID` only when the active task is not the intended task.
+Use `--repo PATH` only when the current directory is not the intended Product
+Repository, and `--task ID` only when the active task is not the intended task.
 
 Status summaries, generated Markdown, rendered projections, and chat text can
 display a pending judgment or option list. They are support context only; they
