@@ -107,9 +107,9 @@ Volicord security claims assume local actors use the documented Volicord contrac
 May claim:
 - Local product files can be inputs to Volicord checks or user-owned judgments.
 - Local runtime data location can be defined by storage/runtime owners.
-- Agent Connections can provide `actor_source=agent_connection:<connection_id>` provenance when [Agent Connection Reference](agent-connection.md), method owners, and this security owner allow the claim. The `connection_id` segment is an internal connection identity in that provenance string, not a user-facing authority token.
+- Agent Connections can provide `actor_source=agent_connection:<connection_id>` provenance when [Agent Connection Reference](agent-connection.md), method owners, and this security owner allow the claim. The `connection_id` segment is the process-binding/provenance spelling in that string, not a user-facing authority token or storage-field name.
 - The `User Channel` can provide `actor_source=local_user` provenance for authority-bearing user judgments when Core and method owners require it.
-- Connection Projects define the explicit internal project identity allowlist for an Agent Connection. User-facing commands select projects by repository root, project name, alias, or a project selector returned by Volicord.
+- Connection Projects define the explicit `project_internal_id` allowlist for an Agent Connection. User-facing commands select projects by repository root, project name, alias, or a `project_selector` returned by Volicord.
 - `operation_category` classifies an operation as `read`, `agent_workflow`, `user_only`, or `admin_local`.
 - Baseline actor provenance is cooperative local provenance, not cryptographic human identity.
 
@@ -250,7 +250,7 @@ Volicord does not allow readers or agents to infer authority from:
 
 - Broad approval.
 - Local path names.
-- Copied internal `connection_id` values.
+- Copied `connection_id` process-binding values.
 - Displayed `ArtifactRef` values.
 - Rendered `Projection` output.
 - `Product Repository` text.

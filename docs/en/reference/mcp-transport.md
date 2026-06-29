@@ -54,8 +54,9 @@ an internal connection binding:
 volicord-mcp --connection <connection_id>
 ```
 
-The internal `connection_id` is generated and stored by `volicord connect` or
-the export flow. Ordinary users should not need to type it in text-mode flows.
+The `<connection_id>` process-binding value comes from the stored
+`connection_internal_id` created by `volicord connect` or the export flow.
+Ordinary users should not need to type it in text-mode flows.
 
 Baseline command-line behavior:
 
@@ -64,7 +65,7 @@ Baseline command-line behavior:
   without reading stdin.
 - `volicord-mcp --check --connection <connection_id> --project <project_id>`
   runs the same startup validation and limits project-detail diagnostics to
-  one allowed internal project identity.
+  one allowed `project_internal_id` value.
 - `-h` and `--help` print usage and environment summary, then exit with code
   `0`.
 - `-V` and `--version` print `volicord-mcp <version>`, then exit with code `0`.
@@ -97,11 +98,11 @@ operation category, connection mode, or host trust state. The stdio process and
 `--check` use `VOLICORD_HOME` before entering startup validation. Help and
 version modes do not use it.
 
-Connection identity is supplied by `--connection <connection_id>` in generated
-host configuration or generic export output. This is an internal process
-binding for the selected Agent Connection, not a normal user-chosen value. The
-bound Agent Connection and Runtime Home registry state supply the connection
-mode, connected projects, and adapter-derived `actor_source` and
+Connection process binding is supplied by `--connection <connection_id>` in
+generated host configuration or generic export output. It names the stored
+`connection_internal_id` for the selected Agent Connection and is not a normal
+user-chosen value. The bound Agent Connection and Runtime Home registry state
+supply the connection mode, connected projects, and adapter-derived `actor_source` and
 `operation_category`. Project access is controlled by the selected Agent
 Connection's connected projects and repository-root resolution. No other
 process environment input is interpreted by the MCP process.
@@ -124,7 +125,8 @@ binding and the local registry records it depends on.
 Startup validation requires:
 
 - the Runtime Home registry exists and is valid
-- the configured internal `connection_id` exists
+- the configured `connection_id` process argument names an existing stored
+  `connection_internal_id`
 - the connection is enabled
 - the connection mode is supported
 - at least one connected project row is readable
@@ -151,7 +153,7 @@ reject because no connected project remains.
 
 One `volicord-mcp` process is bound to:
 
-- one internal `connection_id`
+- one `connection_id` process binding for a stored Agent Connection
 
 The Agent Connection supplies:
 
@@ -166,11 +168,12 @@ Changing project membership, mode, enabled state, or verification state takes
 effect through registry state; each new process reruns startup validation
 against the current registry state.
 
-MCP call arguments and other MCP request bodies cannot set connection identity,
-internal project identity, `actor_source`, `operation_category`, connection
-intent, or connection mode. Administrative connection-status output belongs to
-the `volicord` CLI; MCP startup diagnostics belong to `volicord-mcp --check`;
-public MCP tool arguments use the `project_selector` behavior described below.
+MCP call arguments and other MCP request bodies cannot set
+`connection_internal_id`, `project_internal_id`, `actor_source`,
+`operation_category`, connection intent, or connection mode. Administrative
+connection-status output belongs to the `volicord` CLI; MCP startup diagnostics
+belong to `volicord-mcp --check`; public MCP tool arguments use the
+`project_selector` behavior described below.
 
 <a id="configuration-preflight"></a>
 ## Configuration Preflight
@@ -187,13 +190,13 @@ project-detail block for each connected project, in this order:
 configuration: valid
 transport: stdio
 runtime_home: <absolute path>
-connection_id: <internal connection identity>
+connection_id: <connection_internal_id process-binding value>
 mode: workflow|read_only
 enabled: true|false
 allowed_projects: <count>
 available_projects: <count>
 verification_scope: startup_check_only
-project[0].project_id: <internal project identity or diagnostic identity>
+project[0].project_id: <project_internal_id diagnostic value>
 project[0].available: true|false
 project[0].unavailable_reason: <value or empty>
 project[0].repo_root: <path>
@@ -206,7 +209,7 @@ Project-detail rules:
   stable repository-root order.
 - With `--project <project_id>`, the supplied value must be in the connection's
   allowlist and only that project's detail block is emitted.
-- `connection_id` is the internal Agent Connection process binding.
+- `connection_id` is the process binding for the stored Agent Connection.
 - `allowed_projects` describes the Agent Connection allowlist as a whole.
 - Unavailable projects still emit every project-detail key.
   `unavailable_reason` is populated for unavailable projects and empty for
@@ -430,8 +433,8 @@ Closing stdin or terminating the child process ends the MCP session.
 Shutdown and reconnection rules:
 
 - SQLite state remains in the Runtime Home.
-- Restarting with the same internal `connection_id` reconnects to the same
-  Agent Connection and current registry state.
+- Restarting with the same `connection_id` process binding reconnects to the
+  same Agent Connection and current registry state.
 - Changing connection requires a new process or host configuration update.
 
 Runtime data location boundaries are owned by

@@ -174,7 +174,10 @@ identifier_preservation:
     - "ToolError.details"
     - "ErrorCode"
     - "SensitiveActionScope"
+    - "connection_internal_id"
     - "connection_id"
+    - "project_internal_id"
+    - "project_id"
     - "project_selector"
     - "connection.mode"
     - "actor_source"
@@ -1364,6 +1367,7 @@ terms:
     ko_user: "에이전트 연결"
     ko_reference_first_reference: "`Agent Connection`(에이전트 연결)"
     preserve_as_identifier:
+      - "connection_internal_id"
       - "connection_id"
       - "connection.mode"
       - "connection_intent"
@@ -1381,13 +1385,33 @@ terms:
       - en: "docs/en/reference/admin-cli.md"
         ko: "docs/ko/reference/admin-cli.md"
     notes:
-      - "Use for the local MCP host connection unit stored with an internal `connection_id`."
+      - "Use for the local MCP host connection unit stored with `connection_internal_id`."
+      - "Use `connection_id` only for the MCP process argument spelling, MCP startup diagnostics, provenance placeholders, or implementation-owned output fields that use that spelling."
       - "`connection.mode` is either `workflow` or `read_only`."
-      - "`connection_intent` is `personal`, `shared`, `global`, or internal export state for generic MCP config export."
+      - "`connection_intent` is `personal`, `shared`, or `global`; generic MCP config export is a separate administrative export flow, not a connection intent."
       - "Do not use as a synonym for Product Repository, Runtime Home, User Channel, or managed host configuration state."
       - "Do not make Agent Connection wording sound like OS permission, secret isolation, filesystem ACLs, or user authority."
+  connection_internal_id:
+    category: "storage_internal_identifier"
+    en: "connection_internal_id"
+    preserve_identifier: true
+    ko_reference: "`connection_internal_id`"
+    ko_user: "`connection_internal_id`"
+    preserve_as_identifier:
+      - "connection_internal_id"
+    primary_owner:
+      en: "docs/en/reference/storage-ddl.md"
+      ko: "docs/ko/reference/storage-ddl.md"
+    related_references:
+      - en: "docs/en/reference/storage-records.md"
+        ko: "docs/ko/reference/storage-records.md"
+      - en: "docs/en/reference/agent-connection.md"
+        ko: "docs/ko/reference/agent-connection.md"
+    notes:
+      - "Use for the storage Agent Connection primary key in `agent_connections` and `connection_projects`."
+      - "Do not use as an ordinary user-facing selector."
   connection_id:
-    category: "identifier"
+    category: "mcp_process_binding"
     en: "connection_id"
     preserve_identifier: true
     ko_reference: "`connection_id`"
@@ -1395,18 +1419,79 @@ terms:
     preserve_as_identifier:
       - "connection_id"
     primary_owner:
-      en: "docs/en/reference/agent-connection.md"
-      ko: "docs/ko/reference/agent-connection.md"
+      en: "docs/en/reference/mcp-transport.md"
+      ko: "docs/ko/reference/mcp-transport.md"
     related_references:
-      - en: "docs/en/reference/runtime-boundaries.md"
-        ko: "docs/ko/reference/runtime-boundaries.md"
+      - en: "docs/en/reference/agent-connection.md"
+        ko: "docs/ko/reference/agent-connection.md"
       - en: "docs/en/reference/api/schema-core.md"
         ko: "docs/ko/reference/api/schema-core.md"
       - en: "docs/en/reference/security.md"
         ko: "docs/ko/reference/security.md"
     notes:
-      - "Use as the identifier for an Agent Connection."
+      - "Use for the `volicord-mcp --connection <connection_id>` process argument spelling and `connection_id:` preflight diagnostic line."
+      - "Use in provenance placeholders such as `agent_connection:<connection_id>` where the owner defines that exact spelling."
+      - "For storage primary keys, use `connection_internal_id`."
       - "Do not describe a copied `connection_id` as user authority, OS permission, or proof of capability."
+  project_internal_id:
+    category: "storage_internal_identifier"
+    en: "project_internal_id"
+    preserve_identifier: true
+    ko_reference: "`project_internal_id`"
+    ko_user: "`project_internal_id`"
+    preserve_as_identifier:
+      - "project_internal_id"
+    primary_owner:
+      en: "docs/en/reference/storage-ddl.md"
+      ko: "docs/ko/reference/storage-ddl.md"
+    related_references:
+      - en: "docs/en/reference/storage-records.md"
+        ko: "docs/ko/reference/storage-records.md"
+      - en: "docs/en/reference/agent-connection.md"
+        ko: "docs/ko/reference/agent-connection.md"
+    notes:
+      - "Use for the storage project primary key in the Runtime Home registry and Connection Projects membership."
+      - "User-facing commands select projects by repository root, project name, alias, or a public selector returned by Volicord."
+  project_id:
+    category: "diagnostic_field"
+    en: "project_id"
+    preserve_identifier: true
+    ko_reference: "`project_id`"
+    ko_user: "`project_id`"
+    preserve_as_identifier:
+      - "project_id"
+    primary_owner:
+      en: "docs/en/reference/mcp-transport.md"
+      ko: "docs/ko/reference/mcp-transport.md"
+    related_references:
+      - en: "docs/en/reference/storage-ddl.md"
+        ko: "docs/ko/reference/storage-ddl.md"
+      - en: "docs/en/reference/api/schema-core.md"
+        ko: "docs/ko/reference/api/schema-core.md"
+      - en: "docs/en/reference/agent-connection.md"
+        ko: "docs/ko/reference/agent-connection.md"
+    notes:
+      - "Use only for implemented diagnostic line names, tightly scoped internal protocol contexts, and physical project-state schema fields that use this exact spelling."
+      - "Do not use as the public MCP project selection value; use `project_selector` for that surface."
+  project_selector:
+    category: "mcp_public_selector"
+    en: "project_selector"
+    preserve_identifier: true
+    ko_reference: "`project_selector`"
+    ko_user: "`project_selector`"
+    preserve_as_identifier:
+      - "project_selector"
+    primary_owner:
+      en: "docs/en/reference/mcp-transport.md"
+      ko: "docs/ko/reference/mcp-transport.md"
+    related_references:
+      - en: "docs/en/reference/agent-connection.md"
+        ko: "docs/ko/reference/agent-connection.md"
+      - en: "docs/en/reference/api/schema-core.md"
+        ko: "docs/ko/reference/api/schema-core.md"
+    notes:
+      - "Use for public MCP project selection values returned by `volicord.list_projects`."
+      - "Do not describe `project_selector` as a storage primary key or Runtime Home registry identity."
   connection_intent:
     category: "product_concept"
     en: "connection intent"
@@ -1417,7 +1502,6 @@ terms:
       - "personal"
       - "shared"
       - "global"
-      - "export"
     primary_owner:
       en: "docs/en/reference/agent-connection.md"
       ko: "docs/ko/reference/agent-connection.md"
@@ -1430,7 +1514,7 @@ terms:
         ko: "docs/ko/reference/storage-ddl.md"
     notes:
       - "Use for the user-facing Agent Connection intent choice of `personal`, `shared`, or `global`."
-      - "`export` is an internal storage value for generic MCP config export, not a normal direct host connection intent."
+      - "Generic MCP config export uses `volicord export mcp-config`; it is not a generic host connection intent."
   current_connection_context:
     category: "runtime_context"
     en: "current connection context"
@@ -1439,6 +1523,7 @@ terms:
     aliases_en:
       - "currently applied connection context"
     preserve_as_identifier:
+      - "connection_internal_id"
       - "connection_id"
       - "connection.mode"
       - "actor_source"
@@ -1464,8 +1549,8 @@ terms:
     ko_user: "연결 프로젝트"
     ko_reference_first_reference: "`Connection Projects`(연결 프로젝트)"
     preserve_as_identifier:
-      - "connection_id"
-      - "project_id"
+      - "connection_internal_id"
+      - "project_internal_id"
       - "connection_projects"
     primary_owner:
       en: "docs/en/reference/agent-connection.md"
@@ -1478,7 +1563,7 @@ terms:
       - en: "docs/en/reference/storage-ddl.md"
         ko: "docs/ko/reference/storage-ddl.md"
     notes:
-      - "Use for the explicit allowlist of internal `project_id` values for an Agent Connection."
+      - "Use for the explicit allowlist of internal `project_internal_id` values for an Agent Connection."
       - "User-facing commands select projects by repository root or project name."
       - "Do not imply all registered projects are included unless the owner explicitly says so."
   user_channel:

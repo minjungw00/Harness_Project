@@ -180,16 +180,16 @@ Registry 제약:
 
 - `runtime_home`은 단일 행 테이블입니다. Runtime Home 식별 정보, Runtime Home 경로, registry 데이터베이스 경로, 저장소 프로필, 스키마 버전, 메타데이터, 타임스탬프를 저장합니다. 저장된 `runtime_home_id`는 Runtime Home 기록을 식별하며 보안 보장이 아닙니다.
 - `installation_profile`은 Runtime Home에 대해 setup 시점의 `volicord` 명령, `volicord-mcp` 명령, bin 디렉터리, 기본 연결 모드, 메타데이터, 타임스탬프를 저장합니다. 호스트 신뢰, 사용자 권한, 공개 API 상태가 아닙니다.
-- `projects.project_internal_id`는 내부 프로젝트 식별 정보이자 기본 키입니다. `projects.project_name`은 표시 이름입니다. `projects.project_alias`는 CLI 선택 보조 값입니다. `projects.repo_root`는 저장소 루트 조회 키입니다. `projects.project_alias`, `projects.repo_root`, `projects.project_home`, `projects.state_db_path`는 고유합니다.
-- `project_aliases`는 alias를 내부 프로젝트 식별 정보에 매핑합니다. alias 행은 registry 선택 보조 값이지 프로젝트별 Core 권한 기록이 아닙니다.
+- `projects.project_internal_id`는 프로젝트 기록의 저장 기본 키입니다. `projects.project_name`은 표시 이름입니다. `projects.project_alias`는 CLI 선택 보조 값입니다. `projects.repo_root`는 저장소 루트 조회 키입니다. `projects.project_alias`, `projects.repo_root`, `projects.project_home`, `projects.state_db_path`는 고유합니다.
+- `project_aliases`는 alias를 `project_internal_id` 값에 매핑합니다. alias 행은 registry 선택 보조 값이지 프로젝트별 Core 권한 기록이 아닙니다.
 - `projects.state_db_path`는 저장 열로 유지됩니다. Store 애플리케이션 수준 현재 등록 검증은 운영 `ProjectRecord` 조회나 목록 조회, 프로젝트 상태 마이그레이션 또는 쓰기 가능 열기, Agent Connection 프로젝트 라우팅, Core 실행, setup 재사용, MCP 프로젝트 가용성 전에 이 값이 `project_home/state.sqlite`와 같은지 확인해야 합니다.
 - `projects.status`는 저장소 소유 값이며 기준 범위에서 유효한 값은 `active`뿐입니다.
-- `agent_connections.connection_internal_id`는 내부 연결 식별 정보이자 기본 키입니다. 이 테이블은 호스트 종류, `intent`에 저장되는 연결 의도, 호스트 범위, 선택적 내부 프로젝트 식별 정보, 서버 이름, 설정 대상, 모드, 활성 상태, 관리 fingerprint, 검증 요약 상태, 검증 보고서 JSON, 사용자 동작 JSON, 메타데이터, 타임스탬프를 저장합니다.
+- `agent_connections.connection_internal_id`는 Agent Connection 기록의 저장 기본 키입니다. 이 테이블은 호스트 종류, `intent`에 저장되는 연결 의도, 호스트 범위, 선택적 `project_internal_id`, 서버 이름, 설정 대상, 모드, 활성 상태, 관리 fingerprint, 검증 요약 상태, 검증 보고서 JSON, 사용자 동작 JSON, 메타데이터, 타임스탬프를 저장합니다.
 - `agent_connections.intent`는 `personal`, `shared`, `global`로 제한됩니다.
 - `agent_connections.host_scope`는 `host_kind`와 함께 제한됩니다. Codex는 `user`와 `project`를 지원하고, Claude Code는 `local`, `project`, `user`를 지원하며, generic export는 `export`를 지원합니다.
 - `agent_connections.mode`는 `read_only` 또는 `workflow`로 제한됩니다.
 - `agent_connections.last_verification_report_json`은 최신 검증 보고서 JSON 객체를 저장합니다. `agent_connections.last_user_actions_json`은 최신 사용자 동작 JSON 배열을 저장합니다.
-- `connection_projects`는 Agent Connection 하나에 대한 명시적 프로젝트 허용 목록입니다. 내부 연결 식별 정보와 내부 프로젝트 식별 정보로 멤버십을 저장합니다. 아직 멤버십이 남은 프로젝트나 연결 삭제는 제한됩니다.
+- `connection_projects`는 Agent Connection 하나에 대한 명시적 프로젝트 허용 목록입니다. `connection_internal_id`와 `project_internal_id`로 멤버십을 저장합니다. 아직 멤버십이 남은 프로젝트나 연결 삭제는 제한됩니다.
 - `schema_migrations`는 적용된 registry 스키마 버전을 기록합니다. 마이그레이션 실행 의미는 [저장소 버전 관리](storage-versioning.md)가 담당합니다.
 
 ## 프로젝트 `state.sqlite`

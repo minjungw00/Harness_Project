@@ -48,14 +48,16 @@ This document does not own:
 ## Agent Connection
 
 An Agent Connection is a local MCP host connection unit stored under the
-`Volicord Runtime Home`. It has an internal `connection_id`, but ordinary
-text-mode user flows select it by host, connection intent, and repository root
+`Volicord Runtime Home` with `connection_internal_id`. Generated MCP startup
+uses the `connection_id` process-argument spelling, but ordinary text-mode user
+flows select the connection by host, connection intent, and repository root
 through the commands owned by [Administrative CLI](admin-cli.md).
 
 One `volicord-mcp` process is bound to one Agent Connection. Generated host
-configuration may contain the internal connection identity so the host can
-start that process, but that identity is not a user authority token and is not
-required as a normal command input.
+configuration may contain a `connection_id` process-binding value derived from
+the stored `connection_internal_id` so the host can start that process, but
+that value is not a user authority token and is not required as a normal
+command input.
 
 Stored Agent Connection fields include:
 
@@ -106,9 +108,10 @@ Rules:
   does not expose user-only judgment recording.
 - `connection.mode=read_only` exposes read/project discovery operations. It is
   not a workflow-write capability.
-- `connection_id`, connection mode, connection intent, host configuration, or
-  MCP server instructions are not OS permissions, host trust, secret isolation,
-  filesystem ACLs, network policy, or user authority.
+- `connection_internal_id`, a `connection_id` process binding, connection mode,
+  connection intent, host configuration, or MCP server instructions are not OS
+  permissions, host trust, secret isolation, filesystem ACLs, network policy, or
+  user authority.
 
 Storage record families and DDL belong to [Storage Records](storage-records.md)
 and [Storage DDL](storage-ddl.md). Administrative creation, update,
@@ -210,12 +213,13 @@ tool call. It is derived by the local adapter from the bound Agent Connection,
 the selected project, the method being called, and adapter-owned invocation
 facts. It is not a public request payload.
 
-An MCP session is bound at adapter startup to exactly one internal
-`connection_id`. Project selection is resolved from the Agent Connection's
-registered repository roots and host-provided project context where available.
-Public MCP tool input schemas must not expose internal request envelopes,
-protocol metadata, `connection_id`, `project_id`, `actor_source`,
-`operation_category`, or verification-basis fields as caller-owned inputs.
+An MCP session is bound at adapter startup to exactly one `connection_id`
+process-binding value that names the stored `connection_internal_id`. Project
+selection is resolved from the Agent Connection's registered repository roots
+and host-provided project context where available. Public MCP tool input schemas
+must not expose internal request envelopes, protocol metadata, `connection_id`,
+`project_id`, `actor_source`, `operation_category`, or verification-basis fields
+as caller-owned inputs.
 
 Project selection for public MCP method calls is deterministic:
 

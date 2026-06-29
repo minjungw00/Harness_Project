@@ -95,8 +95,8 @@ Not supported:
 - The CLI has no `serve`, `server`, or daemon command.
 - Administrative commands are not public Volicord API methods and must not be
   added to the public method list.
-- Text-mode user flows must not require users to type internal project
-  identities, Agent Connection identities, host config keys, protocol envelopes, or stored
+- Text-mode user flows must not require users to type `project_internal_id`,
+  `connection_internal_id`, host config keys, protocol envelopes, or stored
   registry fields.
 
 <a id="runtime-home-selection"></a>
@@ -154,7 +154,7 @@ Repository root detection:
   [Runtime Home/Product Repository separation contract](runtime-boundaries.md#runtime-home-product-repository-separation).
 
 `volicord project use [PATH]` registers or reuses the detected repository root.
-Registration creates an internal project identity, a user-facing project name, a
+Registration creates a `project_internal_id`, a user-facing project name, a
 project home under the Runtime Home, and project-local state as needed. The
 default project name is derived from the repository directory and made unique
 inside the Runtime Home when needed.
@@ -166,8 +166,8 @@ directory. It does not create a project registration.
 root, status, and diagnostic availability.
 
 `volicord project rename NAME [--repo PATH]` changes the user-facing project
-name for the selected repository. It does not change the internal project
-identity, repository root, project home, or Core state.
+name for the selected repository. It does not change `project_internal_id`,
+repository root, project home, or Core state.
 
 `volicord project forget [PATH|NAME]` removes the selected project registration
 only when doing so does not orphan active Agent Connection membership or project
@@ -200,9 +200,10 @@ Connection modes:
 
 The internal host configuration key `server_name` defaults to `volicord`.
 Ordinary CLI flows do not expose a server-name option. A generated host
-configuration may contain an internal connection identity, server name, and command
-arguments so that the host can start `volicord-mcp`; those values are not user
-authority tokens and are not required as text-mode command inputs.
+configuration may contain a `connection_id` process-binding value derived from
+the stored `connection_internal_id`, server name, and command arguments so that
+the host can start `volicord-mcp`; those values are not user authority tokens
+and are not required as text-mode command inputs.
 
 Ordinary `volicord connect` commands use the saved profile in the resolved
 Runtime Home instead of asking for an MCP command path or Runtime Home path.
@@ -215,7 +216,7 @@ environment must resolve through `PATH`.
 ## Agent Connection commands
 
 Connection selection uses host, intent, and repository root. The command derives
-or looks up the internal connection identity.
+or looks up the stored `connection_internal_id`.
 
 | Command | Runtime Home registry effect | Host configuration effect | Verification effect |
 |---|---|---|---|
@@ -276,8 +277,10 @@ Rules:
 - It may create or update internal registry state needed for the exported
   command to start a bound `volicord-mcp` process.
 - Omission of `--read-only` uses workflow mode.
-- When `--output` is omitted, the configuration is written to stdout. When
-  present, `--output` names the exact output file.
+- When `--output PATH` is present, the configuration is written to that exact
+  output file. When `--output` is omitted, the command writes the default MCP
+  config file for the resolved repository context, using `volicord.mcp.json` as
+  the default filename.
 - Exported configuration remains user-managed after export. Volicord must not
   claim that an arbitrary external host loaded, trusted, approved, initialized,
   or exposed it.
@@ -337,8 +340,8 @@ Dry-run does not:
 - create or modify SQLite databases
 - create SQLite WAL or SHM files
 - apply registry or project-state migrations
-- register or update projects, Agent Connections, Connection Projects, setup
-  profile rows, or verification status rows
+- register or update projects, Agent Connections, Connection Projects,
+  installation profile rows, or verification status rows
 - create, modify, or remove host configuration files
 - create, modify, or remove `Product Repository` files or directories
 - create, modify, or remove generic export files
