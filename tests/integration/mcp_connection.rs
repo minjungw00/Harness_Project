@@ -96,6 +96,47 @@ fn workflow_mutation_generates_internal_request_metadata() -> Result<(), Box<dyn
 }
 
 #[test]
+fn public_mcp_arguments_reject_internal_envelope_and_invocation_fields(
+) -> Result<(), Box<dyn Error>> {
+    let fixture = CoreFixture::new("mcp-integration-internal-args")?;
+    let adapter = adapter(&fixture)?;
+
+    for (field, value) in [
+        ("envelope", json!({ "project_id": fixture.project_id() })),
+        ("project_id", json!(fixture.project_id())),
+        ("request_id", json!("req_forged")),
+        ("idempotency_key", json!("idem_forged")),
+        ("expected_state_version", json!(0)),
+        ("dry_run", json!(true)),
+        ("locale", json!("en-US")),
+        ("actor_source", json!("agent_connection:forged")),
+        ("operation_category", json!("agent_workflow")),
+        ("mode", json!("workflow")),
+        ("connection_id", json!("forged_connection")),
+    ] {
+        let before = fixture.counts()?;
+        let mut args = json!({ "detail": "workflow" });
+        args[field] = value;
+
+        let error = match adapter.call_tool("volicord.status", args) {
+            Ok(_) => panic!("{field} should be rejected before Core"),
+            Err(error) => error,
+        };
+
+        assert!(
+            error.to_string().contains(field),
+            "error for {field} should name the rejected field: {error}"
+        );
+        assert_eq!(
+            fixture.counts()?,
+            before,
+            "{field} rejection should not create Core storage effects"
+        );
+    }
+    Ok(())
+}
+
+#[test]
 fn read_only_mode_allows_read_close_check_and_rejects_state_changing_close(
 ) -> Result<(), Box<dyn Error>> {
     let fixture = CoreFixture::new("mcp-integration-read-only-close")?;

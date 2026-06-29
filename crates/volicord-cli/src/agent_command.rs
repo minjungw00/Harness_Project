@@ -55,7 +55,7 @@ const DEFAULT_MCP_COMMAND: &str = "volicord-mcp";
 const DEFAULT_SERVER_NAME: &str = "volicord";
 const DEFAULT_TIMEOUT: Duration = Duration::from_secs(5);
 
-const WORKFLOW_TOOL_NAMES: [&str; 9] = [
+const WORKFLOW_TOOL_NAMES: [&str; 10] = [
     "volicord.intake",
     "volicord.update_scope",
     "volicord.status",
@@ -63,12 +63,13 @@ const WORKFLOW_TOOL_NAMES: [&str; 9] = [
     "volicord.stage_artifact",
     "volicord.record_run",
     "volicord.request_user_judgment",
+    "volicord.check_close",
     "volicord.close_task",
     "volicord.list_projects",
 ];
 const READ_ONLY_TOOL_NAMES: [&str; 3] = [
     "volicord.status",
-    "volicord.close_task",
+    "volicord.check_close",
     "volicord.list_projects",
 ];
 
@@ -3793,5 +3794,32 @@ mod tests {
             CONNECTION_MODE_WORKFLOW
         );
         assert!(parse_connection_mode("full").is_err());
+    }
+
+    #[test]
+    fn mcp_tool_validation_matches_public_connection_modes() {
+        let workflow_tools = WORKFLOW_TOOL_NAMES
+            .iter()
+            .map(|tool| (*tool).to_owned())
+            .collect::<Vec<_>>();
+        assert!(validate_tools_for_mode(CONNECTION_MODE_WORKFLOW, &workflow_tools).is_ok());
+
+        let read_only_tools = READ_ONLY_TOOL_NAMES
+            .iter()
+            .map(|tool| (*tool).to_owned())
+            .collect::<Vec<_>>();
+        assert!(validate_tools_for_mode(CONNECTION_MODE_READ_ONLY, &read_only_tools).is_ok());
+        assert!(!read_only_tools
+            .iter()
+            .any(|tool| tool == "volicord.close_task"));
+
+        let stale_read_only_tools = vec![
+            "volicord.status".to_owned(),
+            "volicord.close_task".to_owned(),
+            "volicord.list_projects".to_owned(),
+        ];
+        let error =
+            validate_tools_for_mode(CONNECTION_MODE_READ_ONLY, &stale_read_only_tools).unwrap_err();
+        assert!(error.contains("volicord.check_close"));
     }
 }

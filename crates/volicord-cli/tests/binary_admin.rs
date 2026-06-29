@@ -41,30 +41,37 @@ fn binary_help_uses_agent_connection_model() -> Result<(), Box<dyn Error>> {
     assert!(text.contains("volicord connect [HOST]"));
     assert!(text.contains("volicord connections [--repo PATH]"));
     assert!(text.contains("volicord connection status [HOST]"));
-    assert!(!text.contains("--export-path"));
-    assert!(!text.contains("--export-dir"));
+    assert_removed_low_level_flags_absent(&text);
     assert!(!text.contains("volicord agent connect"));
-    assert!(!text.contains("--connection-id ID"));
-    assert!(!text.contains("--mode read_only|workflow"));
-    assert!(!text.contains("--repo-root PATH"));
-    assert!(!text.contains("--server-name"));
-    assert!(!text.contains("--allow-repository-write"));
-    assert!(!text.contains("--replace-managed"));
     assert!(text.contains("volicord user judgment answer INDEX_OR_ID OPTION_INDEX_OR_ID"));
-    assert!(!text.contains("--project-id ID"));
     assert!(text.contains("User Channel"));
 
     let unknown_user = run_without_home(["user", "not-a-real-command", "--repo", "."])?;
     assert_eq!(unknown_user.status.code(), Some(2));
     assert!(stderr(&unknown_user).contains("unknown user command: not-a-real-command"));
 
+    let connect_help = run_without_home(["connect", "--help"])?;
+    assert_success(&connect_help);
+    let connect_text = stdout(&connect_help);
+    assert!(connect_text.contains("volicord connect [HOST]"));
+    assert!(connect_text.contains("--repo PATH"));
+    assert!(connect_text.contains("--shared|--global"));
+    assert!(connect_text.contains("--read-only"));
+    assert_removed_low_level_flags_absent(&connect_text);
+
+    let connection_help = run_without_home(["connection", "status", "--help"])?;
+    assert_success(&connection_help);
+    let connection_text = stdout(&connection_help);
+    assert!(connection_text.contains("volicord connection status [HOST]"));
+    assert!(connection_text.contains("volicord connection verify [HOST]"));
+    assert_removed_low_level_flags_absent(&connection_text);
+
     let export_help = run_without_home(["export", "mcp-config", "--help"])?;
     assert_success(&export_help);
     let export_text = stdout(&export_help);
     assert!(export_text.contains("volicord export mcp-config"));
     assert!(export_text.contains("--output PATH"));
-    assert!(!export_text.contains("--export-path"));
-    assert!(!export_text.contains("--export-dir"));
+    assert_removed_low_level_flags_absent(&export_text);
     Ok(())
 }
 
@@ -171,6 +178,51 @@ fn project_commands_use_current_git_repository_without_user_ids() -> Result<(), 
     assert!(text.contains("name: product-repo"));
     assert!(!text.contains(&project_internal_id));
     assert!(!text.contains("project_internal_id"));
+
+    let rename = run_with_home_env(
+        runtime_home.path(),
+        [
+            "project",
+            "rename",
+            "renamed-product",
+            "--repo",
+            path_text(&repo_root).as_str(),
+            "--json",
+        ],
+        &[],
+    )?;
+    assert_success(&rename);
+    let rename_json = json_stdout(&rename)?;
+    assert_eq!(rename_json["status"], "renamed");
+    assert_eq!(rename_json["project"]["project_name"], "renamed-product");
+    assert_eq!(
+        rename_json["project"]["project_internal_id"],
+        project_internal_id
+    );
+
+    let renamed_current =
+        run_with_home_env_in_dir(runtime_home.path(), ["project", "current"], &[], &nested)?;
+    assert_success(&renamed_current);
+    let renamed_text = stdout(&renamed_current);
+    assert!(renamed_text.contains("name: renamed-product"));
+    assert!(!renamed_text.contains("project_internal_id"));
+
+    let forget = run_with_home_env_in_dir(
+        runtime_home.path(),
+        ["project", "forget", "renamed-product", "--json"],
+        &[],
+        &nested,
+    )?;
+    assert_success(&forget);
+    let forget_json = json_stdout(&forget)?;
+    assert_eq!(forget_json["status"], "forgotten");
+    assert_eq!(forget_json["project_state_deleted"], false);
+    assert_eq!(list_projects(runtime_home.path())?.len(), 0);
+
+    let forgotten_current =
+        run_with_home_env_in_dir(runtime_home.path(), ["project", "current"], &[], &nested)?;
+    assert_success(&forgotten_current);
+    assert!(stdout(&forgotten_current).contains("project not registered"));
     Ok(())
 }
 
@@ -307,25 +359,23 @@ fn connect_defaults_to_workflow_mode() -> Result<(), Box<dyn Error>> {
     let runtime_home = TempRuntimeHome::new("cli-bin-connection-workflow")?;
     let repo_root = runtime_home.create_product_repo("product-repo")?;
     fs::create_dir_all(repo_root.join(".git"))?;
+    let nested = repo_root.join("src/app");
+    fs::create_dir_all(&nested)?;
     let bin_dir = runtime_home.path().join("bin");
+    let codex_home = runtime_home.path().join("codex-home");
     write_fake_codex(&bin_dir)?;
     let mcp = write_fake_mcp(&bin_dir)?;
     assert_success(&run_setup(runtime_home.path(), &mcp)?);
 
-    let output = run_with_home_env(
+    let output = run_with_home_env_in_dir(
         runtime_home.path(),
-        [
-            "connect",
-            "codex",
-            "--repo",
-            path_text(&repo_root).as_str(),
-            "--shared",
-            "--json",
-        ],
+        ["connect", "codex", "--json"],
         &[
             ("PATH", path_env(&[bin_dir.as_path()])),
+            ("CODEX_HOME", path_text(&codex_home)),
             ("VOLICORD_TEST_CONNECTION_MODE", "workflow".to_owned()),
         ],
+        &nested,
     )?;
     assert_success(&output);
     let value = json_stdout(&output)?;
@@ -334,9 +384,15 @@ fn connect_defaults_to_workflow_mode() -> Result<(), Box<dyn Error>> {
         .expect("connection_id should be present");
 
     assert_eq!(value["connection"]["mode"], CONNECTION_MODE_WORKFLOW);
+    assert_eq!(value["connection"]["host_kind"], "codex");
+    assert_eq!(value["connection"]["host_scope"], "user");
+    assert_eq!(value["status"], "complete");
     let record = agent_connection_record(runtime_home.path(), connection_id)?
         .expect("connection should be stored");
     assert_eq!(record.mode, CONNECTION_MODE_WORKFLOW);
+    let projects = list_connection_projects(runtime_home.path(), connection_id)?;
+    assert_eq!(projects.len(), 1);
+    assert_eq!(projects[0].project.repo_root, repo_root);
     Ok(())
 }
 
@@ -519,6 +575,18 @@ fn connection_status_mode_and_remove_use_natural_selectors() -> Result<(), Box<d
         2
     );
 
+    let connections = run_with_home_env(
+        runtime_home.path(),
+        ["connections", "--repo", path_text(&repo_a).as_str()],
+        &[("CODEX_HOME", path_text(&codex_home))],
+    )?;
+    assert_success(&connections);
+    let connections_text = stdout(&connections);
+    assert!(connections_text.contains("codex\tpersonal\tworkflow"));
+    assert!(connections_text.contains(&path_text(&repo_a)));
+    assert!(connections_text.contains(&path_text(&repo_b)));
+    assert!(!connections_text.contains(&connection_id));
+
     let status = run_with_home_env(
         runtime_home.path(),
         [
@@ -536,6 +604,31 @@ fn connection_status_mode_and_remove_use_natural_selectors() -> Result<(), Box<d
         json_stdout(&status)?["connection"]["connection_id"],
         connection_id
     );
+
+    let verify = run_with_home_env(
+        runtime_home.path(),
+        [
+            "connection",
+            "verify",
+            "codex",
+            "--repo",
+            path_text(&repo_a).as_str(),
+            "--json",
+        ],
+        &[
+            ("PATH", path_env(&[bin_dir.as_path()])),
+            ("CODEX_HOME", path_text(&codex_home)),
+            ("VOLICORD_TEST_CONNECTION_MODE", "workflow".to_owned()),
+        ],
+    )?;
+    assert_success(&verify);
+    let verify_json = json_stdout(&verify)?;
+    assert_eq!(verify_json["status"], "complete");
+    assert!(verify_json["verification"]["tools"]
+        .as_array()
+        .expect("verified tools should be an array")
+        .iter()
+        .any(|tool| tool == "volicord.check_close"));
 
     let mode = run_with_home_env(
         runtime_home.path(),
@@ -812,6 +905,25 @@ fn run_without_home<const N: usize>(args: [&str; N]) -> Result<Output, Box<dyn E
     Ok(Command::new(volicord_bin()).args(args).output()?)
 }
 
+fn assert_removed_low_level_flags_absent(text: &str) {
+    for removed in [
+        "--export-path",
+        "--export-dir",
+        "--connection-id ID",
+        "--mode read_only|workflow",
+        "--repo-root PATH",
+        "--server-name",
+        "--allow-repository-write",
+        "--replace-managed",
+        "--project-id ID",
+    ] {
+        assert!(
+            !text.contains(removed),
+            "help output should not contain removed low-level flag {removed}:\n{text}"
+        );
+    }
+}
+
 fn run_with_home_env<const N: usize>(
     runtime_home: &Path,
     args: [&str; N],
@@ -963,9 +1075,9 @@ fn write_fake_mcp(dir: &Path) -> Result<PathBuf, Box<dyn Error>> {
          *'\"method\":\"initialize\"'*) printf '%s\\n' '{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{\"protocolVersion\":\"2025-11-25\",\"capabilities\":{\"tools\":{}},\"serverInfo\":{\"name\":\"volicord-mcp\",\"version\":\"test\"},\"instructions\":\"Use Volicord.\"}}' ;;\n\
          *'\"method\":\"tools/list\"'*)\n\
          if [ \"$mode\" = \"workflow\" ]; then\n\
-         printf '%s\\n' '{\"jsonrpc\":\"2.0\",\"id\":2,\"result\":{\"tools\":[{\"name\":\"volicord.intake\"},{\"name\":\"volicord.update_scope\"},{\"name\":\"volicord.status\"},{\"name\":\"volicord.prepare_write\"},{\"name\":\"volicord.stage_artifact\"},{\"name\":\"volicord.record_run\"},{\"name\":\"volicord.request_user_judgment\"},{\"name\":\"volicord.close_task\"},{\"name\":\"volicord.list_projects\"}]}}'\n\
+         printf '%s\\n' '{\"jsonrpc\":\"2.0\",\"id\":2,\"result\":{\"tools\":[{\"name\":\"volicord.intake\"},{\"name\":\"volicord.update_scope\"},{\"name\":\"volicord.status\"},{\"name\":\"volicord.prepare_write\"},{\"name\":\"volicord.stage_artifact\"},{\"name\":\"volicord.record_run\"},{\"name\":\"volicord.request_user_judgment\"},{\"name\":\"volicord.check_close\"},{\"name\":\"volicord.close_task\"},{\"name\":\"volicord.list_projects\"}]}}'\n\
          else\n\
-         printf '%s\\n' '{\"jsonrpc\":\"2.0\",\"id\":2,\"result\":{\"tools\":[{\"name\":\"volicord.status\"},{\"name\":\"volicord.close_task\"},{\"name\":\"volicord.list_projects\"}]}}'\n\
+         printf '%s\\n' '{\"jsonrpc\":\"2.0\",\"id\":2,\"result\":{\"tools\":[{\"name\":\"volicord.status\"},{\"name\":\"volicord.check_close\"},{\"name\":\"volicord.list_projects\"}]}}'\n\
          fi\n\
          exit 0 ;;\n\
          esac\n\
