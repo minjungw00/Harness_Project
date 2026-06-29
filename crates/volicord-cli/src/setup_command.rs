@@ -1,6 +1,6 @@
 use std::{
     collections::BTreeMap,
-    env, fs, io,
+    fs, io,
     path::{Path, PathBuf},
 };
 
@@ -18,9 +18,19 @@ use volicord_store::{
 };
 
 use crate::registration::ADMIN_METADATA_JSON;
+pub(crate) use crate::shell_path::{is_executable_file, mcp_binary_name, volicord_binary_name};
+use crate::{
+    setup_report::{
+        CommandAvailability, SetupAction, SetupActionKind, SetupReport, SetupSectionStatus,
+        SetupStatus,
+    },
+    shell_path::{
+        candidate_user_bin_dirs, detect_command_on_path, path_directory_is_on_path,
+        path_directory_is_writable, paths_equivalent, PATH_ENV,
+    },
+};
 
 const INSTALLATION_ID: &str = "default";
-const PATH_ENV: &str = "PATH";
 const SETUP_CREATED_BY: &str = "volicord_cli_setup";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -189,14 +199,6 @@ impl DiagnosticCheck {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-struct DiagnosticAction {
-    id: String,
-    instruction: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    command: Option<String>,
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct DiscoveredCommand {
     path: PathBuf,
@@ -223,74 +225,229 @@ pub fn run_setup_command(
     let runtime_home_id = runtime_home_id_for_path(&runtime_home)?;
     let runtime_home_record =
         initialize_runtime_home(&runtime_home, &runtime_home_id, ADMIN_METADATA_JSON)?;
+    let runtime_home_section = runtime_home_report_section(&runtime_home_record);
+    let mut checks =
+        vec![
+            DiagnosticCheck::passed("runtime_home", "Runtime Home registry is ready").with_details(
+                json!({
+                    "runtime_home": path_text(&runtime_home_record.runtime_home),
+                    "registry_db": path_text(&runtime_home_record.registry_db_path),
+                    "runtime_home_id": runtime_home_record.runtime_home_id,
+                }),
+            ),
+        ];
+    let mut actions_required = Vec::new();
+    let mut actions_optional = Vec::new();
+    let mut actions_performed = vec![SetupAction::performed(
+        "runtime_home_ready",
+        SetupActionKind::RuntimeHomeReady,
+        "Runtime Home registry is ready.",
+    )
+    .with_path(&runtime_home_record.runtime_home)];
+    let mut link_results = BTreeMap::new();
 
-    let volicord_command = discover_volicord_command(process)?;
-    let volicord_mcp = discover_mcp_command(&parsed, process)?;
+    let volicord_command = match discover_volicord_command(process) {
+        Ok(command) => {
+            checks.push(
+                DiagnosticCheck::passed("volicord_command", "volicord command was discovered")
+                    .with_details(json!({
+                        "path": path_text(&command.path),
+                        "source": command.source,
+                    })),
+            );
+            command
+        }
+        Err(error) => {
+            checks.push(
+                DiagnosticCheck::failed("volicord_command", "volicord command was not discovered")
+                    .with_details(json!({ "detail": error.to_string() })),
+            );
+            actions_required.push(SetupAction::required(
+                "run_setup_from_volicord",
+                SetupActionKind::CommandAvailability,
+                "Run volicord setup from an accessible volicord executable.",
+            ));
+            let report = SetupReport::new(
+                runtime_home_section,
+                installation_profile_failed("installation profile was not saved", &error),
+                vec![
+                    missing_command_availability("volicord_command", &volicord_binary_name()),
+                    missing_command_availability("volicord_mcp_command", &mcp_binary_name()),
+                ],
+                actions_required,
+                actions_optional,
+                actions_performed,
+            );
+            let status = command_status(report.status);
+            return Ok(CommandOutcome {
+                status,
+                output: render_setup_output(
+                    parsed.output,
+                    &report,
+                    &runtime_home_record,
+                    None,
+                    &checks,
+                )?,
+            });
+        }
+    };
+
+    let volicord_mcp = match discover_mcp_command(&parsed, process) {
+        Ok(command) => {
+            checks.push(
+                DiagnosticCheck::passed(
+                    "volicord_mcp_command",
+                    "volicord-mcp command was discovered",
+                )
+                .with_details(json!({
+                    "path": path_text(&command.path),
+                    "source": command.source,
+                })),
+            );
+            command
+        }
+        Err(error) => {
+            checks.push(
+                DiagnosticCheck::failed(
+                    "volicord_mcp_command",
+                    "volicord-mcp command was not discovered",
+                )
+                .with_details(json!({ "detail": error.to_string() })),
+            );
+            actions_required.push(
+                SetupAction::required(
+                    "select_mcp_command",
+                    SetupActionKind::SelectMcpCommand,
+                    "Run volicord setup --mcp-command PATH with an executable volicord-mcp path.",
+                )
+                .with_command("volicord setup --mcp-command PATH"),
+            );
+            let path_env = process.env_var(PATH_ENV);
+            let commands = vec![
+                command_availability(
+                    "volicord_command",
+                    &volicord_binary_name(),
+                    &volicord_command,
+                    path_env.as_deref(),
+                ),
+                missing_command_availability("volicord_mcp_command", &mcp_binary_name()),
+            ];
+            push_command_availability_checks(&commands, &mut checks);
+            plan_setup_actions(
+                &commands,
+                &parsed,
+                process,
+                None,
+                &mut actions_required,
+                &mut actions_optional,
+            );
+            let report = SetupReport::new(
+                runtime_home_section,
+                installation_profile_failed("installation profile was not saved", &error),
+                commands,
+                actions_required,
+                actions_optional,
+                actions_performed,
+            );
+            let status = command_status(report.status);
+            return Ok(CommandOutcome {
+                status,
+                output: render_setup_output(
+                    parsed.output,
+                    &report,
+                    &runtime_home_record,
+                    None,
+                    &checks,
+                )?,
+            });
+        }
+    };
     let bin_dir = parsed
         .link_bin
         .clone()
         .unwrap_or_else(|| command_parent(&volicord_command.path));
-
-    let mut checks = vec![
-        DiagnosticCheck::passed("runtime_home", "Runtime Home registry is ready").with_details(
-            json!({
-                "runtime_home": path_text(&runtime_home_record.runtime_home),
-                "registry_db": path_text(&runtime_home_record.registry_db_path),
-                "runtime_home_id": runtime_home_record.runtime_home_id,
-            }),
-        ),
-        DiagnosticCheck::passed("volicord_command", "volicord command was discovered")
-            .with_details(json!({
-                "path": path_text(&volicord_command.path),
-                "source": volicord_command.source,
-            })),
-        DiagnosticCheck::passed(
-            "volicord_mcp_command",
-            "volicord-mcp command was discovered",
-        )
-        .with_details(json!({
-            "path": path_text(&volicord_mcp.path),
-            "source": volicord_mcp.source,
-        })),
-    ];
-    let mut actions = Vec::new();
-    let mut link_results = BTreeMap::new();
+    let mut link_bin_on_path = None;
 
     if let Some(link_bin) = &parsed.link_bin {
         let link_bin = absolute_path(current_dir, link_bin.clone());
-        fs::create_dir_all(&link_bin)?;
-        let volicord_link =
-            install_command_link(&link_bin, &volicord_binary_name(), &volicord_command.path);
-        let mcp_link = install_command_link(&link_bin, &mcp_binary_name(), &volicord_mcp.path);
-        push_link_check(
-            "link_volicord",
-            "volicord command link",
-            &link_bin,
-            &volicord_binary_name(),
-            &volicord_link,
-            &mut checks,
-            &mut actions,
-        );
-        push_link_check(
-            "link_volicord_mcp",
-            "volicord-mcp command link",
-            &link_bin,
-            &mcp_binary_name(),
-            &mcp_link,
-            &mut checks,
-            &mut actions,
-        );
-        link_results.insert("volicord".to_owned(), link_volicord_status(&volicord_link));
-        link_results.insert("volicord_mcp".to_owned(), link_volicord_status(&mcp_link));
-        if !path_contains_dir(process.env_var(PATH_ENV).as_deref(), &link_bin) {
-            actions.push(DiagnosticAction {
-                id: "add_link_bin_to_path".to_owned(),
-                instruction: format!(
-                    "Add {} to PATH before starting new shells or MCP hosts.",
-                    link_bin.display()
-                ),
-                command: Some(format!("export PATH=\"{}:$PATH\"", link_bin.display())),
-            });
+        let mut link_bin_usable = false;
+        match fs::create_dir_all(&link_bin) {
+            Ok(()) => {
+                link_bin_usable = true;
+                let volicord_link = install_command_link(
+                    &link_bin,
+                    &volicord_binary_name(),
+                    &volicord_command.path,
+                );
+                let mcp_link =
+                    install_command_link(&link_bin, &mcp_binary_name(), &volicord_mcp.path);
+                push_link_check(
+                    "link_volicord",
+                    "volicord command link",
+                    &link_bin,
+                    &volicord_binary_name(),
+                    &volicord_link,
+                    LinkCheckOutputs {
+                        checks: &mut checks,
+                        actions_required: &mut actions_required,
+                        actions_performed: &mut actions_performed,
+                    },
+                );
+                push_link_check(
+                    "link_volicord_mcp",
+                    "volicord-mcp command link",
+                    &link_bin,
+                    &mcp_binary_name(),
+                    &mcp_link,
+                    LinkCheckOutputs {
+                        checks: &mut checks,
+                        actions_required: &mut actions_required,
+                        actions_performed: &mut actions_performed,
+                    },
+                );
+                link_results.insert("volicord".to_owned(), link_volicord_status(&volicord_link));
+                link_results.insert("volicord_mcp".to_owned(), link_volicord_status(&mcp_link));
+            }
+            Err(error) => {
+                checks.push(
+                    DiagnosticCheck::failed("link_bin", "link directory could not be created")
+                        .with_details(
+                            json!({ "path": path_text(&link_bin), "detail": error.to_string() }),
+                        ),
+                );
+                actions_required.push(
+                    SetupAction::required(
+                        "repair_link_bin",
+                        SetupActionKind::CommandLinks,
+                        format!(
+                            "Fix write access for {}, then rerun volicord setup --link-bin {}.",
+                            link_bin.display(),
+                            link_bin.display()
+                        ),
+                    )
+                    .with_path(&link_bin),
+                );
+                link_results.insert("volicord".to_owned(), "failed".to_owned());
+                link_results.insert("volicord_mcp".to_owned(), "failed".to_owned());
+            }
+        }
+        let on_path = path_directory_is_on_path(process.env_var(PATH_ENV).as_deref(), &link_bin);
+        link_bin_on_path = Some(on_path);
+        if !on_path {
+            if link_bin_usable {
+                actions_required.push(
+                    SetupAction::required(
+                        "add_link_bin_to_path",
+                        SetupActionKind::PathUpdate,
+                        format!(
+                            "Add {} to PATH before starting new shells or MCP hosts.",
+                            link_bin.display()
+                        ),
+                    )
+                    .with_command(format!("export PATH=\"{}:$PATH\"", link_bin.display()))
+                    .with_path(&link_bin),
+                )
+            }
             checks.push(
                 DiagnosticCheck::warning(
                     "link_bin_path",
@@ -305,6 +462,31 @@ pub fn run_setup_command(
             );
         }
     }
+
+    let path_env = process.env_var(PATH_ENV);
+    let commands = vec![
+        command_availability(
+            "volicord_command",
+            &volicord_binary_name(),
+            &volicord_command,
+            path_env.as_deref(),
+        ),
+        command_availability(
+            "volicord_mcp_command",
+            &mcp_binary_name(),
+            &volicord_mcp,
+            path_env.as_deref(),
+        ),
+    ];
+    push_command_availability_checks(&commands, &mut checks);
+    plan_setup_actions(
+        &commands,
+        &parsed,
+        process,
+        link_bin_on_path,
+        &mut actions_required,
+        &mut actions_optional,
+    );
 
     let metadata_json = setup_metadata_json(
         volicord_command.source,
@@ -327,23 +509,239 @@ pub fn run_setup_command(
         DiagnosticCheck::passed("installation_profile", "installation profile was saved")
             .with_details(profile_json(&profile)),
     );
+    actions_performed.push(
+        SetupAction::performed(
+            "installation_profile_saved",
+            SetupActionKind::InstallationProfileSaved,
+            "Installation profile was saved.",
+        )
+        .with_path(&runtime_home_record.registry_db_path),
+    );
 
-    let status = if checks.iter().any(|check| check.status == "failed") {
-        CommandStatus::ActionRequired
-    } else {
-        CommandStatus::Complete
-    };
+    let report = SetupReport::new(
+        runtime_home_section,
+        SetupSectionStatus::complete("installation profile was saved", profile_json(&profile)),
+        commands,
+        actions_required,
+        actions_optional,
+        actions_performed,
+    );
+    let status = command_status(report.status);
     Ok(CommandOutcome {
         status,
         output: render_setup_output(
             parsed.output,
-            status,
+            &report,
             &runtime_home_record,
-            &profile,
+            Some(&profile),
             &checks,
-            &actions,
         )?,
     })
+}
+
+fn runtime_home_report_section(record: &RuntimeHomeRecord) -> SetupSectionStatus {
+    SetupSectionStatus::complete(
+        "Runtime Home registry is ready",
+        json!({
+            "runtime_home": path_text(&record.runtime_home),
+            "registry_db": path_text(&record.registry_db_path),
+            "runtime_home_id": record.runtime_home_id,
+        }),
+    )
+}
+
+fn installation_profile_failed(
+    summary: impl Into<String>,
+    error: &SetupCommandError,
+) -> SetupSectionStatus {
+    SetupSectionStatus::failed(summary, json!({ "detail": error.to_string() }))
+}
+
+fn command_availability(
+    id: impl Into<String>,
+    command_name: &str,
+    discovered: &DiscoveredCommand,
+    path_env: Option<&std::ffi::OsStr>,
+) -> CommandAvailability {
+    let path_match = detect_command_on_path(command_name, path_env);
+    let discovered_dir = command_parent(&discovered.path);
+    let discovered_directory_on_path = path_directory_is_on_path(path_env, &discovered_dir);
+    let path_matches_discovered = path_match
+        .as_deref()
+        .map(|path| paths_equivalent(path, &discovered.path))
+        .unwrap_or(false);
+    CommandAvailability {
+        id: id.into(),
+        command_name: command_name.to_owned(),
+        discovered: true,
+        discovered_path: Some(path_text(&discovered.path)),
+        discovery_source: Some(discovered.source.to_owned()),
+        available_on_path: path_match.is_some(),
+        path_matches_discovered,
+        discovered_directory_on_path,
+        path_match: path_match.as_deref().map(path_text),
+    }
+}
+
+fn missing_command_availability(id: impl Into<String>, command_name: &str) -> CommandAvailability {
+    CommandAvailability {
+        id: id.into(),
+        command_name: command_name.to_owned(),
+        discovered: false,
+        discovered_path: None,
+        discovery_source: None,
+        available_on_path: false,
+        path_matches_discovered: false,
+        discovered_directory_on_path: false,
+        path_match: None,
+    }
+}
+
+fn push_command_availability_checks(
+    commands: &[CommandAvailability],
+    checks: &mut Vec<DiagnosticCheck>,
+) {
+    for command in commands {
+        if !command.discovered {
+            checks.push(DiagnosticCheck::failed(
+                format!("{}_availability", command.id),
+                format!("{} command was not discovered", command.command_name),
+            ));
+        } else if command.selected_path_ready() {
+            checks.push(
+                DiagnosticCheck::passed(
+                    format!("{}_availability", command.id),
+                    format!(
+                        "{} resolves to the selected executable on PATH",
+                        command.command_name
+                    ),
+                )
+                .with_details(command_availability_details(command)),
+            );
+        } else if command.available_on_path {
+            checks.push(
+                DiagnosticCheck::warning(
+                    format!("{}_availability", command.id),
+                    format!(
+                        "{} resolves to a different executable on PATH",
+                        command.command_name
+                    ),
+                )
+                .with_details(command_availability_details(command)),
+            );
+        } else {
+            checks.push(
+                DiagnosticCheck::warning(
+                    format!("{}_availability", command.id),
+                    format!("{} is not available on PATH", command.command_name),
+                )
+                .with_details(command_availability_details(command)),
+            );
+        }
+    }
+}
+
+fn command_availability_details(command: &CommandAvailability) -> Value {
+    json!({
+        "command_name": &command.command_name,
+        "discovered_path": &command.discovered_path,
+        "discovery_source": &command.discovery_source,
+        "available_on_path": command.available_on_path,
+        "path_matches_discovered": command.path_matches_discovered,
+        "discovered_directory_on_path": command.discovered_directory_on_path,
+        "path_match": &command.path_match,
+    })
+}
+
+fn plan_setup_actions(
+    commands: &[CommandAvailability],
+    parsed: &ParsedSetupOptions,
+    process: &impl SetupProcess,
+    link_bin_on_path: Option<bool>,
+    actions_required: &mut Vec<SetupAction>,
+    actions_optional: &mut Vec<SetupAction>,
+) {
+    let link_bin_requested_but_not_on_path = link_bin_on_path == Some(false);
+    for command in commands {
+        if command.selected_path_ready() || link_bin_requested_but_not_on_path {
+            continue;
+        }
+        if command.available_on_path {
+            push_unique_action(
+                actions_required,
+                SetupAction::required(
+                    format!("resolve_{}_path_mismatch", command.id),
+                    SetupActionKind::CommandAvailability,
+                    format!(
+                        "Update PATH so {} resolves to the selected executable before starting new shells or MCP hosts.",
+                        command.command_name
+                    ),
+                ),
+            );
+        } else if command.discovered {
+            let mut action = SetupAction::required(
+                format!("make_{}_available", command.id),
+                SetupActionKind::CommandAvailability,
+                format!(
+                    "Make {} available on PATH before starting new shells or MCP hosts.",
+                    command.command_name
+                ),
+            );
+            if let Some(discovered_path) = command.discovered_path.as_deref() {
+                let discovered_path = Path::new(discovered_path);
+                if discovered_path
+                    .file_name()
+                    .and_then(|name| name.to_str())
+                    .is_some_and(|name| name == command.command_name)
+                {
+                    let parent = command_parent(discovered_path);
+                    action =
+                        action.with_command(format!("export PATH=\"{}:$PATH\"", parent.display()));
+                }
+            }
+            push_unique_action(actions_required, action);
+        }
+    }
+
+    if parsed.link_bin.is_none()
+        && commands
+            .iter()
+            .any(|command| !command.selected_path_ready())
+    {
+        let mut action = SetupAction::optional(
+            "create_command_links",
+            SetupActionKind::CommandLinks,
+            "Create command links with --link-bin; setup will not modify shell startup files.",
+        );
+        if let Some(link_bin) = suggested_link_bin(process) {
+            action = action
+                .with_command(format!("volicord setup --link-bin {}", link_bin.display()))
+                .with_path(&link_bin);
+        }
+        push_unique_action(actions_optional, action);
+    }
+}
+
+fn suggested_link_bin(process: &impl SetupProcess) -> Option<PathBuf> {
+    let dirs = candidate_user_bin_dirs(&|name| process.env_var(name));
+    dirs.iter()
+        .find(|path| path_directory_is_writable(path))
+        .cloned()
+        .or_else(|| dirs.into_iter().next())
+}
+
+fn push_unique_action(actions: &mut Vec<SetupAction>, action: SetupAction) {
+    if !actions.iter().any(|existing| existing.id == action.id) {
+        actions.push(action);
+    }
+}
+
+fn command_status(status: SetupStatus) -> CommandStatus {
+    match status {
+        SetupStatus::Complete => CommandStatus::Complete,
+        SetupStatus::ActionRequired => CommandStatus::ActionRequired,
+        SetupStatus::Failed => CommandStatus::Failed,
+    }
 }
 
 fn parse_setup_options(
@@ -473,16 +871,13 @@ fn discover_mcp_command(
         }
     }
 
-    if let Some(path) = process.env_var(PATH_ENV) {
-        for dir in env::split_paths(&path) {
-            let candidate = dir.join(mcp_binary_name());
-            if is_executable_file(&candidate) {
-                return Ok(DiscoveredCommand {
-                    path: canonical_existing_executable(&candidate, "volicord-mcp from PATH")?,
-                    source: "path",
-                });
-            }
-        }
+    if let Some(candidate) =
+        detect_command_on_path(&mcp_binary_name(), process.env_var(PATH_ENV).as_deref())
+    {
+        return Ok(DiscoveredCommand {
+            path: canonical_existing_executable(&candidate, "volicord-mcp from PATH")?,
+            source: "path",
+        });
     }
 
     Err(SetupCommandError::Runtime(
@@ -523,28 +918,6 @@ fn is_help_request(args: &[String]) -> bool {
         args.first().map(String::as_str),
         Some("-h" | "--help" | "help")
     )
-}
-
-pub(crate) fn is_executable_file(path: &Path) -> bool {
-    let Ok(metadata) = fs::metadata(path) else {
-        return false;
-    };
-    if !metadata.is_file() {
-        return false;
-    }
-    is_executable_metadata(&metadata)
-}
-
-#[cfg(unix)]
-fn is_executable_metadata(metadata: &fs::Metadata) -> bool {
-    use std::os::unix::fs::PermissionsExt;
-
-    metadata.permissions().mode() & 0o111 != 0
-}
-
-#[cfg(not(unix))]
-fn is_executable_metadata(_metadata: &fs::Metadata) -> bool {
-    true
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -612,46 +985,74 @@ fn install_command_link_inner(link_path: &Path, _target: &Path) -> LinkInstallRe
     LinkInstallResult::Unsupported(link_path.to_path_buf())
 }
 
+struct LinkCheckOutputs<'a> {
+    checks: &'a mut Vec<DiagnosticCheck>,
+    actions_required: &'a mut Vec<SetupAction>,
+    actions_performed: &'a mut Vec<SetupAction>,
+}
+
 fn push_link_check(
     check_id: &str,
     label: &str,
     link_bin: &Path,
     name: &str,
     result: &LinkInstallResult,
-    checks: &mut Vec<DiagnosticCheck>,
-    actions: &mut Vec<DiagnosticAction>,
+    outputs: LinkCheckOutputs<'_>,
 ) {
     match result {
-        LinkInstallResult::Created(path) => checks.push(
-            DiagnosticCheck::passed(check_id, format!("{label} was created"))
+        LinkInstallResult::Created(path) => {
+            outputs.checks.push(
+                DiagnosticCheck::passed(check_id, format!("{label} was created"))
+                    .with_details(json!({ "path": path_text(path) })),
+            );
+            outputs.actions_performed.push(
+                SetupAction::performed(
+                    format!("create_{name}_link"),
+                    SetupActionKind::CommandLinks,
+                    format!("{label} was created."),
+                )
+                .with_path(path),
+            );
+        }
+        LinkInstallResult::Existing(path) => {
+            outputs.checks.push(
+                DiagnosticCheck::passed(
+                    check_id,
+                    format!("{label} already points to the selected executable"),
+                )
                 .with_details(json!({ "path": path_text(path) })),
-        ),
-        LinkInstallResult::Existing(path) => checks.push(
-            DiagnosticCheck::passed(
-                check_id,
-                format!("{label} already points to the selected executable"),
-            )
-            .with_details(json!({ "path": path_text(path) })),
-        ),
+            );
+            outputs.actions_performed.push(
+                SetupAction::performed(
+                    format!("reuse_{name}_link"),
+                    SetupActionKind::CommandLinks,
+                    format!("{label} already points to the selected executable."),
+                )
+                .with_path(path),
+            );
+        }
         LinkInstallResult::Unsupported(path) => {
-            checks.push(
+            outputs.checks.push(
                 DiagnosticCheck::warning(
                     check_id,
                     format!("{label} was not created on this platform"),
                 )
                 .with_details(json!({ "path": path_text(path) })),
             );
-            actions.push(DiagnosticAction {
-                id: format!("create_{name}_shim"),
-                instruction: format!(
-                    "Create a command shim for {name} under {} if your shell cannot find it.",
-                    link_bin.display()
-                ),
-                command: None,
-            });
+            outputs.actions_required.push(
+                SetupAction::required(
+                    format!("create_{name}_shim"),
+                    SetupActionKind::CommandLinks,
+                    format!(
+                        "Create a command shim for {name} under {} if your shell cannot find it.",
+                        link_bin.display()
+                    ),
+                )
+                .with_path(path),
+            );
         }
         LinkInstallResult::UnsafeExisting(path) => {
-            checks.push(
+            outputs.checks.push(
                 DiagnosticCheck::failed(
                     check_id,
                     format!(
@@ -660,30 +1061,36 @@ fn push_link_check(
                 )
                 .with_details(json!({ "path": path_text(path) })),
             );
-            actions.push(DiagnosticAction {
-                id: format!("repair_{name}_link"),
-                instruction: format!(
-                    "Move or remove the existing {} path, then rerun volicord setup --link-bin {}.",
-                    path.display(),
-                    link_bin.display()
-                ),
-                command: None,
-            });
+            outputs.actions_required.push(
+                SetupAction::required(
+                    format!("repair_{name}_link"),
+                    SetupActionKind::CommandLinks,
+                    format!(
+                        "Move or remove the existing {} path, then rerun volicord setup --link-bin {}.",
+                        path.display(),
+                        link_bin.display()
+                    ),
+                )
+                .with_path(path),
+            );
         }
         LinkInstallResult::Failed { path, detail } => {
-            checks.push(
+            outputs.checks.push(
                 DiagnosticCheck::failed(check_id, format!("{label} could not be created"))
                     .with_details(json!({ "path": path_text(path), "detail": detail })),
             );
-            actions.push(DiagnosticAction {
-                id: format!("repair_{name}_link"),
-                instruction: format!(
-                    "Fix write access for {}, then rerun volicord setup --link-bin {}.",
-                    path.display(),
-                    link_bin.display()
-                ),
-                command: None,
-            });
+            outputs.actions_required.push(
+                SetupAction::required(
+                    format!("repair_{name}_link"),
+                    SetupActionKind::CommandLinks,
+                    format!(
+                        "Fix write access for {}, then rerun volicord setup --link-bin {}.",
+                        path.display(),
+                        link_bin.display()
+                    ),
+                )
+                .with_path(path),
+            );
         }
     }
 }
@@ -701,50 +1108,96 @@ fn link_volicord_status(result: &LinkInstallResult) -> String {
 
 fn render_setup_output(
     output: OutputFormat,
-    status: CommandStatus,
+    report: &SetupReport,
     runtime_home: &RuntimeHomeRecord,
-    profile: &InstallationProfileRecord,
+    profile: Option<&InstallationProfileRecord>,
     checks: &[DiagnosticCheck],
-    actions: &[DiagnosticAction],
 ) -> Result<String, SetupCommandError> {
     match output {
         OutputFormat::Json => serde_json::to_string_pretty(&json!({
-            "status": status.as_str(),
+            "status": report.status.as_str(),
             "runtime_home": path_text(&runtime_home.runtime_home),
             "registry_db": path_text(&runtime_home.registry_db_path),
-            "installation_profile": profile_json(profile),
+            "installation_profile": profile.map(profile_json),
+            "setup_report": report,
+            "commands": &report.commands,
             "checks": checks,
-            "actions": actions,
+            "actions": &report.actions_required,
+            "actions_required": &report.actions_required,
+            "actions_optional": &report.actions_optional,
+            "actions_performed": &report.actions_performed,
         }))
         .map(|text| format!("{text}\n"))
         .map_err(|error| SetupCommandError::Runtime(error.to_string())),
         OutputFormat::Text => {
             let mut text = format!(
-                "Volicord setup {}\nruntime_home: {}\nregistry_db: {}\nvolicord_command: {}\nvolicord_mcp_command: {}\ndefault_connection_mode: {}\n",
-                status.as_str(),
+                "Volicord setup {}\nruntime_home: {}\nregistry_db: {}\n",
+                report.status.as_str(),
                 runtime_home.runtime_home.display(),
                 runtime_home.registry_db_path.display(),
-                profile.volicord_command,
-                profile.volicord_mcp_command,
-                profile.default_connection_mode
             );
-            let failed = checks
-                .iter()
-                .filter(|check| check.status == "failed")
-                .collect::<Vec<_>>();
-            if !failed.is_empty() {
-                text.push_str("checks:\n");
-                for check in failed {
-                    text.push_str(&format!("- {}: {}\n", check.id, check.summary));
+            if let Some(profile) = profile {
+                text.push_str(&format!(
+                    "volicord_command: {}\nvolicord_mcp_command: {}\ndefault_connection_mode: {}\n",
+                    profile.volicord_command,
+                    profile.volicord_mcp_command,
+                    profile.default_connection_mode
+                ));
+            }
+            if !report.commands.is_empty() {
+                text.push_str("command_availability:\n");
+                for command in &report.commands {
+                    text.push_str(&format!(
+                        "- {}: {}\n",
+                        command.command_name,
+                        command_availability_summary(command)
+                    ));
                 }
             }
-            if !actions.is_empty() {
+            let not_passed = checks
+                .iter()
+                .filter(|check| check.status != "passed")
+                .collect::<Vec<_>>();
+            if !not_passed.is_empty() {
+                text.push_str("checks:\n");
+                for check in not_passed {
+                    text.push_str(&format!(
+                        "- {}: {} ({})\n",
+                        check.id, check.summary, check.status
+                    ));
+                }
+            }
+            if !report.actions_required.is_empty() {
                 text.push_str("actions:\n");
-                for action in actions {
+                for action in &report.actions_required {
+                    text.push_str(&format!("- {}\n", action.instruction));
+                }
+            }
+            if !report.actions_optional.is_empty() {
+                text.push_str("optional_actions:\n");
+                for action in &report.actions_optional {
                     text.push_str(&format!("- {}\n", action.instruction));
                 }
             }
             Ok(text)
+        }
+    }
+}
+
+fn command_availability_summary(command: &CommandAvailability) -> String {
+    if !command.discovered {
+        "not discovered".to_owned()
+    } else if command.selected_path_ready() {
+        match &command.discovered_path {
+            Some(path) => format!("ready on PATH ({path})"),
+            None => "ready on PATH".to_owned(),
+        }
+    } else if let Some(path_match) = &command.path_match {
+        format!("PATH resolves {path_match}, not the selected executable")
+    } else {
+        match &command.discovered_path {
+            Some(path) => format!("selected executable is {path}; not on PATH"),
+            None => "not on PATH".to_owned(),
         }
     }
 }
@@ -810,35 +1263,9 @@ pub(crate) fn absolute_path(current_dir: &Path, path: PathBuf) -> PathBuf {
     }
 }
 
-pub(crate) fn path_contains_dir(path_env: Option<&std::ffi::OsStr>, dir: &Path) -> bool {
-    path_env
-        .map(env::split_paths)
-        .into_iter()
-        .flatten()
-        .any(|candidate| paths_equivalent(&candidate, dir))
-}
-
-fn paths_equivalent(left: &Path, right: &Path) -> bool {
-    if left == right {
-        return true;
-    }
-    match (fs::canonicalize(left), fs::canonicalize(right)) {
-        (Ok(left), Ok(right)) => left == right,
-        _ => false,
-    }
-}
-
-pub(crate) fn volicord_binary_name() -> String {
-    format!("volicord{}", env::consts::EXE_SUFFIX)
-}
-
-pub(crate) fn mcp_binary_name() -> String {
-    format!("volicord-mcp{}", env::consts::EXE_SUFFIX)
-}
-
 #[cfg(test)]
 mod tests {
-    use std::{ffi::OsString, io::Write};
+    use std::{env, ffi::OsString, io::Write};
 
     use rusqlite::Connection;
     use volicord_store::{bootstrap::installation_profile, sqlite::registry_db_path};
@@ -885,9 +1312,27 @@ mod tests {
             &process,
         )?;
 
-        assert_eq!(outcome.status, CommandStatus::Complete);
+        assert_eq!(outcome.status, CommandStatus::ActionRequired);
         let value: Value = serde_json::from_str(&outcome.output)?;
-        assert_eq!(value["status"], "complete");
+        assert_eq!(value["status"], "action_required");
+        assert_eq!(
+            value["setup_report"]["installation_profile"]["status"],
+            "complete"
+        );
+        assert!(value["commands"]
+            .as_array()
+            .expect("commands should be an array")
+            .iter()
+            .any(|command| {
+                command["id"] == "volicord_mcp_command"
+                    && command["discovered_path"] == path_text(&mcp)
+                    && command["available_on_path"] == false
+            }));
+        assert!(value["actions_required"]
+            .as_array()
+            .expect("actions_required should be an array")
+            .iter()
+            .any(|action| action["id"] == "make_volicord_mcp_command_available"));
         let profile = installation_profile(fixture.path())?.expect("profile should be stored");
         assert_eq!(profile.volicord_mcp_command, path_text(&mcp));
         assert_eq!(profile.default_connection_mode, CONNECTION_MODE_WORKFLOW);
@@ -940,6 +1385,43 @@ mod tests {
         Ok(())
     }
 
+    #[test]
+    fn setup_json_reports_missing_mcp_as_failed() -> Result<(), Box<dyn std::error::Error>> {
+        let fixture = TempRuntimeHome::new("setup-missing-mcp")?;
+        let bin_dir = fixture.path().join("bin");
+        let volicord = write_executable(&bin_dir, &volicord_binary_name())?;
+        let process = FakeProcess {
+            exe: volicord,
+            env: BTreeMap::new(),
+        };
+
+        let outcome = run_setup_command(
+            &[
+                "--home".to_owned(),
+                path_text(fixture.path()),
+                "--json".to_owned(),
+            ],
+            fixture.path(),
+            &process,
+        )?;
+
+        assert_eq!(outcome.status, CommandStatus::Failed);
+        let value: Value = serde_json::from_str(&outcome.output)?;
+        assert_eq!(value["status"], "failed");
+        assert!(value["installation_profile"].is_null());
+        assert_eq!(
+            value["setup_report"]["installation_profile"]["status"],
+            "failed"
+        );
+        assert!(value["actions_required"]
+            .as_array()
+            .expect("actions_required should be an array")
+            .iter()
+            .any(|action| action["id"] == "select_mcp_command"));
+        assert!(installation_profile(fixture.path())?.is_none());
+        Ok(())
+    }
+
     #[cfg(unix)]
     #[test]
     fn setup_creates_requested_links() -> Result<(), Box<dyn std::error::Error>> {
@@ -961,17 +1443,117 @@ mod tests {
                 path_text(&mcp),
                 "--link-bin".to_owned(),
                 path_text(&link_bin),
+                "--json".to_owned(),
             ],
             fixture.path(),
             &process,
         )?;
 
         assert_eq!(outcome.status, CommandStatus::Complete);
+        let value: Value = serde_json::from_str(&outcome.output)?;
+        assert_eq!(value["status"], "complete");
+        assert!(value["actions_performed"]
+            .as_array()
+            .expect("actions_performed should be an array")
+            .iter()
+            .any(|action| action["id"] == "create_volicord_link"));
         assert_eq!(
             fs::canonicalize(link_bin.join(volicord_binary_name()))?,
             volicord
         );
         assert_eq!(fs::canonicalize(link_bin.join(mcp_binary_name()))?, mcp);
+        Ok(())
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn setup_link_bin_reports_path_action_without_prompting(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let fixture = TempRuntimeHome::new("setup-links-path-action")?;
+        let bin_dir = fixture.path().join("bin");
+        let link_bin = fixture.path().join("links");
+        let volicord = write_executable(&bin_dir, &volicord_binary_name())?;
+        let mcp = write_executable(&bin_dir, &mcp_binary_name())?;
+        let process = FakeProcess {
+            exe: volicord.clone(),
+            env: BTreeMap::new(),
+        };
+
+        let outcome = run_setup_command(
+            &[
+                "--home".to_owned(),
+                path_text(fixture.path()),
+                "--mcp-command".to_owned(),
+                path_text(&mcp),
+                "--link-bin".to_owned(),
+                path_text(&link_bin),
+                "--json".to_owned(),
+            ],
+            fixture.path(),
+            &process,
+        )?;
+
+        assert_eq!(outcome.status, CommandStatus::ActionRequired);
+        let value: Value = serde_json::from_str(&outcome.output)?;
+        assert_eq!(value["status"], "action_required");
+        assert!(value["actions_required"]
+            .as_array()
+            .expect("actions_required should be an array")
+            .iter()
+            .any(|action| action["id"] == "add_link_bin_to_path"));
+        assert_eq!(
+            fs::canonicalize(link_bin.join(volicord_binary_name()))?,
+            volicord
+        );
+        assert_eq!(fs::canonicalize(link_bin.join(mcp_binary_name()))?, mcp);
+        Ok(())
+    }
+
+    #[test]
+    fn setup_link_bin_error_still_saves_profile_when_possible(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let fixture = TempRuntimeHome::new("setup-link-bin-file")?;
+        let bin_dir = fixture.path().join("bin");
+        let link_bin = fixture.path().join("not-a-directory");
+        fs::write(&link_bin, "not a directory")?;
+        let volicord = write_executable(&bin_dir, &volicord_binary_name())?;
+        let mcp = write_executable(&bin_dir, &mcp_binary_name())?;
+        let process = FakeProcess {
+            exe: volicord,
+            env: BTreeMap::new(),
+        };
+
+        let outcome = run_setup_command(
+            &[
+                "--home".to_owned(),
+                path_text(fixture.path()),
+                "--mcp-command".to_owned(),
+                path_text(&mcp),
+                "--link-bin".to_owned(),
+                path_text(&link_bin),
+                "--json".to_owned(),
+            ],
+            fixture.path(),
+            &process,
+        )?;
+
+        assert_eq!(outcome.status, CommandStatus::ActionRequired);
+        let value: Value = serde_json::from_str(&outcome.output)?;
+        assert_eq!(
+            value["setup_report"]["installation_profile"]["status"],
+            "complete"
+        );
+        assert!(value["actions_required"]
+            .as_array()
+            .expect("actions_required should be an array")
+            .iter()
+            .any(|action| action["id"] == "repair_link_bin"));
+        assert!(!value["actions_required"]
+            .as_array()
+            .expect("actions_required should be an array")
+            .iter()
+            .any(|action| action["id"] == "add_link_bin_to_path"));
+        assert!(installation_profile(fixture.path())?.is_some());
         Ok(())
     }
 

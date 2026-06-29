@@ -156,7 +156,12 @@ fn setup_and_doctor_report_installation_profile() -> Result<(), Box<dyn Error>> 
     let setup = run_setup_json(runtime_home.path(), &mcp)?;
     assert_success(&setup);
     let setup_json = json_stdout(&setup)?;
-    assert_eq!(setup_json["status"], "complete");
+    assert_eq!(setup_json["status"], "action_required");
+    assert_eq!(setup_json["setup_report"]["status"], "action_required");
+    assert_eq!(
+        setup_json["setup_report"]["installation_profile"]["status"],
+        "complete"
+    );
     assert_eq!(
         setup_json["installation_profile"]["volicord_mcp_command"],
         path_text(&mcp)
@@ -165,6 +170,20 @@ fn setup_and_doctor_report_installation_profile() -> Result<(), Box<dyn Error>> 
         setup_json["installation_profile"]["default_connection_mode"],
         "workflow"
     );
+    assert!(setup_json["commands"]
+        .as_array()
+        .expect("commands should be an array")
+        .iter()
+        .any(|command| {
+            command["id"] == "volicord_mcp_command"
+                && command["discovered_path"] == path_text(&mcp)
+                && command["available_on_path"] == false
+        }));
+    assert!(setup_json["actions_required"]
+        .as_array()
+        .expect("actions_required should be an array")
+        .iter()
+        .any(|action| action["id"] == "make_volicord_mcp_command_available"));
 
     let doctor = run_with_home_env(runtime_home.path(), ["doctor", "--json"], &[])?;
     assert_success(&doctor);

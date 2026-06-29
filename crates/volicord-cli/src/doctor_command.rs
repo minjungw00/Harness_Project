@@ -14,12 +14,13 @@ use volicord_store::{
     runtime_home::{resolve_runtime_home, RuntimeHomeResolutionError},
 };
 
-use crate::setup_command::{
-    is_executable_file, mcp_binary_name, path_contains_dir, path_text, volicord_binary_name,
-    CommandOutcome, CommandStatus,
+use crate::{
+    setup_command::{path_text, CommandOutcome, CommandStatus},
+    shell_path::{
+        is_executable_file, mcp_binary_name, path_directory_is_on_path, volicord_binary_name,
+        PATH_ENV,
+    },
 };
-
-const PATH_ENV: &str = "PATH";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DoctorCommandError {
@@ -422,7 +423,7 @@ fn inspect_path_or_shim<F>(
     F: Fn(&str) -> Option<std::ffi::OsString>,
 {
     let path_env = env_var(PATH_ENV);
-    let bin_dir_on_path = path_contains_dir(path_env.as_deref(), &profile.bin_dir);
+    let bin_dir_on_path = path_directory_is_on_path(path_env.as_deref(), &profile.bin_dir);
     let volicord_link = profile.bin_dir.join(volicord_binary_name());
     let mcp_link = profile.bin_dir.join(mcp_binary_name());
     let link_ready = is_executable_file(&volicord_link) && is_executable_file(&mcp_link);

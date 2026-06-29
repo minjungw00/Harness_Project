@@ -414,8 +414,9 @@ mod tests {
         )
         .expect("setup should succeed");
 
-        assert!(output.contains("Volicord setup complete\n"));
+        assert!(output.contains("Volicord setup action_required\n"));
         assert!(output.contains("default_connection_mode: workflow\n"));
+        assert!(output.contains("command_availability:\n"));
         assert!(registry_db_path(runtime_home.path()).exists());
         assert!(read_installation_profile(runtime_home.path())
             .expect("profile read should work")
