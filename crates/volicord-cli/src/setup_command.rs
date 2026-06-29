@@ -28,7 +28,7 @@ use crate::{
     },
     shell_path::{
         candidate_setup_link_dirs, detect_command_on_path, path_directory_is_on_path,
-        paths_equivalent, PATH_ENV,
+        paths_equivalent, verify_directory_writable, PATH_ENV,
     },
 };
 
@@ -512,7 +512,7 @@ fn run_setup_command_inner(
     if let Some(link_bin) = &parsed.link_bin {
         let link_bin = absolute_path(current_dir, link_bin.clone());
         let mut link_bin_usable = false;
-        match fs::create_dir_all(&link_bin) {
+        match prepare_link_bin(&link_bin) {
             Ok(()) => {
                 link_bin_usable = true;
                 let volicord_link = install_command_link(
@@ -551,12 +551,10 @@ fn run_setup_command_inner(
                 link_results.insert("volicord".to_owned(), link_volicord_status(&volicord_link));
                 link_results.insert("volicord_mcp".to_owned(), link_volicord_status(&mcp_link));
             }
-            Err(error) => {
+            Err((summary, detail)) => {
                 checks.push(
-                    DiagnosticCheck::failed("link_bin", "link directory could not be created")
-                        .with_details(
-                            json!({ "path": path_text(&link_bin), "detail": error.to_string() }),
-                        ),
+                    DiagnosticCheck::failed("link_bin", summary)
+                        .with_details(json!({ "path": path_text(&link_bin), "detail": detail })),
                 );
                 actions_required.push(
                     SetupAction::required(
@@ -778,6 +776,13 @@ fn run_setup_command_inner(
         &interactive_notes,
     );
     Ok(CommandOutcome { status, output })
+}
+
+fn prepare_link_bin(link_bin: &Path) -> Result<(), (&'static str, String)> {
+    fs::create_dir_all(link_bin)
+        .map_err(|error| ("link directory could not be created", error.to_string()))?;
+    verify_directory_writable(link_bin)
+        .map_err(|error| ("link directory is not writable", error.to_string()))
 }
 
 fn runtime_home_report_section(record: &RuntimeHomeRecord) -> SetupSectionStatus {
@@ -2021,7 +2026,7 @@ mod tests {
         let fixture = TempRuntimeHome::new("setup-interactive-shell")?;
         let exe_dir = fixture.path().join("exe");
         let home = fixture.path().join("home");
-        fs::create_dir_all(&home)?;
+        fs::create_dir_all(home.join(".local").join("bin"))?;
         let volicord = write_executable(&exe_dir, &volicord_binary_name())?;
         write_executable(&exe_dir, &mcp_binary_name())?;
         let process = FakeProcess {
@@ -2102,7 +2107,7 @@ mod tests {
         let fixture = TempRuntimeHome::new("setup-interactive-unsupported-shell")?;
         let exe_dir = fixture.path().join("exe");
         let home = fixture.path().join("home");
-        fs::create_dir_all(&home)?;
+        fs::create_dir_all(home.join(".local").join("bin"))?;
         let volicord = write_executable(&exe_dir, &volicord_binary_name())?;
         write_executable(&exe_dir, &mcp_binary_name())?;
         let process = FakeProcess {
@@ -2137,7 +2142,7 @@ mod tests {
         let fixture = TempRuntimeHome::new("setup-interactive-skip")?;
         let exe_dir = fixture.path().join("exe");
         let home = fixture.path().join("home");
-        fs::create_dir_all(&home)?;
+        fs::create_dir_all(home.join(".local").join("bin"))?;
         let volicord = write_executable(&exe_dir, &volicord_binary_name())?;
         write_executable(&exe_dir, &mcp_binary_name())?;
         let process = FakeProcess {
@@ -2174,7 +2179,7 @@ mod tests {
         let fixture = TempRuntimeHome::new("setup-interactive-link-only")?;
         let exe_dir = fixture.path().join("exe");
         let home = fixture.path().join("home");
-        fs::create_dir_all(&home)?;
+        fs::create_dir_all(home.join(".local").join("bin"))?;
         let volicord = write_executable(&exe_dir, &volicord_binary_name())?;
         let mcp = write_executable(&exe_dir, &mcp_binary_name())?;
         let process = FakeProcess {
@@ -2214,7 +2219,7 @@ mod tests {
         let fixture = TempRuntimeHome::new("setup-interactive-decline-shell")?;
         let exe_dir = fixture.path().join("exe");
         let home = fixture.path().join("home");
-        fs::create_dir_all(&home)?;
+        fs::create_dir_all(home.join(".local").join("bin"))?;
         let zshrc = home.join(".zshrc");
         let original_zshrc = "export PATH=\"$HOME/bin:$PATH\"\n";
         fs::write(&zshrc, original_zshrc)?;
@@ -2255,7 +2260,7 @@ mod tests {
         let fixture = TempRuntimeHome::new("setup-interactive-eof")?;
         let exe_dir = fixture.path().join("exe");
         let home = fixture.path().join("home");
-        fs::create_dir_all(&home)?;
+        fs::create_dir_all(home.join(".local").join("bin"))?;
         let volicord = write_executable(&exe_dir, &volicord_binary_name())?;
         write_executable(&exe_dir, &mcp_binary_name())?;
         let process = FakeProcess {
@@ -2558,6 +2563,65 @@ mod tests {
         Ok(())
     }
 
+    #[cfg(unix)]
+    #[test]
+    fn setup_link_bin_probe_failure_reports_repair_action() -> Result<(), Box<dyn std::error::Error>>
+    {
+        use std::os::unix::fs::PermissionsExt;
+
+        let fixture = TempRuntimeHome::new("setup-link-bin-probe-fails")?;
+        let bin_dir = fixture.path().join("bin");
+        let link_bin = fixture.path().join("links");
+        fs::create_dir_all(&link_bin)?;
+        let mut permissions = fs::metadata(&link_bin)?.permissions();
+        permissions.set_mode(0o555);
+        fs::set_permissions(&link_bin, permissions)?;
+        if crate::shell_path::path_directory_is_verified_writable(&link_bin) {
+            restore_writable_dir(&link_bin)?;
+            return Ok(());
+        }
+
+        let volicord = write_executable(&bin_dir, &volicord_binary_name())?;
+        let mcp = write_executable(&bin_dir, &mcp_binary_name())?;
+        let process = FakeProcess {
+            exe: volicord,
+            env: BTreeMap::new(),
+        };
+
+        let outcome = run_setup_command(
+            &[
+                "--home".to_owned(),
+                path_text(fixture.path()),
+                "--mcp-command".to_owned(),
+                path_text(&mcp),
+                "--link-bin".to_owned(),
+                path_text(&link_bin),
+                "--json".to_owned(),
+            ],
+            fixture.path(),
+            &process,
+        );
+        restore_writable_dir(&link_bin)?;
+        let outcome = outcome?;
+
+        assert_eq!(outcome.status, CommandStatus::ActionRequired);
+        let value: Value = serde_json::from_str(&outcome.output)?;
+        assert!(value["checks"]
+            .as_array()
+            .expect("checks should be an array")
+            .iter()
+            .any(|check| check["id"] == "link_bin"
+                && check["summary"] == "link directory is not writable"));
+        assert!(value["actions_required"]
+            .as_array()
+            .expect("actions_required should be an array")
+            .iter()
+            .any(|action| action["id"] == "repair_link_bin"));
+        assert!(!link_bin.join(volicord_binary_name()).exists());
+        assert!(!link_bin.join(mcp_binary_name()).exists());
+        Ok(())
+    }
+
     fn write_executable(dir: &Path, name: &str) -> Result<PathBuf, Box<dyn std::error::Error>> {
         fs::create_dir_all(dir)?;
         let path = dir.join(name);
@@ -2579,6 +2643,16 @@ mod tests {
 
     #[cfg(not(unix))]
     fn make_executable(_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
+        Ok(())
+    }
+
+    #[cfg(unix)]
+    fn restore_writable_dir(path: &Path) -> Result<(), Box<dyn std::error::Error>> {
+        use std::os::unix::fs::PermissionsExt;
+
+        let mut permissions = fs::metadata(path)?.permissions();
+        permissions.set_mode(0o755);
+        fs::set_permissions(path, permissions)?;
         Ok(())
     }
 
