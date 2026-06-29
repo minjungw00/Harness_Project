@@ -253,6 +253,32 @@ struct AnchorCache {
     files: BTreeMap<String, MarkdownAnchors>,
 }
 
+#[derive(Debug, Clone)]
+struct VolicordCommandExample {
+    line: usize,
+    command: String,
+    tokens: std::result::Result<Vec<String>, String>,
+}
+
+#[derive(Debug, Clone)]
+struct PendingShellCommand {
+    line: usize,
+    text: String,
+}
+
+#[derive(Debug, Clone)]
+struct ActiveFence {
+    marker: char,
+    length: usize,
+    shell: bool,
+}
+
+#[derive(Debug, Clone, Default)]
+struct ParsedCommandArgs {
+    options: BTreeSet<String>,
+    positionals: Vec<String>,
+}
+
 pub fn run_docs_check(root: &Path) -> Result<CheckReport> {
     let root = normalize_existing_root(root)?;
     let doc_index_path = root.join(DOC_INDEX_PATH);
@@ -272,6 +298,7 @@ pub fn run_docs_check(root: &Path) -> Result<CheckReport> {
         validate_bilingual_link_parity(&root, index, &mut errors);
         validate_terminology_paths(&root, index, &mut errors);
         validate_retired_paths(&root, index, &mut errors);
+        validate_volicord_command_examples(&root, index, &mut errors);
     }
 
     errors.sort();
@@ -1863,6 +1890,674 @@ fn collect_yaml_path_mentions(value: &Value, mentions: &mut BTreeSet<String>) {
             }
         }
         _ => {}
+    }
+}
+
+fn validate_volicord_command_examples(
+    root: &Path,
+    index: &DocIndex,
+    errors: &mut Vec<ValidationError>,
+) {
+    for path in index
+        .indexed_paths
+        .iter()
+        .filter(|path| path.ends_with(".md"))
+    {
+        let contents = match fs::read_to_string(root.join(path)) {
+            Ok(contents) => contents,
+            Err(error) => {
+                errors.push(ValidationError::new(
+                    path,
+                    "command.read",
+                    format!("failed to read Markdown file: {error}"),
+                ));
+                continue;
+            }
+        };
+
+        for example in volicord_command_examples(&contents) {
+            let result = match &example.tokens {
+                Ok(tokens) => validate_volicord_command(tokens),
+                Err(error) => Err(error.clone()),
+            };
+            if let Err(message) = result {
+                errors.push(ValidationError::new(
+                    path,
+                    "command.invalid_example",
+                    format!(
+                        "line {} command `{}` is not supported: {}",
+                        example.line, example.command, message
+                    ),
+                ));
+            }
+        }
+    }
+}
+
+fn volicord_command_examples(contents: &str) -> Vec<VolicordCommandExample> {
+    let mut examples = Vec::new();
+    let mut active_fence = None;
+    let mut pending = None;
+
+    for (index, line) in contents.lines().enumerate() {
+        let line_number = index + 1;
+        if let Some(fence) = active_fence.as_ref() {
+            if is_closing_fence(line, fence) {
+                active_fence = None;
+                pending = None;
+                continue;
+            }
+            if fence.shell {
+                collect_shell_command_line(line, line_number, &mut pending, &mut examples);
+            }
+            continue;
+        }
+
+        if let Some(fence) = opening_fence(line) {
+            active_fence = Some(fence);
+        }
+    }
+
+    if let Some(pending) = pending {
+        push_shell_command_candidate(pending.line, &pending.text, &mut examples);
+    }
+
+    examples
+}
+
+fn collect_shell_command_line(
+    line: &str,
+    line_number: usize,
+    pending: &mut Option<PendingShellCommand>,
+    examples: &mut Vec<VolicordCommandExample>,
+) {
+    let trimmed = strip_shell_prompt(line).trim();
+    if pending.is_none() && (trimmed.is_empty() || trimmed.starts_with('#')) {
+        return;
+    }
+
+    let (continued_text, continues) = split_shell_continuation(trimmed);
+    if let Some(pending_command) = pending.as_mut() {
+        if !continued_text.is_empty() {
+            pending_command.text.push(' ');
+            pending_command.text.push_str(continued_text);
+        }
+    } else {
+        *pending = Some(PendingShellCommand {
+            line: line_number,
+            text: continued_text.to_string(),
+        });
+    }
+
+    if !continues {
+        if let Some(command) = pending.take() {
+            push_shell_command_candidate(command.line, &command.text, examples);
+        }
+    }
+}
+
+fn split_shell_continuation(line: &str) -> (&str, bool) {
+    let trimmed = line.trim_end();
+    if trimmed.ends_with('\\') {
+        (trimmed.trim_end_matches('\\').trim_end(), true)
+    } else {
+        (trimmed, false)
+    }
+}
+
+fn push_shell_command_candidate(
+    line: usize,
+    command: &str,
+    examples: &mut Vec<VolicordCommandExample>,
+) {
+    let tokens = shell_words_until_control(command);
+    match &tokens {
+        Ok(tokens) if volicord_command_start(tokens).is_none() => return,
+        Err(_) if !starts_like_volicord_command(command) => return,
+        _ => {}
+    }
+
+    examples.push(VolicordCommandExample {
+        line,
+        command: command.to_string(),
+        tokens,
+    });
+}
+
+fn opening_fence(line: &str) -> Option<ActiveFence> {
+    let trimmed = line.trim_start();
+    let marker = trimmed.chars().next()?;
+    if !matches!(marker, '`' | '~') {
+        return None;
+    }
+    let length = trimmed
+        .chars()
+        .take_while(|character| *character == marker)
+        .count();
+    if length < 3 {
+        return None;
+    }
+    let info = trimmed[length..].trim();
+    Some(ActiveFence {
+        marker,
+        length,
+        shell: is_shell_code_info(info),
+    })
+}
+
+fn is_closing_fence(line: &str, fence: &ActiveFence) -> bool {
+    let trimmed = line.trim_start();
+    let length = trimmed
+        .chars()
+        .take_while(|character| *character == fence.marker)
+        .count();
+    length >= fence.length && trimmed[length..].trim().is_empty()
+}
+
+fn is_shell_code_info(info: &str) -> bool {
+    let normalized = info
+        .trim()
+        .trim_matches('{')
+        .trim_matches('}')
+        .trim_start_matches('.')
+        .split_whitespace()
+        .next()
+        .unwrap_or("")
+        .to_ascii_lowercase();
+    matches!(
+        normalized.as_str(),
+        "sh" | "shell" | "bash" | "zsh" | "console"
+    )
+}
+
+fn strip_shell_prompt(line: &str) -> &str {
+    let trimmed = line.trim_start();
+    for prompt in ["$ ", "% ", "> "] {
+        if let Some(command) = trimmed.strip_prefix(prompt) {
+            return command;
+        }
+    }
+    trimmed
+}
+
+fn shell_words_until_control(command: &str) -> std::result::Result<Vec<String>, String> {
+    let mut words = Vec::new();
+    let mut current = String::new();
+    let mut quote = None;
+    let mut escaped = false;
+
+    for character in command.chars() {
+        if escaped {
+            current.push(character);
+            escaped = false;
+            continue;
+        }
+
+        match quote {
+            Some('\'') => {
+                if character == '\'' {
+                    quote = None;
+                } else {
+                    current.push(character);
+                }
+            }
+            Some('"') => match character {
+                '"' => quote = None,
+                '\\' => escaped = true,
+                _ => current.push(character),
+            },
+            Some(_) => unreachable!("only shell quote markers are used"),
+            None => match character {
+                '\\' => escaped = true,
+                '\'' | '"' => quote = Some(character),
+                '#' if current.is_empty() => break,
+                '|' | ';' | '&' | '<' | '>' => {
+                    push_shell_word(&mut words, &mut current);
+                    break;
+                }
+                character if character.is_whitespace() => {
+                    push_shell_word(&mut words, &mut current);
+                }
+                _ => current.push(character),
+            },
+        }
+    }
+
+    if let Some(quote) = quote {
+        return Err(format!("unterminated {quote} quote"));
+    }
+    if escaped {
+        current.push('\\');
+    }
+    push_shell_word(&mut words, &mut current);
+    Ok(words)
+}
+
+fn push_shell_word(words: &mut Vec<String>, current: &mut String) {
+    if !current.is_empty() {
+        words.push(std::mem::take(current));
+    }
+}
+
+fn starts_like_volicord_command(command: &str) -> bool {
+    let mut tokens = command.split_whitespace();
+    let mut token = tokens.next();
+    if token.is_some_and(|token| token == "env") {
+        token = tokens.next();
+    }
+    while token.is_some_and(is_env_assignment) {
+        token = tokens.next();
+    }
+    token.is_some_and(is_volicord_binary)
+}
+
+fn validate_volicord_command(tokens: &[String]) -> std::result::Result<(), String> {
+    let Some(command_start) = volicord_command_start(tokens) else {
+        return Ok(());
+    };
+    let args = &tokens[command_start + 1..];
+    let Some(command) = args.first().map(String::as_str) else {
+        return Ok(());
+    };
+
+    match command {
+        "-h" | "--help" | "help" => validate_no_more_args(args, "volicord help"),
+        "-V" | "--version" => validate_no_more_args(args, "volicord version"),
+        "setup" => validate_setup_command(&args[1..]),
+        "doctor" => validate_doctor_command(&args[1..]),
+        "connect" => validate_connect_command(&args[1..]),
+        "connections" => validate_connections_command(&args[1..]),
+        "connection" => validate_connection_command(&args[1..]),
+        "project" => validate_project_command(&args[1..]),
+        "export" => validate_export_command(&args[1..]),
+        "user" => validate_user_command(&args[1..]),
+        other => Err(format!(
+            "unknown `volicord` command `{other}`; use a supported administrative command"
+        )),
+    }
+}
+
+fn volicord_command_start(tokens: &[String]) -> Option<usize> {
+    let mut index = 0;
+    if tokens.first().is_some_and(|token| token == "env") {
+        index += 1;
+    }
+    while tokens
+        .get(index)
+        .is_some_and(|token| is_env_assignment(token))
+    {
+        index += 1;
+    }
+    tokens
+        .get(index)
+        .is_some_and(|token| is_volicord_binary(token))
+        .then_some(index)
+}
+
+fn is_env_assignment(token: &str) -> bool {
+    let Some((name, _)) = token.split_once('=') else {
+        return false;
+    };
+    let mut chars = name.chars();
+    let Some(first) = chars.next() else {
+        return false;
+    };
+    (first == '_' || first.is_ascii_alphabetic())
+        && chars.all(|character| character == '_' || character.is_ascii_alphanumeric())
+}
+
+fn is_volicord_binary(token: &str) -> bool {
+    token == "volicord"
+        || token == "$VOLICORD_BIN"
+        || token == "${VOLICORD_BIN}"
+        || token
+            .rsplit('/')
+            .next()
+            .is_some_and(|name| name == "volicord")
+}
+
+fn validate_no_more_args(args: &[String], context: &str) -> std::result::Result<(), String> {
+    if args.len() == 1 {
+        Ok(())
+    } else {
+        Err(format!(
+            "{context} does not accept trailing argument `{}`",
+            args[1]
+        ))
+    }
+}
+
+fn validate_setup_command(args: &[String]) -> std::result::Result<(), String> {
+    if is_help_only(args) {
+        return Ok(());
+    }
+    let parsed = parse_command_args(args, &["json"], &["home", "link-bin", "mcp-command"])?;
+    reject_positionals(&parsed, 0, "`volicord setup`")
+}
+
+fn validate_doctor_command(args: &[String]) -> std::result::Result<(), String> {
+    if is_help_only(args) {
+        return Ok(());
+    }
+    let parsed = parse_command_args(args, &["json"], &[])?;
+    reject_positionals(&parsed, 0, "`volicord doctor`")
+}
+
+fn validate_connect_command(args: &[String]) -> std::result::Result<(), String> {
+    if is_help_only(args) {
+        return Ok(());
+    }
+    let parsed = parse_command_args(
+        args,
+        &["shared", "global", "read-only", "dry-run", "json"],
+        &["repo"],
+    )?;
+    reject_mutually_exclusive(&parsed, "shared", "global")?;
+    validate_optional_host(&parsed, "`volicord connect`")
+}
+
+fn validate_connections_command(args: &[String]) -> std::result::Result<(), String> {
+    if is_help_only(args) {
+        return Ok(());
+    }
+    let parsed = parse_command_args(args, &["json"], &["repo"])?;
+    reject_positionals(&parsed, 0, "`volicord connections`")
+}
+
+fn validate_connection_command(args: &[String]) -> std::result::Result<(), String> {
+    let Some(subcommand) = args.first().map(String::as_str) else {
+        return Ok(());
+    };
+    match subcommand {
+        "-h" | "--help" | "help" => validate_no_more_args(args, "`volicord connection` help"),
+        "status" | "verify" => {
+            if is_help_only(&args[1..]) {
+                return Ok(());
+            }
+            let parsed = parse_command_args(&args[1..], &["shared", "global", "json"], &["repo"])?;
+            reject_mutually_exclusive(&parsed, "shared", "global")?;
+            validate_optional_host(&parsed, &format!("`volicord connection {subcommand}`"))
+        }
+        "mode" => {
+            if is_help_only(&args[1..]) {
+                return Ok(());
+            }
+            let parsed = parse_command_args(&args[1..], &["shared", "global", "json"], &["repo"])?;
+            reject_mutually_exclusive(&parsed, "shared", "global")?;
+            validate_connection_mode_positionals(&parsed)
+        }
+        "remove" => {
+            if is_help_only(&args[1..]) {
+                return Ok(());
+            }
+            let parsed = parse_command_args(
+                &args[1..],
+                &["shared", "global", "dry-run", "json"],
+                &["repo"],
+            )?;
+            reject_mutually_exclusive(&parsed, "shared", "global")?;
+            validate_optional_host(&parsed, "`volicord connection remove`")
+        }
+        other => Err(format!(
+            "unknown `volicord connection` subcommand `{other}`; use status, verify, mode, or remove"
+        )),
+    }
+}
+
+fn validate_project_command(args: &[String]) -> std::result::Result<(), String> {
+    let Some(subcommand) = args.first().map(String::as_str) else {
+        return Ok(());
+    };
+    match subcommand {
+        "-h" | "--help" | "help" => validate_no_more_args(args, "`volicord project` help"),
+        "use" => {
+            if is_help_only(&args[1..]) {
+                return Ok(());
+            }
+            let parsed = parse_command_args(&args[1..], &["json"], &[])?;
+            reject_positionals(&parsed, 1, "`volicord project use`")
+        }
+        "current" | "list" => {
+            if is_help_only(&args[1..]) {
+                return Ok(());
+            }
+            let parsed = parse_command_args(&args[1..], &["json"], &[])?;
+            reject_positionals(&parsed, 0, &format!("`volicord project {subcommand}`"))
+        }
+        "rename" => {
+            if is_help_only(&args[1..]) {
+                return Ok(());
+            }
+            let parsed = parse_command_args(&args[1..], &["json"], &["repo"])?;
+            require_positionals(&parsed, 1, 1, "`volicord project rename`")
+        }
+        "forget" => {
+            if is_help_only(&args[1..]) {
+                return Ok(());
+            }
+            let parsed = parse_command_args(&args[1..], &["json"], &[])?;
+            reject_positionals(&parsed, 1, "`volicord project forget`")
+        }
+        other => Err(format!(
+            "unknown `volicord project` subcommand `{other}`; use use, current, list, rename, or forget"
+        )),
+    }
+}
+
+fn validate_export_command(args: &[String]) -> std::result::Result<(), String> {
+    match args.first().map(String::as_str) {
+        Some("-h" | "--help" | "help") => validate_no_more_args(args, "`volicord export` help"),
+        Some("mcp-config") => {
+            if is_help_only(&args[1..]) {
+                return Ok(());
+            }
+            let parsed =
+                parse_command_args(&args[1..], &["read-only", "json"], &["output", "repo"])?;
+            reject_positionals(&parsed, 0, "`volicord export mcp-config`")
+        }
+        Some(other) => Err(format!(
+            "unknown `volicord export` subcommand `{other}`; use mcp-config"
+        )),
+        None => Ok(()),
+    }
+}
+
+fn validate_user_command(args: &[String]) -> std::result::Result<(), String> {
+    let Some(subcommand) = args.first().map(String::as_str) else {
+        return Ok(());
+    };
+    match subcommand {
+        "-h" | "--help" | "help" => validate_no_more_args(args, "`volicord user` help"),
+        "status" | "judgments" => {
+            if is_help_only(&args[1..]) {
+                return Ok(());
+            }
+            let parsed = parse_command_args(&args[1..], &["json"], &["repo", "task"])?;
+            reject_positionals(&parsed, 0, &format!("`volicord user {subcommand}`"))
+        }
+        "judgment" => validate_user_judgment_command(&args[1..]),
+        other => Err(format!(
+            "unknown `volicord user` subcommand `{other}`; use status, judgments, or judgment"
+        )),
+    }
+}
+
+fn validate_user_judgment_command(args: &[String]) -> std::result::Result<(), String> {
+    let Some(subcommand) = args.first().map(String::as_str) else {
+        return Err("`volicord user judgment` requires show or answer".to_string());
+    };
+    match subcommand {
+        "-h" | "--help" | "help" => validate_no_more_args(args, "`volicord user judgment` help"),
+        "show" => {
+            if is_help_only(&args[1..]) {
+                return Ok(());
+            }
+            let parsed = parse_command_args(&args[1..], &["json"], &["repo"])?;
+            require_positionals(&parsed, 1, 1, "`volicord user judgment show`")
+        }
+        "answer" => {
+            if is_help_only(&args[1..]) {
+                return Ok(());
+            }
+            let parsed = parse_command_args(&args[1..], &["json"], &["repo", "note"])?;
+            require_positionals(&parsed, 2, 2, "`volicord user judgment answer`")
+        }
+        other => Err(format!(
+            "unknown `volicord user judgment` subcommand `{other}`; use show or answer"
+        )),
+    }
+}
+
+fn is_help_only(args: &[String]) -> bool {
+    matches!(
+        args,
+        [argument] if matches!(argument.as_str(), "-h" | "--help" | "help")
+    )
+}
+
+fn parse_command_args(
+    args: &[String],
+    flags: &[&str],
+    values: &[&str],
+) -> std::result::Result<ParsedCommandArgs, String> {
+    let mut parsed = ParsedCommandArgs::default();
+    let mut index = 0;
+    while index < args.len() {
+        let token = &args[index];
+        if !token.starts_with("--") {
+            parsed.positionals.push(token.clone());
+            index += 1;
+            continue;
+        }
+
+        let option = token.trim_start_matches("--");
+        let (name, inline_value) = match option.split_once('=') {
+            Some((name, value)) => (name, Some(value)),
+            None => (option, None),
+        };
+        if flags.contains(&name) {
+            if inline_value.is_some() {
+                return Err(format!("option `--{name}` does not accept a value"));
+            }
+            insert_option(&mut parsed, name)?;
+        } else if values.contains(&name) {
+            insert_option(&mut parsed, name)?;
+            if let Some(value) = inline_value {
+                reject_empty_option_value(name, value)?;
+            } else {
+                index += 1;
+                let Some(value) = args.get(index) else {
+                    return Err(format!("missing value for option `--{name}`"));
+                };
+                reject_empty_option_value(name, value)?;
+            }
+        } else {
+            return Err(format!(
+                "option `--{name}` is not supported in this command context"
+            ));
+        }
+        index += 1;
+    }
+    Ok(parsed)
+}
+
+fn insert_option(parsed: &mut ParsedCommandArgs, name: &str) -> std::result::Result<(), String> {
+    if !parsed.options.insert(name.to_string()) {
+        return Err(format!("duplicate option `--{name}`"));
+    }
+    Ok(())
+}
+
+fn reject_empty_option_value(name: &str, value: &str) -> std::result::Result<(), String> {
+    if value.trim().is_empty() {
+        Err(format!("option `--{name}` requires a non-empty value"))
+    } else {
+        Ok(())
+    }
+}
+
+fn reject_mutually_exclusive(
+    parsed: &ParsedCommandArgs,
+    left: &str,
+    right: &str,
+) -> std::result::Result<(), String> {
+    if parsed.options.contains(left) && parsed.options.contains(right) {
+        Err(format!(
+            "options `--{left}` and `--{right}` are mutually exclusive"
+        ))
+    } else {
+        Ok(())
+    }
+}
+
+fn reject_positionals(
+    parsed: &ParsedCommandArgs,
+    max: usize,
+    context: &str,
+) -> std::result::Result<(), String> {
+    require_positionals(parsed, 0, max, context)
+}
+
+fn require_positionals(
+    parsed: &ParsedCommandArgs,
+    min: usize,
+    max: usize,
+    context: &str,
+) -> std::result::Result<(), String> {
+    if parsed.positionals.len() < min {
+        return Err(format!("{context} requires {min} positional argument(s)"));
+    }
+    if parsed.positionals.len() > max {
+        return Err(format!(
+            "{context} accepts at most {max} positional argument(s), found `{}`",
+            parsed.positionals[max]
+        ));
+    }
+    Ok(())
+}
+
+fn validate_optional_host(
+    parsed: &ParsedCommandArgs,
+    context: &str,
+) -> std::result::Result<(), String> {
+    reject_positionals(parsed, 1, context)?;
+    if let Some(host) = parsed.positionals.first() {
+        validate_host(host)?;
+    }
+    Ok(())
+}
+
+fn validate_connection_mode_positionals(
+    parsed: &ParsedCommandArgs,
+) -> std::result::Result<(), String> {
+    match parsed.positionals.as_slice() {
+        [mode] => validate_connection_mode(mode),
+        [host, mode] => {
+            validate_host(host)?;
+            validate_connection_mode(mode)
+        }
+        [] => Err("`volicord connection mode` requires workflow or read-only mode".to_string()),
+        _ => Err("`volicord connection mode` accepts optional HOST and required mode".to_string()),
+    }
+}
+
+fn validate_host(host: &str) -> std::result::Result<(), String> {
+    if matches!(host, "codex" | "claude-code" | "claude_code") {
+        Ok(())
+    } else {
+        Err(format!(
+            "unsupported host `{host}`; use `codex` or `claude-code`"
+        ))
+    }
+}
+
+fn validate_connection_mode(mode: &str) -> std::result::Result<(), String> {
+    if matches!(mode, "workflow" | "read-only") {
+        Ok(())
+    } else {
+        Err(format!(
+            "unsupported connection mode `{mode}`; use `workflow` or `read-only`"
+        ))
     }
 }
 

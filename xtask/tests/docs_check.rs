@@ -960,3 +960,73 @@ fn reports_terminology_map_path_failure() {
 
     assert!(has_category(&report, "terminology.missing_target"));
 }
+
+#[test]
+fn accepts_supported_volicord_shell_command_examples() {
+    let fixture = valid_fixture();
+    let commands = r#"```sh
+./target/debug/volicord setup --mcp-command ./target/debug/volicord-mcp --link-bin ~/.local/bin
+volicord connect codex --read-only
+volicord export mcp-config --output /tmp/volicord.mcp.json
+volicord connection mode codex workflow
+volicord user status --task active
+```
+"#;
+    write(
+        fixture.path(),
+        "docs/en/example.md",
+        &format!("# Overview\n\n{commands}"),
+    );
+    write(
+        fixture.path(),
+        "docs/ko/example.md",
+        &format!("<a id=\"overview\"></a>\n# 개요\n\n{commands}"),
+    );
+
+    let report = report(fixture.path());
+
+    assert!(report.is_ok(), "{:#?}", report.errors());
+}
+
+#[test]
+fn rejects_setup_only_option_on_connect_command_examples() {
+    let fixture = valid_fixture();
+    write(
+        fixture.path(),
+        "docs/en/example.md",
+        "# Overview\n\n```sh\nvolicord connect codex --mcp-command ./target/debug/volicord-mcp\n```\n",
+    );
+
+    let report = report(fixture.path());
+    let errors = category_errors(&report, "command.invalid_example");
+
+    assert_eq!(errors.len(), 1, "{:#?}", report.errors());
+    assert!(
+        errors[0].message().contains("--mcp-command"),
+        "{:#?}",
+        report.errors()
+    );
+    assert!(
+        errors[0].message().contains("volicord connect"),
+        "{:#?}",
+        report.errors()
+    );
+}
+
+#[test]
+fn ignores_unsupported_volicord_commands_in_prose() {
+    let fixture = valid_fixture();
+    write(
+        fixture.path(),
+        "docs/en/example.md",
+        "# Overview\n\nA diagnostic can mention `connection_id`, and prose can name `volicord connect codex --mcp-command ./target/debug/volicord-mcp` without becoming an executable example.\n",
+    );
+
+    let report = report(fixture.path());
+
+    assert!(
+        !has_category(&report, "command.invalid_example"),
+        "{:#?}",
+        report.errors()
+    );
+}
