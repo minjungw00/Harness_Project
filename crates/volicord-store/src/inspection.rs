@@ -128,7 +128,6 @@ pub struct ProjectInspectionRecord {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AgentConnectionInspectionRecord {
     pub connection_internal_id: String,
-    pub connection_id: String,
     pub host_kind: String,
     pub intent: String,
     pub host_scope: String,
@@ -150,7 +149,6 @@ pub struct AgentConnectionInspectionRecord {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ConnectionProjectInspectionRecord {
     pub connection_internal_id: String,
-    pub connection_id: String,
     pub project_internal_id: String,
     pub project_id: String,
     pub created_at: String,
@@ -1093,7 +1091,6 @@ fn read_agent_connection_rows(
         .query_map([], |row| {
             let connection_internal_id = row.get::<_, String>(0)?;
             Ok(AgentConnectionInspectionRecord {
-                connection_id: connection_internal_id.clone(),
                 connection_internal_id,
                 host_kind: row.get(1)?,
                 intent: row.get(2)?,
@@ -1150,7 +1147,6 @@ fn read_connection_project_rows(
             let connection_internal_id = row.get::<_, String>(0)?;
             let project_internal_id = row.get::<_, String>(1)?;
             Ok(ConnectionProjectInspectionRecord {
-                connection_id: connection_internal_id.clone(),
                 connection_internal_id,
                 project_id: project_internal_id.clone(),
                 project_internal_id,
@@ -1348,7 +1344,7 @@ fn validate_verification_status(status: &str) -> Result<(), InspectionIssue> {
         Ok(())
     } else {
         Err(InspectionIssue::Malformed(format!(
-            "agent_connections.last_verified_status is not supported: {status}"
+            "agent_connections.last_verification_status is not supported: {status}"
         )))
     }
 }
@@ -1609,7 +1605,7 @@ mod tests {
 
         assert_eq!(snapshot.agent_connections.len(), 1);
         assert_eq!(
-            snapshot.agent_connections[0].connection_id,
+            snapshot.agent_connections[0].connection_internal_id,
             "agent_inspected"
         );
         assert_eq!(snapshot.agent_connections[0].host_kind, HOST_KIND_CODEX);

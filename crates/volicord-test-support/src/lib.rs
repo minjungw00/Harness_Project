@@ -190,7 +190,7 @@ pub mod core_fixtures {
             ensure_agent_connection(
                 runtime_home.path(),
                 AgentConnectionRegistration {
-                    connection_id: connection_id.clone(),
+                    connection_internal_id: connection_id.clone(),
                     host_kind: HOST_KIND_CODEX.to_owned(),
                     intent: volicord_store::agent_connections::CONNECTION_INTENT_SHARED.to_owned(),
                     host_scope: HOST_SCOPE_PROJECT.to_owned(),
@@ -204,7 +204,7 @@ pub mod core_fixtures {
                     mode: CONNECTION_MODE_WORKFLOW.to_owned(),
                     enabled: true,
                     managed_fingerprint: format!("fixture:{component}"),
-                    last_verified_status: VERIFIED_STATUS_COMPLETE.to_owned(),
+                    last_verification_status: VERIFIED_STATUS_COMPLETE.to_owned(),
                     last_verification_report_json: "{}".to_owned(),
                     last_user_actions_json: "[]".to_owned(),
                     metadata_json: "{}".to_owned(),
@@ -213,7 +213,7 @@ pub mod core_fixtures {
             add_connection_project(
                 runtime_home.path(),
                 ConnectionProjectRegistration {
-                    connection_id: connection_id.clone(),
+                    connection_internal_id: connection_id.clone(),
                     project_id: project_id.clone(),
                 },
             )?;

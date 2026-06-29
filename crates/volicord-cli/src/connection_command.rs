@@ -390,9 +390,9 @@ pub fn run_connect_command(
         &target_hint,
         &server_name,
     )?;
-    let connection_id = existing
+    let connection_internal_id = existing
         .as_ref()
-        .map(|connection| connection.connection_id.clone())
+        .map(|connection| connection.connection_internal_id.clone())
         .unwrap_or_else(|| {
             deterministic_connection_id(
                 host_kind,
@@ -412,7 +412,7 @@ pub fn run_connect_command(
         BuildHostPlanRequest {
             host_kind,
             connection_intent: intent,
-            connection_id: &connection_id,
+            connection_id: &connection_internal_id,
             repo_root: Some(&repo_root),
             project_id: project_hint
                 .as_ref()
@@ -439,7 +439,7 @@ pub fn run_connect_command(
             format: connection_output_format(&parsed),
             action: "connect",
             status: AgentResultStatus::DryRun,
-            connection_id: &connection_id,
+            connection_id: &connection_internal_id,
             host_kind,
             intent,
             host_scope,
@@ -483,7 +483,7 @@ pub fn run_connect_command(
         BuildHostPlanRequest {
             host_kind,
             connection_intent: intent,
-            connection_id: &connection_id,
+            connection_id: &connection_internal_id,
             repo_root: Some(&project.repo_root),
             project_id: Some(&project.project_id),
             project_name: Some(&project.project_name),
@@ -504,7 +504,7 @@ pub fn run_connect_command(
     let mut connection = ensure_agent_connection(
         &runtime_home,
         AgentConnectionRegistration {
-            connection_id: connection_id.clone(),
+            connection_internal_id: connection_internal_id.clone(),
             host_kind: host_kind.as_str().to_owned(),
             intent: intent.as_str().to_owned(),
             host_scope: host_scope.as_str().to_owned(),
@@ -513,9 +513,9 @@ pub fn run_connect_command(
             mode: mode.to_owned(),
             enabled: true,
             managed_fingerprint: host_plan.fingerprint.clone(),
-            last_verified_status: existing
+            last_verification_status: existing
                 .as_ref()
-                .map(|record| record.last_verified_status.clone())
+                .map(|record| record.last_verification_status.clone())
                 .unwrap_or_else(|| VERIFIED_STATUS_NOT_VERIFIED.to_owned()),
             last_verification_report_json: existing
                 .as_ref()
@@ -529,7 +529,7 @@ pub fn run_connect_command(
     add_connection_project(
         &runtime_home,
         ConnectionProjectRegistration {
-            connection_id: connection.connection_id.clone(),
+            connection_internal_id: connection.connection_internal_id.clone(),
             project_id: project.project_id.clone(),
         },
     )?;
@@ -545,13 +545,13 @@ pub fn run_connect_command(
     )?;
     connection = update_agent_connection_verification_report(
         &runtime_home,
-        &connection.connection_id,
+        &connection.connection_internal_id,
         verification.status.store_status(),
         &host_plan.fingerprint,
-        &verification_report_json(&verification)?,
+        &detailed_verification_report_json(&verification)?,
         &user_actions_json(&verification.host.user_actions)?,
     )?;
-    let projects = list_connection_projects(&runtime_home, &connection.connection_id)?;
+    let projects = list_connection_projects(&runtime_home, &connection.connection_internal_id)?;
     render_simplified_connection_output(SimplifiedConnectionOutput {
         format: connection_output_format(&parsed),
         action: "connected",
@@ -581,7 +581,7 @@ pub fn run_connections_command(
         .transpose()?;
     let mut rows = Vec::new();
     for connection in list_agent_connections(&runtime_home)? {
-        let projects = list_connection_projects(&runtime_home, &connection.connection_id)?;
+        let projects = list_connection_projects(&runtime_home, &connection.connection_internal_id)?;
         if repo_root.as_ref().is_none_or(|repo_root| {
             projects
                 .iter()
@@ -671,13 +671,13 @@ fn command_connection_verify(
     )?;
     connection = update_agent_connection_verification_report(
         &runtime_home,
-        &connection.connection_id,
+        &connection.connection_internal_id,
         verification.status.store_status(),
         &host_plan.fingerprint,
-        &verification_report_json(&verification)?,
+        &detailed_verification_report_json(&verification)?,
         &user_actions_json(&verification.host.user_actions)?,
     )?;
-    let projects = list_connection_projects(&runtime_home, &connection.connection_id)?;
+    let projects = list_connection_projects(&runtime_home, &connection.connection_internal_id)?;
     render_simplified_connection_output(SimplifiedConnectionOutput {
         format: connection_output_format(&parsed),
         action: "verified",
@@ -707,7 +707,8 @@ fn command_connection_mode(
     let runtime_home = resolve_runtime_home(|name| process.env_var(name), current_dir)?;
     let selector = connection_selector(&parsed, current_dir, process)?;
     let (connection, _) = select_connection(&runtime_home, &selector)?;
-    let mut connection = set_connection_mode(&runtime_home, &connection.connection_id, &mode)?;
+    let mut connection =
+        set_connection_mode(&runtime_home, &connection.connection_internal_id, &mode)?;
     let mut actions = stored_or_default_user_actions(
         &connection,
         parse_host_kind(&connection.host_kind)?,
@@ -719,13 +720,13 @@ fn command_connection_mode(
     ));
     connection = update_agent_connection_verification_report(
         &runtime_home,
-        &connection.connection_id,
+        &connection.connection_internal_id,
         &connection.last_verification_status,
         &connection.managed_fingerprint,
         &connection.last_verification_report_json,
         &user_actions_json(&actions)?,
     )?;
-    let projects = list_connection_projects(&runtime_home, &connection.connection_id)?;
+    let projects = list_connection_projects(&runtime_home, &connection.connection_internal_id)?;
     render_simplified_connection_output(SimplifiedConnectionOutput {
         format: connection_output_format(&parsed),
         action: "mode_updated",
@@ -778,15 +779,16 @@ fn command_connection_remove(
 
     remove_connection_project(
         &runtime_home,
-        &connection.connection_id,
+        &connection.connection_internal_id,
         &selected_project.project_id,
     )?;
-    let remaining_projects = list_connection_projects(&runtime_home, &connection.connection_id)?;
+    let remaining_projects =
+        list_connection_projects(&runtime_home, &connection.connection_internal_id)?;
     if remaining_projects.is_empty() {
         if let Some(host_plan) = &host_plan {
             remove_host_configuration(host_plan, &connection, process)?;
         }
-        remove_agent_connection_if_unused(&runtime_home, &connection.connection_id)?;
+        remove_agent_connection_if_unused(&runtime_home, &connection.connection_internal_id)?;
     }
     render_simplified_connection_output(SimplifiedConnectionOutput {
         format: connection_output_format(&parsed),
@@ -1155,7 +1157,7 @@ fn select_connection(
         {
             continue;
         }
-        let projects = list_connection_projects(runtime_home, &connection.connection_id)?;
+        let projects = list_connection_projects(runtime_home, &connection.connection_internal_id)?;
         if projects
             .iter()
             .any(|project| project.project.repo_root == selector.repo_root)
@@ -1330,7 +1332,7 @@ fn enforce_single_project_scope(
     if !matches!(scope, HostScope::Project | HostScope::Local) {
         return Ok(());
     }
-    let projects = list_connection_projects(runtime_home, &connection.connection_id)?;
+    let projects = list_connection_projects(runtime_home, &connection.connection_internal_id)?;
     if projects
         .iter()
         .any(|project| project.project_id != project_id)
@@ -1544,7 +1546,7 @@ fn existing_host_plan(
                 .plan_existing(CodexExistingPlanRequest {
                     connection_intent,
                     scope: host_scope,
-                    connection_id: &connection.connection_id,
+                    connection_id: &connection.connection_internal_id,
                     server_name: &connection.server_name,
                     config_target: Path::new(&connection.config_target),
                     mcp_command: &mcp_command,
@@ -1607,7 +1609,11 @@ fn manual_existing_host_plan(
         mode: connection.mode.clone(),
         server_name: connection.server_name.clone(),
         target,
-        entry: ManagedServerEntry::new(&connection.connection_id, mcp_command, runtime_home),
+        entry: ManagedServerEntry::new(
+            &connection.connection_internal_id,
+            mcp_command,
+            runtime_home,
+        ),
         change: PlannedChange::Noop,
         fingerprint: connection.managed_fingerprint.clone(),
         conflicts: Vec::new(),
@@ -1653,7 +1659,7 @@ fn verify_connection(
         process,
         launch,
         runtime_home,
-        &connection.connection_id,
+        &connection.connection_internal_id,
         project_id,
         &connection.mode,
     );
@@ -1661,7 +1667,7 @@ fn verify_connection(
         match process.verify_mcp_stdio(
             launch,
             runtime_home,
-            &connection.connection_id,
+            &connection.connection_internal_id,
             &connection.mode,
         ) {
             Ok(verification) => verification,
@@ -1678,7 +1684,7 @@ fn verify_connection(
             tools: Vec::new(),
         }
     };
-    let status = aggregate_status(&host, &preflight, &handshake.step);
+    let status = aggregate_verification_status(&host, &preflight, &handshake.step);
     Ok(VerificationReport {
         status,
         host,
@@ -1688,7 +1694,7 @@ fn verify_connection(
     })
 }
 
-fn aggregate_status(
+fn aggregate_verification_status(
     host: &Verification,
     preflight: &VerificationStep,
     handshake: &VerificationStep,
@@ -2198,7 +2204,7 @@ fn render_simplified_remove_dry_run(
                 format,
                 action: "remove",
                 status: AgentResultStatus::DryRun,
-                connection_id: &connection.connection_id,
+                connection_id: &connection.connection_internal_id,
                 host_kind: parse_host_kind(&connection.host_kind)?,
                 intent: parse_connection_intent(&connection.intent)?,
                 host_scope: parse_host_scope(&connection.host_scope)?,
@@ -2394,14 +2400,14 @@ fn terminate_child(child: &mut Child, deadline: Instant) -> Result<(), String> {
 
 fn connection_json(connection: &AgentConnectionRecord, project_ids: &[String]) -> Value {
     json!({
-        "connection_id": connection.connection_id,
+        "connection_id": connection.connection_internal_id,
         "host_kind": connection.host_kind,
         "connection_intent": connection.intent,
         "host_scope": connection.host_scope,
         "mode": connection.mode,
         "enabled": connection.enabled,
         "connected_projects": project_ids,
-        "verification_status": connection.last_verified_status,
+        "verification_status": connection.last_verification_status,
         "verification_report": json_object_text(&connection.last_verification_report_json),
         "user_actions": json_array_text(&connection.last_user_actions_json),
         "server_name": connection.server_name,
@@ -2444,7 +2450,9 @@ fn verification_json(report: &VerificationReport) -> Value {
     })
 }
 
-fn verification_report_json(report: &VerificationReport) -> Result<String, ConnectionCommandError> {
+fn detailed_verification_report_json(
+    report: &VerificationReport,
+) -> Result<String, ConnectionCommandError> {
     serde_json::to_string(&verification_json(report))
         .map_err(|error| ConnectionCommandError::runtime(error.to_string()))
 }

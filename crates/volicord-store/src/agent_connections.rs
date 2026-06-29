@@ -53,7 +53,7 @@ pub const VERIFIED_STATUS_FAILED: &str = "failed";
 /// Agent Connection creation or compatible update input.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AgentConnectionRegistration {
-    pub connection_id: String,
+    pub connection_internal_id: String,
     pub host_kind: String,
     pub intent: String,
     pub host_scope: String,
@@ -62,7 +62,7 @@ pub struct AgentConnectionRegistration {
     pub mode: String,
     pub enabled: bool,
     pub managed_fingerprint: String,
-    pub last_verified_status: String,
+    pub last_verification_status: String,
     pub last_verification_report_json: String,
     pub last_user_actions_json: String,
     pub metadata_json: String,
@@ -101,7 +101,6 @@ pub struct AgentConnectionNaturalKey {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AgentConnectionRecord {
     pub connection_internal_id: String,
-    pub connection_id: String,
     pub host_kind: String,
     pub intent: String,
     pub host_scope: String,
@@ -114,7 +113,6 @@ pub struct AgentConnectionRecord {
     pub last_verification_status: String,
     pub last_verification_report_json: String,
     pub last_user_actions_json: String,
-    pub last_verified_status: String,
     pub created_at: String,
     pub updated_at: String,
     pub metadata_json: String,
@@ -123,7 +121,7 @@ pub struct AgentConnectionRecord {
 /// Explicit project allowlist row creation input.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ConnectionProjectRegistration {
-    pub connection_id: String,
+    pub connection_internal_id: String,
     pub project_id: String,
 }
 
@@ -131,7 +129,6 @@ pub struct ConnectionProjectRegistration {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ConnectionProjectRecord {
     pub connection_internal_id: String,
-    pub connection_id: String,
     pub project_internal_id: String,
     pub project_id: String,
     pub created_at: String,
@@ -141,7 +138,7 @@ pub struct ConnectionProjectRecord {
 /// Current dynamic project-access facts for one connection/project pair.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AgentConnectionProjectAccess {
-    pub connection_id: String,
+    pub connection_internal_id: String,
     pub project_id: String,
     pub connection_enabled: bool,
     pub project_allowed: bool,
@@ -176,7 +173,7 @@ pub fn ensure_agent_connection(
     write_agent_connection(
         runtime_home,
         AgentConnectionWriteRegistration {
-            connection_internal_id: registration.connection_id,
+            connection_internal_id: registration.connection_internal_id,
             host_kind: registration.host_kind,
             intent: registration.intent,
             host_scope: registration.host_scope,
@@ -186,7 +183,7 @@ pub fn ensure_agent_connection(
             mode: registration.mode,
             enabled: registration.enabled,
             managed_fingerprint: registration.managed_fingerprint,
-            last_verification_status: registration.last_verified_status,
+            last_verification_status: registration.last_verification_status,
             last_verification_report_json: registration.last_verification_report_json,
             last_user_actions_json: registration.last_user_actions_json,
             metadata_json: registration.metadata_json,
@@ -291,7 +288,9 @@ fn write_agent_connection(
     let tx = begin_immediate_transaction(&mut conn)?;
     require_runtime_home(&tx, &registry_path)?;
 
-    if let Some(existing_target_id) = connection_id_for_target(&tx, &registration)? {
+    if let Some(existing_target_id) =
+        existing_connection_internal_id_for_target(&tx, &registration)?
+    {
         if existing_target_id != registration.connection_internal_id {
             return Err(conflict(
                 "agent_connection",
@@ -404,16 +403,16 @@ fn write_agent_connection(
 /// Reads one Agent Connection.
 pub fn agent_connection_record(
     runtime_home: impl AsRef<Path>,
-    connection_id: &str,
+    connection_internal_id: &str,
 ) -> StoreResult<Option<AgentConnectionRecord>> {
-    validate_identifier("connection_id", connection_id)?;
+    validate_identifier("connection_internal_id", connection_internal_id)?;
     let registry_path = registry_db_path(runtime_home);
     if !registry_path.exists() {
         return Ok(None);
     }
 
     let conn = open_registry_database(registry_path)?;
-    agent_connection_record_from_conn(&conn, connection_id)
+    agent_connection_record_from_conn(&conn, connection_internal_id)
 }
 
 /// Lists Agent Connections in deterministic order.
@@ -458,10 +457,10 @@ pub fn list_agent_connections(
 /// Enables or disables an Agent Connection.
 pub fn set_connection_enabled(
     runtime_home: impl AsRef<Path>,
-    connection_id: &str,
+    connection_internal_id: &str,
     enabled: bool,
 ) -> StoreResult<AgentConnectionRecord> {
-    validate_identifier("connection_id", connection_id)?;
+    validate_identifier("connection_internal_id", connection_internal_id)?;
     let registry_path = registry_db_path(runtime_home);
     let mut conn = open_registry_database(&registry_path)?;
     let tx = begin_immediate_transaction(&mut conn)?;
@@ -471,29 +470,31 @@ pub fn set_connection_enabled(
             SET enabled = ?2,
                 updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
           WHERE connection_internal_id = ?1",
-        params![connection_id, enabled_as_i64(enabled)],
+        params![connection_internal_id, enabled_as_i64(enabled)],
     )?;
     if changed == 0 {
         return Err(StoreError::NotFound {
             entity: "agent_connection",
-            id: connection_id.to_owned(),
+            id: connection_internal_id.to_owned(),
         });
     }
     tx.commit()?;
 
-    agent_connection_record_from_conn(&conn, connection_id)?.ok_or_else(|| StoreError::NotFound {
-        entity: "agent_connection",
-        id: connection_id.to_owned(),
+    agent_connection_record_from_conn(&conn, connection_internal_id)?.ok_or_else(|| {
+        StoreError::NotFound {
+            entity: "agent_connection",
+            id: connection_internal_id.to_owned(),
+        }
     })
 }
 
 /// Updates one Agent Connection mode.
 pub fn set_connection_mode(
     runtime_home: impl AsRef<Path>,
-    connection_id: &str,
+    connection_internal_id: &str,
     mode: &str,
 ) -> StoreResult<AgentConnectionRecord> {
-    validate_identifier("connection_id", connection_id)?;
+    validate_identifier("connection_internal_id", connection_internal_id)?;
     validate_connection_mode(mode)?;
     let registry_path = registry_db_path(runtime_home);
     let mut conn = open_registry_database(&registry_path)?;
@@ -504,31 +505,33 @@ pub fn set_connection_mode(
             SET mode = ?2,
                 updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
           WHERE connection_internal_id = ?1",
-        params![connection_id, mode],
+        params![connection_internal_id, mode],
     )?;
     if changed == 0 {
         return Err(StoreError::NotFound {
             entity: "agent_connection",
-            id: connection_id.to_owned(),
+            id: connection_internal_id.to_owned(),
         });
     }
     tx.commit()?;
 
-    agent_connection_record_from_conn(&conn, connection_id)?.ok_or_else(|| StoreError::NotFound {
-        entity: "agent_connection",
-        id: connection_id.to_owned(),
+    agent_connection_record_from_conn(&conn, connection_internal_id)?.ok_or_else(|| {
+        StoreError::NotFound {
+            entity: "agent_connection",
+            id: connection_internal_id.to_owned(),
+        }
     })
 }
 
 /// Updates last-known Agent Connection verification state and fingerprint.
 pub fn update_agent_connection_verification(
     runtime_home: impl AsRef<Path>,
-    connection_id: &str,
-    last_verified_status: &str,
+    connection_internal_id: &str,
+    last_verification_status: &str,
     managed_fingerprint: &str,
 ) -> StoreResult<AgentConnectionRecord> {
-    validate_identifier("connection_id", connection_id)?;
-    validate_verification_status(last_verified_status)?;
+    validate_identifier("connection_internal_id", connection_internal_id)?;
+    validate_verification_status(last_verification_status)?;
     validate_nonempty("managed_fingerprint", managed_fingerprint)?;
     let registry_path = registry_db_path(runtime_home);
     let mut conn = open_registry_database(&registry_path)?;
@@ -540,32 +543,38 @@ pub fn update_agent_connection_verification(
                 last_verification_status = ?3,
                 updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
           WHERE connection_internal_id = ?1",
-        params![connection_id, managed_fingerprint, last_verified_status],
+        params![
+            connection_internal_id,
+            managed_fingerprint,
+            last_verification_status
+        ],
     )?;
     if changed == 0 {
         return Err(StoreError::NotFound {
             entity: "agent_connection",
-            id: connection_id.to_owned(),
+            id: connection_internal_id.to_owned(),
         });
     }
     tx.commit()?;
 
-    agent_connection_record_from_conn(&conn, connection_id)?.ok_or_else(|| StoreError::NotFound {
-        entity: "agent_connection",
-        id: connection_id.to_owned(),
+    agent_connection_record_from_conn(&conn, connection_internal_id)?.ok_or_else(|| {
+        StoreError::NotFound {
+            entity: "agent_connection",
+            id: connection_internal_id.to_owned(),
+        }
     })
 }
 
 /// Updates verification status, full report JSON, user actions JSON, and fingerprint.
 pub fn update_agent_connection_verification_report(
     runtime_home: impl AsRef<Path>,
-    connection_id: &str,
+    connection_internal_id: &str,
     last_verification_status: &str,
     managed_fingerprint: &str,
     last_verification_report_json: &str,
     last_user_actions_json: &str,
 ) -> StoreResult<AgentConnectionRecord> {
-    validate_identifier("connection_id", connection_id)?;
+    validate_identifier("connection_internal_id", connection_internal_id)?;
     validate_verification_status(last_verification_status)?;
     validate_nonempty("managed_fingerprint", managed_fingerprint)?;
     validate_json_object(
@@ -589,7 +598,7 @@ pub fn update_agent_connection_verification_report(
                 updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
           WHERE connection_internal_id = ?1",
         params![
-            connection_id,
+            connection_internal_id,
             managed_fingerprint,
             last_verification_status,
             last_verification_report_json,
@@ -599,34 +608,36 @@ pub fn update_agent_connection_verification_report(
     if changed == 0 {
         return Err(StoreError::NotFound {
             entity: "agent_connection",
-            id: connection_id.to_owned(),
+            id: connection_internal_id.to_owned(),
         });
     }
     tx.commit()?;
 
-    agent_connection_record_from_conn(&conn, connection_id)?.ok_or_else(|| StoreError::NotFound {
-        entity: "agent_connection",
-        id: connection_id.to_owned(),
+    agent_connection_record_from_conn(&conn, connection_internal_id)?.ok_or_else(|| {
+        StoreError::NotFound {
+            entity: "agent_connection",
+            id: connection_internal_id.to_owned(),
+        }
     })
 }
 
 /// Removes an Agent Connection only when no project memberships remain.
 pub fn remove_agent_connection_if_unused(
     runtime_home: impl AsRef<Path>,
-    connection_id: &str,
+    connection_internal_id: &str,
 ) -> StoreResult<bool> {
-    validate_identifier("connection_id", connection_id)?;
+    validate_identifier("connection_internal_id", connection_internal_id)?;
     let registry_path = registry_db_path(runtime_home);
     let mut conn = open_registry_database(&registry_path)?;
     let tx = begin_immediate_transaction(&mut conn)?;
     require_runtime_home(&tx, &registry_path)?;
-    require_agent_connection(&tx, connection_id)?;
+    require_agent_connection(&tx, connection_internal_id)?;
 
     let membership_count: i64 = tx.query_row(
         "SELECT COUNT(*)
            FROM connection_projects
           WHERE connection_internal_id = ?1",
-        [connection_id],
+        [connection_internal_id],
         |row| row.get(0),
     )?;
     if membership_count != 0 {
@@ -636,7 +647,7 @@ pub fn remove_agent_connection_if_unused(
 
     let changed = tx.execute(
         "DELETE FROM agent_connections WHERE connection_internal_id = ?1",
-        [connection_id],
+        [connection_internal_id],
     )?;
     tx.commit()?;
     Ok(changed > 0)
@@ -653,7 +664,7 @@ pub fn add_connection_project(
     let mut conn = open_registry_database(&registry_path)?;
     let tx = begin_immediate_transaction(&mut conn)?;
     require_runtime_home(&tx, &registry_path)?;
-    let connection = require_agent_connection(&tx, &registration.connection_id)?;
+    let connection = require_agent_connection(&tx, &registration.connection_internal_id)?;
     let project =
         require_current_project_registration(&tx, &runtime_home, &registration.project_id)?;
     tx.execute(
@@ -692,16 +703,16 @@ pub fn add_connection_project(
 /// Removes one project from a connection allowlist.
 pub fn remove_connection_project(
     runtime_home: impl AsRef<Path>,
-    connection_id: &str,
+    connection_internal_id: &str,
     project_id: &str,
 ) -> StoreResult<bool> {
-    validate_identifier("connection_id", connection_id)?;
+    validate_identifier("connection_internal_id", connection_internal_id)?;
     validate_project_id(project_id)?;
     let runtime_home = runtime_home.as_ref().to_path_buf();
     let registry_path = registry_db_path(&runtime_home);
     let mut conn = open_registry_database(&registry_path)?;
     let tx = begin_immediate_transaction(&mut conn)?;
-    let connection = require_agent_connection(&tx, connection_id)?;
+    let connection = require_agent_connection(&tx, connection_internal_id)?;
     let Some(project) = raw_project_record_from_conn(&tx, project_id)? else {
         tx.commit()?;
         return Ok(false);
@@ -722,20 +733,20 @@ pub fn remove_connection_project(
 /// Lists the explicitly allowed projects for one Agent Connection.
 pub fn list_connection_projects(
     runtime_home: impl AsRef<Path>,
-    connection_id: &str,
+    connection_internal_id: &str,
 ) -> StoreResult<Vec<ConnectionProjectRecord>> {
-    validate_identifier("connection_id", connection_id)?;
+    validate_identifier("connection_internal_id", connection_internal_id)?;
     let runtime_home = runtime_home.as_ref().to_path_buf();
     let registry_path = registry_db_path(&runtime_home);
     if !registry_path.exists() {
         return Err(StoreError::NotFound {
             entity: "agent_connection",
-            id: connection_id.to_owned(),
+            id: connection_internal_id.to_owned(),
         });
     }
 
     let conn = open_registry_database(registry_path)?;
-    require_agent_connection(&conn, connection_id)?;
+    require_agent_connection(&conn, connection_internal_id)?;
     let mut stmt = conn.prepare(
         "SELECT
             cp.connection_internal_id,
@@ -755,7 +766,7 @@ pub fn list_connection_projects(
         WHERE cp.connection_internal_id = ?1
         ORDER BY p.project_name, cp.project_internal_id",
     )?;
-    let mut rows = stmt.query([connection_id])?;
+    let mut rows = stmt.query([connection_internal_id])?;
     let mut projects = Vec::new();
     while let Some(row) = rows.next()? {
         let project = connection_project_record_from_row(row)?;
@@ -767,10 +778,10 @@ pub fn list_connection_projects(
 /// Returns current access facts for a connection/project pair.
 pub fn agent_connection_project_access(
     runtime_home: impl AsRef<Path>,
-    connection_id: &str,
+    connection_internal_id: &str,
     project_id: &str,
 ) -> StoreResult<Option<AgentConnectionProjectAccess>> {
-    validate_identifier("connection_id", connection_id)?;
+    validate_identifier("connection_internal_id", connection_internal_id)?;
     validate_project_id(project_id)?;
     let runtime_home = runtime_home.as_ref().to_path_buf();
     let registry_path = registry_db_path(&runtime_home);
@@ -779,7 +790,7 @@ pub fn agent_connection_project_access(
     }
 
     let conn = open_registry_database(registry_path)?;
-    let Some(connection) = agent_connection_record_from_conn(&conn, connection_id)? else {
+    let Some(connection) = agent_connection_record_from_conn(&conn, connection_internal_id)? else {
         return Ok(None);
     };
     let project = raw_project_record_from_conn(&conn, project_id)?;
@@ -808,7 +819,7 @@ pub fn agent_connection_project_access(
         .unwrap_or_else(|| project_id.to_owned());
 
     Ok(Some(AgentConnectionProjectAccess {
-        connection_id: connection.connection_id,
+        connection_internal_id: connection.connection_internal_id,
         project_id: resolved_project_id,
         connection_enabled: connection.enabled,
         project_allowed,
@@ -819,11 +830,11 @@ pub fn agent_connection_project_access(
 /// Returns whether the connection is enabled and the project is allowlisted.
 pub fn is_agent_connection_project_allowed(
     runtime_home: impl AsRef<Path>,
-    connection_id: &str,
+    connection_internal_id: &str,
     project_id: &str,
 ) -> StoreResult<bool> {
     Ok(
-        agent_connection_project_access(runtime_home, connection_id, project_id)?
+        agent_connection_project_access(runtime_home, connection_internal_id, project_id)?
             .is_some_and(|access| access.connection_enabled && access.project_allowed),
     )
 }
@@ -831,14 +842,17 @@ pub fn is_agent_connection_project_allowed(
 fn validate_agent_connection_registration(
     registration: &AgentConnectionRegistration,
 ) -> StoreResult<()> {
-    validate_identifier("connection_id", &registration.connection_id)?;
+    validate_identifier(
+        "connection_internal_id",
+        &registration.connection_internal_id,
+    )?;
     validate_host_kind_scope(&registration.host_kind, &registration.host_scope)?;
     validate_connection_intent(&registration.intent)?;
     validate_nonempty("server_name", &registration.server_name)?;
     validate_nonempty("config_target", &registration.config_target)?;
     validate_connection_mode(&registration.mode)?;
     validate_nonempty("managed_fingerprint", &registration.managed_fingerprint)?;
-    validate_verification_status(&registration.last_verified_status)?;
+    validate_verification_status(&registration.last_verification_status)?;
     validate_json_object(
         "agent_connections.last_verification_report_json",
         &registration.last_verification_report_json,
@@ -924,7 +938,10 @@ fn validate_agent_connection_write_registration(
 fn validate_connection_project_registration(
     registration: &ConnectionProjectRegistration,
 ) -> StoreResult<()> {
-    validate_identifier("connection_id", &registration.connection_id)?;
+    validate_identifier(
+        "connection_internal_id",
+        &registration.connection_internal_id,
+    )?;
     validate_project_id(&registration.project_id)
 }
 
@@ -1002,7 +1019,7 @@ fn validate_verification_status(status: &str) -> StoreResult<()> {
         Ok(())
     } else {
         Err(StoreError::InvalidInput {
-            detail: "last_verified_status is not supported".to_owned(),
+            detail: "last_verification_status is not supported".to_owned(),
         })
     }
 }
@@ -1055,11 +1072,13 @@ fn require_runtime_home(conn: &Connection, registry_path: &Path) -> StoreResult<
 
 fn require_agent_connection(
     conn: &Connection,
-    connection_id: &str,
+    connection_internal_id: &str,
 ) -> StoreResult<AgentConnectionRecord> {
-    agent_connection_record_from_conn(conn, connection_id)?.ok_or_else(|| StoreError::NotFound {
-        entity: "agent_connection",
-        id: connection_id.to_owned(),
+    agent_connection_record_from_conn(conn, connection_internal_id)?.ok_or_else(|| {
+        StoreError::NotFound {
+            entity: "agent_connection",
+            id: connection_internal_id.to_owned(),
+        }
     })
 }
 
@@ -1076,7 +1095,7 @@ fn require_current_project_registration(
 
 fn agent_connection_record_from_conn(
     conn: &Connection,
-    connection_id: &str,
+    connection_internal_id: &str,
 ) -> StoreResult<Option<AgentConnectionRecord>> {
     conn.query_row(
         "SELECT
@@ -1098,7 +1117,7 @@ fn agent_connection_record_from_conn(
             metadata_json
          FROM agent_connections
          WHERE connection_internal_id = ?1",
-        [connection_id],
+        [connection_internal_id],
         agent_connection_record_from_row,
     )
     .optional()
@@ -1109,9 +1128,7 @@ fn agent_connection_record_from_row(
     row: &rusqlite::Row<'_>,
 ) -> rusqlite::Result<AgentConnectionRecord> {
     let connection_internal_id = row.get::<_, String>(0)?;
-    let last_verification_status = row.get::<_, String>(10)?;
     Ok(AgentConnectionRecord {
-        connection_id: connection_internal_id.clone(),
         connection_internal_id,
         host_kind: row.get(1)?,
         intent: row.get(2)?,
@@ -1122,8 +1139,7 @@ fn agent_connection_record_from_row(
         mode: row.get(7)?,
         enabled: row.get::<_, i64>(8)? == 1,
         managed_fingerprint: row.get(9)?,
-        last_verified_status: last_verification_status.clone(),
-        last_verification_status,
+        last_verification_status: row.get(10)?,
         last_verification_report_json: row.get(11)?,
         last_user_actions_json: row.get(12)?,
         created_at: row.get(13)?,
@@ -1135,7 +1151,7 @@ fn agent_connection_record_from_row(
 fn connection_project_record_from_conn(
     conn: &Connection,
     runtime_home: &Path,
-    connection_id: &str,
+    connection_internal_id: &str,
     project_id: &str,
 ) -> StoreResult<Option<ConnectionProjectRecord>> {
     let record = conn
@@ -1157,7 +1173,7 @@ fn connection_project_record_from_conn(
                ON p.project_internal_id = cp.project_internal_id
             WHERE cp.connection_internal_id = ?1
               AND cp.project_internal_id = ?2",
-            params![connection_id, project_id],
+            params![connection_internal_id, project_id],
             connection_project_record_from_row,
         )
         .optional()
@@ -1190,10 +1206,9 @@ fn connection_project_record_from_row(
     row: &rusqlite::Row<'_>,
 ) -> rusqlite::Result<ConnectionProjectRecord> {
     let project_id = row.get::<_, String>(1)?;
-    let connection_id = row.get::<_, String>(0)?;
+    let connection_internal_id = row.get::<_, String>(0)?;
     Ok(ConnectionProjectRecord {
-        connection_id: connection_id.clone(),
-        connection_internal_id: connection_id,
+        connection_internal_id,
         project_id: project_id.clone(),
         project_internal_id: project_id.clone(),
         created_at: row.get(2)?,
@@ -1212,7 +1227,7 @@ fn connection_project_record_from_row(
     })
 }
 
-fn connection_id_for_target(
+fn existing_connection_internal_id_for_target(
     conn: &Connection,
     registration: &AgentConnectionWriteRegistration,
 ) -> StoreResult<Option<String>> {
@@ -1312,7 +1327,7 @@ mod tests {
                 mode: CONNECTION_MODE_READ_ONLY.to_owned(),
                 enabled: false,
                 managed_fingerprint: "fingerprint-updated".to_owned(),
-                last_verified_status: VERIFIED_STATUS_COMPLETE.to_owned(),
+                last_verification_status: VERIFIED_STATUS_COMPLETE.to_owned(),
                 metadata_json: r#"{"updated":true}"#.to_owned(),
                 ..connection("conn_a")
             },
@@ -1321,7 +1336,7 @@ mod tests {
             .expect("connection should be readable");
         let listed = list_agent_connections(fixture.runtime_home.path())?;
 
-        assert_eq!(created.connection_id, "conn_a");
+        assert_eq!(created.connection_internal_id, "conn_a");
         assert_eq!(updated.mode, CONNECTION_MODE_READ_ONLY);
         assert!(!updated.enabled);
         assert_eq!(updated.managed_fingerprint, "fingerprint-updated");
@@ -1338,7 +1353,7 @@ mod tests {
         let error = ensure_agent_connection(
             fixture.runtime_home.path(),
             AgentConnectionRegistration {
-                connection_id: "conn_b".to_owned(),
+                connection_internal_id: "conn_b".to_owned(),
                 ..connection("conn_a")
             },
         )
@@ -1361,14 +1376,14 @@ mod tests {
         let added = add_connection_project(
             fixture.runtime_home.path(),
             ConnectionProjectRegistration {
-                connection_id: "conn_project".to_owned(),
+                connection_internal_id: "conn_project".to_owned(),
                 project_id: PROJECT_ID.to_owned(),
             },
         )?;
         let repeated = add_connection_project(
             fixture.runtime_home.path(),
             ConnectionProjectRegistration {
-                connection_id: "conn_project".to_owned(),
+                connection_internal_id: "conn_project".to_owned(),
                 project_id: PROJECT_ID.to_owned(),
             },
         )?;
@@ -1418,7 +1433,7 @@ mod tests {
         add_connection_project(
             fixture.runtime_home.path(),
             ConnectionProjectRegistration {
-                connection_id: "conn_blocked".to_owned(),
+                connection_internal_id: "conn_blocked".to_owned(),
                 project_id: PROJECT_ID.to_owned(),
             },
         )?;
@@ -1451,9 +1466,9 @@ mod tests {
         Ok(RegistryFixture { runtime_home })
     }
 
-    fn connection(connection_id: &str) -> AgentConnectionRegistration {
+    fn connection(connection_internal_id: &str) -> AgentConnectionRegistration {
         AgentConnectionRegistration {
-            connection_id: connection_id.to_owned(),
+            connection_internal_id: connection_internal_id.to_owned(),
             host_kind: HOST_KIND_CODEX.to_owned(),
             intent: CONNECTION_INTENT_PERSONAL.to_owned(),
             host_scope: HOST_SCOPE_USER.to_owned(),
@@ -1462,7 +1477,7 @@ mod tests {
             mode: CONNECTION_MODE_WORKFLOW.to_owned(),
             enabled: true,
             managed_fingerprint: "fingerprint".to_owned(),
-            last_verified_status: VERIFIED_STATUS_NOT_VERIFIED.to_owned(),
+            last_verification_status: VERIFIED_STATUS_NOT_VERIFIED.to_owned(),
             last_verification_report_json: "{}".to_owned(),
             last_user_actions_json: "[]".to_owned(),
             metadata_json: "{}".to_owned(),

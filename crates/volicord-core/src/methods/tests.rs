@@ -148,7 +148,7 @@ impl MethodHarness {
         ensure_agent_connection(
             runtime_home.path(),
             AgentConnectionRegistration {
-                connection_id: CONNECTION_ID.to_owned(),
+                connection_internal_id: CONNECTION_ID.to_owned(),
                 host_kind: HOST_KIND_CODEX.to_owned(),
                 intent: volicord_store::agent_connections::CONNECTION_INTENT_SHARED.to_owned(),
                 host_scope: HOST_SCOPE_PROJECT.to_owned(),
@@ -162,7 +162,7 @@ impl MethodHarness {
                 mode: CONNECTION_MODE_WORKFLOW.to_owned(),
                 enabled: true,
                 managed_fingerprint: "fixture:methods".to_owned(),
-                last_verified_status: VERIFIED_STATUS_COMPLETE.to_owned(),
+                last_verification_status: VERIFIED_STATUS_COMPLETE.to_owned(),
                 last_verification_report_json: "{}".to_owned(),
                 last_user_actions_json: "[]".to_owned(),
                 metadata_json: "{}".to_owned(),
@@ -171,7 +171,7 @@ impl MethodHarness {
         add_connection_project(
             runtime_home.path(),
             ConnectionProjectRegistration {
-                connection_id: CONNECTION_ID.to_owned(),
+                connection_internal_id: CONNECTION_ID.to_owned(),
                 project_id: PROJECT_ID.to_owned(),
             },
         )?;

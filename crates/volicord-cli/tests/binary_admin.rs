@@ -442,7 +442,10 @@ fn export_mcp_config_writes_default_path_and_connection_context() -> Result<(), 
     assert_eq!(record.host_scope, HOST_SCOPE_EXPORT);
     assert_eq!(record.mode, CONNECTION_MODE_WORKFLOW);
     assert_eq!(record.config_target, path_text(&output_path));
-    assert_eq!(record.last_verified_status, VERIFIED_STATUS_ACTION_REQUIRED);
+    assert_eq!(
+        record.last_verification_status,
+        VERIFIED_STATUS_ACTION_REQUIRED
+    );
     let projects = list_connection_projects(runtime_home.path(), connection_id)?;
     assert_eq!(projects.len(), 1);
     assert_eq!(projects[0].project.repo_root, repo_root);

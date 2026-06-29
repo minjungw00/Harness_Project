@@ -326,7 +326,7 @@ fn set_connection_mode(fixture: &CoreFixture, mode: &str) -> Result<(), Box<dyn 
     ensure_agent_connection(
         fixture.runtime_home_path(),
         AgentConnectionRegistration {
-            connection_id: existing.connection_id,
+            connection_internal_id: existing.connection_internal_id,
             host_kind: existing.host_kind,
             intent: existing.intent,
             host_scope: existing.host_scope,
@@ -335,7 +335,7 @@ fn set_connection_mode(fixture: &CoreFixture, mode: &str) -> Result<(), Box<dyn 
             mode: mode.to_owned(),
             enabled: existing.enabled,
             managed_fingerprint: existing.managed_fingerprint,
-            last_verified_status: existing.last_verified_status,
+            last_verification_status: existing.last_verification_status,
             last_verification_report_json: existing.last_verification_report_json,
             last_user_actions_json: existing.last_user_actions_json,
             metadata_json: existing.metadata_json,
@@ -364,7 +364,7 @@ fn add_project(
         add_connection_project(
             fixture.runtime_home_path(),
             ConnectionProjectRegistration {
-                connection_id: fixture.connection_id().to_owned(),
+                connection_internal_id: fixture.connection_id().to_owned(),
                 project_id: project_id.to_owned(),
             },
         )?;

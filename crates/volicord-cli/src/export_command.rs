@@ -162,9 +162,9 @@ where
     let output_path = resolve_output_path(current_dir, options.output.as_deref());
     let config_target = path_text(&output_path);
     let existing = connection_for_export_target(&runtime_home, &config_target)?;
-    let connection_id = existing
+    let connection_internal_id = existing
         .as_ref()
-        .map(|connection| connection.connection_id.clone())
+        .map(|connection| connection.connection_internal_id.clone())
         .unwrap_or_else(|| deterministic_connection_id(&config_target));
     let expected_fingerprint = existing
         .as_ref()
@@ -177,7 +177,7 @@ where
 
     let adapter = GenericAdapter;
     let plan = adapter.plan_export(GenericExportRequest {
-        connection_id: &connection_id,
+        connection_id: &connection_internal_id,
         installation_profile: installation_profile_context(&runtime_home, &setup_profile),
         mode,
         target_path: &output_path,
@@ -192,7 +192,7 @@ where
     let connection = ensure_agent_connection(
         &runtime_home,
         AgentConnectionRegistration {
-            connection_id: connection_id.clone(),
+            connection_internal_id: connection_internal_id.clone(),
             host_kind: HOST_KIND_GENERIC.to_owned(),
             intent: CONNECTION_INTENT_PERSONAL.to_owned(),
             host_scope: HOST_SCOPE_EXPORT.to_owned(),
@@ -201,7 +201,7 @@ where
             mode: mode.to_owned(),
             enabled: true,
             managed_fingerprint: plan.fingerprint.clone(),
-            last_verified_status: VERIFIED_STATUS_ACTION_REQUIRED.to_owned(),
+            last_verification_status: VERIFIED_STATUS_ACTION_REQUIRED.to_owned(),
             last_verification_report_json: export_verification_report_json()?,
             last_user_actions_json: user_actions_json(&plan.user_actions)?,
             metadata_json,
@@ -210,7 +210,7 @@ where
     add_connection_project(
         &runtime_home,
         ConnectionProjectRegistration {
-            connection_id: connection.connection_id.clone(),
+            connection_internal_id: connection.connection_internal_id.clone(),
             project_id: project.project_id.clone(),
         },
     )?;
@@ -487,10 +487,10 @@ fn render_export_output(data: ExportRenderData<'_>) -> Result<String, ExportComm
                 "mode": data.mode,
                 "connection": {
                     "status": data.connection_status,
-                    "connection_id": data.connection.connection_id,
+                    "connection_id": data.connection.connection_internal_id,
                     "host_kind": data.connection.host_kind,
                     "host_scope": data.connection.host_scope,
-                    "verification_status": data.connection.last_verified_status,
+                    "verification_status": data.connection.last_verification_status,
                     "config_target": data.connection.config_target,
                 },
                 "planned_change": planned_change_text(data.planned_change),

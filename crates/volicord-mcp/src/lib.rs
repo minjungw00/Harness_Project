@@ -107,7 +107,7 @@ pub struct McpToolDefinition {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct McpConnectionContext {
     pub runtime_home: PathBuf,
-    pub connection_id: AgentConnectionId,
+    pub connection_internal_id: AgentConnectionId,
     pub mode: AgentConnectionMode,
     pub invocation_binding_basis: String,
 }
@@ -118,8 +118,8 @@ impl McpConnectionContext {
         runtime_home: impl AsRef<Path>,
         connection_id: impl Into<String>,
     ) -> Result<Self, McpAdapterError> {
-        let connection_id = connection_id.into();
-        let (context, _, _) = resolve_connection_context(runtime_home, &connection_id)?;
+        let connection_internal_id = connection_id.into();
+        let (context, _, _) = resolve_connection_context(runtime_home, &connection_internal_id)?;
         Ok(context)
     }
 
@@ -135,7 +135,7 @@ impl McpConnectionContext {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct McpConnectionStartupInspection {
     pub runtime_home: PathBuf,
-    pub connection_id: AgentConnectionId,
+    pub connection_internal_id: AgentConnectionId,
     pub mode: AgentConnectionMode,
     pub enabled: bool,
     pub allowed_project_count: usize,
@@ -149,9 +149,9 @@ impl McpConnectionStartupInspection {
         connection_id: impl Into<String>,
         detail_project_id: Option<ProjectId>,
     ) -> Result<Self, McpAdapterError> {
-        let connection_id = connection_id.into();
+        let connection_internal_id = connection_id.into();
         let (context, connection, projects) =
-            resolve_connection_context(runtime_home, &connection_id)?;
+            resolve_connection_context(runtime_home, &connection_internal_id)?;
         let selected_projects = if let Some(project_id) = detail_project_id {
             if !projects
                 .iter()
@@ -160,7 +160,7 @@ impl McpConnectionStartupInspection {
                 return Err(McpAdapterError::Environment(format!(
                     "project {} is outside connection {} project allowlist",
                     project_id.as_str(),
-                    connection.connection_id
+                    connection.connection_internal_id
                 )));
             }
             projects
@@ -178,7 +178,7 @@ impl McpConnectionStartupInspection {
 
         Ok(Self {
             runtime_home: context.runtime_home.clone(),
-            connection_id: context.connection_id,
+            connection_internal_id: context.connection_internal_id,
             mode: context.mode,
             enabled: connection.enabled,
             allowed_project_count: projects.len(),
@@ -190,7 +190,7 @@ impl McpConnectionStartupInspection {
     pub fn connection_context(&self) -> McpConnectionContext {
         McpConnectionContext {
             runtime_home: self.runtime_home.clone(),
-            connection_id: self.connection_id.clone(),
+            connection_internal_id: self.connection_internal_id.clone(),
             mode: self.mode,
             invocation_binding_basis: DEFAULT_INVOCATION_BINDING_BASIS.to_owned(),
         }
@@ -206,7 +206,7 @@ impl McpConnectionStartupInspection {
         let mut report = format!(
             "configuration: valid\ntransport: stdio\nruntime_home: {}\nconnection_id: {}\nmode: {}\nenabled: {}\nallowed_projects: {}\navailable_projects: {}\nverification_scope: startup_check_only\n",
             self.runtime_home.display(),
-            self.connection_id.as_str(),
+            self.connection_internal_id.as_str(),
             self.mode.as_str(),
             self.enabled,
             self.allowed_project_count,
@@ -292,7 +292,7 @@ impl McpAdapter {
     pub fn tools(&self) -> Result<Vec<McpToolDefinition>, McpAdapterError> {
         let connection = current_enabled_connection(
             &self.runtime_home,
-            self.context.connection_id.as_str(),
+            self.context.connection_internal_id.as_str(),
             "tools/list",
         )?;
         let mode = parse_connection_mode(&connection.mode).map_err(|error| {
@@ -312,7 +312,9 @@ impl McpAdapter {
     ) -> McpDerivedInvocationContext {
         McpDerivedInvocationContext {
             project_id: envelope.project_id.clone(),
-            actor_source: ActorSource::agent_connection(self.context.connection_id.clone()),
+            actor_source: ActorSource::agent_connection(
+                self.context.connection_internal_id.clone(),
+            ),
             operation_category,
             invocation_binding_basis: self.context.invocation_binding_basis.clone(),
         }
@@ -662,12 +664,14 @@ impl McpAdapter {
     fn list_projects_result(&self) -> Result<ListProjectsResult, McpAdapterError> {
         let connection = current_enabled_connection(
             &self.runtime_home,
-            self.context.connection_id.as_str(),
+            self.context.connection_internal_id.as_str(),
             "volicord.list_projects",
         )?;
-        let projects =
-            list_connection_projects(&self.runtime_home, self.context.connection_id.as_str())
-                .map_err(McpAdapterError::Store)?;
+        let projects = list_connection_projects(
+            &self.runtime_home,
+            self.context.connection_internal_id.as_str(),
+        )
+        .map_err(McpAdapterError::Store)?;
         let items = projects
             .iter()
             .map(|project| inspect_allowed_project(&self.runtime_home, project))
@@ -686,7 +690,7 @@ impl McpAdapter {
         })?;
 
         Ok(ListProjectsResult {
-            connection_id: connection.connection_id,
+            connection_id: connection.connection_internal_id,
             mode,
             projects: items,
         })
@@ -734,7 +738,7 @@ impl McpAdapter {
         } else {
             RequiredNullable::some(IdempotencyKey::new(generated_metadata_id(
                 "idem",
-                self.context.connection_id.as_str(),
+                self.context.connection_internal_id.as_str(),
                 tool_name,
             )))
         };
@@ -744,7 +748,7 @@ impl McpAdapter {
             task_id: task_id.cloned().into(),
             request_id: RequestId::new(generated_metadata_id(
                 "req",
-                self.context.connection_id.as_str(),
+                self.context.connection_internal_id.as_str(),
                 tool_name,
             )),
             idempotency_key,
@@ -767,18 +771,24 @@ impl McpAdapter {
         &self,
         requested_project_id: Option<&str>,
     ) -> Result<ProjectId, McpAdapterError> {
-        let connection_id = self.context.connection_id.as_str();
-        let _connection =
-            current_enabled_connection(&self.runtime_home, connection_id, "project routing")?;
+        let connection_internal_id = self.context.connection_internal_id.as_str();
+        let _connection = current_enabled_connection(
+            &self.runtime_home,
+            connection_internal_id,
+            "project routing",
+        )?;
 
         if let Some(project_id) = requested_project_id {
-            let access =
-                agent_connection_project_access(&self.runtime_home, connection_id, project_id)
-                    .map_err(McpAdapterError::Store)?
-                    .ok_or_else(|| McpAdapterError::ToolExecution {
-                        tool_name: "project routing".to_owned(),
-                        message: format!("connection {connection_id} is not registered"),
-                    })?;
+            let access = agent_connection_project_access(
+                &self.runtime_home,
+                connection_internal_id,
+                project_id,
+            )
+            .map_err(McpAdapterError::Store)?
+            .ok_or_else(|| McpAdapterError::ToolExecution {
+                tool_name: "project routing".to_owned(),
+                message: format!("connection {connection_internal_id} is not registered"),
+            })?;
             if !access.connection_enabled {
                 return Err(routing_error("connection is disabled"));
             }
@@ -791,8 +801,7 @@ impl McpAdapter {
                 .project
                 .ok_or_else(|| routing_error(format!("project {project_id} is not registered")))?;
             let project_record = ConnectionProjectRecord {
-                connection_internal_id: connection_id.to_owned(),
-                connection_id: connection_id.to_owned(),
+                connection_internal_id: connection_internal_id.to_owned(),
                 project_internal_id: project.project_internal_id.clone(),
                 project_id: project.project_id.clone(),
                 created_at: String::new(),
@@ -802,7 +811,7 @@ impl McpAdapter {
             return selected_project_from_availability(availability);
         }
 
-        let projects = list_connection_projects(&self.runtime_home, connection_id)
+        let projects = list_connection_projects(&self.runtime_home, connection_internal_id)
             .map_err(McpAdapterError::Store)?;
         if projects.is_empty() {
             return Err(routing_error(
@@ -828,7 +837,7 @@ impl McpAdapter {
     ) -> Result<(), McpAdapterError> {
         let connection = current_enabled_connection(
             &self.runtime_home,
-            self.context.connection_id.as_str(),
+            self.context.connection_internal_id.as_str(),
             tool_name,
         )?;
         let current_mode = parse_connection_mode(&connection.mode).map_err(|error| {
@@ -1041,7 +1050,7 @@ fn process_env_var(name: &str) -> Option<OsString> {
 
 fn resolve_connection_context(
     runtime_home: impl AsRef<Path>,
-    connection_id: &str,
+    connection_internal_id: &str,
 ) -> Result<
     (
         McpConnectionContext,
@@ -1069,19 +1078,21 @@ fn resolve_connection_context(
         }
         Err(error) => return Err(McpAdapterError::Store(error)),
     }
-    validate_identifier_text("connection_id", connection_id)?;
-    let connection = agent_connection_record(&runtime_home, connection_id)
+    validate_identifier_text("connection_internal_id", connection_internal_id)?;
+    let connection = agent_connection_record(&runtime_home, connection_internal_id)
         .map_err(McpAdapterError::Store)?
         .ok_or_else(|| {
-            McpAdapterError::Environment(format!("connection {connection_id} is not registered"))
+            McpAdapterError::Environment(format!(
+                "connection {connection_internal_id} is not registered"
+            ))
         })?;
     let mode = validate_connection_record(&connection)?;
-    let projects =
-        list_connection_projects(&runtime_home, connection_id).map_err(McpAdapterError::Store)?;
+    let projects = list_connection_projects(&runtime_home, connection_internal_id)
+        .map_err(McpAdapterError::Store)?;
 
     let context = McpConnectionContext {
         runtime_home,
-        connection_id: AgentConnectionId::new(connection.connection_id.clone()),
+        connection_internal_id: AgentConnectionId::new(connection.connection_internal_id.clone()),
         mode,
         invocation_binding_basis: DEFAULT_INVOCATION_BINDING_BASIS.to_owned(),
     };
@@ -1094,10 +1105,10 @@ fn validate_connection_record(
     if !connection.enabled {
         return Err(McpAdapterError::Environment(format!(
             "connection {} is disabled",
-            connection.connection_id
+            connection.connection_internal_id
         )));
     }
-    validate_identifier_text("connection_id", &connection.connection_id)?;
+    validate_identifier_text("connection_internal_id", &connection.connection_internal_id)?;
     match serde_json::from_str::<Value>(&connection.metadata_json) {
         Ok(Value::Object(_)) => (),
         Ok(_) => {
@@ -1122,14 +1133,14 @@ fn parse_connection_mode(mode: &str) -> Result<AgentConnectionMode, McpAdapterEr
 
 fn current_enabled_connection(
     runtime_home: &Path,
-    connection_id: &str,
+    connection_internal_id: &str,
     tool_name: &str,
 ) -> Result<AgentConnectionRecord, McpAdapterError> {
-    let connection = agent_connection_record(runtime_home, connection_id)
+    let connection = agent_connection_record(runtime_home, connection_internal_id)
         .map_err(McpAdapterError::Store)?
         .ok_or_else(|| McpAdapterError::ToolExecution {
             tool_name: tool_name.to_owned(),
-            message: format!("connection {connection_id} is not registered"),
+            message: format!("connection {connection_internal_id} is not registered"),
         })?;
     validate_connection_record(&connection).map_err(|error| McpAdapterError::ToolExecution {
         tool_name: tool_name.to_owned(),
@@ -1964,7 +1975,10 @@ mod tests {
 
         let context =
             McpConnectionContext::resolve(fixture.runtime_home_path(), fixture.connection_id())?;
-        assert_eq!(context.connection_id.as_str(), fixture.connection_id());
+        assert_eq!(
+            context.connection_internal_id.as_str(),
+            fixture.connection_id()
+        );
         assert_eq!(context.mode, AgentConnectionMode::Workflow);
 
         let report = preflight_check(
@@ -2083,7 +2097,7 @@ mod tests {
         ensure_agent_connection(
             fixture.runtime_home_path(),
             AgentConnectionRegistration {
-                connection_id: existing.connection_id,
+                connection_internal_id: existing.connection_internal_id,
                 host_kind: existing.host_kind,
                 intent: existing.intent,
                 host_scope: existing.host_scope,
@@ -2092,7 +2106,7 @@ mod tests {
                 mode: mode.to_owned(),
                 enabled: existing.enabled,
                 managed_fingerprint: existing.managed_fingerprint,
-                last_verified_status: existing.last_verified_status,
+                last_verification_status: existing.last_verification_status,
                 last_verification_report_json: existing.last_verification_report_json,
                 last_user_actions_json: existing.last_user_actions_json,
                 metadata_json: existing.metadata_json,
