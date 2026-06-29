@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 
 use std::{
+    collections::BTreeSet,
     error::Error,
     fs,
     path::{Path, PathBuf},
@@ -41,7 +42,6 @@ fn binary_help_uses_agent_connection_model() -> Result<(), Box<dyn Error>> {
     assert!(text.contains("volicord connect [HOST]"));
     assert!(text.contains("volicord connections [--repo PATH]"));
     assert!(text.contains("volicord connection status [HOST]"));
-    assert_removed_low_level_flags_absent(&text);
     assert!(!text.contains("volicord agent connect"));
     assert!(text.contains("volicord user judgment answer INDEX_OR_ID OPTION_INDEX_OR_ID"));
     assert!(text.contains("User Channel"));
@@ -63,22 +63,86 @@ fn binary_help_uses_agent_connection_model() -> Result<(), Box<dyn Error>> {
     assert!(connect_text.contains("--repo PATH"));
     assert!(connect_text.contains("--shared|--global"));
     assert!(connect_text.contains("--read-only"));
-    assert!(!connect_text.contains("--mcp-command"));
-    assert_removed_low_level_flags_absent(&connect_text);
 
     let connection_help = run_without_home(["connection", "status", "--help"])?;
     assert_success(&connection_help);
     let connection_text = stdout(&connection_help);
     assert!(connection_text.contains("volicord connection status [HOST]"));
-    assert!(connection_text.contains("volicord connection verify [HOST]"));
-    assert_removed_low_level_flags_absent(&connection_text);
 
     let export_help = run_without_home(["export", "mcp-config", "--help"])?;
     assert_success(&export_help);
     let export_text = stdout(&export_help);
     assert!(export_text.contains("volicord export mcp-config"));
     assert!(export_text.contains("--output PATH"));
-    assert_removed_low_level_flags_absent(&export_text);
+    Ok(())
+}
+
+#[test]
+fn binary_help_options_match_supported_contracts() -> Result<(), Box<dyn Error>> {
+    assert_help_options(
+        ["--help"],
+        &[
+            "--version",
+            "--home",
+            "--link-bin",
+            "--mcp-command",
+            "--json",
+            "--output",
+            "--repo",
+            "--shared",
+            "--global",
+            "--read-only",
+            "--dry-run",
+            "--task",
+            "--note",
+        ],
+    )?;
+    assert_help_options(
+        ["setup", "--help"],
+        &["--home", "--link-bin", "--mcp-command", "--json"],
+    )?;
+    assert_help_options(["doctor", "--help"], &["--json"])?;
+    assert_help_options(
+        ["connect", "--help"],
+        &[
+            "--repo",
+            "--shared",
+            "--global",
+            "--read-only",
+            "--dry-run",
+            "--json",
+        ],
+    )?;
+    assert_help_options(["connections", "--help"], &["--repo", "--json"])?;
+    assert_help_options(
+        ["connection", "--help"],
+        &["--repo", "--shared", "--global", "--dry-run", "--json"],
+    )?;
+    assert_help_options(
+        ["connection", "status", "--help"],
+        &["--repo", "--shared", "--global", "--json"],
+    )?;
+    assert_help_options(
+        ["connection", "verify", "--help"],
+        &["--repo", "--shared", "--global", "--json"],
+    )?;
+    assert_help_options(
+        ["connection", "mode", "--help"],
+        &["--repo", "--shared", "--global", "--json"],
+    )?;
+    assert_help_options(
+        ["connection", "remove", "--help"],
+        &["--repo", "--shared", "--global", "--dry-run", "--json"],
+    )?;
+    assert_help_options(
+        ["export", "mcp-config", "--help"],
+        &["--output", "--repo", "--read-only", "--json"],
+    )?;
+    assert_help_options(["project", "--help"], &["--repo", "--json"])?;
+    assert_help_options(
+        ["user", "--help"],
+        &["--repo", "--task", "--note", "--json"],
+    )?;
     Ok(())
 }
 
@@ -999,23 +1063,62 @@ fn run_without_home<const N: usize>(args: [&str; N]) -> Result<Output, Box<dyn E
     Ok(Command::new(volicord_bin()).args(args).output()?)
 }
 
-fn assert_removed_low_level_flags_absent(text: &str) {
-    for removed in [
-        "--export-path",
-        "--export-dir",
-        "--connection-id ID",
-        "--mode read_only|workflow",
-        "--repo-root PATH",
-        "--server-name",
-        "--allow-repository-write",
-        "--replace-managed",
-        "--project-id ID",
-    ] {
-        assert!(
-            !text.contains(removed),
-            "help output should not contain removed low-level flag {removed}:\n{text}"
-        );
+fn assert_help_options<const N: usize>(
+    args: [&str; N],
+    expected: &[&str],
+) -> Result<(), Box<dyn Error>> {
+    let command = format!("volicord {}", args.join(" "));
+    let output = run_without_home(args)?;
+    assert_success(&output);
+    let text = stdout(&output);
+    let actual = help_option_tokens(&text);
+    let expected = expected_options(expected);
+    assert_eq!(
+        actual, expected,
+        "help options for `{command}` should match the supported option allowlist:\n{text}"
+    );
+    Ok(())
+}
+
+fn help_option_tokens(text: &str) -> BTreeSet<String> {
+    text.split_whitespace()
+        .flat_map(|token| token.split('|'))
+        .filter_map(normalize_help_option_token)
+        .filter(|token| token != "-h" && token != "--help")
+        .collect()
+}
+
+fn normalize_help_option_token(token: &str) -> Option<String> {
+    let token = token.trim_matches(|character: char| {
+        matches!(
+            character,
+            '[' | ']' | '(' | ')' | '{' | '}' | ',' | ':' | ';' | '.'
+        )
+    });
+    if !token.starts_with('-') {
+        return None;
     }
+
+    let option_len = token
+        .char_indices()
+        .find_map(|(index, character)| {
+            if character == '-' || character.is_ascii_alphanumeric() {
+                None
+            } else {
+                Some(index)
+            }
+        })
+        .unwrap_or(token.len());
+    let option = &token[..option_len];
+    if option == "-" || option == "--" {
+        None
+    } else {
+        Some(option.to_owned())
+    }
+}
+
+fn expected_options(options: &[&str]) -> BTreeSet<String> {
+    options.iter().map(|option| (*option).to_owned()).collect()
 }
 
 fn run_with_home_env<const N: usize>(

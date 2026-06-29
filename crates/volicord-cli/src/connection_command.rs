@@ -328,13 +328,31 @@ pub fn connections_usage() -> String {
 }
 
 pub fn connection_usage() -> String {
-    concat!(
-        "volicord connection status [HOST] [--repo PATH] [--shared|--global] [--json]\n",
-        "volicord connection verify [HOST] [--repo PATH] [--shared|--global] [--json]\n",
-        "volicord connection mode [HOST] workflow|read-only [--repo PATH] [--shared|--global] [--json]\n",
-        "volicord connection remove [HOST] [--repo PATH] [--shared|--global] [--dry-run] [--json]\n"
+    format!(
+        "{}{}{}{}",
+        connection_status_usage(),
+        connection_verify_usage(),
+        connection_mode_usage(),
+        connection_remove_usage()
     )
-    .to_owned()
+}
+
+fn connection_status_usage() -> String {
+    "volicord connection status [HOST] [--repo PATH] [--shared|--global] [--json]\n".to_owned()
+}
+
+fn connection_verify_usage() -> String {
+    "volicord connection verify [HOST] [--repo PATH] [--shared|--global] [--json]\n".to_owned()
+}
+
+fn connection_mode_usage() -> String {
+    "volicord connection mode [HOST] workflow|read-only [--repo PATH] [--shared|--global] [--json]\n"
+        .to_owned()
+}
+
+fn connection_remove_usage() -> String {
+    "volicord connection remove [HOST] [--repo PATH] [--shared|--global] [--dry-run] [--json]\n"
+        .to_owned()
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -636,7 +654,7 @@ fn command_connection_status(
     process: &mut impl ConnectionProcess,
 ) -> Result<String, ConnectionCommandError> {
     if is_help_request(args) {
-        return Ok(connection_usage());
+        return Ok(connection_status_usage());
     }
     let parsed = parse_connection_options(args, &["repo", "shared", "global", "json"], 1)?;
     let runtime_home = resolve_runtime_home(|name| process.env_var(name), current_dir)?;
@@ -660,7 +678,7 @@ fn command_connection_verify(
     process: &mut impl ConnectionProcess,
 ) -> Result<String, ConnectionCommandError> {
     if is_help_request(args) {
-        return Ok(connection_usage());
+        return Ok(connection_verify_usage());
     }
     let parsed = parse_connection_options(args, &["repo", "shared", "global", "json"], 1)?;
     let runtime_home = resolve_runtime_home(|name| process.env_var(name), current_dir)?;
@@ -703,7 +721,7 @@ fn command_connection_mode(
     process: &mut impl ConnectionProcess,
 ) -> Result<String, ConnectionCommandError> {
     if is_help_request(args) {
-        return Ok(connection_usage());
+        return Ok(connection_mode_usage());
     }
     let parsed = parse_connection_options(args, &["repo", "shared", "global", "json"], 2)?;
     let (host_kind, mode) = mode_positionals(&parsed, process)?;
@@ -752,7 +770,7 @@ fn command_connection_remove(
     process: &mut impl ConnectionProcess,
 ) -> Result<String, ConnectionCommandError> {
     if is_help_request(args) {
-        return Ok(connection_usage());
+        return Ok(connection_remove_usage());
     }
     let parsed =
         parse_connection_options(args, &["repo", "shared", "global", "dry-run", "json"], 1)?;
