@@ -490,45 +490,38 @@ fn connect_claude_code_global_is_accepted() -> Result<(), Box<dyn Error>> {
 
 #[cfg(unix)]
 #[test]
-fn export_mcp_config_writes_default_path_and_connection_context() -> Result<(), Box<dyn Error>> {
+fn export_mcp_config_uses_default_file_when_output_is_omitted() -> Result<(), Box<dyn Error>> {
     let runtime_home = TempRuntimeHome::new("cli-bin-export-default")?;
     let repo_root = create_git_repo(&runtime_home, "product-repo")?;
+    let invocation_dir = runtime_home.path().join("invocation-dir");
+    fs::create_dir_all(&invocation_dir)?;
     let bin_dir = runtime_home.path().join("bin");
     let mcp = write_fake_mcp(&bin_dir)?;
     assert_success(&run_setup(runtime_home.path(), &mcp)?);
 
     let output = run_with_home_env_in_dir(
         runtime_home.path(),
-        ["export", "mcp-config", "--json"],
+        [
+            "export",
+            "mcp-config",
+            "--repo",
+            path_text(&repo_root).as_str(),
+        ],
         &[],
-        &repo_root,
+        &invocation_dir,
     )?;
     assert_success(&output);
-    let value = json_stdout(&output)?;
+    let text = stdout(&output);
     let output_path = repo_root.join("volicord.mcp.json");
-    let connection_id = value["connection"]["connection_id"]
-        .as_str()
-        .expect("connection_id should be present");
+    assert!(text.contains("MCP configuration exported"));
+    assert!(text.contains(&format!("output: {}", path_text(&output_path))));
+    assert!(!text.contains("mcpServers"));
+    assert!(!text.contains("--connection"));
+    assert!(!invocation_dir.join("volicord.mcp.json").exists());
 
-    assert_eq!(value["output_path"], path_text(&output_path));
-    assert_eq!(value["mode"], CONNECTION_MODE_WORKFLOW);
-    assert_eq!(value["connection"]["status"], "created");
-    assert_eq!(value["connection"]["host_kind"], HOST_KIND_GENERIC);
-    assert_eq!(value["connection"]["host_scope"], HOST_SCOPE_EXPORT);
+    let connection_id = assert_exported_mcp_config(&output_path, &mcp, runtime_home.path())?;
 
-    let config: Value = serde_json::from_str(&fs::read_to_string(&output_path)?)?;
-    let server = &config["mcpServers"]["volicord"];
-    assert_eq!(server["command"], path_text(&mcp));
-    assert_eq!(
-        server["args"],
-        serde_json::json!(["--connection", connection_id])
-    );
-    assert_eq!(
-        server["env"]["VOLICORD_HOME"],
-        path_text(runtime_home.path())
-    );
-
-    let record = agent_connection_record(runtime_home.path(), connection_id)?
+    let record = agent_connection_record(runtime_home.path(), &connection_id)?
         .expect("generic export connection should be stored");
     assert_eq!(record.host_kind, HOST_KIND_GENERIC);
     assert_eq!(record.host_scope, HOST_SCOPE_EXPORT);
@@ -538,7 +531,7 @@ fn export_mcp_config_writes_default_path_and_connection_context() -> Result<(), 
         record.last_verification_status,
         VERIFIED_STATUS_ACTION_REQUIRED
     );
-    let projects = list_connection_projects(runtime_home.path(), connection_id)?;
+    let projects = list_connection_projects(runtime_home.path(), &connection_id)?;
     assert_eq!(projects.len(), 1);
     assert_eq!(projects[0].project.repo_root, repo_root);
     Ok(())
@@ -546,7 +539,7 @@ fn export_mcp_config_writes_default_path_and_connection_context() -> Result<(), 
 
 #[cfg(unix)]
 #[test]
-fn export_mcp_config_explicit_output_read_only_reuses_connection() -> Result<(), Box<dyn Error>> {
+fn export_mcp_config_writes_explicit_output_path() -> Result<(), Box<dyn Error>> {
     let runtime_home = TempRuntimeHome::new("cli-bin-export-explicit")?;
     let repo_root = create_git_repo(&runtime_home, "product-repo")?;
     let bin_dir = runtime_home.path().join("bin");
@@ -574,9 +567,15 @@ fn export_mcp_config_explicit_output_read_only_reuses_connection() -> Result<(),
         .as_str()
         .expect("connection_id should be present")
         .to_owned();
+    let default_output_path = repo_root.join("volicord.mcp.json");
     assert_eq!(first_json["output_path"], path_text(&output_path));
     assert_eq!(first_json["mode"], CONNECTION_MODE_READ_ONLY);
     assert_eq!(first_json["connection"]["status"], "created");
+    assert_eq!(
+        assert_exported_mcp_config(&output_path, &mcp, runtime_home.path())?,
+        connection_id
+    );
+    assert!(!default_output_path.exists());
 
     let second = run_with_home_env(
         runtime_home.path(),
@@ -1095,6 +1094,31 @@ fn json_stdout(output: &Output) -> Result<Value, Box<dyn Error>> {
 
 fn path_text(path: &Path) -> String {
     path.display().to_string()
+}
+
+#[cfg(unix)]
+fn assert_exported_mcp_config(
+    output_path: &Path,
+    mcp_command: &Path,
+    runtime_home: &Path,
+) -> Result<String, Box<dyn Error>> {
+    let config: Value = serde_json::from_str(&fs::read_to_string(output_path)?)?;
+    let server = &config["mcpServers"]["volicord"];
+    let connection_id = server["args"]
+        .as_array()
+        .and_then(|args| match args.as_slice() {
+            [flag, id] if flag.as_str() == Some("--connection") => id.as_str(),
+            _ => None,
+        })
+        .expect("exported MCP config should bind a connection id");
+
+    assert_eq!(server["command"], path_text(mcp_command));
+    assert_eq!(
+        server["args"],
+        serde_json::json!(["--connection", connection_id])
+    );
+    assert_eq!(server["env"]["VOLICORD_HOME"], path_text(runtime_home));
+    Ok(connection_id.to_owned())
 }
 
 fn write_test_installation_profile(runtime_home: &Path) -> Result<(), Box<dyn Error>> {

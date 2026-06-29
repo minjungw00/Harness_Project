@@ -148,6 +148,8 @@ where
     )?;
 
     let repo_root = resolve_repository_root(current_dir, options.repo.as_deref())?;
+    let output_path =
+        resolve_export_output_path(current_dir, &repo_root, options.output.as_deref());
     let project = ensure_project_for_repo(
         &runtime_home,
         RepoProjectRegistration {
@@ -159,7 +161,6 @@ where
             metadata_json: metadata_json_base()?,
         },
     )?;
-    let output_path = resolve_output_path(current_dir, options.output.as_deref());
     let config_target = path_text(&output_path);
     let existing = connection_for_export_target(&runtime_home, &config_target)?;
     let connection_internal_id = existing
@@ -345,13 +346,19 @@ fn installation_profile_context<'a>(
     }
 }
 
-fn resolve_output_path(current_dir: &Path, output: Option<&Path>) -> PathBuf {
-    absolute_path(
-        current_dir,
-        output
-            .map(Path::to_path_buf)
-            .unwrap_or_else(|| PathBuf::from(DEFAULT_EXPORT_FILE)),
-    )
+fn resolve_export_output_path(
+    current_dir: &Path,
+    repo_context: &Path,
+    output: Option<&Path>,
+) -> PathBuf {
+    match output {
+        Some(output) => absolute_path(current_dir, output.to_path_buf()),
+        None => default_export_output_path(repo_context),
+    }
+}
+
+fn default_export_output_path(repo_context: &Path) -> PathBuf {
+    repo_context.join(DEFAULT_EXPORT_FILE)
 }
 
 fn resolve_repository_root(
