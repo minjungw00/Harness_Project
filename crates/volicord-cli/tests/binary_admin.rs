@@ -30,6 +30,8 @@ use volicord_types::{
     UserJudgmentOptionId, UserJudgmentOptionInput, VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
 };
 
+const SETUP_HELP_OPTIONS: &[&str] = &["--home", "--link-bin", "--mcp-command", "--json"];
+
 #[test]
 fn binary_help_uses_agent_connection_model() -> Result<(), Box<dyn Error>> {
     let help = run_without_home(["--help"])?;
@@ -50,7 +52,10 @@ fn binary_help_uses_agent_connection_model() -> Result<(), Box<dyn Error>> {
     assert_success(&setup_help);
     let setup_text = stdout(&setup_help);
     assert!(setup_text.contains("volicord setup"));
+    assert!(setup_text.contains("--home PATH"));
+    assert!(setup_text.contains("--link-bin PATH"));
     assert!(setup_text.contains("--mcp-command PATH"));
+    assert!(setup_text.contains("--json"));
 
     let unknown_user = run_without_home(["user", "not-a-real-command", "--repo", "."])?;
     assert_eq!(unknown_user.status.code(), Some(2));
@@ -97,10 +102,7 @@ fn binary_help_options_match_supported_contracts() -> Result<(), Box<dyn Error>>
             "--note",
         ],
     )?;
-    assert_help_options(
-        ["setup", "--help"],
-        &["--home", "--link-bin", "--mcp-command", "--json"],
-    )?;
+    assert_help_options(["setup", "--help"], SETUP_HELP_OPTIONS)?;
     assert_help_options(["doctor", "--help"], &["--json"])?;
     assert_help_options(
         ["connect", "--help"],

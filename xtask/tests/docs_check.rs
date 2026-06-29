@@ -1099,7 +1099,12 @@ fn accepts_sensitive_identifiers_in_document_prose_when_map_roles_are_valid() {
 fn accepts_supported_volicord_shell_command_examples() {
     let fixture = valid_fixture();
     let commands = r#"```sh
-./target/debug/volicord setup --mcp-command ./target/debug/volicord-mcp --link-bin ~/.local/bin
+./target/debug/volicord setup
+volicord setup
+volicord setup --json
+volicord setup --mcp-command /path/to/volicord-mcp
+volicord setup --link-bin /path/to/bin
+volicord setup --home /path/to/runtime-home
 volicord connect codex --read-only
 volicord export mcp-config --output /tmp/volicord.mcp.json
 volicord connection mode codex workflow
@@ -1123,7 +1128,7 @@ volicord user status --task active
 }
 
 #[test]
-fn rejects_setup_only_option_on_connect_command_examples() {
+fn rejects_mcp_command_on_connect_command_examples() {
     let fixture = valid_fixture();
     write(
         fixture.path(),
@@ -1148,12 +1153,37 @@ fn rejects_setup_only_option_on_connect_command_examples() {
 }
 
 #[test]
+fn rejects_link_bin_on_connect_command_examples() {
+    let fixture = valid_fixture();
+    write(
+        fixture.path(),
+        "docs/en/example.md",
+        "# Overview\n\n```sh\nvolicord connect codex --link-bin /path/to/bin\n```\n",
+    );
+
+    let report = report(fixture.path());
+    let errors = category_errors(&report, "command.invalid_example");
+
+    assert_eq!(errors.len(), 1, "{:#?}", report.errors());
+    assert!(
+        errors[0].message().contains("--link-bin"),
+        "{:#?}",
+        report.errors()
+    );
+    assert!(
+        errors[0].message().contains("volicord connect"),
+        "{:#?}",
+        report.errors()
+    );
+}
+
+#[test]
 fn ignores_unsupported_volicord_commands_in_prose() {
     let fixture = valid_fixture();
     write(
         fixture.path(),
         "docs/en/example.md",
-        "# Overview\n\nA diagnostic can mention `connection_id`, and prose can name `volicord connect codex --mcp-command ./target/debug/volicord-mcp` without becoming an executable example.\n",
+        "# Overview\n\nA diagnostic can mention `connection_id`, and prose can name `volicord connect codex --mcp-command ./target/debug/volicord-mcp` or `volicord connect codex --link-bin /path/to/bin` without becoming an executable example.\n",
     );
 
     let report = report(fixture.path());
