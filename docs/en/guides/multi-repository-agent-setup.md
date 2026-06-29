@@ -45,7 +45,7 @@ repositories.
 
 ## Connect The First Repository
 
-From the first product repository:
+From the first Product Repository:
 
 ```sh
 cd /path/to/acme-api
@@ -67,7 +67,7 @@ stores internal registry identities in the Runtime Home.
 
 ## Add Another Repository
 
-Run the same host and intent from the second repository:
+Run the same host and intent from the second Product Repository:
 
 ```sh
 cd /path/to/billing-api

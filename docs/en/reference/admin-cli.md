@@ -126,7 +126,7 @@ Arguments:
 | Argument | Meaning |
 |---|---|
 | `--home PATH` | Selects the `Volicord Runtime Home`. Omission uses the platform default local runtime location. The selected path must satisfy the Runtime Home/Product Repository separation contract before project state is used. |
-| `--link-bin PATH` | Creates or updates command links for both `volicord` and `volicord-mcp` in the specified directory when feasible. The command reports each target path, refuses unsafe replacement, and does not by itself edit shell startup files or the parent shell `PATH`. |
+| `--link-bin PATH` | Creates the directory if needed, verifies it is writable, then creates or updates command links for both `volicord` and `volicord-mcp` there when feasible. The command reports each target path, refuses unsafe replacement, and does not by itself edit shell startup files or the parent shell `PATH`. |
 | `--mcp-command PATH` | Stores the exact command that managed host configuration and generic exports should use to start `volicord-mcp`. Discovery order is explicit `--mcp-command PATH` when supplied, then a sibling `volicord-mcp` next to the running `volicord` executable, then a command on `PATH`. |
 | `--json` | Selects machine-readable, noninteractive output. Setup does not prompt in JSON mode. |
 
@@ -139,8 +139,9 @@ Setup effects:
 - inspects whether selected command paths resolve through the current process
   `PATH`
 - may prompt in interactive text mode for safe command-availability choices:
-  create command links, write an approved shell startup `PATH` block, print a
-  shell command, or skip linking
+  create command links in a setup-suggested directory whose writability was
+  verified, write an approved shell startup `PATH` block, print a shell
+  command, or skip linking
 - may update command links named by `--link-bin` or selected through the
   interactive prompt for both executable roles
 - may write a managed shell startup `PATH` block only after explicit

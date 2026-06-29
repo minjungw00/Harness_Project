@@ -297,6 +297,10 @@ fn doctor_without_setup_reports_action_required() -> Result<(), Box<dyn Error>> 
     assert_success(&doctor);
     let value = json_stdout(&doctor)?;
     assert_eq!(value["status"], "action_required");
+    assert_eq!(
+        value["status_meaning"],
+        "local setup or profile repair is required before Volicord workflows are usable"
+    );
     assert!(value["actions"]
         .as_array()
         .expect("actions should be an array")

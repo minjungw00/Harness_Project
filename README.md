@@ -76,10 +76,11 @@ volicord connect codex
 
 During setup, Volicord checks whether `volicord` and `volicord-mcp` are
 available for future terminals and agent hosts. If they are not, setup offers
-safe choices such as creating command links, printing a shell command, or
-skipping the link step. Follow setup's prompt or action-required output before
-running `volicord connect`, starting a new terminal, or starting an agent host;
-Volicord cannot change the parent shell's current `PATH`.
+safe choices such as creating command links in a directory it can verify is
+writable, printing a shell command, or skipping the link step. Follow setup's
+prompt or action-required output before running `volicord connect`, starting a
+new terminal, or starting an agent host; Volicord cannot change the parent
+shell's current `PATH`.
 
 `/path/to/your-product-repo` is an example path for the Product Repository where
 you want the agent to work. `volicord connect codex` detects the repository root

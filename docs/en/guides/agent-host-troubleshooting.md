@@ -64,7 +64,8 @@ volicord doctor
 
 Use `--link-bin PATH` only when you need a deterministic command-link directory
 for automation or a special local layout. Setup can report the required `PATH`
-action, but it cannot permanently change the parent shell.
+action or a repair action if that directory is not writable, but it cannot
+permanently change the parent shell.
 
 Do not create Runtime Home files by hand. Use setup so the registry and setup
 profile are created together.

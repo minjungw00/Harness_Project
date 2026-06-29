@@ -49,7 +49,8 @@ profile has been saved.
 In an interactive terminal, setup may offer command-availability choices when
 the selected executables are not ready on `PATH`:
 
-- create command links in a suggested directory
+- create command links in a suggested directory that setup can verify is
+  writable
 - create command links and, after explicit approval, add a managed `PATH` block
   to a supported shell startup file
 - create command links and print the shell command to run yourself
@@ -72,7 +73,7 @@ For automation or deterministic local layouts, use explicit setup options:
 
 | Option | When to use it |
 |---|---|
-| `--link-bin PATH` | Create or update command links in a specific directory. This does not by itself edit shell startup files. |
+| `--link-bin PATH` | Create the directory if needed, verify it is writable, then create or update command links there. This does not by itself edit shell startup files. |
 | `--mcp-command PATH` | Store a specific `volicord-mcp` executable when sibling discovery or `PATH` lookup would choose the wrong command or cannot find one. |
 | `--home PATH` | Select a non-default `Volicord Runtime Home`. |
 

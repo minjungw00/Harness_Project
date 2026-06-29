@@ -43,7 +43,7 @@ flowchart LR
 
 ## 첫 저장소 연결하기
 
-첫 제품 저장소에서 실행합니다.
+첫 번째 Product Repository에서 실행합니다.
 
 ```sh
 cd /path/to/acme-api
@@ -65,7 +65,7 @@ Home에 저장합니다.
 
 ## 다른 저장소 추가하기
 
-두 번째 저장소에서 같은 호스트와 의도로 실행합니다.
+두 번째 Product Repository에서 같은 호스트와 의도로 실행합니다.
 
 ```sh
 cd /path/to/billing-api
