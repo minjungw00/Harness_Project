@@ -123,7 +123,7 @@ flowchart LR
   hostcfg["외부 MCP 호스트 설정<br/>호스트 소유 또는 내보낸 설정"]
 
   user --> cli
-  cli -- "setup, doctor, project, connect, user" --> runtime
+  cli -- "setup, doctor, project, connect, export, user" --> runtime
   cli -- "Git 저장소 루트 감지" --> repo
   cli -- "호스트 설정 설치 또는 내보내기" --> hostcfg
   hostcfg -. "호스트가 로드" .-> host
@@ -163,9 +163,9 @@ Volicord가 관리하지 않는 것:
 
 | 필요 | 읽을 문서 |
 |---|---|
-| 실행 파일 설치와 확인 | [설치](docs/ko/getting-started/installation.md), 그다음 [Quickstart](docs/ko/getting-started/quickstart.md) |
+| 실행 파일 설치와 확인 | [설치](docs/ko/getting-started/installation.md), 그다음 [빠른 시작](docs/ko/getting-started/quickstart.md) |
 | 사용자 작업 흐름 이해 | [사용자 가이드](docs/ko/guides/user-workflow.md) |
-| 에이전트 호스트 설정 또는 복구 | [에이전트 호스트 Setup](docs/ko/guides/agent-host-setup.md)과 [에이전트 호스트 문제 해결](docs/ko/guides/agent-host-troubleshooting.md) |
+| 에이전트 호스트 설정 또는 복구 | [에이전트 호스트 설정](docs/ko/guides/agent-host-setup.md)과 [에이전트 호스트 문제 해결](docs/ko/guides/agent-host-troubleshooting.md) |
 | 에이전트 동작 경계 이해 | [에이전트 가이드](docs/ko/guides/agent-workflow.md) |
 | 정확한 CLI, MCP, 런타임 계약 확인 | [관리 CLI 참조](docs/ko/reference/admin-cli.md), [MCP 전송](docs/ko/reference/mcp-transport.md), [런타임 경계](docs/ko/reference/runtime-boundaries.md) |
 | Core 권한 개념 이해 | [Core 모델](docs/ko/reference/core-model.md) |

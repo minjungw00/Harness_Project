@@ -1,6 +1,6 @@
-# 에이전트 호스트 Setup
+# 에이전트 호스트 설정
 
-이 가이드는 Codex, Claude Code, generic MCP 호스트를 Volicord에 연결할 때
+이 가이드는 Codex, Claude Code, 일반 MCP 호스트를 Volicord에 연결할 때
 사용합니다. 일반 경로는 호스트, 저장소, 연결 의도에서 시작하며, 내부 호스트와
 registry 값은 Volicord가 관리합니다.
 
@@ -8,7 +8,7 @@ registry 값은 Volicord가 관리합니다.
 Agent Connection 의미는 [Agent Connection 참조](../reference/agent-connection.md)가,
 런타임/파일 경계는 [런타임 경계](../reference/runtime-boundaries.md)가 담당합니다.
 
-## Setup 순서
+## 설정 순서
 
 ```sh
 cargo build --workspace --bins
@@ -60,9 +60,9 @@ volicord connection mode codex workflow
 
 모드를 바꾼 뒤에는 호스트 reload 또는 restart가 필요할 수 있습니다.
 
-## 적용 전 Dry Run
+## 적용 전 dry-run
 
-Dry run은 지속 변경 없이 계획을 보고합니다.
+dry-run은 지속 변경 없이 계획을 보고합니다.
 
 ```sh
 volicord connect codex --dry-run
@@ -81,7 +81,7 @@ volicord connection status codex
 volicord connection verify codex
 ```
 
-Shared 또는 global 연결은 선택할 때 쓴 의도 플래그를 함께 넣습니다.
+`shared` 또는 `global` 연결은 선택할 때 쓴 의도 플래그를 함께 넣습니다.
 
 ```sh
 volicord connection status codex --shared
@@ -90,7 +90,7 @@ volicord connection verify claude-code --global
 
 결과 상태:
 
-| 상태 | setup 가이드에서의 의미 |
+| 상태 | 설정 가이드에서의 의미 |
 |---|---|
 | `complete` | Volicord 쪽 상태, 관리 호스트 설정, 관찰 가능한 MCP 시작, 초기화, 기대 도구 노출이 준비되었습니다. |
 | `action_required` | Volicord 쪽 상태는 있지만 이름 붙은 사용자 통제 호스트 동작이 남아 있습니다. |
@@ -106,8 +106,8 @@ cd /work/acme-api
 volicord export mcp-config --output /tmp/volicord.mcp.json
 ```
 
-Export는 감지된 저장소 프로젝트와 설치 프로필을 사용합니다. 내보낸 설정이
-read-only 연결에 묶여야 하면 `--read-only`를 추가합니다. 내보낸 파일은 export 뒤에도
+내보내기는 감지된 저장소 프로젝트와 설치 프로필을 사용합니다. 내보낸 설정이
+read-only 연결에 묶여야 하면 `--read-only`를 추가합니다. 내보낸 파일은 내보내기 뒤에도
 사용자 관리 파일로 남습니다.
 
 ## User Channel 경계

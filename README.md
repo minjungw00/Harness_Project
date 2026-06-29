@@ -132,7 +132,7 @@ flowchart LR
   hostcfg["External MCP host configuration<br/>host-owned or exported"]
 
   user --> cli
-  cli -- "setup, doctor, project, connect, user" --> runtime
+  cli -- "setup, doctor, project, connect, export, user" --> runtime
   cli -- "detects Git repository root" --> repo
   cli -- "installs or exports host config" --> hostcfg
   hostcfg -. "loaded by host" .-> host

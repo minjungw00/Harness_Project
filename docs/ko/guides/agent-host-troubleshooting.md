@@ -21,10 +21,10 @@ volicord connections
 명령을 의도한 저장소 밖에서 실행하고 있다면 그 저장소로 `cd`하거나, 확인하려는
 project, connection, export, user 명령에 `--repo PATH`를 추가합니다.
 
-## Setup이 완료되지 않음
+## 설정이 완료되지 않음
 
 관찰 증상: 일반 project, connection, export, MCP, user workflow가 선택된
-`Volicord Runtime Home`에 setup이 완료되지 않았다고 말합니다.
+`Volicord Runtime Home`에 설정이 완료되지 않았다고 말합니다.
 
 제한된 복구:
 
@@ -41,11 +41,11 @@ volicord doctor
 ```
 
 그래도 `volicord`를 찾지 못하면 링크 디렉터리를 셸 설정에 추가하고 새 셸이나 MCP
-호스트를 시작합니다. Setup은 필요한 `PATH` 동작을 보고할 수 있지만 부모 셸을
+호스트를 시작합니다. `volicord setup`은 필요한 `PATH` 동작을 보고할 수 있지만 부모 셸을
 영구적으로 바꿀 수는 없습니다.
 
 Runtime Home 파일을 직접 만들지 않습니다. Registry와 설치 프로필이 함께 만들어지도록
-setup을 사용합니다.
+`volicord setup`을 사용합니다.
 
 ## 저장소가 감지되지 않음
 
@@ -106,7 +106,7 @@ volicord connection verify codex
 
 보고된 동작을 읽고 그 호스트 소유 단계만 완료합니다. 흔한 동작에는 호스트 항목
 신뢰, 프로젝트 MCP 항목 승인, 호스트 로그인, 호스트 reload, 호스트 restart,
-setup 재실행이 있습니다. 그런 다음 verification을 다시 실행합니다.
+`volicord setup` 재실행이 있습니다. 그런 다음 verification을 다시 실행합니다.
 
 `action_required`를 치명적 실패로 다루지 않습니다. 오래 유지되는 Volicord 쪽 상태가
 이미 있을 수 있습니다.
@@ -141,7 +141,7 @@ volicord doctor
 volicord connection verify codex
 ```
 
-Setup은 관리 호스트 설정과 generic export가 사용할 MCP 명령을 기록하는 위치입니다.
+`volicord setup`은 관리 호스트 설정과 generic export가 사용할 MCP 명령을 기록하는 위치입니다.
 일반 `connect` 명령은 사용자가 MCP 명령 경로를 전달하도록 요구하지 않습니다.
 실행 파일이 sibling 조회나 `PATH`로 찾을 수 없는 위치에 설치되어 있다면
 `--mcp-command PATH`로 setup을 다시 실행합니다.

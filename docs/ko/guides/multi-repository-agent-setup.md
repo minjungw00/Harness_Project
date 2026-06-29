@@ -1,4 +1,4 @@
-# 여러 저장소 Agent Setup
+# 여러 저장소 에이전트 설정
 
 하나의 호스트 수준 Agent Connection이 명시적으로 연결된 둘 이상의
 `Product Repository`를 처리해야 할 때 이 가이드를 사용합니다.
