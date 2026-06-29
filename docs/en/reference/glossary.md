@@ -47,10 +47,10 @@ Contract detail stays in the focused owner documents. Translation and style rule
 | close readiness | 닫기 준비 상태 | The Core concept for whether a `Task` is ready to close from its current state. | [Core Model](core-model.md) |
 | close-readiness blocker | 닫기 차단 사유 | A close-relevant reason shown when close readiness cannot proceed. | [API blocker routing](api/blocker-routing.md) |
 | `Projection` | 상태 보기 | The exact product label for a read-only state view. Projection output is display, not Core authority. | [Projection Authority Reference](projection-and-templates.md) |
-| `Agent Connection` | 에이전트 연결 | The local MCP host connection unit stored with an internal `connection_id`. | [Agent Connection Reference](agent-connection.md) |
+| `Agent Connection` | 에이전트 연결 | The local MCP host connection unit stored with an internal connection identity. | [Agent Connection Reference](agent-connection.md) |
 | connection intent | 연결 의도 | The Agent Connection placement intent: `personal`, `shared`, or `global`. | [Agent Connection Reference](agent-connection.md) |
 | `connection.mode` | 연결 모드 | The Agent Connection mode, either `workflow` or `read_only`. | [Agent Connection Reference](agent-connection.md) |
-| `Connection Projects` | 연결 프로젝트 | The explicit internal `project_id` allowlist for an Agent Connection. | [Agent Connection Reference](agent-connection.md) |
+| `Connection Projects` | 연결 프로젝트 | The explicit internal project identity allowlist for an Agent Connection. | [Agent Connection Reference](agent-connection.md) |
 | `User Channel` | 사용자 채널 | The local user path for recording authority-bearing user judgments. | [Core Model](core-model.md) |
 | `actor_source` | 행위자 출처 | Durable provenance such as `agent_connection:<connection_id>`, `local_user`, or `system`; not a registered connection or user identity proof. | [Core Model](core-model.md) |
 | `operation_category` | 작업 범주 | Internal API operation classification: `read`, `agent_workflow`, `user_only`, or `admin_local`. | [Security](security.md) |

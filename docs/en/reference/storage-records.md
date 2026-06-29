@@ -28,7 +28,7 @@ This document does not own:
 
 ## Storage Locations
 
-Volicord stores baseline records in one local `Volicord Runtime Home` and one project-local state database per registered project. `volicord setup` establishes the selected Runtime Home and setup profile; ordinary user flows do not need to provide the Runtime Home path again.
+Volicord stores baseline records in one local `Volicord Runtime Home` and one project-local state database per registered project. `volicord setup` establishes the selected Runtime Home and installation profile; ordinary user flows do not need to provide the Runtime Home path again.
 
 The tree is representative after the relevant storage features have been used; it is not an initial-directory checklist. Project registration creates or opens project state, while artifact-store directories may be created lazily.
 
@@ -36,7 +36,7 @@ The tree is representative after the relevant storage features have been used; i
 ~/.volicord/
   registry.sqlite
   projects/
-    PRJ-0001/
+    prj_<internal>/
       state.sqlite
       artifacts/        # created when artifact storage is used
         tmp/            # created when artifact staging occurs
@@ -44,8 +44,8 @@ The tree is representative after the relevant storage features have been used; i
 
 Storage placement:
 
-- `registry.sqlite` stores Runtime Home identity, setup profile records, project registration mapping, Agent Connection records, Connection Projects membership, and registry metadata. The setup profile includes the selected MCP command location and optional executable-link metadata. Project registration includes a user-facing project name, the registered `repo_root`, `project_home`, project `state.sqlite` path, and status.
-- `projects/{project_id}/` is the Volicord project home for one registered project. It is not the same location or authority as `repo_root`.
+- `registry.sqlite` stores Runtime Home identity, installation profile records, project registration mapping, project aliases, Agent Connection records, Connection Projects membership, and registry metadata. The installation profile includes the setup-time `volicord` command, `volicord-mcp` command, bin directory, default connection mode, metadata, and timestamps. Project registration includes an internal project identity, display name, CLI selection alias, Runtime Home relationship, registered `repo_root`, `project_home`, project `state.sqlite` path, status, metadata, and timestamps.
+- `projects/{project_internal_id}/` is the default Volicord project home shape for one registered project. It is not the same location or authority as `repo_root`.
 - `state.sqlite` stores project-local Core state for the registered project.
 - `artifacts/` is the project artifact store when artifact storage is used; it may be created lazily when artifact storage is first needed. `artifacts/tmp/` is transient staging space when artifact staging requires it, not evidence authority; it may be created lazily when staging occurs. These directories need not exist immediately after project registration.
 
@@ -78,11 +78,11 @@ Baseline storage persists only the record families defined by this baseline stor
 
 | Stored area | Record family | Stored category | Layout summary |
 |---|---|---|---|
-| `registry.sqlite` | Runtime Home identity | Runtime identity | One stored `runtime_home_id`, schema/storage profile, and local registry metadata. |
-| `registry.sqlite` | Setup profile | Setup and installation profile | Selected MCP command, optional executable-link metadata, and non-authority setup metadata established by `volicord setup`. |
-| `registry.sqlite` | Project registration | Project mapping | Registered project identity and user-facing project name mapped to unique `repo_root`, location-owning `project_home`, and stored `state_db_path` that must match `project_home/state.sqlite` for execution. |
-| `registry.sqlite` | Agent Connection | MCP host connection unit | Durable internal `connection_id`, host kind, connection intent, internal server name, config target, mode, enabled state, managed fingerprint, last verification status, and metadata. |
-| `registry.sqlite` | Connection Projects | Connection project allowlist | Explicit many-to-many membership between an Agent Connection and registered projects. |
+| `registry.sqlite` | Runtime Home identity | Runtime identity | One stored `runtime_home_id`, Runtime Home path, registry database path, schema/storage profile, metadata, and timestamps. |
+| `registry.sqlite` | Installation profile | Setup-time executable profile | Setup-time `volicord` command, `volicord-mcp` command, bin directory, default connection mode, metadata, and timestamps established by `volicord setup`. |
+| `registry.sqlite` | Project registration and aliases | Project mapping | Internal project identity, display name, CLI selection alias, Runtime Home relationship, unique `repo_root`, location-owning `project_home`, stored `state_db_path` that must match `project_home/state.sqlite` for execution, status, metadata, and alias-to-internal-identity mappings. |
+| `registry.sqlite` | Agent Connection | MCP host connection unit | Durable internal connection identity, host kind, connection intent, host scope, optional internal project identity, internal server name, config target, mode, enabled state, managed fingerprint, verification summary status, verification report JSON, user actions JSON, metadata, and timestamps. |
+| `registry.sqlite` | Connection Projects | Connection project allowlist | Explicit many-to-many membership between an Agent Connection and registered projects using internal connection and project identities. |
 | `state.sqlite` | `project_state` | Project state header | Storage profile, `state_version`, current `Task` pointer, and project enforcement profile. |
 | `state.sqlite` | `tasks` | Work-unit state | User-value work unit, shaping summary, scope and close-basis revisions, nullable current close basis, lifecycle/result/terminal close summary, current `CompletionPolicy`, current Change Unit pointer, and creator actor source. |
 | `state.sqlite` | `change_units` | Scoped work boundary | Scope summaries, write basis, Change Unit lifecycle, and owning `Task` relation. |
@@ -106,9 +106,9 @@ Baseline storage persists only the record families defined by this baseline stor
 Baseline records use opaque stable ids as primary keys or equivalent unique keys. Uniqueness is scoped by the owning record family:
 
 - Runtime Home identity stores one `runtime_home_id` for the Runtime Home.
-- Project registration requires unique project identity, unique project name, unique repository root, and a unique project home.
-- Agent Connection identity is unique by `connection_id`.
-- Connection Projects membership is unique by `(connection_id, project_id)` and is the only registry membership that lets one connection address a registered project.
+- Project registration requires a unique internal project identity, unique project alias, unique repository root, unique project home, and unique state database path. `project_name` is the display name and `project_alias` is the CLI selection aid.
+- Agent Connection identity is unique by internal connection identity.
+- Connection Projects membership is unique by internal connection identity and internal project identity, and is the only registry membership that lets one connection address a registered project.
 - Project-scoped rows belong to a registered project.
 - Task-scoped rows belong to the same project and `Task` as their owning `tasks` row.
 - Current pointers and owner references must point to same-project records.
@@ -167,10 +167,11 @@ Closed storage-owned value sets are persistence constraints. Unknown values must
 |---|---|
 | Project registration `status` | `active` |
 | Agent Connection `host_kind` | `codex`, `claude_code`, `generic` |
-| Agent Connection `connection_intent` | `personal`, `shared`, `global`; `export` only for internal state used by generic MCP config export |
+| Agent Connection `intent` | `personal`, `shared`, `global` |
+| Agent Connection `host_scope` | `user`, `project`, `local`, `export` according to the `host_kind` matrix |
 | Agent Connection `mode` | `workflow`, `read_only` |
 | Agent Connection `enabled` | `0`, `1` |
-| Agent Connection `last_verified_status` | `not_verified`, `complete`, `action_required`, `failed` |
+| Agent Connection `last_verification_status` | `not_verified`, `complete`, `action_required`, `failed` |
 | `change_units.status` | `proposed`, `active`, `replaced`, `closed` |
 | `write_checks.status` | `active`, `consumed`, `expired`, `stale`, `revoked` |
 | `user_judgments.status` | `pending`, `resolved`, `stale`, `superseded`, `expired` |
@@ -204,8 +205,8 @@ Rules:
 
 | Record family | JSON `TEXT` category |
 |---|---|
-| Setup profile | Installation-profile metadata that is not a host trust decision, user judgment, or public API schema. |
-| Agent Connection | Metadata that is not used as authority, project selection, host trust proof, or a replacement for external host configuration. |
+| Installation profile | Installation-profile metadata that is not a host trust decision, user judgment, or public API schema. |
+| Agent Connection | Verification report JSON, user-action JSON, and metadata that are not used as authority, host trust proof, or a replacement for external host configuration. |
 | `tasks` | Shaping summary, bounded lists, autonomy boundary, current close basis, terminal close summary, lifecycle summary, and `CompletionPolicy`. |
 | `change_units` | Scope summaries, bounded lists, write basis summaries, optional effect contract data, and lifecycle support data. |
 | `user_judgments` | Judgment request, context, options, affected refs, artifact refs, basis snapshot, sensitive-action scope, machine-readable resolution, and descriptive rationale metadata. |

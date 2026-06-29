@@ -107,9 +107,9 @@ Volicord security claims assume local actors use the documented Volicord contrac
 May claim:
 - Local product files can be inputs to Volicord checks or user-owned judgments.
 - Local runtime data location can be defined by storage/runtime owners.
-- Agent Connections can provide `actor_source=agent_connection:<connection_id>` provenance when [Agent Connection Reference](agent-connection.md), method owners, and this security owner allow the claim. The `connection_id` is internal registry identity, not a user-facing authority token.
+- Agent Connections can provide `actor_source=agent_connection:<connection_id>` provenance when [Agent Connection Reference](agent-connection.md), method owners, and this security owner allow the claim. The `connection_id` segment is an internal connection identity in that provenance string, not a user-facing authority token.
 - The `User Channel` can provide `actor_source=local_user` provenance for authority-bearing user judgments when Core and method owners require it.
-- Connection Projects define the explicit internal `project_id` allowlist for an Agent Connection. User-facing commands select projects by repository root or project name.
+- Connection Projects define the explicit internal project identity allowlist for an Agent Connection. User-facing commands select projects by repository root, project name, alias, or a project selector returned by Volicord.
 - `operation_category` classifies an operation as `read`, `agent_workflow`, `user_only`, or `admin_local`.
 - Baseline actor provenance is cooperative local provenance, not cryptographic human identity.
 
@@ -165,7 +165,7 @@ Must not claim:
 Connection identity, user-channel provenance, and operation categories limit what may be claimed.
 
 May claim:
-- `connection_id`, connection intent, `connection.mode`, Connection Projects, `operation_category`, and `actor_source` can be used according to the runtime, Core, method, and security owners after the current invocation matches the documented connection context.
+- Internal connection identity, connection intent, `connection.mode`, Connection Projects, `operation_category`, and `actor_source` can be used according to the runtime, Core, method, and security owners after the current invocation matches the documented connection context.
 - `actor_source` can supply durable provenance only when the Core and method owners accept the value for the current authority-resolution operation.
 - `actor_source=local_user` through the `User Channel` is required for authority-bearing user judgments.
 

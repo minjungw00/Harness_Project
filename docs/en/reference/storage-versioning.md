@@ -8,7 +8,7 @@ The current baseline storage profile is `baseline_sqlite_v3`.
 
 Registry storage and project-state storage record their own migration ledger rows. A database is current only when its schema version, migration names, database kind, and storage profile match the compiled baseline. Unknown newer versions, missing migration rows, partial ledgers, migration-name mismatch, and storage-profile mismatch are storage/runtime-unavailable conditions. Store code must not guess record meaning, silently rewrite data, or convert unsupported profiles.
 
-Baseline registry storage includes Runtime Home identity, setup profile records, project registrations, Agent Connection records, and `connection_projects`. Baseline project-state storage includes Core state records, replay rows, staged artifacts, persistent artifacts, evidence, user judgments, runs, blockers, and `write_checks`.
+Baseline registry storage includes Runtime Home identity, installation profile records, repository-root-based project registrations, project aliases, Agent Connection records, and `connection_projects`. Baseline project-state storage includes Core state records, replay rows, staged artifacts, persistent artifacts, evidence, user judgments, runs, blockers, and `write_checks`.
 
 ## Project State Version
 

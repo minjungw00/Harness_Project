@@ -31,7 +31,7 @@ PRAGMA foreign_keys = ON;
 
 Mutating transactions must use `BEGIN IMMEDIATE` or an equivalent serialized write boundary before reading freshness, Write Check, staging, or replay rows for a state-changing commit.
 
-No baseline table uses `ON DELETE CASCADE`. Authority rows remain addressable unless an owning storage or migration contract defines a repair or retention path.
+Baseline authority rows remain addressable unless an owning storage or migration contract defines a repair or retention path. The registry may cascade-delete non-authority alias rows that are owned by a forgotten project registration; it must not use alias cleanup to imply deletion of project-local Core authority records.
 
 SQLite `TEXT` columns ending in `_json` store JSON as a representation choice. JSON used for authority, lifecycle, scope, evidence, completion, close readiness, or write compatibility is typed owner state. Typed Core code must parse and validate those columns before commit against the applicable API schema owner, storage owner, or artifact owner. Failure to decode typed owner state is corruption and must never be converted to an empty object, empty array, false value, default enum, or "no requirement" interpretation. SQL `NULL` may mean absence only when the owning schema explicitly marks the field optional; malformed JSON in an optional column is corruption, not absence. Open-ended display metadata may remain untyped only when it is not used for authority or close decisions. Safe diagnostics may identify the table, record reference, logical column, and corruption category, but must not expose raw stored JSON, secrets, SQL text, or sensitive absolute paths. SQLite defaults such as `'{}'` and `'[]'` do not make API fields optional.
 
@@ -41,7 +41,7 @@ Write Check rows record Core-state compatibility for a product-file write attemp
 
 ## `registry.sqlite`
 
-`registry.sqlite` stores Runtime Home identity, setup profile records, project registration, Agent Connection records, Connection Projects membership, and host configuration inventory. It does not store project-local Core state.
+`registry.sqlite` stores Runtime Home identity, installation profile records, project registration, project aliases, Agent Connection records, Connection Projects membership, and host configuration inventory. It does not store project-local Core state.
 
 The DDL below is the initial physical registry schema for storage profile `baseline_sqlite_v3` schema version `1`. Storage profile and migration boundary behavior are owned by [Storage Versioning](storage-versioning.md).
 
@@ -60,97 +60,136 @@ CREATE TABLE schema_migrations (
 CREATE TABLE runtime_home (
   singleton_id INTEGER PRIMARY KEY CHECK (singleton_id = 1),
   runtime_home_id TEXT NOT NULL UNIQUE,
+  runtime_home_path TEXT NOT NULL UNIQUE,
+  registry_db_path TEXT NOT NULL UNIQUE,
   storage_profile TEXT NOT NULL,
   schema_version INTEGER NOT NULL CHECK (schema_version > 0),
+  metadata_json TEXT NOT NULL DEFAULT '{}',
   created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL,
-  metadata_json TEXT NOT NULL DEFAULT '{}'
+  updated_at TEXT NOT NULL
 );
 
-CREATE TABLE setup_profile (
-  singleton_id INTEGER PRIMARY KEY CHECK (singleton_id = 1),
-  runtime_home_id TEXT NOT NULL,
-  mcp_command TEXT NOT NULL,
-  linked_bin_path TEXT,
-  installation_profile_json TEXT NOT NULL DEFAULT '{}',
+CREATE TABLE installation_profile (
+  installation_id TEXT PRIMARY KEY,
+  runtime_home_id TEXT NOT NULL UNIQUE,
+  volicord_command TEXT NOT NULL,
+  volicord_mcp_command TEXT NOT NULL,
+  bin_dir TEXT NOT NULL,
+  default_connection_mode TEXT NOT NULL CHECK (default_connection_mode IN ('read_only', 'workflow')),
+  metadata_json TEXT NOT NULL DEFAULT '{}',
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
-  metadata_json TEXT NOT NULL DEFAULT '{}',
-  FOREIGN KEY (runtime_home_id) REFERENCES runtime_home (runtime_home_id)
+  FOREIGN KEY (runtime_home_id) REFERENCES runtime_home (runtime_home_id) ON DELETE RESTRICT
 );
 
 CREATE TABLE projects (
-  project_id TEXT PRIMARY KEY,
+  project_internal_id TEXT PRIMARY KEY,
+  project_name TEXT NOT NULL,
+  project_alias TEXT NOT NULL UNIQUE,
   runtime_home_id TEXT NOT NULL,
-  project_name TEXT NOT NULL UNIQUE,
-  repo_root TEXT NOT NULL,
+  repo_root TEXT NOT NULL UNIQUE,
   project_home TEXT NOT NULL UNIQUE,
-  state_db_path TEXT NOT NULL,
+  state_db_path TEXT NOT NULL UNIQUE,
   status TEXT NOT NULL DEFAULT 'active' CHECK (status = 'active'),
+  metadata_json TEXT NOT NULL DEFAULT '{}',
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
-  metadata_json TEXT NOT NULL DEFAULT '{}',
   FOREIGN KEY (runtime_home_id) REFERENCES runtime_home (runtime_home_id)
 );
 
-CREATE UNIQUE INDEX idx_projects_repo_root_unique ON projects (repo_root);
+CREATE TABLE project_aliases (
+  alias TEXT PRIMARY KEY,
+  project_internal_id TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (project_internal_id)
+    REFERENCES projects (project_internal_id)
+    ON DELETE CASCADE
+);
+
+CREATE UNIQUE INDEX idx_projects_repo_root ON projects (repo_root);
 CREATE INDEX idx_projects_status ON projects (status);
+CREATE INDEX idx_project_aliases_project
+  ON project_aliases (project_internal_id);
 
 CREATE TABLE agent_connections (
-  connection_id TEXT PRIMARY KEY,
+  connection_internal_id TEXT PRIMARY KEY,
   host_kind TEXT NOT NULL CHECK (host_kind IN ('codex', 'claude_code', 'generic')),
-  connection_intent TEXT NOT NULL
-    CHECK (connection_intent IN ('personal', 'shared', 'global', 'export')),
-  server_name TEXT NOT NULL DEFAULT 'volicord',
+  intent TEXT NOT NULL CHECK (intent IN ('personal', 'shared', 'global')),
+  host_scope TEXT NOT NULL CHECK (host_scope IN ('user', 'project', 'local', 'export')),
+  project_internal_id TEXT,
+  server_name TEXT NOT NULL,
   config_target TEXT NOT NULL,
-  mode TEXT NOT NULL DEFAULT 'workflow' CHECK (mode IN ('workflow', 'read_only')),
+  mode TEXT NOT NULL CHECK (mode IN ('read_only', 'workflow')),
   enabled INTEGER NOT NULL DEFAULT 1 CHECK (enabled IN (0, 1)),
   managed_fingerprint TEXT NOT NULL,
-  last_verified_status TEXT NOT NULL DEFAULT 'not_verified'
-    CHECK (last_verified_status IN ('not_verified', 'complete', 'action_required', 'failed')),
+  last_verification_status TEXT NOT NULL DEFAULT 'not_verified'
+    CHECK (last_verification_status IN ('not_verified', 'complete', 'action_required', 'failed')),
+  last_verification_report_json TEXT NOT NULL DEFAULT '{}',
+  last_user_actions_json TEXT NOT NULL DEFAULT '[]',
+  metadata_json TEXT NOT NULL DEFAULT '{}',
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
-  metadata_json TEXT NOT NULL DEFAULT '{}',
+  FOREIGN KEY (project_internal_id) REFERENCES projects (project_internal_id) ON DELETE RESTRICT,
   CHECK (
-    (host_kind IN ('codex', 'claude_code')
-      AND connection_intent IN ('personal', 'shared', 'global'))
-    OR (host_kind = 'generic' AND connection_intent = 'export')
+    (host_kind = 'codex' AND host_scope IN ('user', 'project'))
+    OR (host_kind = 'claude_code' AND host_scope IN ('local', 'project', 'user'))
+    OR (host_kind = 'generic' AND host_scope = 'export')
   )
 );
 
 CREATE TABLE connection_projects (
-  connection_id TEXT NOT NULL,
-  project_id TEXT NOT NULL,
+  connection_internal_id TEXT NOT NULL,
+  project_internal_id TEXT NOT NULL,
   created_at TEXT NOT NULL,
-  PRIMARY KEY (connection_id, project_id),
-  FOREIGN KEY (connection_id)
-    REFERENCES agent_connections (connection_id)
+  PRIMARY KEY (connection_internal_id, project_internal_id),
+  FOREIGN KEY (connection_internal_id)
+    REFERENCES agent_connections (connection_internal_id)
     ON DELETE RESTRICT
     DEFERRABLE INITIALLY DEFERRED,
-  FOREIGN KEY (project_id) REFERENCES projects (project_id) ON DELETE RESTRICT
+  FOREIGN KEY (project_internal_id) REFERENCES projects (project_internal_id) ON DELETE RESTRICT
 );
 
 CREATE INDEX idx_connection_projects_project
-  ON connection_projects (project_id);
+  ON connection_projects (project_internal_id);
 CREATE INDEX idx_agent_connections_enabled
   ON agent_connections (enabled);
-CREATE UNIQUE INDEX idx_agent_connections_target
-  ON agent_connections (host_kind, connection_intent, config_target, server_name);
+CREATE INDEX idx_agent_connections_project
+  ON agent_connections (project_internal_id);
+CREATE UNIQUE INDEX idx_agent_connections_target_project
+  ON agent_connections (
+    host_kind,
+    intent,
+    host_scope,
+    project_internal_id,
+    config_target,
+    server_name
+  )
+  WHERE project_internal_id IS NOT NULL;
+CREATE UNIQUE INDEX idx_agent_connections_target_global
+  ON agent_connections (
+    host_kind,
+    intent,
+    host_scope,
+    config_target,
+    server_name
+  )
+  WHERE project_internal_id IS NULL;
 ```
 
 Registry constraints:
 
-- `runtime_home` is a singleton table. The stored `runtime_home_id` identifies the Runtime Home record; it is not a security guarantee.
-- `setup_profile` is a singleton table. It stores setup-time MCP command and installation-profile metadata. It is not host trust, user authority, or public API state.
-- `projects.project_name`, `projects.repo_root`, and `projects.project_home` are unique. `repo_root` is the user-facing repository-root lookup key and does not replace internal project identity.
+- `runtime_home` is a singleton table. It stores Runtime Home identity, the Runtime Home path, the registry database path, storage profile, schema version, metadata, and timestamps. The stored `runtime_home_id` identifies the Runtime Home record; it is not a security guarantee.
+- `installation_profile` stores the setup-time `volicord` command, `volicord-mcp` command, bin directory, default connection mode, metadata, and timestamps for the Runtime Home. It is not host trust, user authority, or public API state.
+- `projects.project_internal_id` is the internal project identity and primary key. `projects.project_name` is the display name. `projects.project_alias` is the CLI selection aid. `projects.repo_root` is the repository-root lookup key. `projects.project_alias`, `projects.repo_root`, `projects.project_home`, and `projects.state_db_path` are unique.
+- `project_aliases` maps aliases to internal project identities. Alias rows are registry selection aids, not project-local Core authority records.
 - `projects.state_db_path` is retained as a stored column. Store application-level current-registration validation must confirm it equals `project_home/state.sqlite` before operational `ProjectRecord` lookup or listing, project-state migration or writable open, Agent Connection project routing, Core execution, setup reuse, or MCP project availability.
 - `projects.status` is storage-owned and baseline-valid only as `active`.
-- `agent_connections` stores one local MCP host connection unit, its connection intent, mode, enabled state, host configuration inventory, and last verification status.
-- `agent_connections.connection_intent` is constrained to `personal`, `shared`, `global`, or internal export state for generic MCP config export.
-- `agent_connections.server_name` defaults to the internal host config key `volicord`.
-- `agent_connections.mode` is constrained to `workflow` or `read_only`, and the default is `workflow`.
-- `connection_projects` is the explicit project allowlist for one Agent Connection. Deleting a project or connection that still has membership is restricted.
-- `agent_connections.host_kind` and `agent_connections.connection_intent` are constrained to the supported direct host connection intents and the separate generic export flow defined by [Administrative CLI](admin-cli.md).
+- `agent_connections.connection_internal_id` is the internal connection identity and primary key. The table stores host kind, connection intent in `intent`, host scope, optional internal project identity, server name, config target, mode, enabled state, managed fingerprint, verification summary status, verification report JSON, user actions JSON, metadata, and timestamps.
+- `agent_connections.intent` is constrained to `personal`, `shared`, or `global`.
+- `agent_connections.host_scope` is constrained with `host_kind`: Codex supports `user` and `project`; Claude Code supports `local`, `project`, and `user`; generic export supports `export`.
+- `agent_connections.mode` is constrained to `read_only` or `workflow`.
+- `agent_connections.last_verification_report_json` stores the latest verification report JSON object. `agent_connections.last_user_actions_json` stores the latest user-action JSON array.
+- `connection_projects` is the explicit project allowlist for one Agent Connection. It stores membership with internal connection and project identities. Deleting a project or connection that still has membership is restricted.
 - `schema_migrations` records applied registry schema versions. Migration execution semantics stay with [Storage Versioning](storage-versioning.md).
 
 ## Project `state.sqlite`
