@@ -56,6 +56,12 @@ project-local visual principles, and brand claim boundaries. The brand
 guidelines do not define product behavior, API behavior, storage effects,
 schemas, security guarantees, or Core authority semantics.
 
+Use [Document Charters](document-charters.md) when deciding what major documents
+and document families should own, exclude, diagram, and link to. The charters
+turn the metadata model into practical scope guidance for high-traffic
+documents; they do not move exact product contracts out of focused Reference
+owners.
+
 ## Ownership Boundaries
 
 Exact product contracts stay in the focused Reference owners selected from
