@@ -348,6 +348,46 @@ fn volicord_mcp_subcommand_stdio_records_judgment_with_elicitation() -> Result<(
 }
 
 #[test]
+fn volicord_mcp_subcommand_stdio_without_elicitation_returns_chat_capture_fallback(
+) -> Result<(), Box<dyn Error>> {
+    let fixture = McpFixture::new("mcp-bin-elicitation-fallback")?;
+    let (task_id, state_version) = fixture.create_task("elicitation_fallback")?;
+    let messages = json_lines(&[
+        initialize_request(1),
+        initialized_notification(),
+        tools_call(
+            2,
+            "volicord.request_user_judgment",
+            request_user_judgment_arguments(&fixture, &task_id, state_version),
+        ),
+    ])?;
+
+    let output = run_child(
+        fixture.connection_command(["--stdio", "--connection", fixture.connection_id()]),
+        ChildStdin::WriteAndClose(messages),
+    )?;
+
+    assert_success_captured(&output);
+    assert_eq!(captured_stderr(&output), "");
+    let responses = responses_by_id(&output.stdout)?;
+    assert_eq!(responses.len(), 2);
+    let response = volicord_response(&responses[&2])?;
+    assert_eq!(response["user_judgment"]["status"], "pending");
+    let fallback = responses[&2]["result"]["content"][1]["text"]
+        .as_str()
+        .expect("fallback text should be present");
+    assert!(fallback.contains("MCP elicitation is unavailable"));
+    assert!(fallback.contains("Volicord: answer J-1 1"));
+    assert!(fallback.contains("Volicord: note J-1"));
+    assert!(fallback.contains("Do not ask the user to include secrets"));
+
+    let record = fixture.stored_judgment(&task_id, &response)?;
+    assert_eq!(record.status, "pending");
+    assert!(record.resolved_by_actor_source.is_none());
+    Ok(())
+}
+
+#[test]
 fn volicord_mcp_subcommand_tools_list_respects_connection_mode_and_schema_boundary(
 ) -> Result<(), Box<dyn Error>> {
     let workflow = McpFixture::new("mcp-bin-tools-workflow")?;

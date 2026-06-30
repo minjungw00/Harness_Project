@@ -122,6 +122,40 @@ fn guard_pre_tool_allows_read_status_without_active_task() -> Result<(), Box<dyn
 }
 
 #[test]
+fn guard_pre_tool_rejects_paths_outside_project_allowlist() -> Result<(), Box<dyn Error>> {
+    let fixture = GuardCliFixture::new("guard-pre-outside-project")?;
+    let event = json!({
+        "event_id": "guard_pre_outside_project",
+        "session_id": "guard_session_pre_outside_project",
+        "connection_id": fixture.connection_id(),
+        "host_kind": "codex",
+        "tool_name": "read",
+        "paths": ["../outside-product-repo.txt"]
+    });
+
+    let output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        ["guard", "pre-tool", "--repo", fixture.repo_arg()],
+        &event,
+    )?;
+    assert_eq!(output.status.code(), Some(1));
+    let value = json_stdout(&output)?;
+    assert_eq!(value["decision"], "deny");
+    assert_reason(&value, "target_outside_project_allowlist");
+
+    let stored = guard_event(
+        fixture.runtime_home(),
+        fixture.project_id(),
+        "guard_pre_outside_project",
+    )?
+    .expect("outside-project guard event should be stored");
+    assert_eq!(stored.decision, "deny");
+    assert_eq!(stored.event_kind, "pre_tool");
+    Ok(())
+}
+
+#[test]
 fn guard_pre_tool_requires_current_write_readiness() -> Result<(), Box<dyn Error>> {
     let fixture = GuardCliFixture::new("guard-pre-write-ready")?;
     let task_id = fixture.create_active_task()?;
@@ -202,6 +236,14 @@ fn guard_post_tool_records_unrecorded_product_file_changes() -> Result<(), Box<d
     )?;
     assert_eq!(unresolved.len(), 1);
     assert_eq!(unresolved[0].task_id.as_deref(), Some(task_id.as_str()));
+    let stored = guard_event(
+        fixture.runtime_home(),
+        fixture.project_id(),
+        "guard_post_changed",
+    )?
+    .expect("post-tool guard event should be stored");
+    assert_eq!(stored.decision, "warn");
+    assert_eq!(stored.event_kind, "post_tool");
     Ok(())
 }
 
