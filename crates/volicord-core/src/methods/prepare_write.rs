@@ -471,6 +471,7 @@ fn plan_prepare_write(
         evidence_summary,
         close_state: Some(close_plan.close_state),
         close_blockers: close_plan.blockers,
+        guard_health: close_plan.guard_health,
         guarantee_display: guarantee_display.clone(),
     })?;
     let result = PrepareWriteResult {

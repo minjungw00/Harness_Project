@@ -84,6 +84,7 @@ Mutation conditions:
 Close condition:
 
 - `intent=complete` can close only after preflight succeeds, the close readiness evaluation over the current `CurrentCloseBasis` is valid, current close-basis refs satisfy their artifact and Run compatibility rules, and no close blocker remains.
+- When the verified connection is in `guarded` or `managed` mode, close readiness also checks guard health, prompt-capture availability facts, unresolved unrecorded Product Repository changes, and guard-detected write-readiness issues. These checks are close blockers only for guarded or managed behavior; `mcp_only` remains cooperative unless an owner-defined configuration selects guarded or managed behavior.
 - Required close evidence must be supported by current claim-matching evidence observation provenance. Unverified, provenance-free, stale, or cooperative-agent-only evidence does not satisfy a close requirement when stronger provenance is required.
 - `intent=cancel` requires a current accepted cancellation judgment with `machine_action=accept`, `resolution_outcome=accepted`, `resolved_by_actor_source=local_user`, compatible User Channel provenance, and a basis bound to the Task, current scope revision, and current Change Unit. It does not require completion-only evidence, final acceptance, or residual-risk acceptance.
 - `intent=supersede` evaluates the requested terminal path. It is not evidence sufficiency, final acceptance, or residual-risk acceptance.
@@ -156,7 +157,7 @@ Implementations evaluate `volicord.close_task` in this order:
 1. Validate the envelope, method fields, intent-field combination, and same-project `Task` identity. Shape failures, wrong-project identity, and unreadable `Task` identity return `ToolRejectedResponse`.
 2. Verify the invocation context, operation category, actor source, and requested terminal-path preconditions.
 3. For `dry_run=false` mutating intents, check `idempotency_key`, current `expected_state_version`, idempotency request hash, and close-relevant `WriteCheck.basis_state_version`. Stale or conflicting values return `ToolRejectedResponse`.
-4. For `intent=check`, compute current close readiness with the same calculation used by [`volicord.status`](method-status.md) when `include.close=true`, and return read-only `CloseTaskResult`.
+4. For `intent=check`, compute current close readiness, including selected guard-health facts, with the same calculation used by [`volicord.status`](method-status.md) when `include.close=true`, and return read-only `CloseTaskResult`.
 5. For mutating intents with `dry_run=true`, return the common preview branch after valid preflight.
 6. For `intent=complete`, run the close readiness evaluation over the current `CurrentCloseBasis`. If blockers remain, return the blocked branch; otherwise commit `close_state=closed`, the terminal close result, and any method-selected project continuity records for close-basis known limits that do not require residual-risk acceptance.
 7. For `intent=cancel`, require a current accepted `judgment_kind=cancellation` with `machine_action=accept`, `resolution_outcome=accepted`, `resolved_by_actor_source=local_user`, compatible User Channel provenance, and compatibility with the current Task, scope revision, and Change Unit. Missing or incompatible cancellation authority returns the blocked branch.
@@ -199,6 +200,7 @@ Returns `CloseTaskResult` with `base.response_kind=result`.
 | `risk_acceptance_coverage` | `RiskAcceptanceCoverage[]` for current residual-risk acceptance coverage in the close-readiness result. Shape is owned by [API State Schemas](schema-state.md#close-readiness-and-validation-shapes). |
 | `continuity_summary` | `ProjectContinuitySummary[]` for project continuity records made relevant by this close result. For successful `intent=complete`, this includes continuity records Core carries forward for close-basis known limits that do not require residual-risk acceptance. Empty means the computation ran and found no carry-forward records for this result. Shape is owned by [API State Schemas](schema-state.md#project-continuity-shapes). |
 | `blockers` | `CloseReadinessBlocker[]` returned when the requested path has close or terminal blockers. Shape and nesting are owned by [API State Schemas](schema-state.md#close-readiness-and-validation-shapes); `category` values are owned by [API Value Sets](schema-value-sets.md#state-and-blocker-values). |
+| `guard_health` | `GuardHealthSummary | null` for guard-health facts selected into the close-readiness result. Shape is owned by [API State Schemas](schema-state.md#guard-health-summary). |
 | `evidence_summary` | `EvidenceSummary | null` for the close basis visible in the result, or `null` when no evidence summary is selected into the result. Shape is owned by [API State Schemas](schema-state.md#evidence-and-run-snapshot-shapes). |
 | `artifact_refs` | `ArtifactRef[]` for close-relevant artifacts selected into the result. `ArtifactRef` shape is owned by [API Artifact Schemas](schema-artifacts.md#artifactref). |
 
@@ -219,6 +221,11 @@ The production meanings below apply only after the method reaches close-readines
 | `missing_cancellation_authority` | `user_judgment` | `intent=cancel` lacks a current accepted user cancellation judgment with `resolved_by_actor_source=local_user`, compatible User Channel provenance, and a basis bound to the current Task, scope revision, and Change Unit. |
 | `write_check_stale` | `write_compatibility` | A close-relevant `Write Check` is unusable for a freshness reason that is not routed as `STATE_VERSION_CONFLICT`. |
 | `baseline_stale` | `baseline` | The close-relevant baseline basis is stale on a blocker-producing path. |
+| `guard_installation_missing` | `connection_capability` | A guarded or managed close path has no usable guard installation recorded for the verified connection. |
+| `guard_installation_unhealthy` | `connection_capability` | A guarded or managed close path has a guard installation, but its recorded health is not `healthy`. |
+| `guard_connection_unhealthy` | `connection_capability` | A guarded or managed close path has an Agent Connection health fact that is not healthy. |
+| `unresolved_unrecorded_changes` | `connection_capability` | Guard records show unresolved unrecorded Product Repository changes that must be recorded or reconciled before close. |
+| `guard_write_readiness_missing_or_stale` | `write_compatibility` | Guard events detected missing or stale write readiness for the close path. |
 | `evidence_claim_unsupported` | `evidence_claim` | A required close claim lacks supported evidence coverage. |
 | `evidence_claim_missing` | `evidence_claim` | A required close claim has no current evidence coverage record. |
 | `evidence_provenance_insufficient` | `evidence_provenance` | Required close evidence exists but lacks sufficient current source and assurance provenance. |
@@ -233,6 +240,8 @@ The production meanings below apply only after the method reaches close-readines
 | `recovery_required` | `recovery` | Recovery work remains required before the requested close path can proceed. |
 
 These codes are method-local `CloseReadinessBlocker.code` values. They are not public `ErrorCode` values, not `WriteDecisionReason.code` values, and not global value-set entries.
+
+For `pending_user_judgment`, blocker next actions may point to available User Channel answer paths, including MCP elicitation, prompt-capture chat commands, or local user commands when those paths are available. The blocker does not authorize an Agent Connection to answer the user-owned judgment.
 
 ## Blocked result
 
@@ -253,7 +262,7 @@ Method-specific blocker branches:
 | Branch | Production rule |
 |---|---|
 | `intent=check` | Returns current close readiness blockers as read-only observation data. |
-| `intent=complete` | Produces close readiness blockers when the completion path reaches close readiness evaluation and owner-defined close requirements remain unresolved. |
+| `intent=complete` | Produces close readiness blockers when the completion path reaches close readiness evaluation and owner-defined close requirements remain unresolved. In `guarded` or `managed` mode this includes guard-health, unresolved unrecorded-change, and guard-detected write-readiness blockers. |
 | `intent=cancel` | Produces blockers only for cancellation-specific terminal constraints, including missing or incompatible cancellation authority. Completion-only evidence, final acceptance, or residual-risk gaps do not block cancellation by themselves. |
 | `intent=supersede` | Produces blockers only for supersession-specific terminal constraints. Completion-only evidence, final acceptance, or residual-risk gaps do not block supersession by themselves. |
 

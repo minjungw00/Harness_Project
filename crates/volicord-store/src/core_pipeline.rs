@@ -1,6 +1,6 @@
 use std::{
     fs,
-    path::{Component, Path},
+    path::{Component, Path, PathBuf},
 };
 
 use rusqlite::{params, Connection, OptionalExtension, Transaction};
@@ -33,6 +33,7 @@ use crate::{
 /// Project-local store handle used by the Core request pipeline.
 #[derive(Debug)]
 pub struct CoreProjectStore {
+    pub(crate) runtime_home: PathBuf,
     pub(crate) project: ProjectRecord,
     pub(crate) conn: Connection,
 }
@@ -706,12 +707,11 @@ pub struct ProjectMutation<'tx> {
 impl CoreProjectStore {
     /// Opens the registered project-local state store for Core pipeline work.
     pub fn open(runtime_home: impl AsRef<Path>, project_id: &ProjectId) -> StoreResult<Self> {
-        let project =
-            project_record_for_execution(runtime_home, project_id.as_str())?.ok_or_else(|| {
-                StoreError::NotFound {
-                    entity: "project",
-                    id: project_id.as_str().to_owned(),
-                }
+        let runtime_home = runtime_home.as_ref().to_path_buf();
+        let project = project_record_for_execution(&runtime_home, project_id.as_str())?
+            .ok_or_else(|| StoreError::NotFound {
+                entity: "project",
+                id: project_id.as_str().to_owned(),
             })?;
 
         if !project.state_db_path.exists() {
@@ -722,7 +722,16 @@ impl CoreProjectStore {
         }
 
         let conn = open_project_state_database(&project.state_db_path)?;
-        Ok(Self { project, conn })
+        Ok(Self {
+            runtime_home,
+            project,
+            conn,
+        })
+    }
+
+    /// Returns the Runtime Home path that selected this project-local store.
+    pub fn runtime_home(&self) -> &Path {
+        &self.runtime_home
     }
 
     /// Returns the registry project row that selected this project-local store.

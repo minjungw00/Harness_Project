@@ -319,7 +319,7 @@ pub(super) fn plan_close_task(
     request: CloseTaskRequest,
     now: &UtcTimestamp,
 ) -> Result<CloseTaskPlan, PlanError> {
-    let context = load_close_task_context(store, project_state, &request)?;
+    let context = load_close_task_context(store, project_state, verified_invocation, &request)?;
     plan_close_task_with_context(
         store,
         project_state,
@@ -340,6 +340,11 @@ pub(super) fn plan_close_task_with_context(
     now: &UtcTimestamp,
     context: CloseTaskContext,
 ) -> Result<CloseTaskPlan, PlanError> {
+    let mut context = context;
+    if context.guard_health.is_none() {
+        context.guard_health =
+            projected_guard_health(store, project_state, verified_invocation, &request)?;
+    }
     let risk_acceptance_coverage =
         risk_acceptance_coverage(store, project_state, &request, &context)?;
     let mut blockers = terminal_close_blockers(store, project_state, &request, &context, now)?;
@@ -352,6 +357,7 @@ pub(super) fn plan_close_task_with_context(
             &risk_acceptance_coverage,
             now,
         )?);
+        blockers.extend(guard_close_blockers(project_state, &request, &context));
     }
 
     let committed_terminal = request.intent != CloseIntent::Check && blockers.is_empty();
@@ -459,6 +465,7 @@ pub(super) fn plan_close_task_with_context(
         evidence_summary: context.evidence_summary.clone(),
         close_state: Some(close_state),
         close_blockers: blockers.clone(),
+        guard_health: context.guard_health.clone(),
         guarantee_display,
     })?;
 
@@ -475,6 +482,7 @@ pub(super) fn plan_close_task_with_context(
         continuity_summary: Vec::new(),
         state: result_state.clone(),
         blockers: blockers.clone(),
+        guard_health: context.guard_health.clone(),
         evidence_summary: result_evidence_summary.clone(),
         artifact_refs: result_artifact_refs.clone(),
     };
@@ -493,6 +501,7 @@ pub(super) fn plan_close_task_with_context(
         current_close_basis: result_current_close_basis,
         risk_acceptance_coverage: result_risk_acceptance_coverage,
         blockers,
+        guard_health: context.guard_health,
     })
 }
 
@@ -649,6 +658,7 @@ fn terminal_close_summary_json(
 fn load_close_task_context(
     store: &CoreProjectStore,
     project_state: &ProjectStateHeader,
+    verified_invocation: Option<&VerifiedInvocationContext>,
     request: &CloseTaskRequest,
 ) -> Result<CloseTaskContext, PlanError> {
     let task = store
@@ -748,6 +758,7 @@ fn load_close_task_context(
         task,
         current_change_unit,
         current_close_basis,
+        guard_health: projected_guard_health(store, project_state, verified_invocation, request)?,
         pending_user_judgment_refs,
         blocker_refs,
         evidence_summary,
@@ -755,6 +766,295 @@ fn load_close_task_context(
         pending_judgment_authorities: None,
         resolved_judgment_authorities: None,
     })
+}
+
+fn projected_guard_health(
+    store: &CoreProjectStore,
+    project_state: &ProjectStateHeader,
+    verified_invocation: Option<&VerifiedInvocationContext>,
+    request: &CloseTaskRequest,
+) -> Result<Option<GuardHealthSummary>, PlanError> {
+    let Some(invocation) = verified_invocation else {
+        return Ok(None);
+    };
+    let Some(connection_id) = invocation.actor_source.agent_connection_id() else {
+        return Ok(None);
+    };
+    let record = volicord_store::guards::guard_health_record(
+        store.runtime_home(),
+        request.envelope.project_id.as_str(),
+        connection_id.as_str(),
+    )
+    .map_err(|error| {
+        PlanError::Response(Box::new(store_error_response(
+            &request.envelope,
+            project_state,
+            error,
+        )))
+    })?;
+    guard_health_summary_from_record(record)
+}
+
+fn guard_health_summary_from_record(
+    record: GuardHealthRecord,
+) -> Result<Option<GuardHealthSummary>, PlanError> {
+    let guard_mode = guard_health_mode(&record)?;
+    let guard_installation_status = if let Some(installation) = record.guard_installation.as_ref() {
+        parse_guard_installation_health(
+            "guard_installations",
+            &installation.guard_installation_id,
+            &installation.installation_health,
+        )?
+    } else {
+        GuardInstallationHealth::Unknown
+    };
+    let guard_installation_id = record
+        .guard_installation
+        .as_ref()
+        .map(|installation| GuardInstallationId::new(installation.guard_installation_id.clone()))
+        .into();
+    let last_guard_event_at = record
+        .latest_event
+        .as_ref()
+        .map(|event| {
+            parse_owner_storage_value(
+                "guard_events",
+                event.guard_event_id.clone(),
+                "occurred_at",
+                &event.occurred_at,
+            )
+        })
+        .transpose()?
+        .into();
+    let mcp_connection_status = record
+        .connection
+        .as_ref()
+        .map(|connection| connection.last_verification_status.clone())
+        .into();
+    let mcp_connection_healthy = record.connection.as_ref().is_some_and(|connection| {
+        connection.enabled && connection.last_verification_status == "complete"
+    });
+    let prompt_capture_available = guard_mode_supports_prompt_capture(guard_mode)
+        && guard_installation_status == GuardInstallationHealth::Healthy
+        && record
+            .guard_installation
+            .as_ref()
+            .map(prompt_capture_capability_enabled)
+            .transpose()?
+            .unwrap_or(false);
+    let missing_or_stale_write_readiness = record
+        .latest_event
+        .as_ref()
+        .map(latest_guard_event_has_write_readiness_issue)
+        .transpose()?
+        .unwrap_or(false);
+    Ok(Some(GuardHealthSummary {
+        guard_mode,
+        guard_installation_id,
+        guard_installation_status,
+        last_guard_event_at,
+        prompt_capture_available,
+        mcp_connection_healthy,
+        mcp_connection_status,
+        unresolved_unrecorded_change_count: record.unresolved_unrecorded_changes.len() as u64,
+        missing_or_stale_write_readiness,
+    }))
+}
+
+fn guard_health_mode(record: &GuardHealthRecord) -> Result<GuardMode, PlanError> {
+    if let Some(installation) = record.guard_installation.as_ref() {
+        return parse_guard_mode(
+            "guard_installations",
+            &installation.guard_installation_id,
+            &installation.guard_mode,
+        );
+    }
+    if let Some(session) = record.latest_session.as_ref() {
+        return parse_guard_mode("agent_sessions", &session.session_id, &session.guard_mode);
+    }
+    Ok(GuardMode::McpOnly)
+}
+
+fn parse_guard_mode(
+    table: &'static str,
+    record_ref: &str,
+    value: &str,
+) -> Result<GuardMode, PlanError> {
+    serde_json::from_value(Value::String(value.to_owned()))
+        .map_err(|_| {
+            CorePipelineError::Store(StoreError::corrupt_owner_state_value(
+                table,
+                record_ref.to_owned(),
+                "guard_mode",
+            ))
+        })
+        .map_err(PlanError::Core)
+}
+
+fn parse_guard_installation_health(
+    table: &'static str,
+    record_ref: &str,
+    value: &str,
+) -> Result<GuardInstallationHealth, PlanError> {
+    serde_json::from_value(Value::String(value.to_owned()))
+        .map_err(|_| {
+            CorePipelineError::Store(StoreError::corrupt_owner_state_value(
+                table,
+                record_ref.to_owned(),
+                "installation_health",
+            ))
+        })
+        .map_err(PlanError::Core)
+}
+
+fn guard_mode_supports_prompt_capture(guard_mode: GuardMode) -> bool {
+    matches!(guard_mode, GuardMode::Guarded | GuardMode::Managed)
+}
+
+fn prompt_capture_capability_enabled(
+    installation: &volicord_store::guards::GuardInstallationRecord,
+) -> Result<bool, PlanError> {
+    let capability = decode_required_json_object(
+        "guard_installations",
+        installation.guard_installation_id.clone(),
+        "host_capability_json",
+        Some(&installation.host_capability_json),
+    )?;
+    Ok(capability
+        .get("prompt_capture")
+        .and_then(Value::as_bool)
+        .unwrap_or(true))
+}
+
+fn latest_guard_event_has_write_readiness_issue(
+    event: &volicord_store::guards::GuardEventRecord,
+) -> Result<bool, PlanError> {
+    let result = decode_required_json_object(
+        "guard_events",
+        event.guard_event_id.clone(),
+        "result_json",
+        Some(&event.result_json),
+    )?;
+    let result = Value::Object(result);
+    Ok(
+        json_has_code(&result, &["write_readiness_missing", "write_check_stale"])
+            || json_has_non_empty_array_key(&result, "stale_write_check_ids"),
+    )
+}
+
+fn json_has_code(value: &Value, codes: &[&str]) -> bool {
+    match value {
+        Value::Object(object) => {
+            object
+                .get("code")
+                .and_then(Value::as_str)
+                .is_some_and(|code| codes.contains(&code))
+                || object.values().any(|value| json_has_code(value, codes))
+        }
+        Value::Array(values) => values.iter().any(|value| json_has_code(value, codes)),
+        _ => false,
+    }
+}
+
+fn json_has_non_empty_array_key(value: &Value, key: &str) -> bool {
+    match value {
+        Value::Object(object) => {
+            object
+                .get(key)
+                .and_then(Value::as_array)
+                .is_some_and(|values| !values.is_empty())
+                || object
+                    .values()
+                    .any(|value| json_has_non_empty_array_key(value, key))
+        }
+        Value::Array(values) => values
+            .iter()
+            .any(|value| json_has_non_empty_array_key(value, key)),
+        _ => false,
+    }
+}
+
+fn guard_close_blockers(
+    project_state: &ProjectStateHeader,
+    request: &CloseTaskRequest,
+    context: &CloseTaskContext,
+) -> Vec<CloseReadinessBlocker> {
+    let Some(summary) = context.guard_health.as_ref() else {
+        return Vec::new();
+    };
+    if !matches!(summary.guard_mode, GuardMode::Guarded | GuardMode::Managed) {
+        return Vec::new();
+    }
+
+    let task_ref = task_ref_for_close(request, project_state.state_version);
+    let mut blockers = Vec::new();
+    if summary.guard_installation_status != GuardInstallationHealth::Healthy {
+        let code = if summary.guard_installation_id.is_some() {
+            "guard_installation_unhealthy"
+        } else {
+            "guard_installation_missing"
+        };
+        blockers.push(close_blocker(
+            CloseReadinessBlockerCategory::ConnectionCapability,
+            code,
+            "Guarded close requires a healthy guard installation.",
+            vec![task_ref.clone()],
+            vec![NextActionSummary {
+                action_kind: NextActionKind::CloseTask,
+                owner_method: None,
+                label: "Repair guard setup or verification before completing the Task.".to_owned(),
+                blocking_question: None,
+                required_refs: vec![task_ref.clone()],
+            }],
+        ));
+    }
+    if !summary.mcp_connection_healthy {
+        blockers.push(close_blocker(
+            CloseReadinessBlockerCategory::ConnectionCapability,
+            "guard_connection_unhealthy",
+            "Guarded close requires the Agent Connection to be healthy.",
+            vec![task_ref.clone()],
+            vec![NextActionSummary {
+                action_kind: NextActionKind::CloseTask,
+                owner_method: None,
+                label: "Repair Agent Connection health before completing the Task.".to_owned(),
+                blocking_question: None,
+                required_refs: vec![task_ref.clone()],
+            }],
+        ));
+    }
+    if summary.unresolved_unrecorded_change_count > 0 {
+        blockers.push(close_blocker(
+            CloseReadinessBlockerCategory::ConnectionCapability,
+            "unresolved_unrecorded_changes",
+            "Observed Product Repository changes still need reconciliation.",
+            vec![task_ref.clone()],
+            vec![NextActionSummary {
+                action_kind: NextActionKind::RecordRun,
+                owner_method: Some(MethodName::RecordRun),
+                label: "Record or reconcile observed Product Repository changes before close."
+                    .to_owned(),
+                blocking_question: None,
+                required_refs: vec![task_ref.clone()],
+            }],
+        ));
+    }
+    if summary.missing_or_stale_write_readiness {
+        blockers.push(close_blocker(
+            CloseReadinessBlockerCategory::WriteCompatibility,
+            "guard_write_readiness_missing_or_stale",
+            "Guard events detected missing or stale write readiness.",
+            vec![task_ref.clone()],
+            vec![NextActionSummary {
+                action_kind: NextActionKind::PrepareWrite,
+                owner_method: Some(MethodName::PrepareWrite),
+                label: "Refresh write readiness before completing the Task.".to_owned(),
+                blocking_question: None,
+                required_refs: vec![task_ref],
+            }],
+        ));
+    }
+    blockers
 }
 
 fn terminal_close_blockers(
@@ -862,9 +1162,11 @@ fn terminal_close_blockers(
                     vec![NextActionSummary {
                         action_kind: NextActionKind::RecordUserJudgment,
                         owner_method: Some(MethodName::RecordUserJudgment),
-                        label: "Resolve pending user-owned judgments required for supersession."
+                        label: "Resolve pending user-owned judgments through the User Channel."
                             .to_owned(),
-                        blocking_question: None,
+                        blocking_question: Some(
+                            "Use MCP elicitation or prompt-capture chat commands when available, or use the local volicord user command.".to_owned(),
+                        ),
                         required_refs: pending_refs,
                     }],
                 ));
@@ -1195,8 +1497,10 @@ fn completion_close_blockers(
             vec![NextActionSummary {
                 action_kind: NextActionKind::RecordUserJudgment,
                 owner_method: Some(MethodName::RecordUserJudgment),
-                label: "Resolve pending user-owned judgments required for close.".to_owned(),
-                blocking_question: None,
+                label: "Resolve pending user-owned judgments through the User Channel.".to_owned(),
+                blocking_question: Some(
+                    "Use MCP elicitation or prompt-capture chat commands when available, or use the local volicord user command.".to_owned(),
+                ),
                 required_refs: close_complete_pending_refs,
             }],
         ));

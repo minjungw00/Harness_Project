@@ -17,6 +17,11 @@ use volicord_store::{
         initialize_runtime_home, register_project, ProjectRegistration, ACTIVE_PROJECT_STATUS,
     },
     core_pipeline::{CoreProjectStore, StorageEffectCounts, TaskRevisionRecord},
+    guards::{
+        insert_agent_session, insert_guard_event, insert_unrecorded_change,
+        upsert_guard_installation, AgentSessionInsert, GuardEventInsert, GuardInstallationUpsert,
+        UnrecordedChangeInsert,
+    },
     sqlite::open_project_state_database,
 };
 use volicord_test_support::TempRuntimeHome;
@@ -12251,6 +12256,490 @@ fn close_task_complete_success() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
+fn guarded_close_complete_success_reports_guard_health() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let guard_installation_id =
+        record_guard_installation(&harness, "guarded_success", "guarded", "healthy", "{}")?;
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&harness, "guarded_close_success")?;
+    let after_evidence = record_close_evidence(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "guarded_success",
+        true,
+    )?;
+    let after_final = record_final_acceptance(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_evidence,
+        "guarded_success",
+    )?;
+
+    let before_status = harness.counts()?;
+    let status = harness.service.status(
+        StatusRequest {
+            envelope: envelope(
+                "req_status_guarded_success",
+                None,
+                false,
+                None,
+                Some(&task_id),
+            ),
+            include: StatusInclude {
+                task: true,
+                pending_user_judgments: true,
+                write_check: false,
+                evidence: true,
+                close: true,
+                guarantees: false,
+                continuity: false,
+            },
+        },
+        invocation(OperationCategory::Read),
+    )?;
+    assert_eq!(harness.counts()?, before_status);
+    assert_eq!(
+        status.response_value["guard_health"]["guard_mode"],
+        "guarded"
+    );
+    assert_eq!(
+        status.response_value["guard_health"]["guard_installation_id"],
+        guard_installation_id
+    );
+    assert_eq!(
+        status.response_value["guard_health"]["guard_installation_status"],
+        "healthy"
+    );
+    assert_eq!(
+        status.response_value["guard_health"]["prompt_capture_available"],
+        true
+    );
+    assert_eq!(
+        status.response_value["guard_health"]["mcp_connection_healthy"],
+        true
+    );
+    assert_eq!(
+        status.response_value["guard_health"]["unresolved_unrecorded_change_count"],
+        0
+    );
+    assert_eq!(
+        status.response_value["active_task"]["guard_health"]["guard_mode"],
+        "guarded"
+    );
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_close_guarded_success",
+            idempotency_key: Some("idem_close_guarded_success"),
+            dry_run: false,
+            expected_state_version: Some(after_final),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation(OperationCategory::AgentWorkflow),
+    )?;
+
+    assert_eq!(response.response_value["close_state"], "closed");
+    assert_eq!(response.response_value["blockers"], json!([]));
+    assert_eq!(
+        response.response_value["guard_health"]["guard_mode"],
+        "guarded"
+    );
+    assert_eq!(
+        response.response_value["guard_health"]["unresolved_unrecorded_change_count"],
+        0
+    );
+    Ok(())
+}
+
+#[test]
+fn guarded_close_blocks_unhealthy_guard_installation() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    record_guard_installation(
+        &harness,
+        "guarded_unhealthy",
+        "guarded",
+        "action_required",
+        "{}",
+    )?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "guarded_unhealthy")?;
+    let after_evidence = record_close_evidence(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "guarded_unhealthy",
+        true,
+    )?;
+    let after_final = record_final_acceptance(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_evidence,
+        "guarded_unhealthy",
+    )?;
+    let before = harness.counts()?;
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_close_guarded_unhealthy",
+            idempotency_key: Some("idem_close_guarded_unhealthy"),
+            dry_run: false,
+            expected_state_version: Some(after_final),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation(OperationCategory::AgentWorkflow),
+    )?;
+
+    assert_eq!(response.response_value["close_state"], "blocked");
+    assert_close_blocker(&response.response_value, "guard_installation_unhealthy");
+    assert_close_blocker_category(
+        &response.response_value,
+        "guard_installation_unhealthy",
+        "connection_capability",
+    );
+    assert_eq!(
+        response.response_value["guard_health"]["guard_installation_status"],
+        "action_required"
+    );
+    assert_eq!(response.response_value["base"]["effect_kind"], "no_effect");
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn guarded_close_blocks_missing_guard_installation() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    insert_guarded_agent_session(&harness, "guarded_missing_install", "guarded")?;
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&harness, "guarded_missing_install")?;
+    let after_evidence = record_close_evidence(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "guarded_missing_install",
+        true,
+    )?;
+    let after_final = record_final_acceptance(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_evidence,
+        "guarded_missing_install",
+    )?;
+    let before = harness.counts()?;
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_close_guarded_missing_install",
+            idempotency_key: Some("idem_close_guarded_missing_install"),
+            dry_run: false,
+            expected_state_version: Some(after_final),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation(OperationCategory::AgentWorkflow),
+    )?;
+
+    assert_eq!(response.response_value["close_state"], "blocked");
+    assert_close_blocker(&response.response_value, "guard_installation_missing");
+    assert_close_blocker_category(
+        &response.response_value,
+        "guard_installation_missing",
+        "connection_capability",
+    );
+    assert_eq!(
+        response.response_value["guard_health"]["guard_installation_status"],
+        "unknown"
+    );
+    assert_eq!(
+        response.response_value["guard_health"]["guard_installation_id"],
+        Value::Null
+    );
+    assert_eq!(response.response_value["base"]["effect_kind"], "no_effect");
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn guarded_close_blocks_unresolved_unrecorded_changes_and_check_is_read_only(
+) -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    record_guard_installation(&harness, "guarded_unrecorded", "guarded", "healthy", "{}")?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "guarded_unrecorded")?;
+    let after_evidence = record_close_evidence(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "guarded_unrecorded",
+        true,
+    )?;
+    let after_final = record_final_acceptance(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_evidence,
+        "guarded_unrecorded",
+    )?;
+    insert_guarded_unrecorded_change(&harness, &task_id, "guarded_unrecorded")?;
+    let before = harness.counts()?;
+
+    let check = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_check_guarded_unrecorded",
+            idempotency_key: None,
+            dry_run: false,
+            expected_state_version: None,
+            task_id: &task_id,
+            intent: CloseIntent::Check,
+            close_reason: None,
+            superseding_task_id: None,
+        }),
+        invocation(OperationCategory::Read),
+    )?;
+
+    assert_eq!(check.response_value["base"]["effect_kind"], "read_only");
+    assert_eq!(check.response_value["close_state"], "blocked");
+    assert_close_blocker(&check.response_value, "unresolved_unrecorded_changes");
+    assert_eq!(
+        check.response_value["guard_health"]["unresolved_unrecorded_change_count"],
+        1
+    );
+    assert!(!check.response_json.contains("src/export.rs"));
+    assert_eq!(harness.counts()?, before);
+
+    let complete = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_close_guarded_unrecorded",
+            idempotency_key: Some("idem_close_guarded_unrecorded"),
+            dry_run: false,
+            expected_state_version: Some(after_final),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation(OperationCategory::AgentWorkflow),
+    )?;
+
+    assert_eq!(complete.response_value["close_state"], "blocked");
+    assert_close_blocker(&complete.response_value, "unresolved_unrecorded_changes");
+    assert_eq!(complete.response_value["base"]["effect_kind"], "no_effect");
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn guarded_close_blocks_write_readiness_issue_from_guard_event() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let guard_installation_id =
+        record_guard_installation(&harness, "guarded_write_ready", "guarded", "healthy", "{}")?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "guarded_write_ready")?;
+    let after_evidence = record_close_evidence(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "guarded_write_ready",
+        true,
+    )?;
+    let after_final = record_final_acceptance(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_evidence,
+        "guarded_write_ready",
+    )?;
+    insert_write_readiness_guard_event(&harness, &guard_installation_id, "guarded_write_ready")?;
+    let before = harness.counts()?;
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_check_guarded_write_ready",
+            idempotency_key: None,
+            dry_run: false,
+            expected_state_version: None,
+            task_id: &task_id,
+            intent: CloseIntent::Check,
+            close_reason: None,
+            superseding_task_id: None,
+        }),
+        invocation(OperationCategory::Read),
+    )?;
+
+    assert_eq!(response.response_value["close_state"], "blocked");
+    assert_close_blocker(
+        &response.response_value,
+        "guard_write_readiness_missing_or_stale",
+    );
+    assert_eq!(
+        response.response_value["guard_health"]["missing_or_stale_write_readiness"],
+        true
+    );
+    assert_eq!(
+        response.response_value["guard_health"]["last_guard_event_at"],
+        "2026-06-30T00:06:00Z"
+    );
+    assert_eq!(harness.counts()?, before);
+
+    let complete = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_close_guarded_write_ready",
+            idempotency_key: Some("idem_close_guarded_write_ready"),
+            dry_run: false,
+            expected_state_version: Some(after_final),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation(OperationCategory::AgentWorkflow),
+    )?;
+    assert_eq!(complete.response_value["close_state"], "blocked");
+    assert_eq!(complete.response_value["base"]["effect_kind"], "no_effect");
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn guarded_pending_judgment_displays_user_answer_paths() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    record_guard_installation(&harness, "guarded_pending", "guarded", "healthy", "{}")?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "guarded_pending")?;
+    let after_evidence = record_close_evidence(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "guarded_pending",
+        true,
+    )?;
+    let mut product_request = user_judgment_request(
+        "req_guarded_pending_judgment",
+        "idem_guarded_pending_judgment",
+        false,
+        Some(after_evidence),
+        &task_id,
+        Some(&change_unit_id),
+        JudgmentKind::ProductDecision,
+    );
+    product_request.required_for = vec![volicord_types::JudgmentRequiredFor::CloseComplete];
+    harness.service.request_user_judgment(
+        product_request,
+        invocation(OperationCategory::AgentWorkflow),
+    )?;
+    let after_final = record_final_acceptance(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_evidence + 1,
+        "guarded_pending",
+    )?;
+    let before = harness.counts()?;
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_close_guarded_pending",
+            idempotency_key: Some("idem_close_guarded_pending"),
+            dry_run: false,
+            expected_state_version: Some(after_final),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation(OperationCategory::AgentWorkflow),
+    )?;
+
+    assert_eq!(response.response_value["close_state"], "blocked");
+    assert_close_blocker(&response.response_value, "pending_user_judgment");
+    let pending = response.response_value["blockers"]
+        .as_array()
+        .expect("blockers should be an array")
+        .iter()
+        .find(|blocker| blocker["code"] == "pending_user_judgment")
+        .expect("pending judgment blocker should be present");
+    let guidance = pending["next_actions"][0]["blocking_question"]
+        .as_str()
+        .expect("pending blocker should include answer-path guidance");
+    assert!(guidance.contains("MCP elicitation"), "{guidance}");
+    assert!(guidance.contains("prompt-capture"), "{guidance}");
+    assert!(guidance.contains("volicord user"), "{guidance}");
+    assert_eq!(
+        response.response_value["guard_health"]["prompt_capture_available"],
+        true
+    );
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn mcp_only_close_does_not_receive_guarded_unrecorded_change_blocker() -> Result<(), Box<dyn Error>>
+{
+    let harness = MethodHarness::new()?;
+    record_guard_installation(&harness, "mcp_only_unrecorded", "mcp_only", "healthy", "{}")?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "mcp_only_unrecorded")?;
+    let after_evidence = record_close_evidence(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "mcp_only_unrecorded",
+        true,
+    )?;
+    let after_final = record_final_acceptance(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_evidence,
+        "mcp_only_unrecorded",
+    )?;
+    insert_guarded_unrecorded_change(&harness, &task_id, "mcp_only_unrecorded")?;
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_close_mcp_only_unrecorded",
+            idempotency_key: Some("idem_close_mcp_only_unrecorded"),
+            dry_run: false,
+            expected_state_version: Some(after_final),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation(OperationCategory::AgentWorkflow),
+    )?;
+
+    assert_eq!(response.response_value["close_state"], "closed");
+    assert_no_close_blocker(&response.response_value, "unresolved_unrecorded_changes");
+    assert_eq!(
+        response.response_value["guard_health"]["guard_mode"],
+        "mcp_only"
+    );
+    assert_eq!(
+        response.response_value["guard_health"]["unresolved_unrecorded_change_count"],
+        1
+    );
+    assert_eq!(
+        response.response_value["guard_health"]["prompt_capture_available"],
+        false
+    );
+    Ok(())
+}
+
+#[test]
 fn close_task_cancel_success_despite_missing_completion_evidence() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "close_cancel")?;
@@ -12959,6 +13448,100 @@ fn close_task_request(input: CloseTaskFixture<'_>) -> CloseTaskRequest {
         superseding_task_id: input.superseding_task_id.map(TaskId::new).into(),
         user_note: Some("Focused close-task test.".to_owned()).into(),
     }
+}
+
+fn record_guard_installation(
+    harness: &MethodHarness,
+    suffix: &str,
+    guard_mode: &str,
+    installation_health: &str,
+    host_capability_json: &str,
+) -> Result<String, Box<dyn Error>> {
+    let guard_installation_id = format!("guard_installation_{suffix}");
+    upsert_guard_installation(
+        &harness.runtime_home_path,
+        GuardInstallationUpsert {
+            guard_installation_id: guard_installation_id.clone(),
+            connection_internal_id: CONNECTION_ID.to_owned(),
+            project_id: Some(PROJECT_ID.to_owned()),
+            host_kind: HOST_KIND_CODEX.to_owned(),
+            guard_mode: guard_mode.to_owned(),
+            host_capability_json: host_capability_json.to_owned(),
+            installation_health: installation_health.to_owned(),
+            installed_at: Some("2026-06-30T00:00:00Z".to_owned()),
+            last_checked_at: "2026-06-30T00:01:00Z".to_owned(),
+            metadata_json: "{}".to_owned(),
+        },
+    )?;
+    Ok(guard_installation_id)
+}
+
+fn insert_guarded_agent_session(
+    harness: &MethodHarness,
+    suffix: &str,
+    guard_mode: &str,
+) -> Result<(), Box<dyn Error>> {
+    insert_agent_session(
+        &harness.runtime_home_path,
+        PROJECT_ID,
+        AgentSessionInsert {
+            session_id: format!("agent_session_{suffix}"),
+            connection_internal_id: CONNECTION_ID.to_owned(),
+            guard_installation_id: None,
+            host_kind: HOST_KIND_CODEX.to_owned(),
+            guard_mode: guard_mode.to_owned(),
+            started_at: "2026-06-30T00:02:00Z".to_owned(),
+            metadata_json: "{}".to_owned(),
+        },
+    )?;
+    Ok(())
+}
+
+fn insert_guarded_unrecorded_change(
+    harness: &MethodHarness,
+    task_id: &str,
+    suffix: &str,
+) -> Result<(), Box<dyn Error>> {
+    insert_unrecorded_change(
+        &harness.runtime_home_path,
+        PROJECT_ID,
+        UnrecordedChangeInsert {
+            unrecorded_change_id: format!("unrecorded_change_{suffix}"),
+            session_id: None,
+            connection_internal_id: CONNECTION_ID.to_owned(),
+            task_id: Some(task_id.to_owned()),
+            summary: "Product Repository change observed outside a recorded run.".to_owned(),
+            observed_paths_json: r#"["src/export.rs"]"#.to_owned(),
+            detection_json: "{}".to_owned(),
+            detected_at: "2026-06-30T00:05:00Z".to_owned(),
+            metadata_json: "{}".to_owned(),
+        },
+    )?;
+    Ok(())
+}
+
+fn insert_write_readiness_guard_event(
+    harness: &MethodHarness,
+    guard_installation_id: &str,
+    suffix: &str,
+) -> Result<(), Box<dyn Error>> {
+    insert_guard_event(
+        &harness.runtime_home_path,
+        PROJECT_ID,
+        GuardEventInsert {
+            guard_event_id: format!("guard_event_{suffix}"),
+            session_id: None,
+            connection_internal_id: CONNECTION_ID.to_owned(),
+            guard_installation_id: Some(guard_installation_id.to_owned()),
+            event_kind: "prepare_write".to_owned(),
+            decision: "deny".to_owned(),
+            subject_json: "{}".to_owned(),
+            result_json: r#"{"reasons":[{"code":"write_readiness_missing"}]}"#.to_owned(),
+            occurred_at: "2026-06-30T00:06:00Z".to_owned(),
+            metadata_json: "{}".to_owned(),
+        },
+    )?;
+    Ok(())
 }
 
 fn record_close_evidence(

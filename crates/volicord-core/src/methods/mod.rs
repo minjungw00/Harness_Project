@@ -19,6 +19,7 @@ use volicord_store::{
         TaskScopeUpdate, UserJudgmentInsert, UserJudgmentInvalidation, UserJudgmentRecord,
         UserJudgmentResolutionUpdate, WriteCheckConsumption, WriteCheckInsert, WriteCheckRecord,
     },
+    guards::GuardHealthRecord,
     StoreError,
 };
 use volicord_types::{
@@ -29,17 +30,18 @@ use volicord_types::{
     CurrentCloseBasis, DryRunSummary, DurableIdKind, EffectKind, ErrorCode, EvidenceAssuranceLevel,
     EvidenceCoverageItem, EvidenceCoverageState, EvidenceObservation, EvidenceObservationId,
     EvidenceObservationInput, EvidenceSourceKind, EvidenceStatus, EvidenceSummary,
-    EvidenceUpdateProvenance, GuaranteeDisplay, JsonObject, JudgmentBasis,
-    JudgmentBasisCompatibilityStatus, JudgmentKind, JudgmentRationale, JudgmentRequiredFor,
-    JudgmentResolutionOutcome, MethodName, MethodOperationCategory, NextActionKind,
-    NextActionSummary, ObservedChanges, PersistedEvidenceMetadata, PersistedJudgmentBasis,
-    PersistedUserJudgmentOptions, PersistedUserJudgmentRequest, PersistedUserJudgmentResolution,
-    PlannedEffect, PrepareWriteRequest, PrepareWriteResult, ProjectContinuityKind,
-    ProjectContinuityRecord, ProjectContinuityRecordId, ProjectContinuityStatus,
-    ProjectContinuitySummary, ProjectEnforcementProfile, ProjectId, RecordId, RecordRunRequest,
-    RecordRunResult, RecordUserJudgmentPayload, RecordUserJudgmentRequest, RedactionState,
-    RequestedMode, RequiredNullable, ResidualRisk, ResumePolicy, RiskAcceptanceCoverage, RiskId,
-    RunId, RunSummary, SensitiveActionRequirement, StageArtifactRequest, StageArtifactResult,
+    EvidenceUpdateProvenance, GuaranteeDisplay, GuardHealthSummary, GuardInstallationHealth,
+    GuardInstallationId, GuardMode, JsonObject, JudgmentBasis, JudgmentBasisCompatibilityStatus,
+    JudgmentKind, JudgmentRationale, JudgmentRequiredFor, JudgmentResolutionOutcome, MethodName,
+    MethodOperationCategory, NextActionKind, NextActionSummary, ObservedChanges,
+    PersistedEvidenceMetadata, PersistedJudgmentBasis, PersistedUserJudgmentOptions,
+    PersistedUserJudgmentRequest, PersistedUserJudgmentResolution, PlannedEffect,
+    PrepareWriteRequest, PrepareWriteResult, ProjectContinuityKind, ProjectContinuityRecord,
+    ProjectContinuityRecordId, ProjectContinuityStatus, ProjectContinuitySummary,
+    ProjectEnforcementProfile, ProjectId, RecordId, RecordRunRequest, RecordRunResult,
+    RecordUserJudgmentPayload, RecordUserJudgmentRequest, RedactionState, RequestedMode,
+    RequiredNullable, ResidualRisk, ResumePolicy, RiskAcceptanceCoverage, RiskId, RunId,
+    RunSummary, SensitiveActionRequirement, StageArtifactRequest, StageArtifactResult,
     StagedArtifactHandle, StagedArtifactHandleId, StateRecordKind, StateRecordRef,
     StatusCloseState, StatusInclude, StatusRequest, StorageRef, TaskId, TaskLifecyclePhase,
     TaskLifecycleState, TaskMode, TaskResult, ToolEnvelope, ToolResultBase, UpdateScopeRequest,
@@ -137,12 +139,14 @@ struct CloseTaskPlan {
     current_close_basis: Option<CurrentCloseBasis>,
     risk_acceptance_coverage: Vec<RiskAcceptanceCoverage>,
     blockers: Vec<CloseReadinessBlocker>,
+    guard_health: Option<GuardHealthSummary>,
 }
 
 struct CloseTaskContext {
     task: TaskRecord,
     current_change_unit: Option<ChangeUnitRecord>,
     current_close_basis: Option<CurrentCloseBasis>,
+    guard_health: Option<GuardHealthSummary>,
     pending_user_judgment_refs: Vec<StateRecordRef>,
     blocker_refs: Vec<StateRecordRef>,
     evidence_summary: Option<EvidenceSummary>,
@@ -1765,6 +1769,7 @@ struct SummaryBuild<'a> {
     evidence_summary: Option<EvidenceSummary>,
     close_state: Option<CloseState>,
     close_blockers: Vec<CloseReadinessBlocker>,
+    guard_health: Option<GuardHealthSummary>,
     guarantee_display: Option<GuaranteeDisplay>,
 }
 
@@ -1780,6 +1785,7 @@ fn build_state_summary(input: SummaryBuild<'_>) -> CoreResult<volicord_types::St
         evidence_summary,
         close_state,
         close_blockers,
+        guard_health,
         guarantee_display,
     } = input;
     let task_id = TaskId::new(task.task_id.clone());
@@ -1848,6 +1854,7 @@ fn build_state_summary(input: SummaryBuild<'_>) -> CoreResult<volicord_types::St
         evidence_summary,
         close_state,
         close_blockers,
+        guard_health,
         guarantee_display,
     })
 }
@@ -2116,6 +2123,7 @@ fn close_context_from_projection(
         task,
         current_change_unit,
         current_close_basis,
+        guard_health: None,
         pending_user_judgment_refs,
         blocker_refs,
         evidence_summary,

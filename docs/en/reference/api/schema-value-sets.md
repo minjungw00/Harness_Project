@@ -342,6 +342,25 @@ write_decision
 close_readiness
 ```
 
+`GuardHealthSummary.guard_mode` uses:
+
+```text
+mcp_only
+guarded
+managed
+```
+
+`GuardHealthSummary.guard_installation_status` uses:
+
+```text
+unknown
+healthy
+action_required
+failed
+```
+
+These values report guard integration state for close-readiness and status projections. They do not prove product correctness, test sufficiency, OS enforcement, sandboxing, security isolation, final acceptance, or residual-risk acceptance. `mcp_only` remains cooperative unless an owner-defined configuration selects guarded or managed behavior.
+
 `WriteDecisionReason.category` is a controlled category value. It uses only these supported values:
 
 | Value | Category family |

@@ -1,6 +1,6 @@
 # API 상태 스키마
 
-이 문서는 기준 범위의 상태 형태 API 스키마를 담당합니다. `StateSummary`, `StateRecordRef`, API 데이터 형태의 생명주기 상태, 상태 관련 스냅샷, `ProjectContinuityRecord`, `ProjectContinuitySummary`, `ShapingReadiness`, `ChangeUnitEffectContract`, 그리고 `NextActionSummary`, `WriteCheckStateSummary`, `WriteCheckSummary`, `WriteCheckAttemptScope`, `EvidenceSummary`, `EvidenceObservation`, `CurrentCloseBasis`, `ResidualRisk`, `RiskAcceptanceCoverage`, `CloseReadinessBlocker`, `ValidatorResult`, `GuaranteeDisplay` 같은 표시 형태를 정의합니다.
+이 문서는 기준 범위의 상태 형태 API 스키마를 담당합니다. `StateSummary`, `StateRecordRef`, API 데이터 형태의 생명주기 상태, 상태 관련 스냅샷, `ProjectContinuityRecord`, `ProjectContinuitySummary`, `ShapingReadiness`, `ChangeUnitEffectContract`, 그리고 `NextActionSummary`, `WriteCheckStateSummary`, `WriteCheckSummary`, `WriteCheckAttemptScope`, `EvidenceSummary`, `EvidenceObservation`, `GuardHealthSummary`, `CurrentCloseBasis`, `ResidualRisk`, `RiskAcceptanceCoverage`, `CloseReadinessBlocker`, `ValidatorResult`, `GuaranteeDisplay` 같은 표시 형태를 정의합니다.
 
 ## 담당 경계
 
@@ -79,12 +79,13 @@ StateSummary:
   evidence_summary: EvidenceSummary | null
   close_state: string | null
   close_blockers: CloseReadinessBlocker[]
+  guard_health: GuardHealthSummary | null
   guarantee_display: GuaranteeDisplay | null
 ```
 
 의미:
 - `StateSummary`는 상태 참조, 요약, 닫기 준비 상태 필드를 담는 간결한 응답 형태입니다.
-- 메서드 include 플래그는 이 형태의 일부만 선택할 수 있습니다. 메서드 담당 문서가 어떤 상태 보기를 선택하지 않는다고 말하면 `evidence_summary`, `close_state`, `close_blockers`, `guarantee_display` 같은 include 제어 필드는 null이나 빈 값으로 반환하지 않고 생략합니다. 반환된 빈 배열은 그 상태 보기를 계산했고 비어 있음을 뜻합니다.
+- 메서드 include 플래그는 이 형태의 일부만 선택할 수 있습니다. 메서드 담당 문서가 어떤 상태 보기를 선택하지 않는다고 말하면 `evidence_summary`, `close_state`, `close_blockers`, `guard_health`, `guarantee_display` 같은 include 제어 필드는 null이나 빈 값으로 반환하지 않고 생략합니다. 반환된 빈 배열은 그 상태 보기를 계산했고 비어 있음을 뜻합니다.
 - `mode`와 `close_state`는 값이 있을 때 제어 값 문자열입니다.
 - `goal_summary`, `scope_summary`, `non_goals`, `acceptance_criteria`, `autonomy_boundary`는 자유 형식 표시 문자열입니다.
 - `effect_contract`는 현재 적용 Change Unit의 선택적 추가 효과 계약입니다. `null`은 추가 Change Unit 효과 계약이 기록되어 있지 않다는 뜻입니다. 넓은 안전성이나 제한 없는 실행처럼 설명하면 안 됩니다.
@@ -98,6 +99,42 @@ StateSummary:
 - `mode`와 `close_state` 값: [`Task` 생명주기 값](schema-value-sets.md#task-lifecycle-values)
 - 커밋 결정 분기: [공통 응답 분기](schema-core.md#common-response)
 - 메서드별 커밋 동작: [API 메서드](methods.md)가 안내하는 메서드 담당 문서
+
+## Guard health summary
+
+`GuardHealthSummary`는 메서드 담당 문서가 선택했을 때 닫기 준비 상태와 상태 조회 보기가 반환하는 간결한 guard 상태 보기입니다.
+
+```yaml
+GuardHealthSummary:
+  guard_mode: string
+  guard_installation_id: string | null
+  guard_installation_status: string
+  last_guard_event_at: string | null
+  prompt_capture_available: boolean
+  mcp_connection_healthy: boolean
+  mcp_connection_status: string | null
+  unresolved_unrecorded_change_count: integer
+  missing_or_stale_write_readiness: boolean
+```
+
+의미:
+- `guard_mode`와 `guard_installation_status`는 제어 값 문자열입니다.
+- `guard_installation_id`가 `null`이 아니면 불투명 guard 설치 식별자입니다.
+- `last_guard_event_at`은 상태 보기에 사용할 수 있는 최신 guard 이벤트 타임스탬프입니다. 사용할 수 있는 guard 이벤트가 없으면 `null`입니다.
+- `prompt_capture_available`은 선택된 guarded 또는 managed 연결에서 prompt capture를 사용할 수 있는지 보고합니다. 프롬프트 텍스트는 포함하지 않습니다.
+- `mcp_connection_healthy`와 `mcp_connection_status`는 추적되는 Agent Connection 확인 상태가 있을 때 그 상태를 요약합니다.
+- `unresolved_unrecorded_change_count`는 해결되지 않은 미기록 Product Repository 변경 수입니다. 프롬프트 텍스트, 명령 텍스트, 경로 목록은 노출하지 않습니다.
+- `missing_or_stale_write_readiness`는 guard 이벤트가 누락되었거나 오래된 쓰기 준비 상태를 감지했는지 보고합니다.
+
+의미하지 않는 것:
+- `GuardHealthSummary`는 제품 정확성, 테스트 충분성, OS 강제, 샌드박싱, 보안 격리, 최종 수락의 증거가 아닙니다.
+- 건강한 guard 요약은 증거, 아티팩트 무결성, 사용자 소유 판단, `Write Check`, 최종 수락, 잔여 위험 수락 요구사항을 대체하지 않습니다.
+- `mcp_only` 모드는 담당 문서가 정의한 설정이 guarded 또는 managed 동작을 선택하지 않는 한 협력형으로 남습니다.
+
+담당 문서 링크:
+- `guard_mode`와 `guard_installation_status` 값: [상태와 차단 사유 값](schema-value-sets.md#state-and-blocker-values)
+- 닫기 준비 상태 guard 차단 사유와 메서드 로컬 코드: [`volicord.close_task`](method-close-task.md)
+- Agent Connection 의미: [Agent Connection](../agent-connection.md)
 
 <a id="project-continuity-shapes"></a>
 ## 프로젝트 연속성 형태

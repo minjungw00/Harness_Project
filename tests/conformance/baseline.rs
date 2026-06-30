@@ -3,6 +3,13 @@ use std::{error::Error, fs, path::Path};
 use chrono::{DateTime, Duration, Utc};
 use serde_json::{json, Value};
 use volicord_core::{rejected_response, tool_error, Clock, CoreService, InvocationContext};
+use volicord_store::{
+    agent_connections::HOST_KIND_CODEX,
+    guards::{
+        insert_unrecorded_change, upsert_guard_installation, GuardInstallationUpsert,
+        UnrecordedChangeInsert,
+    },
+};
 use volicord_test_support::core_fixtures::{
     answer_payload, artifact_input_for_handle, supported_evidence_update,
     unsupported_evidence_update, ArtifactOwnerJsonColumn, ChangeUnitOwnerJsonColumn,
@@ -928,6 +935,70 @@ fn close_readiness_reports_distinct_blockers_without_substitution() -> Result<()
         &risk_blocked.response_value,
         "missing_residual_risk_acceptance",
     );
+    Ok(())
+}
+
+#[test]
+fn guarded_unresolved_unrecorded_changes_block_close_without_mutation() -> Result<(), Box<dyn Error>>
+{
+    let fixture = CoreFixture::new("guarded_unrecorded_close")?;
+    let service = core(&fixture);
+    record_guard_installation(&fixture, "guarded_unrecorded_close", "guarded", "healthy")?;
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&fixture, &service, "guarded_unrecorded_close")?;
+    let after_evidence =
+        record_close_evidence(&fixture, &service, &task_id, &change_unit_id, 2, true)?;
+    let after_final = record_final_acceptance(
+        &fixture,
+        &service,
+        &task_id,
+        &change_unit_id,
+        after_evidence,
+        "guarded_unrecorded_close",
+    )?;
+    insert_guarded_unrecorded_change(&fixture, &task_id, "guarded_unrecorded_close")?;
+    let before = fixture.counts()?;
+
+    let check = service.close_task(
+        fixture.close_task_request(CloseTaskFixture {
+            request_id: "req_guarded_unrecorded_check",
+            idempotency_key: None,
+            dry_run: false,
+            expected_state_version: None,
+            task_id: &task_id,
+            intent: CloseIntent::Check,
+            close_reason: None,
+            superseding_task_id: None,
+        }),
+        invocation(&fixture, OperationCategory::Read),
+    )?;
+    assert_eq!(check.response_value["base"]["effect_kind"], "read_only");
+    assert_eq!(check.response_value["close_state"], "blocked");
+    assert_close_blocker(&check.response_value, "unresolved_unrecorded_changes");
+    assert_eq!(
+        check.response_value["guard_health"]["unresolved_unrecorded_change_count"],
+        1
+    );
+    assert!(!check.response_json.contains("src/export.rs"));
+    assert_eq!(fixture.counts()?, before);
+
+    let close = service.close_task(
+        fixture.close_task_request(CloseTaskFixture {
+            request_id: "req_guarded_unrecorded_close",
+            idempotency_key: Some("idem_guarded_unrecorded_close"),
+            dry_run: false,
+            expected_state_version: Some(after_final),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation(&fixture, OperationCategory::AgentWorkflow),
+    )?;
+    assert_eq!(close.response_value["base"]["effect_kind"], "no_effect");
+    assert_eq!(close.response_value["close_state"], "blocked");
+    assert_close_blocker(&close.response_value, "unresolved_unrecorded_changes");
+    assert_eq!(fixture.counts()?, before);
     Ok(())
 }
 
@@ -3563,6 +3634,53 @@ fn invocation_with_actor(
         operation_category,
         VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
     )
+}
+
+fn record_guard_installation(
+    fixture: &CoreFixture,
+    suffix: &str,
+    guard_mode: &str,
+    installation_health: &str,
+) -> Result<(), Box<dyn Error>> {
+    upsert_guard_installation(
+        fixture.runtime_home_path(),
+        GuardInstallationUpsert {
+            guard_installation_id: format!("guard_installation_{suffix}"),
+            connection_internal_id: fixture.connection_id().to_owned(),
+            project_id: Some(fixture.project_id().to_owned()),
+            host_kind: HOST_KIND_CODEX.to_owned(),
+            guard_mode: guard_mode.to_owned(),
+            host_capability_json: "{}".to_owned(),
+            installation_health: installation_health.to_owned(),
+            installed_at: Some("2026-06-30T00:00:00Z".to_owned()),
+            last_checked_at: "2026-06-30T00:01:00Z".to_owned(),
+            metadata_json: "{}".to_owned(),
+        },
+    )?;
+    Ok(())
+}
+
+fn insert_guarded_unrecorded_change(
+    fixture: &CoreFixture,
+    task_id: &str,
+    suffix: &str,
+) -> Result<(), Box<dyn Error>> {
+    insert_unrecorded_change(
+        fixture.runtime_home_path(),
+        fixture.project_id(),
+        UnrecordedChangeInsert {
+            unrecorded_change_id: format!("unrecorded_change_{suffix}"),
+            session_id: None,
+            connection_internal_id: fixture.connection_id().to_owned(),
+            task_id: Some(task_id.to_owned()),
+            summary: "Product Repository change observed outside a recorded run.".to_owned(),
+            observed_paths_json: r#"["src/export.rs"]"#.to_owned(),
+            detection_json: "{}".to_owned(),
+            detected_at: "2026-06-30T00:05:00Z".to_owned(),
+            metadata_json: "{}".to_owned(),
+        },
+    )?;
+    Ok(())
 }
 
 fn latest_tool_invocation_binding(

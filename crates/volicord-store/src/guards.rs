@@ -7,7 +7,9 @@ use volicord_types::{
 };
 
 use crate::{
-    agent_connections::is_agent_connection_project_allowed,
+    agent_connections::{
+        agent_connection_record, is_agent_connection_project_allowed, AgentConnectionRecord,
+    },
     bootstrap::{project_record_for_execution, raw_project_record_from_conn, ProjectRecord},
     sqlite::{
         begin_immediate_transaction, open_project_state_database, open_registry_database,
@@ -173,6 +175,16 @@ pub struct UnrecordedChangeRecord {
     pub resolved_at: Option<String>,
     pub resolved_by_actor_source: Option<String>,
     pub metadata_json: String,
+}
+
+/// Read-only guard-health facts for one project and Agent Connection.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct GuardHealthRecord {
+    pub connection: Option<AgentConnectionRecord>,
+    pub guard_installation: Option<GuardInstallationRecord>,
+    pub latest_session: Option<AgentSessionRecord>,
+    pub latest_event: Option<GuardEventRecord>,
+    pub unresolved_unrecorded_changes: Vec<UnrecordedChangeRecord>,
 }
 
 /// Creates or updates one guard installation in the Runtime Home registry.
@@ -705,6 +717,125 @@ pub fn list_unresolved_unrecorded_changes(
         unrecorded_change_from_row,
     )?;
     collect_rows(rows)
+}
+
+/// Reads compact guard-health facts for one project and Agent Connection.
+pub fn guard_health_record(
+    runtime_home: impl AsRef<Path>,
+    project_id: &str,
+    connection_internal_id: &str,
+) -> StoreResult<GuardHealthRecord> {
+    validate_identifier("project_id", project_id)?;
+    validate_identifier("connection_internal_id", connection_internal_id)?;
+    let runtime_home = runtime_home.as_ref().to_path_buf();
+    let connection = agent_connection_record(&runtime_home, connection_internal_id)?;
+    let guard_installation =
+        selected_guard_installation(&runtime_home, project_id, connection_internal_id)?;
+    let latest_session = latest_agent_session(&runtime_home, project_id, connection_internal_id)?;
+    let latest_event = latest_guard_event(&runtime_home, project_id, connection_internal_id)?;
+    let unresolved_unrecorded_changes = list_unresolved_unrecorded_changes(
+        &runtime_home,
+        project_id,
+        Some(connection_internal_id),
+    )?;
+    Ok(GuardHealthRecord {
+        connection,
+        guard_installation,
+        latest_session,
+        latest_event,
+        unresolved_unrecorded_changes,
+    })
+}
+
+fn selected_guard_installation(
+    runtime_home: &Path,
+    project_id: &str,
+    connection_internal_id: &str,
+) -> StoreResult<Option<GuardInstallationRecord>> {
+    let mut records =
+        list_guard_installations(runtime_home, connection_internal_id, Some(project_id))?;
+    if records.is_empty() {
+        records = list_guard_installations(runtime_home, connection_internal_id, None)?;
+    }
+    records.sort_by_key(|record| guard_mode_priority(&record.guard_mode));
+    Ok(records.pop())
+}
+
+fn guard_mode_priority(value: &str) -> u8 {
+    match value {
+        "managed" => 3,
+        "guarded" => 2,
+        "mcp_only" => 1,
+        _ => 0,
+    }
+}
+
+fn latest_agent_session(
+    runtime_home: &Path,
+    project_id: &str,
+    connection_internal_id: &str,
+) -> StoreResult<Option<AgentSessionRecord>> {
+    let Some(project) = open_project_for_read(runtime_home, project_id)? else {
+        return Ok(None);
+    };
+    project
+        .conn
+        .query_row(
+            "SELECT
+                project_id,
+                session_id,
+                connection_internal_id,
+                guard_installation_id,
+                host_kind,
+                guard_mode,
+                started_at,
+                ended_at,
+                metadata_json
+             FROM agent_sessions
+            WHERE project_id = ?1
+              AND connection_internal_id = ?2
+            ORDER BY started_at DESC, session_id DESC
+            LIMIT 1",
+            params![project.project.project_id, connection_internal_id],
+            agent_session_from_row,
+        )
+        .optional()
+        .map_err(StoreError::from)
+}
+
+fn latest_guard_event(
+    runtime_home: &Path,
+    project_id: &str,
+    connection_internal_id: &str,
+) -> StoreResult<Option<GuardEventRecord>> {
+    let Some(project) = open_project_for_read(runtime_home, project_id)? else {
+        return Ok(None);
+    };
+    project
+        .conn
+        .query_row(
+            "SELECT
+                project_id,
+                guard_event_id,
+                session_id,
+                connection_internal_id,
+                guard_installation_id,
+                event_kind,
+                decision,
+                subject_json,
+                result_json,
+                occurred_at,
+                metadata_json
+             FROM guard_events
+            WHERE project_id = ?1
+              AND connection_internal_id = ?2
+            ORDER BY occurred_at DESC, guard_event_id DESC
+            LIMIT 1",
+            params![project.project.project_id, connection_internal_id],
+            guard_event_from_row,
+        )
+        .optional()
+        .map_err(StoreError::from)
 }
 
 /// Resolves one unresolved unrecorded-change row.

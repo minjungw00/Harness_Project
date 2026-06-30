@@ -21,7 +21,7 @@ This document does not own:
 
 ## Purpose
 
-`volicord.status` returns a read-only current-position view over Core state. The view can include current Task summary, blockers, pending user judgments, `Write Check` summary, evidence summary, close state, close-readiness findings, project continuity summaries, guarantee display, and next safe actions.
+`volicord.status` returns a read-only current-position view over Core state. The view can include current Task summary, blockers, pending user judgments, `Write Check` summary, evidence summary, close state, close-readiness findings, guard health, project continuity summaries, guarantee display, and next safe actions.
 
 ## Required inputs
 
@@ -86,11 +86,11 @@ Include projection contract:
 - `include.write_check` returns active, expired, stale, consumed, or otherwise relevant `Write Check` Core-state compatibility record state through `write_check_summary`.
 - `write_check_summary` is a compatibility summary only; it is not filesystem access, shell approval, final acceptance, or ordinary write approval.
 - `include.evidence` returns current `EvidenceSummary` and coverage when available.
-- `include.close` returns `CurrentCloseBasis | null`, close state, computed blockers, risk acceptance coverage, and relevant next actions. The blockers use the same close-readiness calculation as `volicord.close_task intent=check`.
+- `include.close` returns `CurrentCloseBasis | null`, close state, computed blockers, risk acceptance coverage, guard health when available, and relevant next actions. The blockers use the same close-readiness calculation as `volicord.close_task intent=check`.
 - `include.guarantees` returns only guarantees derived from the project enforcement profile, verified invocation context, enabled enforcement mechanisms, and supported baseline scope.
 - `include.continuity` returns active `ProjectContinuitySummary[]` entries for durable project-level context.
 - `include.evidence=false` means evidence summaries, coverage, artifact evidence refs, and evidence-only next actions are not computed and not returned.
-- `include.close=false` means close readiness is not computed and `CurrentCloseBasis`, close state, close blockers, residual-risk coverage, and close-only next actions are not returned.
+- `include.close=false` means close readiness is not computed and `CurrentCloseBasis`, close state, close blockers, guard health, residual-risk coverage, and close-only next actions are not returned.
 - `include.guarantees=false` means guarantee display is not derived and not returned.
 - `include.continuity=false` means project continuity summaries are not read or returned.
 
@@ -118,10 +118,11 @@ Truthful projection rules:
 | `current_close_basis` | `CurrentCloseBasis | null` selected into the close status view. Shape is owned by [API State Schemas](schema-state.md#close-readiness-and-validation-shapes). |
 | `risk_acceptance_coverage` | `RiskAcceptanceCoverage[]` for current residual-risk acceptance coverage in the close status view. Shape is owned by [API State Schemas](schema-state.md#close-readiness-and-validation-shapes). |
 | `close_blockers` | Read-only `CloseReadinessBlocker[]` observations for the current view. They are not stored close results. |
+| `guard_health` | `GuardHealthSummary | null` selected into the close status view. Shape is owned by [API State Schemas](schema-state.md#guard-health-summary). |
 | `guarantee_display` | `GuaranteeDisplay | null` for the current status view. |
 | `continuity_summary` | `ProjectContinuitySummary[]` when `include.continuity=true`; omitted when the projection is not selected. Shape is owned by [API State Schemas](schema-state.md#project-continuity-shapes). |
 
-Nested `StateSummary`, `StateRecordRef`, `ProjectContinuitySummary`, `CurrentCloseBasis`, `RiskAcceptanceCoverage`, `CloseReadinessBlocker`, `GuaranteeDisplay`, and `NextActionSummary` shapes are owned by [API State Schemas](schema-state.md).
+Nested `StateSummary`, `StateRecordRef`, `ProjectContinuitySummary`, `CurrentCloseBasis`, `RiskAcceptanceCoverage`, `CloseReadinessBlocker`, `GuardHealthSummary`, `GuaranteeDisplay`, and `NextActionSummary` shapes are owned by [API State Schemas](schema-state.md).
 
 ## Blocked result
 

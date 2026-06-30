@@ -479,6 +479,7 @@ fn plan_record_run(
         evidence_summary: evidence_summary.clone(),
         close_state: Some(close_plan.close_state),
         close_blockers: close_plan.blockers,
+        guard_health: close_plan.guard_health,
         guarantee_display: Some(guarantee_display),
     })?;
 

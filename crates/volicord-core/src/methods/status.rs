@@ -98,6 +98,7 @@ fn status_result_fields(
     let mut current_close_basis = None;
     let mut risk_acceptance_coverage = None;
     let mut close_blockers = None;
+    let mut guard_health = None;
     let mut continuity_summary = None;
     let mut next_actions = Vec::new();
     let guarantee_profile = if include.guarantees {
@@ -168,6 +169,7 @@ fn status_result_fields(
             current_close_basis = plan.current_close_basis.clone();
             risk_acceptance_coverage = Some(plan.risk_acceptance_coverage.clone());
             close_blockers = Some(plan.blockers.clone());
+            guard_health = plan.guard_health.clone();
             next_actions.extend(close_next_actions(&plan.blockers));
             Some(plan)
         } else {
@@ -188,6 +190,9 @@ fn status_result_fields(
                     .as_ref()
                     .map(|plan| plan.blockers.clone())
                     .unwrap_or_default(),
+                guard_health: close_plan
+                    .as_ref()
+                    .and_then(|plan| plan.guard_health.clone()),
                 guarantee_display: guarantee_projection.clone(),
             })?;
             if let Some(task_ref) = &state.task_ref {
@@ -221,6 +226,7 @@ fn status_result_fields(
         current_close_basis: include.close.then(|| current_close_basis.into()),
         risk_acceptance_coverage,
         close_blockers,
+        guard_health: include.close.then_some(guard_health).flatten(),
         guarantee_display: guarantee_projection.map(RequiredNullable::some),
         continuity_summary,
     };
@@ -316,6 +322,7 @@ fn status_state_summary_value(
     if !include.close {
         object.remove("close_state");
         object.remove("close_blockers");
+        object.remove("guard_health");
     }
     if !include.guarantees {
         object.remove("guarantee_display");

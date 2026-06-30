@@ -1,6 +1,6 @@
 # API state schemas
 
-This document owns API state-shaped schemas for the baseline scope. It defines public response shapes for `StateSummary`, `StateRecordRef`, lifecycle state as API data, state-related snapshots, `ProjectContinuityRecord`, `ProjectContinuitySummary`, `ShapingReadiness`, `ChangeUnitEffectContract`, and display shapes such as `NextActionSummary`, `WriteCheckStateSummary`, `WriteCheckSummary`, `WriteCheckAttemptScope`, `EvidenceSummary`, `EvidenceObservation`, `CurrentCloseBasis`, `ResidualRisk`, `RiskAcceptanceCoverage`, `CloseReadinessBlocker`, `ValidatorResult`, and `GuaranteeDisplay`.
+This document owns API state-shaped schemas for the baseline scope. It defines public response shapes for `StateSummary`, `StateRecordRef`, lifecycle state as API data, state-related snapshots, `ProjectContinuityRecord`, `ProjectContinuitySummary`, `ShapingReadiness`, `ChangeUnitEffectContract`, and display shapes such as `NextActionSummary`, `WriteCheckStateSummary`, `WriteCheckSummary`, `WriteCheckAttemptScope`, `EvidenceSummary`, `EvidenceObservation`, `GuardHealthSummary`, `CurrentCloseBasis`, `ResidualRisk`, `RiskAcceptanceCoverage`, `CloseReadinessBlocker`, `ValidatorResult`, and `GuaranteeDisplay`.
 
 ## Owner boundary
 
@@ -79,12 +79,13 @@ StateSummary:
   evidence_summary: EvidenceSummary | null
   close_state: string | null
   close_blockers: CloseReadinessBlocker[]
+  guard_health: GuardHealthSummary | null
   guarantee_display: GuaranteeDisplay | null
 ```
 
 Meaning:
 - `StateSummary` is a compact response shape for state references, summaries, and close-readiness fields.
-- Method include flags may select only part of this shape. When a method owner says a projection is not selected, include-controlled fields such as `evidence_summary`, `close_state`, `close_blockers`, or `guarantee_display` are omitted instead of being returned as null or empty. A returned empty array means the projection was computed and found empty.
+- Method include flags may select only part of this shape. When a method owner says a projection is not selected, include-controlled fields such as `evidence_summary`, `close_state`, `close_blockers`, `guard_health`, or `guarantee_display` are omitted instead of being returned as null or empty. A returned empty array means the projection was computed and found empty.
 - `mode` and `close_state` are controlled value strings when present.
 - `goal_summary`, `scope_summary`, `non_goals`, `acceptance_criteria`, and `autonomy_boundary` are free-form display strings.
 - `effect_contract` is the current Change Unit's optional extra effect contract. `null` means no extra Change Unit effect contract is recorded; it must not be described as broad safety or unrestricted execution.
@@ -98,6 +99,42 @@ Owner links:
 - `mode` and `close_state` values: [task lifecycle values](schema-value-sets.md#task-lifecycle-values)
 - Commit decision branch: [Common response branches](schema-core.md#common-response)
 - Method-specific commit behavior: method owner documents routed from [API Methods](methods.md)
+
+## Guard health summary
+
+`GuardHealthSummary` is the compact guard-health projection returned by close-readiness and status views when the method owner selects it.
+
+```yaml
+GuardHealthSummary:
+  guard_mode: string
+  guard_installation_id: string | null
+  guard_installation_status: string
+  last_guard_event_at: string | null
+  prompt_capture_available: boolean
+  mcp_connection_healthy: boolean
+  mcp_connection_status: string | null
+  unresolved_unrecorded_change_count: integer
+  missing_or_stale_write_readiness: boolean
+```
+
+Meaning:
+- `guard_mode` and `guard_installation_status` are controlled value strings.
+- `guard_installation_id`, when non-null, is an opaque guard-installation identifier.
+- `last_guard_event_at` is the latest guard-event timestamp available to the projection, or `null` when no guard event is available.
+- `prompt_capture_available` reports whether prompt capture is available for the selected guarded or managed connection. It does not include prompt text.
+- `mcp_connection_healthy` and `mcp_connection_status` summarize the tracked Agent Connection verification state when that state is available.
+- `unresolved_unrecorded_change_count` is a count of unresolved unrecorded Product Repository changes. It does not expose prompt text, command text, or path lists.
+- `missing_or_stale_write_readiness` reports whether guard events detected missing or stale write readiness.
+
+Does not imply:
+- `GuardHealthSummary` is not evidence of product correctness, test sufficiency, OS enforcement, sandboxing, security isolation, or final acceptance.
+- A healthy guard summary does not replace evidence, artifact integrity, user-owned judgment, `Write Check`, final acceptance, or residual-risk acceptance requirements.
+- `mcp_only` mode remains cooperative unless an owner-defined configuration selects guarded or managed behavior.
+
+Owner links:
+- `guard_mode` and `guard_installation_status` values: [state and blocker values](schema-value-sets.md#state-and-blocker-values)
+- Close-readiness guard blockers and method-local codes: [`volicord.close_task`](method-close-task.md)
+- Agent Connection meaning: [Agent Connection](../agent-connection.md)
 
 <a id="project-continuity-shapes"></a>
 ## Project continuity shapes

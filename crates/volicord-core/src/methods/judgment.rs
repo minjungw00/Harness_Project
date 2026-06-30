@@ -382,6 +382,7 @@ fn plan_request_user_judgment(
         evidence_summary,
         close_state: Some(close_plan.close_state),
         close_blockers: close_plan.blockers,
+        guard_health: close_plan.guard_health,
         guarantee_display: Some(guarantee_display),
     })?;
     let result = volicord_types::RequestUserJudgmentResult {
@@ -1264,6 +1265,7 @@ fn plan_record_user_judgment(
         evidence_summary,
         close_state: Some(close_plan.close_state),
         close_blockers: close_plan.blockers,
+        guard_health: close_plan.guard_health,
         guarantee_display: Some(guarantee_display),
     })?;
     let continuity_plans = plan_judgment_continuity_records(JudgmentContinuityContext {

@@ -344,6 +344,25 @@ write_decision
 close_readiness
 ```
 
+`GuardHealthSummary.guard_mode`는 아래 값을 사용합니다.
+
+```text
+mcp_only
+guarded
+managed
+```
+
+`GuardHealthSummary.guard_installation_status`는 아래 값을 사용합니다.
+
+```text
+unknown
+healthy
+action_required
+failed
+```
+
+이 값들은 닫기 준비 상태와 상태 조회 보기에 쓰이는 guard 통합 상태를 보고합니다. 제품 정확성, 테스트 충분성, OS 강제, 샌드박싱, 보안 격리, 최종 수락, 잔여 위험 수락을 증명하지 않습니다. `mcp_only`는 담당 문서가 정의한 설정이 guarded 또는 managed 동작을 선택하지 않는 한 협력형으로 남습니다.
+
 `WriteDecisionReason.category`는 제어되는 범주 값입니다. 지원되는 값은 아래 값 집합뿐입니다.
 
 | 값 | 범주 계열 |

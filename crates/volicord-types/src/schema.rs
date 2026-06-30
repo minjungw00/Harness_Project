@@ -367,6 +367,21 @@ pub struct UnrecordedChange {
     pub metadata: JsonObject,
 }
 
+/// Compact guard-health projection for close-readiness and status views.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct GuardHealthSummary {
+    pub guard_mode: GuardMode,
+    pub guard_installation_id: RequiredNullable<GuardInstallationId>,
+    pub guard_installation_status: GuardInstallationHealth,
+    pub last_guard_event_at: RequiredNullable<UtcTimestamp>,
+    pub prompt_capture_available: bool,
+    pub mcp_connection_healthy: bool,
+    pub mcp_connection_status: RequiredNullable<String>,
+    pub unresolved_unrecorded_change_count: u64,
+    pub missing_or_stale_write_readiness: bool,
+}
+
 /// Project-level continuity record that preserves durable context after Task close.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
@@ -461,6 +476,7 @@ pub struct StateSummary {
     pub evidence_summary: Option<EvidenceSummary>,
     pub close_state: Option<CloseState>,
     pub close_blockers: Vec<CloseReadinessBlocker>,
+    pub guard_health: Option<GuardHealthSummary>,
     pub guarantee_display: Option<GuaranteeDisplay>,
 }
 

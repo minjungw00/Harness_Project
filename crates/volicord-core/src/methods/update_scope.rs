@@ -393,6 +393,7 @@ fn plan_update_scope(
         evidence_summary,
         close_state: Some(close_plan.close_state),
         close_blockers: close_plan.blockers,
+        guard_health: close_plan.guard_health,
         guarantee_display: Some(guarantee_display),
     })?;
     let result = volicord_types::UpdateScopeResult {

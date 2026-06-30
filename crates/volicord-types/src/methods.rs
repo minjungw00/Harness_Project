@@ -8,12 +8,12 @@ use crate::ids::{
 use crate::schema::{
     AcceptedRiskInput, ArtifactInput, ArtifactRef, ChangeUnitEffectContract, CloseAssessmentInput,
     CloseReadinessBlocker, CurrentCloseBasis, EvidenceCoverageItem, EvidenceObservation,
-    EvidenceObservationInput, EvidenceSummary, GuaranteeDisplay, JsonObject, JudgmentRationale,
-    NextActionSummary, ObservedChanges, ProjectContinuitySummary, RecordUserJudgmentPayload,
-    RequiredNullable, RiskAcceptanceCoverage, RunSummary, SensitiveActionScope,
-    StagedArtifactHandle, StateRecordRef, StateSummary, ToolEnvelope, ToolResponse, ToolResultBase,
-    UserJudgment, UserJudgmentCandidate, UserJudgmentContext, UserJudgmentOptionInput,
-    WriteCheckStateSummary, WriteCheckSummary, WriteDecisionReason,
+    EvidenceObservationInput, EvidenceSummary, GuaranteeDisplay, GuardHealthSummary, JsonObject,
+    JudgmentRationale, NextActionSummary, ObservedChanges, ProjectContinuitySummary,
+    RecordUserJudgmentPayload, RequiredNullable, RiskAcceptanceCoverage, RunSummary,
+    SensitiveActionScope, StagedArtifactHandle, StateRecordRef, StateSummary, ToolEnvelope,
+    ToolResponse, ToolResultBase, UserJudgment, UserJudgmentCandidate, UserJudgmentContext,
+    UserJudgmentOptionInput, WriteCheckStateSummary, WriteCheckSummary, WriteDecisionReason,
 };
 use crate::values::{
     ChangeUnitOperation, CloseIntent, CloseMutationIntent, CloseReason, CloseState, JudgmentKind,
@@ -286,6 +286,8 @@ pub struct StatusResult {
     pub risk_acceptance_coverage: Option<Vec<RiskAcceptanceCoverage>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub close_blockers: Option<Vec<CloseReadinessBlocker>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub guard_health: Option<GuardHealthSummary>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub guarantee_display: Option<RequiredNullable<GuaranteeDisplay>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -615,6 +617,7 @@ pub struct CloseTaskResult {
     pub continuity_summary: Vec<ProjectContinuitySummary>,
     pub state: StateSummary,
     pub blockers: Vec<CloseReadinessBlocker>,
+    pub guard_health: Option<GuardHealthSummary>,
     pub evidence_summary: Option<EvidenceSummary>,
     pub artifact_refs: Vec<ArtifactRef>,
 }

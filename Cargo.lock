@@ -630,6 +630,7 @@ dependencies = [
  "chrono",
  "serde_json",
  "volicord-core",
+ "volicord-store",
  "volicord-test-support",
  "volicord-types",
 ]
