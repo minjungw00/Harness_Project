@@ -100,7 +100,15 @@ fn binary_help_options_match_supported_contracts() -> Result<(), Box<dyn Error>>
             "--dry-run",
             "--task",
             "--note",
+            "--stdio",
+            "--check",
+            "--connection",
+            "--project",
         ],
+    )?;
+    assert_help_options(
+        ["mcp", "--help"],
+        &["--stdio", "--check", "--connection", "--project"],
     )?;
     assert_help_options(["setup", "--help"], SETUP_HELP_OPTIONS)?;
     assert_help_options(["doctor", "--help"], &["--json"])?;
@@ -176,20 +184,21 @@ fn setup_and_doctor_report_installation_profile() -> Result<(), Box<dyn Error>> 
         setup_json["installation_profile"]["default_connection_mode"],
         "workflow"
     );
-    assert!(setup_json["commands"]
+    assert!(setup_json["checks"]
         .as_array()
-        .expect("commands should be an array")
+        .expect("checks should be an array")
         .iter()
-        .any(|command| {
-            command["id"] == "volicord_mcp_command"
-                && command["discovered_path"] == path_text(&mcp)
-                && command["available_on_path"] == false
+        .any(|check| {
+            check["id"] == "volicord_mcp_command"
+                && check["status"] == "passed"
+                && check["details"]["path"] == path_text(&mcp)
+                && check["details"]["source"] == "explicit"
         }));
     assert!(setup_json["actions_required"]
         .as_array()
         .expect("actions_required should be an array")
         .iter()
-        .any(|action| action["id"] == "make_volicord_mcp_command_available"));
+        .any(|action| action["id"] == "make_volicord_command_available"));
 
     let doctor = run_with_home_env(runtime_home.path(), ["doctor", "--json"], &[])?;
     assert_success(&doctor);
@@ -222,7 +231,7 @@ fn setup_and_doctor_report_installation_profile() -> Result<(), Box<dyn Error>> 
         .expect("checks should be an array")
         .iter()
         .find(|check| check["id"] == "volicord_mcp_command_availability")
-        .expect("doctor should report volicord-mcp command availability");
+        .expect("doctor should report MCP launch command availability");
     assert_eq!(mcp_availability["status"], "warning");
     assert_eq!(
         mcp_availability["details"]["profile_command"],
@@ -572,7 +581,9 @@ fn connect_respects_explicit_read_only_and_uses_same_dry_run_plan() -> Result<()
     assert_eq!(projects[0].project.repo_root, repo_root);
 
     let config = fs::read_to_string(repo_root.join(".codex").join("config.toml"))?;
-    assert!(config.contains(&format!("args = [\"--connection\", \"{connection_id}\"]")));
+    assert!(config.contains(&format!(
+        "args = [\"mcp\", \"--stdio\", \"--connection\", \"{connection_id}\"]"
+    )));
     Ok(())
 }
 
@@ -1327,7 +1338,13 @@ fn assert_exported_mcp_config(
     let connection_id = server["args"]
         .as_array()
         .and_then(|args| match args.as_slice() {
-            [flag, id] if flag.as_str() == Some("--connection") => id.as_str(),
+            [mcp, stdio, flag, id]
+                if mcp.as_str() == Some("mcp")
+                    && stdio.as_str() == Some("--stdio")
+                    && flag.as_str() == Some("--connection") =>
+            {
+                id.as_str()
+            }
             _ => None,
         })
         .expect("exported MCP config should bind a connection id");
@@ -1335,7 +1352,7 @@ fn assert_exported_mcp_config(
     assert_eq!(server["command"], path_text(mcp_command));
     assert_eq!(
         server["args"],
-        serde_json::json!(["--connection", connection_id])
+        serde_json::json!(["mcp", "--stdio", "--connection", connection_id])
     );
     assert_eq!(server["env"]["VOLICORD_HOME"], path_text(runtime_home));
     Ok(connection_id.to_owned())
@@ -1347,7 +1364,7 @@ fn write_test_installation_profile(runtime_home: &Path) -> Result<(), Box<dyn Er
         InstallationProfileRegistration {
             installation_id: "default".to_owned(),
             volicord_command: "volicord".to_owned(),
-            volicord_mcp_command: "volicord-mcp".to_owned(),
+            volicord_mcp_command: "volicord".to_owned(),
             bin_dir: runtime_home.join("bin"),
             default_connection_mode: CONNECTION_MODE_WORKFLOW.to_owned(),
             metadata_json: "{}".to_owned(),
@@ -1433,13 +1450,13 @@ fn write_fake_claude_code(dir: &Path) -> Result<PathBuf, Box<dyn Error>> {
 #[cfg(unix)]
 fn write_fake_mcp(dir: &Path) -> Result<PathBuf, Box<dyn Error>> {
     fs::create_dir_all(dir)?;
-    let path = dir.join("volicord-mcp");
+    let path = dir.join("volicord");
     fs::write(
         &path,
         "#!/bin/sh\n\
          mode=\"${VOLICORD_TEST_CONNECTION_MODE:-read_only}\"\n\
-         if [ \"$1\" = \"--check\" ]; then\n\
-         shift\n\
+         if [ \"$1\" = \"mcp\" ] && [ \"$2\" = \"--check\" ]; then\n\
+         shift 2\n\
          if [ \"$1\" != \"--connection\" ]; then printf 'missing connection\\n' >&2; exit 2; fi\n\
          connection=\"$2\"\n\
          printf 'configuration: valid\\n'\n\
@@ -1453,7 +1470,7 @@ fn write_fake_mcp(dir: &Path) -> Result<PathBuf, Box<dyn Error>> {
          printf 'verification_scope: startup_check_only\\n'\n\
          exit 0\n\
          fi\n\
-         if [ \"$1\" = \"--connection\" ]; then\n\
+         if [ \"$1\" = \"mcp\" ] && [ \"$2\" = \"--stdio\" ] && [ \"$3\" = \"--connection\" ]; then\n\
          while IFS= read -r line; do\n\
          case \"$line\" in\n\
          *'\"method\":\"initialize\"'*) printf '%s\\n' '{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{\"protocolVersion\":\"2025-11-25\",\"capabilities\":{\"tools\":{}},\"serverInfo\":{\"name\":\"volicord-mcp\",\"version\":\"test\"},\"instructions\":\"Use Volicord.\"}}' ;;\n\

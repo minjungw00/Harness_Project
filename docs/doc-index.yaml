@@ -55,7 +55,8 @@ applicability:
     description: Repository Rust workspace requiring Rust 1.85 or newer, as declared by the workspace
       `Cargo.toml`.
   mcp_protocol_2025_11_25:
-    description: MCP protocol version 2025-11-25 supported by the local `volicord-mcp` stdio process.
+    description: MCP protocol version 2025-11-25 supported by the local `volicord mcp --stdio`
+      process.
   storage_baseline_sqlite_v3_schema_v1:
     description: '`baseline_sqlite_v3` storage profile with registry and project-state schema version
       1.'
@@ -983,7 +984,7 @@ documents:
   - supported, verified, unverified, and out-of-scope environment status distinctions
   - Rust and Cargo prerequisite boundary separate from operating-system support claims
   - maintained shell example applicability
-  - executable layout and discovery prerequisites for `volicord` and `volicord-mcp`
+  - executable layout and discovery prerequisites for `volicord` and its `mcp` subcommand
   - Runtime Home, Product Repository, and host configuration access prerequisites
   - host compatibility check policy when no stable Codex or Claude Code minimum version is defined
   - stop criteria for unsupported or unverified installation environments
@@ -1146,7 +1147,7 @@ documents:
   - operate
   - implement
   canonical_for:
-  - local `volicord-mcp` process command contract
+  - local `volicord mcp --stdio` process command contract
   - MCP stdio process startup and exit behavior
   - MCP process environment variables and integration-bound startup
   - MCP startup validation and integration process binding

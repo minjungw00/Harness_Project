@@ -103,7 +103,7 @@ Core는 Volicord 상태의 로컬 기준 기록입니다. 상태, 승인, 증거
 <a id="project-selection"></a>
 ## Volicord 프로젝트를 의도적으로 고르기
 
-현재 MCP 경로에서 `volicord-mcp` 프로세스는 하나의 고정 `Product Repository`가 아니라 하나의 Agent Connection에 바인딩됩니다. 사용자 범위 Agent Connection은 여러 프로젝트를 연결할 수 있지만, 프로젝트 범위와 로컬 범위는 단일 저장소 범위로 남습니다.
+현재 MCP 경로에서 `volicord mcp --stdio` 프로세스는 하나의 고정 `Product Repository`가 아니라 하나의 Agent Connection에 바인딩됩니다. 사용자 범위 Agent Connection은 여러 프로젝트를 연결할 수 있지만, 프로젝트 범위와 로컬 범위는 단일 저장소 범위로 남습니다.
 
 공개 Volicord 도구 호출에서는 아래를 따릅니다.
 

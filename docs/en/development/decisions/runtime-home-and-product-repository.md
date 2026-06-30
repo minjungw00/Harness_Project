@@ -9,9 +9,9 @@ paths harder to reason about and could make generated runtime state look like
 product work.
 
 Volicord source and installation files are a separate implementation
-artifact role. They may contain or deploy the `volicord` and `volicord-mcp`
-executables, but they are not the Runtime Home or Product Repository by
-definition.
+artifact role. They may contain or deploy the `volicord` executable and
+implementation crates such as `volicord-mcp`, but they are not the Runtime Home
+or Product Repository by definition.
 
 ## Decision
 

@@ -31,18 +31,18 @@ Volicord는 이런 대체를 보이게 하려고 존재합니다. 범위, 사용
 |---|---|---|
 | Volicord | AI 보조 제품 작업을 위한 로컬 work-authority 제품/시스템과 권한 제어 평면. | [Volicord란](#what-volicord-is) |
 | Core | Volicord 상태의 로컬 권한 기록. | [Core 모델](../reference/core-model.md) |
-| Volicord 구현 | Core, 저장소, 타입, `volicord` CLI, `volicord-mcp`, 테스트, 문서, 검증 도구를 포함하는 이 저장소의 구현 집합. | [런타임 경계](../reference/runtime-boundaries.md) |
-| `volicord` | Runtime Home 초기화, 프로젝트 등록, Agent Connection 관리, 로컬 User Channel을 제공하는 로컬 관리 CLI. | [관리 CLI](../reference/admin-cli.md) |
-| `volicord-mcp` | 생성된 호스트 설정이 선택된 Agent Connection을 위해 자식 프로세스로 시작하는 stdio MCP 어댑터. | [MCP 전송](../reference/mcp-transport.md) |
+| Volicord 구현 | Core, 저장소, 타입, `volicord` 실행 파일, MCP 어댑터 코드, 테스트, 문서, 검증 도구를 포함하는 이 저장소의 구현 집합. | [런타임 경계](../reference/runtime-boundaries.md) |
+| `volicord` | 로컬 관리 CLI 명령, 로컬 User Channel, 생성된 MCP 호스트 설정이 사용하는 `mcp` 하위 명령을 제공하는 설치 실행 파일. | [관리 CLI](../reference/admin-cli.md) |
+| `volicord mcp --stdio` | 생성된 호스트 설정이 선택된 Agent Connection을 위해 자식 프로세스로 시작하는 stdio MCP 프로세스 모드. | [MCP 전송](../reference/mcp-transport.md) |
 | `Volicord Runtime Home` | 저장소/런타임 담당 문서가 정의하는 Volicord 운영 데이터의 로컬 런타임 데이터 공간. | [런타임 경계](../reference/runtime-boundaries.md) |
 | `Product Repository` | 사용자의 프로젝트 작업공간과 제품 파일. 명시적으로 선택된 프로젝트 범위 호스트 설정을 포함할 수 있지만 Core 권한도 런타임 홈도 아닙니다. | [런타임 경계](../reference/runtime-boundaries.md) |
 | Agent Connection | 로컬 MCP 호스트 connection 단위. 하나의 호스트 설정 대상, 관리되는 연결 식별 정보, 모드, 명시적으로 연결된 Project를 묶습니다. | [Agent Connection Reference](../reference/agent-connection.md) |
 | User Channel | 권한을 지니는 사용자 판단을 위한 로컬 사용자 경로. Agent Connection은 `user_only` 판단을 기록하지 않습니다. | [관리 CLI](../reference/admin-cli.md#user-channel-commands) |
 
-현재 기준 에이전트 호스트 모델은 connection 기반입니다. 하나의 `volicord-mcp`
-프로세스는 내부 연결 식별 정보로 하나의 Agent Connection에 묶이고, connection은
-명시적으로 연결된 Project에만 접근할 수 있습니다. 정확한 프로젝트 선택과 MCP 도구
-인자 동작은 [Agent Connection Reference](../reference/agent-connection.md)와
+현재 기준 에이전트 호스트 모델은 connection 기반입니다. 하나의
+`volicord mcp --stdio` 프로세스는 내부 연결 식별 정보로 하나의 Agent Connection에
+묶이고, connection은 명시적으로 연결된 Project에만 접근할 수 있습니다. 정확한 프로젝트
+선택과 MCP 도구 인자 동작은 [Agent Connection Reference](../reference/agent-connection.md)와
 [MCP 전송](../reference/mcp-transport.md)이 담당합니다.
 
 ## 설정이 하는 일

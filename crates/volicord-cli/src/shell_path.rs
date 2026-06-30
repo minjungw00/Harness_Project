@@ -301,7 +301,7 @@ pub(crate) fn volicord_binary_name() -> String {
 }
 
 pub(crate) fn mcp_binary_name() -> String {
-    format!("volicord-mcp{}", env::consts::EXE_SUFFIX)
+    volicord_binary_name()
 }
 
 #[cfg(test)]

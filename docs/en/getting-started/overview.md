@@ -31,18 +31,18 @@ These names are related, but they are not interchangeable.
 |---|---|---|
 | Volicord | The local work-authority product/system and authority control plane for AI-assisted product work. | [What Volicord Is](#what-volicord-is) |
 | Core | The local authority record for Volicord state. | [Core Model](../reference/core-model.md) |
-| Volicord implementation | The implementation set maintained by this repository, including Core, storage, types, the `volicord` CLI, `volicord-mcp`, tests, documentation, and validation tooling. | [Runtime Boundaries](../reference/runtime-boundaries.md) |
-| `volicord` | The local administrative CLI that initializes Runtime Homes, registers projects, manages Agent Connections, and provides the local User Channel. | [Administrative CLI](../reference/admin-cli.md) |
-| `volicord-mcp` | The stdio MCP adapter process that generated host configuration starts as a child process for the selected Agent Connection. | [MCP Transport](../reference/mcp-transport.md) |
+| Volicord implementation | The implementation set maintained by this repository, including Core, storage, types, the `volicord` executable, MCP adapter code, tests, documentation, and validation tooling. | [Runtime Boundaries](../reference/runtime-boundaries.md) |
+| `volicord` | The installed executable that provides local administrative CLI commands, the local User Channel, and the `mcp` subcommand used by generated MCP host configuration. | [Administrative CLI](../reference/admin-cli.md) |
+| `volicord mcp --stdio` | The stdio MCP process mode that generated host configuration starts as a child process for the selected Agent Connection. | [MCP Transport](../reference/mcp-transport.md) |
 | `Volicord Runtime Home` | The local runtime data space for Volicord operational data as storage/runtime owners define it. | [Runtime Boundaries](../reference/runtime-boundaries.md) |
 | `Product Repository` | The user's project workspace and product files. It may contain explicitly selected project-scoped host configuration, but it is not Core authority and is not a runtime home. | [Runtime Boundaries](../reference/runtime-boundaries.md) |
 | Agent Connection | A local MCP host connection unit. It binds one host configuration target to one managed connection identity, a mode, and explicitly connected Projects. | [Agent Connection Reference](../reference/agent-connection.md) |
 | User Channel | The local user path for authority-bearing user judgments. Agent Connections do not record `user_only` judgments. | [Administrative CLI](../reference/admin-cli.md#user-channel-commands) |
 
-The current baseline agent host model is connection-based. One `volicord-mcp`
-process binds to one Agent Connection through an internal connection identity,
-and the connection can access only Projects explicitly connected to it. Exact
-project-selection and MCP tool-argument behavior belongs to
+The current baseline agent host model is connection-based. One
+`volicord mcp --stdio` process binds to one Agent Connection through an internal
+connection identity, and the connection can access only Projects explicitly
+connected to it. Exact project-selection and MCP tool-argument behavior belongs to
 [Agent Connection Reference](../reference/agent-connection.md) and
 [MCP Transport](../reference/mcp-transport.md).
 

@@ -2344,6 +2344,7 @@ fn validate_volicord_command(tokens: &[String]) -> std::result::Result<(), Strin
         "-V" | "--version" => validate_no_more_args(args, "volicord version"),
         "setup" => validate_setup_command(&args[1..]),
         "doctor" => validate_doctor_command(&args[1..]),
+        "mcp" => validate_mcp_command(&args[1..]),
         "connect" => validate_connect_command(&args[1..]),
         "connections" => validate_connections_command(&args[1..]),
         "connection" => validate_connection_command(&args[1..]),
@@ -2420,6 +2421,31 @@ fn validate_doctor_command(args: &[String]) -> std::result::Result<(), String> {
     }
     let parsed = parse_command_args(args, &["json"], &[])?;
     reject_positionals(&parsed, 0, "`volicord doctor`")
+}
+
+fn validate_mcp_command(args: &[String]) -> std::result::Result<(), String> {
+    if is_help_only(args)
+        || matches!(args, [option] if matches!(option.as_str(), "-V" | "--version"))
+    {
+        return Ok(());
+    }
+
+    let parsed = parse_command_args(args, &["stdio", "check"], &["connection", "project"])?;
+    reject_mutually_exclusive(&parsed, "stdio", "check")?;
+    reject_positionals(&parsed, 0, "`volicord mcp`")?;
+
+    let has_stdio = parsed.options.contains("stdio");
+    let has_check = parsed.options.contains("check");
+    if !has_stdio && !has_check {
+        return Err("`volicord mcp` requires --stdio or --check".to_string());
+    }
+    if !parsed.options.contains("connection") {
+        return Err("`volicord mcp` requires --connection".to_string());
+    }
+    if parsed.options.contains("project") && !has_check {
+        return Err("`volicord mcp --project` requires --check".to_string());
+    }
+    Ok(())
 }
 
 fn validate_connect_command(args: &[String]) -> std::result::Result<(), String> {

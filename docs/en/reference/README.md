@@ -11,7 +11,7 @@ This README is route-only. It does not define term meanings, terminology metadat
 - Product/system boundaries: [Scope](scope.md), [Core Model](core-model.md), [Runtime Boundaries](runtime-boundaries.md), and [Security](security.md).
 - First-run agent host setup: [Quickstart](../getting-started/quickstart.md) for the shortest success path, then [Agent Host Setup](../guides/agent-host-setup.md) for the complete operator guide and [Multi-Repository Agent Setup](../guides/multi-repository-agent-setup.md) for one user-scope Agent Connection serving multiple repositories.
 - Setup failures and recovery: [Agent Host Troubleshooting](../guides/agent-host-troubleshooting.md).
-- Local executable contracts: [Administrative CLI](admin-cli.md) for `volicord` administrative commands and Runtime Home selection, and [MCP Transport](mcp-transport.md) for `volicord-mcp` stdio startup, preflight, response wrapping, and shutdown.
+- Local executable contracts: [Administrative CLI](admin-cli.md) for `volicord` administrative commands and Runtime Home selection, and [MCP Transport](mcp-transport.md) for `volicord mcp --stdio` startup, preflight, response wrapping, and shutdown.
 - API method behavior: [API Methods](api/methods.md), then the linked method owner.
 - API schema families: [Schema Core](api/schema-core.md), [State Schemas](api/schema-state.md), [Artifact Schemas](api/schema-artifacts.md), [Judgment Schemas](api/schema-judgment.md), and [Value Sets](api/schema-value-sets.md).
 - API error families: [API Errors](api/errors.md), which routes to error codes, precedence, response routing, blocker routing, and machine-readable details.
@@ -24,7 +24,7 @@ This README is route-only. It does not define term meanings, terminology metadat
 - User-owned judgment meaning belongs in [Core Model](core-model.md); request and record method behavior belongs in [Request-user-judgment method](api/method-request-user-judgment.md) and [Record-user-judgment method](api/method-record-user-judgment.md); judgment-shaped API data belongs in [Judgment Schemas](api/schema-judgment.md).
 - Close-readiness authority concepts belong in [Core Model](core-model.md); `volicord.close_task` behavior belongs in [Close-Task Method](api/method-close-task.md); `CloseReadinessBlocker` shape belongs in [State Schemas](api/schema-state.md); blocker/API response boundary questions belong in [API Blocker Routing](api/blocker-routing.md).
 - Public error code meaning belongs in [API Error Codes](api/error-codes.md); error precedence belongs in [API Error Precedence](api/error-precedence.md); response branch routing belongs in [API Error Routing](api/error-routing.md); machine-readable error details belong in [API Error Details](api/error-details.md).
-- Administrative `volicord` commands are local bootstrap commands, not public Volicord API methods; `volicord-mcp` exposes the public method set through MCP stdio without owning a second method list.
+- Administrative `volicord` commands are local bootstrap commands, not public Volicord API methods; `volicord mcp --stdio` exposes the public method set through MCP stdio without owning a second method list.
 - Terminology lookup starts with the [Glossary](glossary.md) for selected reader-facing terms and [`docs/terminology-map.yaml`](../../terminology-map.yaml) for structured terminology and identifier controls.
 
 ## Maintenance Routes

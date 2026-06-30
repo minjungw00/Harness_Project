@@ -1162,7 +1162,7 @@ mod tests {
             InstallationProfileRegistration {
                 installation_id: "default".to_owned(),
                 volicord_command: "/opt/volicord/bin/volicord".to_owned(),
-                volicord_mcp_command: "/opt/volicord/bin/volicord-mcp".to_owned(),
+                volicord_mcp_command: "/opt/volicord/bin/volicord".to_owned(),
                 bin_dir: PathBuf::from("/opt/volicord/bin"),
                 default_connection_mode: "workflow".to_owned(),
                 metadata_json: "{}".to_owned(),
@@ -1173,7 +1173,7 @@ mod tests {
         assert_eq!(profile.default_connection_mode, "workflow");
         assert_eq!(
             require_installation_profile(runtime_home.path())?.volicord_mcp_command,
-            "/opt/volicord/bin/volicord-mcp"
+            "/opt/volicord/bin/volicord"
         );
         Ok(())
     }
@@ -1192,7 +1192,7 @@ mod tests {
             InstallationProfileRegistration {
                 installation_id: "default".to_owned(),
                 volicord_command: "volicord\0bad".to_owned(),
-                volicord_mcp_command: "volicord-mcp".to_owned(),
+                volicord_mcp_command: "volicord".to_owned(),
                 bin_dir: PathBuf::from("/opt/volicord/bin"),
                 default_connection_mode: "workflow".to_owned(),
                 metadata_json: "{}".to_owned(),

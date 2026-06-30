@@ -1,10 +1,10 @@
 # MCP transport reference
 
-This document owns the local `volicord-mcp` process contract: process startup,
-process environment, MCP protocol-version negotiation, initialization lifecycle,
-stdio transport framing, JSON-RPC message validation, Agent-Connection-bound
-startup validation, MCP-visible tool discovery, MCP response wrapping, and
-shutdown/reconnection behavior.
+This document owns the local `volicord mcp --stdio` process contract: process
+startup, process environment, MCP protocol-version negotiation, initialization
+lifecycle, stdio transport framing, JSON-RPC message validation,
+Agent-Connection-bound startup validation, MCP-visible tool discovery, MCP
+response wrapping, and shutdown/reconnection behavior.
 
 It does not define public Volicord API method behavior, public request or
 response schemas, Agent Connection meaning, storage record layout, security
@@ -14,7 +14,7 @@ guarantees, or Core authority semantics.
 
 This document owns:
 
-- `volicord-mcp` process startup and exit behavior
+- `volicord mcp --stdio` process startup and exit behavior
 - process configuration used by generated host configuration and exported MCP
   config
 - MCP Runtime Home environment resolution
@@ -43,15 +43,16 @@ This document does not own:
 
 ## Process Model
 
-`volicord-mcp` is a local MCP stdio process. An MCP host starts it as a child
-process and communicates through stdin/stdout. It is not a TCP listener, HTTP
-listener, Unix-domain socket listener, or other network listener.
+`volicord mcp --stdio` is a local MCP stdio process mode of the installed
+`volicord` executable. An MCP host starts it as a child process and communicates
+through stdin/stdout. It is not a TCP listener, HTTP listener, Unix-domain
+socket listener, or other network listener.
 
 Generated host configuration and generic exports may launch the stdio loop with
 an internal connection binding:
 
 ```text
-volicord-mcp --connection <connection_id>
+volicord mcp --stdio --connection <connection_id>
 ```
 
 The `<connection_id>` process-binding value comes from the stored
@@ -60,18 +61,19 @@ Ordinary users should not need to type it in text-mode flows.
 
 Baseline command-line behavior:
 
-- `volicord-mcp --connection <connection_id>` launches the stdio loop.
-- `volicord-mcp --check --connection <connection_id>` runs startup validation
+- `volicord mcp --stdio --connection <connection_id>` launches the stdio loop.
+- `volicord mcp --check --connection <connection_id>` runs startup validation
   without reading stdin.
-- `volicord-mcp --check --connection <connection_id> --project <project_id>`
+- `volicord mcp --check --connection <connection_id> --project <project_id>`
   runs the same startup validation and limits project-detail diagnostics to
   one allowed `project_internal_id` value.
 - `-h` and `--help` print usage and environment summary, then exit with code
   `0`.
-- `-V` and `--version` print `volicord-mcp <version>`, then exit with code `0`.
-- No arguments, `--check` without `--connection`, unknown options, combined
-  command-line modes, missing required option values, and extra positional
-  arguments write usage diagnostics to stderr and exit with code `2`.
+- `-V` and `--version` print `volicord <version>`, then exit with code `0`.
+- No mode, `--check` or `--stdio` without `--connection`, unknown options,
+  combined command-line modes, missing required option values, and extra
+  positional arguments write usage diagnostics to stderr and exit with code
+  `2`.
 - Help and version handling happen before Runtime Home or Agent Connection
   lookup.
 
@@ -119,8 +121,8 @@ Current MCP Runtime Home resolution:
 
 ## Startup Validation
 
-Before entering the stdio loop, `volicord-mcp` validates the Agent Connection
-binding and the local registry records it depends on.
+Before entering the stdio loop, `volicord mcp --stdio` validates the Agent
+Connection binding and the local registry records it depends on.
 
 Startup validation requires:
 
@@ -151,7 +153,7 @@ reject because no connected project remains.
 
 ## Agent-Connection-Bound Process
 
-One `volicord-mcp` process is bound to:
+One `volicord mcp --stdio` process is bound to:
 
 - one `connection_id` process binding for a stored Agent Connection
 
@@ -172,13 +174,13 @@ MCP call arguments and other MCP request bodies cannot set
 `connection_internal_id`, `project_internal_id`, `actor_source`,
 `operation_category`, connection intent, or connection mode. Administrative
 connection-status output belongs to the `volicord` CLI; MCP startup diagnostics
-belong to `volicord-mcp --check`; public MCP tool arguments use the
+belong to `volicord mcp --check`; public MCP tool arguments use the
 `project_selector` behavior described below.
 
 <a id="configuration-preflight"></a>
 ## Configuration Preflight
 
-`volicord-mcp --check --connection <connection_id>` runs the same Runtime Home,
+`volicord mcp --check --connection <connection_id>` runs the same Runtime Home,
 Agent Connection, membership, and registry-shape startup validation used before
 entering the stdio loop. It does not read stdin and does not perform complete
 host verification.
@@ -233,10 +235,10 @@ initialization, and successful tool discovery, as defined by
 
 ## MCP Wire Behavior
 
-`volicord-mcp` supports MCP protocol version `2025-11-25` over stdio. It does
-not advertise simultaneous compatibility with older MCP protocol versions. Each
-new process or stdio connection starts a new MCP lifecycle and must complete its
-own initialization sequence.
+`volicord mcp --stdio` supports MCP protocol version `2025-11-25` over stdio.
+It does not advertise simultaneous compatibility with older MCP protocol
+versions. Each new process or stdio connection starts a new MCP lifecycle and
+must complete its own initialization sequence.
 
 The server initialization response includes MCP server instructions. Those
 instructions may describe Volicord tool selection, repository-root project
@@ -255,8 +257,8 @@ Framing rules:
 - JSON-RPC batches are not supported. An array input receives one Invalid
   Request response, not one response per array element.
 - Messages are delimited by newlines and must not contain embedded newlines.
-- Each output line contains one JSON-RPC response object. `volicord-mcp` writes
-  no readiness message before `initialize`.
+- Each output line contains one JSON-RPC response object.
+  `volicord mcp --stdio` writes no readiness message before `initialize`.
 - Stdin EOF ends the process after stdout is flushed.
 
 JSON-RPC validation rules:
@@ -301,15 +303,15 @@ The first valid MCP request in a connection is `initialize`. A valid
 - `capabilities` as an object
 - `clientInfo` as an object containing string `name` and `version` fields
 
-Examples use the fields listed above. `volicord-mcp` may accept additional MCP
+Examples use the fields listed above. `volicord mcp --stdio` may accept additional MCP
 `Implementation` metadata allowed by the 2025-11-25 schema, such as `title`,
 `description`, `icons`, or `websiteUrl`.
 
 Protocol-version negotiation:
 
-- If the client requests `2025-11-25`, `volicord-mcp` returns `2025-11-25`.
+- If the client requests `2025-11-25`, `volicord mcp --stdio` returns `2025-11-25`.
 - If the client sends another syntactically valid protocol-version string,
-  `volicord-mcp` returns the version it supports: `2025-11-25`.
+  `volicord mcp --stdio` returns the version it supports: `2025-11-25`.
 - The server response does not claim simultaneous compatibility with older MCP
   protocol versions.
 
@@ -403,7 +405,7 @@ unavailable project selection is rejected before Core execution and the
 actionable text must name the `volicord project use` or `volicord connect`
 command needed to repair the state.
 
-`volicord-mcp` does not advertise or implement MCP task-augmented tool
+`volicord mcp --stdio` does not advertise or implement MCP task-augmented tool
 execution. A `tools/call` request does not return `CreateTaskResult`, and a
 `task` parameter is not a supported baseline feature.
 

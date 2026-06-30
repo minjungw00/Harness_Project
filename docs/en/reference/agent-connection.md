@@ -6,7 +6,7 @@ connection intent, connected projects, connection mode, `actor_source`, and
 `operation_category` are interpreted before a request enters Core.
 
 It does not define public API schemas, method behavior, storage effects,
-security guarantee meanings, `volicord-mcp` wire behavior, or Core authority
+security guarantee meanings, `volicord mcp --stdio` wire behavior, or Core authority
 semantics.
 
 ## Owns / Does Not Own
@@ -31,7 +31,7 @@ This document does not own:
   value names; see [API Schema Core](api/schema-core.md),
   [API Methods](api/methods.md), method owners, and
   [API Value Sets](api/schema-value-sets.md)
-- `volicord-mcp` executable startup, process environment, stdio framing,
+- `volicord mcp --stdio` startup, process environment, stdio framing,
   startup validation, response wrapping, or shutdown; see
   [MCP Transport](mcp-transport.md)
 - administrative setup, connection, status, verification, mode, remove, project,
@@ -53,11 +53,11 @@ uses the `connection_id` process-argument spelling, but ordinary text-mode user
 flows select the connection by host, connection intent, and repository root
 through the commands owned by [Administrative CLI](admin-cli.md).
 
-One `volicord-mcp` process is bound to one Agent Connection. Generated host
-configuration may contain a `connection_id` process-binding value derived from
-the stored `connection_internal_id` so the host can start that process, but
-that value is not a user authority token and is not required as a normal
-command input.
+One `volicord mcp --stdio` process is bound to one Agent Connection. Generated
+host configuration may contain a `connection_id` process-binding value derived
+from the stored `connection_internal_id` so the host can start that process, but
+that value is not a user authority token and is not required as a normal command
+input.
 
 Stored Agent Connection fields include:
 
@@ -87,7 +87,7 @@ one surface without changing the others.
 | Installation profile | Runtime Home registry installation records, including the selected Runtime Home identity and MCP command location. | `volicord setup`. | Setup is required local configuration. It is not a host trust decision, user judgment, or public API method. |
 | Agent Connection registry state | `agent_connections` records under the `Volicord Runtime Home`, including `connection_internal_id`, host kind, connection intent, `server_name`, `config_target`, `connection.mode`, enabled state, managed fingerprint, and `last_verification_status`. | `volicord connect` creates or updates the record, `volicord connection mode` changes mode, `volicord connection verify` updates verification status, and `volicord connection remove` may remove the record after membership removal. | Registry state is management state. It is not the host configuration file and is not proof that the external host loaded, trusted, approved, or exposed the MCP server. |
 | Connection Projects membership | `connection_projects` records under the same Runtime Home. | `volicord connect`, `volicord project use`, and connection removal flows can add, validate, or remove membership according to the selected repository root. | Membership controls the Agent Connection project allowlist. It does not register every Runtime Home project and does not delete project registration, project state, or Core records. |
-| Host configuration | The MCP host configuration location named by `config_target`, or a user-managed generic export. | `volicord connect` installs or updates managed host configuration; `volicord connection remove` removes only matching managed content when safety checks permit it; `volicord export mcp-config` renders host-neutral configuration. | Host configuration starts `volicord-mcp`, but remains an external host integration surface. It is not identical to registry state. |
+| Host configuration | The MCP host configuration location named by `config_target`, or a user-managed generic export. | `volicord connect` installs or updates managed host configuration; `volicord connection remove` removes only matching managed content when safety checks permit it; `volicord export mcp-config` renders host-neutral configuration. | Host configuration starts `volicord mcp --stdio`, but remains an external host integration surface. It is not identical to registry state. |
 | Verification state | `last_verification_status` in the Agent Connection registry record, plus command output owned by [Administrative CLI](admin-cli.md#agent-connection-result-states). | `volicord connect` and `volicord connection verify` run observable setup, host, MCP startup, MCP initialization, and `tools/list` checks where available. | Verification can inspect both Volicord-side state and host/MCP readiness. MCP startup validation alone is not a `complete` Agent Connection. |
 | Invocation eligibility | Current connection context derived by the MCP adapter at startup and per public tool call. | Affected by `enabled`, connected project availability, `connection.mode`, and the method's `operation_category`. | Eligibility can become unavailable after registry or project-state changes without any host configuration rewrite. |
 | Removal | Managed host content, `connection_projects`, and sometimes `agent_connections`. | `volicord connection remove`. | Removal must not delete a `Product Repository`, project registration, project state, Core records, the Runtime Home itself, artifact storage, or unrelated host configuration. |
@@ -131,7 +131,7 @@ is not a security level and not an authority grant.
 
 The baseline directly managed host kinds are `codex` and `claude_code`.
 Host-neutral MCP configuration export is a separate export flow. Exported
-configuration can use internal registry state needed to start `volicord-mcp`,
+configuration can use internal registry state needed to start `volicord mcp --stdio`,
 but export is not a normal connection intent for direct host installation.
 
 ## Connection Projects
@@ -162,10 +162,10 @@ Rules:
   effect without requiring host configuration to be rewritten.
 - An Agent Connection with no connected projects may remain stored, and host
   configuration may also remain on disk. That stored state does not mean a new
-  `volicord-mcp` process can start successfully.
+  `volicord mcp --stdio` process can start successfully.
 - New MCP stdio startup and startup checks fail when the Agent Connection has
   zero connected projects.
-- A `volicord-mcp` process that already started while at least one project was
+- A `volicord mcp --stdio` process that already started while at least one project was
   connected can observe later membership changes without host configuration
   being rewritten. After the last membership is removed, project discovery may
   report no available projects, and project-routed public tools cannot proceed
@@ -325,7 +325,7 @@ Owner links:
   method owners.
 - `operation_category` value names belong to
   [API Value Sets](api/schema-value-sets.md).
-- `volicord-mcp` startup, connection binding, environment variables, stdio
+- `volicord mcp --stdio` startup, connection binding, environment variables, stdio
   framing, startup validation, response wrapping, and shutdown belong to
   [MCP Transport](mcp-transport.md).
 

@@ -621,12 +621,12 @@ pub fn build_remove_command(
 
 fn validate_mcp_command(scope: HostScope, command: &Path) -> Result<(), HostConfigError> {
     if scope == HostScope::Project {
-        if command == Path::new("volicord-mcp") {
+        if command == Path::new(DEFAULT_MCP_COMMAND) {
             return Ok(());
         }
         return Err(HostConfigError::Conflict(HostConflict::new(
             HostConflictKind::InvalidCommand,
-            "Claude Code project-scoped configuration must use volicord-mcp from PATH",
+            "Claude Code project-scoped configuration must use volicord from PATH",
         )));
     }
     if command.is_absolute() {
@@ -634,7 +634,7 @@ fn validate_mcp_command(scope: HostScope, command: &Path) -> Result<(), HostConf
     } else {
         Err(HostConfigError::Conflict(HostConflict::new(
             HostConflictKind::InvalidCommand,
-            "Claude Code local and user scopes require an absolute volicord-mcp command path",
+            "Claude Code local and user scopes require an absolute volicord command path",
         )))
     }
 }
@@ -996,7 +996,7 @@ mod tests {
     fn local_project_and_user_command_construction() {
         let entry = ManagedServerEntry::new(
             "int_alpha",
-            Path::new("/bin/volicord-mcp"),
+            Path::new("/bin/volicord"),
             Some(Path::new("/runtime")),
         );
         let local = build_add_command(
@@ -1010,7 +1010,7 @@ mod tests {
             "claude",
             HostScope::Project,
             "volicord",
-            &ManagedServerEntry::new("int_alpha", Path::new("volicord-mcp"), None),
+            &ManagedServerEntry::new("int_alpha", Path::new("volicord"), None),
             Some(PathBuf::from("/repo")),
         );
         let user = build_add_command("claude", HostScope::User, "volicord", &entry, None);
@@ -1029,9 +1029,23 @@ mod tests {
             .expect("separator");
         assert_eq!(
             &local.args[separator + 1..],
-            ["/bin/volicord-mcp", "--connection", "int_alpha"]
+            [
+                "/bin/volicord",
+                "mcp",
+                "--stdio",
+                "--connection",
+                "int_alpha"
+            ]
         );
-        assert_eq!(project.args[project.args.len() - 3], "volicord-mcp");
+        let project_separator = project
+            .args
+            .iter()
+            .position(|arg| arg == "--")
+            .expect("project separator");
+        assert_eq!(
+            &project.args[project_separator + 1..],
+            ["volicord", "mcp", "--stdio", "--connection", "int_alpha"]
+        );
     }
 
     #[test]
@@ -1042,7 +1056,7 @@ mod tests {
         let plan = adapter.plan(request(
             HostScope::Local,
             Some(&repo),
-            Path::new("/bin/volicord-mcp"),
+            Path::new("/bin/volicord"),
         ))?;
         let effect = adapter.apply(&plan)?;
         assert_eq!(effect.change, PlannedChange::ExternalCommand);
@@ -1058,11 +1072,7 @@ mod tests {
                 stderr: "boom".to_owned(),
             },
         ]));
-        let plan = failing.plan(request(
-            HostScope::User,
-            None,
-            Path::new("/bin/volicord-mcp"),
-        ))?;
+        let plan = failing.plan(request(HostScope::User, None, Path::new("/bin/volicord")))?;
         assert!(matches!(
             failing.apply(&plan),
             Err(HostConfigError::ExternalCommand(_))
@@ -1080,18 +1090,15 @@ mod tests {
         let personal_plan = personal.plan(request(
             HostScope::Local,
             Some(&repo),
-            Path::new("/bin/volicord-mcp"),
+            Path::new("/bin/volicord"),
         ))?;
         let shared_plan = shared.plan(request(
             HostScope::Project,
             Some(&repo),
-            Path::new("/bin/volicord-mcp"),
+            Path::new("/bin/volicord"),
         ))?;
-        let global_plan = global.plan(request(
-            HostScope::User,
-            None,
-            Path::new("/bin/volicord-mcp"),
-        ))?;
+        let global_plan =
+            global.plan(request(HostScope::User, None, Path::new("/bin/volicord")))?;
 
         assert_eq!(personal_plan.host_scope, HostScope::Local);
         assert_eq!(shared_plan.host_scope, HostScope::Project);
@@ -1114,7 +1121,7 @@ mod tests {
         let plan = pending.plan(request(
             HostScope::Local,
             Some(&repo),
-            Path::new("/bin/volicord-mcp"),
+            Path::new("/bin/volicord"),
         ))?;
         let verification = pending.verify(&plan)?;
         assert_eq!(verification.status.as_str(), "action_required");
@@ -1132,11 +1139,7 @@ mod tests {
                 stderr: String::new(),
             },
         ]));
-        let plan = rejected.plan(request(
-            HostScope::User,
-            None,
-            Path::new("/bin/volicord-mcp"),
-        ))?;
+        let plan = rejected.plan(request(HostScope::User, None, Path::new("/bin/volicord")))?;
         assert_eq!(rejected.verify(&plan)?.status.as_str(), "rejected");
         Ok(())
     }
@@ -1146,15 +1149,20 @@ mod tests {
         let connected = parse_claude_mcp_get_output(&CommandOutput {
             success: true,
             status_code: Some(0),
-            stdout: "Status: ✓ Connected\nScope: local\nCommand: /bin/volicord-mcp\nArgs: [\"--connection\",\"int_alpha\"]\nEnvironment:\n  VOLICORD_HOME=/runtime\n".to_owned(),
+            stdout: "Status: ✓ Connected\nScope: local\nCommand: /bin/volicord\nArgs: [\"mcp\",\"--stdio\",\"--connection\",\"int_alpha\"]\nEnvironment:\n  VOLICORD_HOME=/runtime\n".to_owned(),
             stderr: String::new(),
         });
         assert_eq!(connected.state, ClaudeMcpState::Connected);
         assert_eq!(connected.scope, Some(HostScope::Local));
-        assert_eq!(connected.command.as_deref(), Some("/bin/volicord-mcp"));
+        assert_eq!(connected.command.as_deref(), Some("/bin/volicord"));
         assert_eq!(
             connected.args,
-            Some(vec!["--connection".to_owned(), "int_alpha".to_owned()])
+            Some(vec![
+                "mcp".to_owned(),
+                "--stdio".to_owned(),
+                "--connection".to_owned(),
+                "int_alpha".to_owned()
+            ])
         );
         assert_eq!(
             connected.env.get("VOLICORD_HOME"),
@@ -1197,13 +1205,13 @@ mod tests {
         let mut adapter = ClaudeCodeAdapter::new(FakeRunner::new(vec![
             missing_output(),
             ok_output(
-                "Status: ✓ Connected\nScope: local\nCommand: /bin/volicord-mcp\nArgs: --connection int_alpha\nEnvironment:\n  VOLICORD_HOME=/runtime\n",
+                "Status: ✓ Connected\nScope: local\nCommand: /bin/volicord\nArgs: mcp --stdio --connection int_alpha\nEnvironment:\n  VOLICORD_HOME=/runtime\n",
             ),
         ]));
         let plan = adapter.plan(request(
             HostScope::Local,
             Some(&repo),
-            Path::new("/bin/volicord-mcp"),
+            Path::new("/bin/volicord"),
         ))?;
         let verification = adapter.verify(&plan)?;
         assert_eq!(verification.status.as_str(), "complete");
@@ -1211,12 +1219,12 @@ mod tests {
 
         let mut unknown = ClaudeCodeAdapter::new(FakeRunner::new(vec![
             missing_output(),
-            ok_output("Status: ✓ Connected\nCommand: /bin/volicord-mcp\n"),
+            ok_output("Status: ✓ Connected\nCommand: /bin/volicord\n"),
         ]));
         let plan = unknown.plan(request(
             HostScope::Local,
             Some(&repo),
-            Path::new("/bin/volicord-mcp"),
+            Path::new("/bin/volicord"),
         ))?;
         assert_eq!(unknown.verify(&plan)?.status.as_str(), "unknown");
         Ok(())
@@ -1230,7 +1238,7 @@ mod tests {
         let plan = adapter.plan(request(
             HostScope::Project,
             Some(&repo),
-            Path::new("volicord-mcp"),
+            Path::new("volicord"),
         ))?;
         adapter.apply(&plan)?;
 
@@ -1254,7 +1262,7 @@ mod tests {
         let plan = adapter.plan(request(
             HostScope::Project,
             Some(&repo),
-            Path::new("volicord-mcp"),
+            Path::new("volicord"),
         ))?;
         adapter.apply(&plan)?;
         let text = fs::read_to_string(repo.join(".mcp.json"))?;
@@ -1265,7 +1273,7 @@ mod tests {
         let again = adapter.plan(request(
             HostScope::Project,
             Some(&repo),
-            Path::new("volicord-mcp"),
+            Path::new("volicord"),
         ))?;
         assert_eq!(again.change, PlannedChange::Noop);
         Ok(())
@@ -1277,14 +1285,14 @@ mod tests {
         let repo = temp_dir("claude-project-mismatch")?;
         fs::write(
             repo.join(".mcp.json"),
-            "{\"mcpServers\":{\"volicord\":{\"command\":\"volicord-mcp\",\"args\":[\"--connection\",\"other\"]}}}\n",
+            "{\"mcpServers\":{\"volicord\":{\"command\":\"volicord\",\"args\":[\"mcp\",\"--stdio\",\"--connection\",\"other\"]}}}\n",
         )?;
         let mut adapter = ClaudeCodeAdapter::new(FakeRunner::new(Vec::new()));
 
         let plan = adapter.plan(request(
             HostScope::Project,
             Some(&repo),
-            Path::new("volicord-mcp"),
+            Path::new("volicord"),
         ))?;
 
         assert_eq!(
@@ -1301,7 +1309,7 @@ mod tests {
         let plan = adapter.plan(request(
             HostScope::Project,
             Some(&repo),
-            Path::new("volicord-mcp"),
+            Path::new("volicord"),
         ))?;
         adapter.apply(&plan)?;
         let HostTarget::File(target) = plan.target.clone() else {
@@ -1331,7 +1339,7 @@ mod tests {
         let plan = adapter.plan(request(
             HostScope::Project,
             Some(&repo),
-            Path::new("volicord-mcp"),
+            Path::new("volicord"),
         ))?;
         adapter.apply(&plan)?;
         let HostTarget::File(target) = plan.target.clone() else {
@@ -1339,7 +1347,8 @@ mod tests {
         };
         fs::write(
             &target,
-            fs::read_to_string(&target)?.replace("volicord-mcp", "manual-mcp"),
+            fs::read_to_string(&target)?
+                .replace("\"command\": \"volicord\"", "\"command\": \"manual-mcp\""),
         )?;
 
         let error = adapter
@@ -1367,10 +1376,10 @@ mod tests {
         let plan = adapter.plan(request(
             HostScope::Project,
             Some(&repo),
-            Path::new("/personal/target/debug/volicord-mcp"),
+            Path::new("/personal/target/debug/volicord"),
         ))?;
 
-        assert_eq!(plan.entry.command, "volicord-mcp");
+        assert_eq!(plan.entry.command, "volicord");
         assert!(!plan.entry.env.contains_key("VOLICORD_HOME"));
         Ok(())
     }

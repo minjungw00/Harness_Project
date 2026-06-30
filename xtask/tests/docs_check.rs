@@ -1102,9 +1102,14 @@ fn accepts_supported_volicord_shell_command_examples() {
 ./target/debug/volicord setup
 volicord setup
 volicord setup --json
-volicord setup --mcp-command /path/to/volicord-mcp
+volicord setup --mcp-command /path/to/volicord
 volicord setup --link-bin /path/to/bin
 volicord setup --home /path/to/runtime-home
+./target/debug/volicord mcp --version
+./target/debug/volicord mcp --help
+volicord mcp --stdio --connection CONNECTION_ID
+volicord mcp --check --connection CONNECTION_ID
+volicord mcp --check --connection CONNECTION_ID --project PROJECT_ID
 volicord connect codex --read-only
 volicord export mcp-config --output /tmp/volicord.mcp.json
 volicord connection mode codex workflow
@@ -1133,7 +1138,7 @@ fn rejects_mcp_command_on_connect_command_examples() {
     write(
         fixture.path(),
         "docs/en/example.md",
-        "# Overview\n\n```sh\nvolicord connect codex --mcp-command ./target/debug/volicord-mcp\n```\n",
+        "# Overview\n\n```sh\nvolicord connect codex --mcp-command ./target/debug/volicord\n```\n",
     );
 
     let report = report(fixture.path());
@@ -1183,7 +1188,7 @@ fn ignores_unsupported_volicord_commands_in_prose() {
     write(
         fixture.path(),
         "docs/en/example.md",
-        "# Overview\n\nA diagnostic can mention `connection_id`, and prose can name `volicord connect codex --mcp-command ./target/debug/volicord-mcp` or `volicord connect codex --link-bin /path/to/bin` without becoming an executable example.\n",
+        "# Overview\n\nA diagnostic can mention `connection_id`, and prose can name `volicord connect codex --mcp-command ./target/debug/volicord` or `volicord connect codex --link-bin /path/to/bin` without becoming an executable example.\n",
     );
 
     let report = report(fixture.path());

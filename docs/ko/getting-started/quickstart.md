@@ -17,13 +17,13 @@ cd /path/to/your-product-repo
 volicord connect codex
 ```
 
-Setup은 방금 빌드한 `volicord`와 `volicord-mcp` 명령을 이후 터미널과 에이전트
-호스트에서 사용할 수 있는지 확인합니다. 명령 링크가 필요하면 setup은 `~/.local/bin`
-같은 관례적 사용자 명령 디렉터리가 없고 안전하게 만들 수 있을 때 그 디렉터리를 만든
-뒤 쓰기 가능 여부를 확인하고 링크하도록 제안할 수 있습니다. 프롬프트를 표시하거나
-`action_required`를 보고하면 `volicord connect`를 실행하거나 새 터미널을 열거나
-호스트를 시작하기 전에 이름 붙은 명령 가용성 단계를 따릅니다. Volicord는 부모 셸의
-현재 `PATH`를 바꿀 수 없습니다.
+Setup은 방금 빌드한 `volicord` 명령을 이후 터미널과 에이전트 호스트에서 사용할 수
+있는지 확인합니다. 명령 링크가 필요하면 setup은 `~/.local/bin` 같은 관례적 사용자
+명령 디렉터리가 없고 안전하게 만들 수 있을 때 그 디렉터리를 만든 뒤 쓰기 가능 여부를
+확인하고 링크하도록 제안할 수 있습니다. 프롬프트를 표시하거나 `action_required`를
+보고하면 `volicord connect`를 실행하거나 새 터미널을 열거나 호스트를 시작하기 전에
+이름 붙은 명령 가용성 단계를 따릅니다. Volicord는 부모 셸의 현재 `PATH`를 바꿀 수
+없습니다.
 `/path/to/your-product-repo`는 에이전트에게 작업을 요청할 Product Repository의 경로
 예시입니다. Volicord는 현재 디렉터리에서 그 저장소를 감지하고 첫 호스트 연결에는
 일반 CLI 기본값을 사용합니다. 정확한 프로젝트 이름, 연결 기본값, 내부 식별 정보

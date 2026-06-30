@@ -376,8 +376,9 @@ Most relevant tests:
 Recommended next component:
 
 - Read `volicord-store` for bootstrap, inspection, and registry storage calls.
-  Read `volicord-mcp` for the `volicord-mcp --check --connection` preflight path
-  that connection setup validates.
+  Read `volicord-mcp` and `volicord-cli` for the
+  `volicord mcp --check --connection` preflight path that connection setup
+  validates.
 
 ## `crates/volicord-mcp`
 
@@ -390,7 +391,7 @@ Core, and wraps Core's JSON response in an MCP `tools/call` result.
 
 Owns in the implementation:
 
-- `volicord-mcp` binary command modes: stdio, `--check`, help, and version.
+- `volicord mcp` command modes: stdio, `--check`, help, and version.
 - Runtime Home and session binding validation for MCP startup.
 - Tool metadata returned by `tools/list`.
 - `tools/call` dispatch, typed argument decoding, and invocation-context
@@ -415,8 +416,8 @@ Important modules:
   `McpConnectionContext`, `McpAdapter`, `McpAdapter::call_tool`,
   `prepare_connection_arguments`, `public_method_tools`, `run_stdio_from_env`,
   `handle_json_rpc_request`, and `call_tool_result`.
-- [`crates/volicord-mcp/src/main.rs`](../../../crates/volicord-mcp/src/main.rs)
-  for process-mode dispatch through `dispatch_args`.
+- [`crates/volicord-cli/src/main.rs`](../../../crates/volicord-cli/src/main.rs)
+  for public `volicord mcp` process-mode dispatch.
 
 Important current symbols:
 
@@ -438,9 +439,9 @@ Most relevant tests:
   `adapter_auto_selects_single_project_and_injects_connection_invocation`,
   `read_only_mode_rejects_agent_workflow_calls_before_core`, and
   `mcp_visible_schemas_make_project_selector_optional`.
-- [`crates/volicord-mcp/tests/binary_transport.rs`](../../../crates/volicord-mcp/tests/binary_transport.rs)
-  exercises the binary, `--check`, stdio framing, reconnect behavior, and MCP
-  response wrapping.
+- [`crates/volicord-cli/tests/mcp_transport.rs`](../../../crates/volicord-cli/tests/mcp_transport.rs)
+  exercises the `volicord mcp` subcommand, `--check`, stdio framing, reconnect
+  behavior, and MCP response wrapping.
 - [`tests/integration/mcp_connection.rs`](../../../tests/integration/mcp_connection.rs)
   exercises cross-layer MCP/Core/Store behavior.
 

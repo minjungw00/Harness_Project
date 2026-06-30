@@ -1,7 +1,7 @@
 # 설치
 
-이 튜토리얼은 로컬 `volicord`와 `volicord-mcp` 실행 파일을 준비하고, 이후
-프로젝트, 연결, 내보내기, `User Channel` 명령이 사용할 설치 프로필을 기록합니다.
+이 튜토리얼은 로컬 `volicord` 실행 파일을 준비하고, 이후 프로젝트, 연결, 내보내기,
+MCP, `User Channel` 명령이 사용할 설치 프로필을 기록합니다.
 [빠른 시작](quickstart.md) 전에 수행하는 설정 단계입니다.
 
 정확한 명령 동작은 [관리 CLI 참조](../reference/admin-cli.md)가 담당합니다.
@@ -22,10 +22,9 @@ Volicord 소스 저장소에서 실행합니다.
 cargo build --workspace --bins
 ```
 
-이 명령은 두 로컬 실행 파일을 빌드합니다.
+이 명령은 로컬 실행 파일을 빌드합니다.
 
 - `./target/debug/volicord`
-- `./target/debug/volicord-mcp`
 
 그다음 방금 빌드한 CLI에서 안내형 setup을 실행합니다.
 
@@ -34,9 +33,9 @@ cargo build --workspace --bins
 ```
 
 `volicord setup`은 선택된 `Volicord Runtime Home`을 만들거나 검증하고 설치
-프로필을 저장합니다. 실행 중인 `volicord` 실행 파일을 발견하고 `volicord-mcp`를
-찾으며, 이후 터미널과 에이전트 호스트에서 선택된 명령을 `PATH`로 사용할 수 있는지
-확인합니다. 정확한 `volicord setup` 옵션, MCP 명령 찾기 순서, 출력 동작은 [관리 CLI
+프로필을 저장합니다. 실행 중인 `volicord` 실행 파일을 발견하고 MCP 시작 명령을
+저장하며, 이후 터미널과 에이전트 호스트에서 선택된 명령을 `PATH`로 사용할 수 있는지
+확인합니다. 정확한 `volicord setup` 옵션, MCP 시작 명령 동작, 출력 동작은 [관리 CLI
 참조](../reference/admin-cli.md#runtime-home-selection)가 담당합니다.
 이 상태는 안내형 첫 실행 설정 경험에 이름 붙은 사용자 동작이 아직 필요한지를
 답하므로, 설치 프로필이 저장된 뒤에도 `action_required`가 나타날 수 있습니다.
@@ -68,7 +67,7 @@ Setup은 부모 셸의 현재 `PATH`를 바꿀 수 없습니다. 출력된 `expo
 | 옵션 | 사용할 때 |
 |---|---|
 | `--link-bin PATH` | 필요하면 디렉터리를 만들고 쓰기 가능 여부를 확인한 뒤 그곳에 명령 링크를 만들거나 갱신합니다. 이 옵션 자체가 셸 시작 파일을 편집하지는 않습니다. |
-| `--mcp-command PATH` | sibling 찾기나 `PATH` 조회가 잘못된 명령을 고르거나 명령을 찾지 못할 때 특정 `volicord-mcp` 실행 파일을 저장합니다. |
+| `--mcp-command PATH` | 생성된 MCP 시작 항목이 실행 중인 실행 파일 대신 특정 `volicord` 명령을 사용해야 할 때 그 명령을 저장합니다. |
 | `--home PATH` | 기본값이 아닌 `Volicord Runtime Home`을 선택합니다. |
 
 예를 들어 비대화식 링크 단계에서 링크 디렉터리를 지정할 수 있습니다.
@@ -92,7 +91,7 @@ volicord doctor
 
 ## 설치된 실행 파일 사용하기
 
-`volicord`와 `volicord-mcp`가 이미 `PATH`에 있다면 아래처럼 실행합니다.
+`volicord`가 이미 `PATH`에 있다면 아래처럼 실행합니다.
 
 ```sh
 volicord setup
@@ -100,9 +99,9 @@ volicord doctor
 ```
 
 실행 파일을 소스에서 빌드했든 설치된 명령 디렉터리에서 가져왔든 setup은 같은 설치
-프로필 계약을 사용합니다. CLI 참조가 설명하는 기본 찾기 방식이 사용하려는
-`volicord-mcp` 실행 파일을 찾을 수 없을 때만 `volicord setup --mcp-command PATH`를
-사용합니다. Setup이 `action_required`를 보고하면 새 터미널이나 에이전트 호스트를
+프로필 계약을 사용합니다. 생성된 호스트 설정이 다른 `volicord` 명령 경로로 MCP를
+시작해야 할 때만 `volicord setup --mcp-command PATH`를 사용합니다. Setup이
+`action_required`를 보고하면 새 터미널이나 에이전트 호스트를
 시작하기 전에 이름 붙은 로컬 동작을 완료합니다. 일반 `volicord connect` 명령은
 저장된 설치 프로필을 사용합니다.
 

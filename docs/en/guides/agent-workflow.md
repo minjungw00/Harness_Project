@@ -72,7 +72,7 @@ Escalate from small change to tracked work when you find scope drift, a new publ
 <a id="project-selection"></a>
 ## Select the Volicord project deliberately
 
-In the current MCP path, the `volicord-mcp` process is bound to one Agent Connection, not to one fixed `Product Repository`. A user-scope Agent Connection may connect multiple projects, while project and local scopes remain single-repository scopes.
+In the current MCP path, the `volicord mcp --stdio` process is bound to one Agent Connection, not to one fixed `Product Repository`. A user-scope Agent Connection may connect multiple projects, while project and local scopes remain single-repository scopes.
 
 For public Volicord tool calls:
 

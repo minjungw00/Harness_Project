@@ -444,12 +444,12 @@ fn add_project_trust_action(scope: HostScope, user_actions: &mut Vec<UserAction>
 
 fn validate_mcp_command(scope: HostScope, command: &Path) -> Result<(), HostConfigError> {
     if scope == HostScope::Project {
-        if command == Path::new("volicord-mcp") {
+        if command == Path::new(DEFAULT_MCP_COMMAND) {
             return Ok(());
         }
         return Err(HostConfigError::Conflict(HostConflict::new(
             HostConflictKind::InvalidCommand,
-            "Codex project-scoped configuration must use volicord-mcp from PATH",
+            "Codex project-scoped configuration must use volicord from PATH",
         )));
     }
     if command.is_absolute() {
@@ -457,7 +457,7 @@ fn validate_mcp_command(scope: HostScope, command: &Path) -> Result<(), HostConf
     } else {
         Err(HostConfigError::Conflict(HostConflict::new(
             HostConflictKind::InvalidCommand,
-            "Codex user-scoped configuration requires an absolute volicord-mcp command path",
+            "Codex user-scoped configuration requires an absolute volicord command path",
         )))
     }
 }
@@ -769,11 +769,7 @@ mod tests {
             path: None,
         });
 
-        let plan = adapter.plan(request(
-            HostScope::User,
-            None,
-            Path::new("/bin/volicord-mcp"),
-        ))?;
+        let plan = adapter.plan(request(HostScope::User, None, Path::new("/bin/volicord")))?;
 
         assert_eq!(
             plan.target,
@@ -792,11 +788,7 @@ mod tests {
             path: None,
         });
 
-        let plan = adapter.plan(request(
-            HostScope::User,
-            None,
-            Path::new("/bin/volicord-mcp"),
-        ))?;
+        let plan = adapter.plan(request(HostScope::User, None, Path::new("/bin/volicord")))?;
 
         assert_eq!(
             plan.target,
@@ -834,11 +826,7 @@ mod tests {
             path: None,
         });
 
-        let personal = adapter.plan(request(
-            HostScope::User,
-            None,
-            Path::new("/bin/volicord-mcp"),
-        ))?;
+        let personal = adapter.plan(request(HostScope::User, None, Path::new("/bin/volicord")))?;
         let shared = adapter.plan(request(
             HostScope::Project,
             Some(&repo),
@@ -847,7 +835,7 @@ mod tests {
         let global = adapter
             .plan(HostPlanRequest {
                 connection_intent: ConnectionIntent::Global,
-                ..request(HostScope::User, None, Path::new("/bin/volicord-mcp"))
+                ..request(HostScope::User, None, Path::new("/bin/volicord"))
             })
             .expect_err("Codex global intent should be unsupported");
 
@@ -880,7 +868,7 @@ mod tests {
         let plan = adapter.plan_existing(existing_request(
             HostScope::User,
             &stored_target,
-            Path::new("/bin/volicord-mcp"),
+            Path::new("/bin/volicord"),
             Some(Path::new("/runtime")),
         ))?;
 
@@ -909,7 +897,7 @@ mod tests {
         let plan = adapter.plan_existing(existing_request(
             HostScope::User,
             &stored_target,
-            Path::new("/bin/volicord-mcp"),
+            Path::new("/bin/volicord"),
             Some(Path::new("/runtime")),
         ))?;
 
@@ -936,11 +924,7 @@ mod tests {
             path: None,
         });
 
-        let plan = adapter.plan(request(
-            HostScope::User,
-            None,
-            Path::new("/bin/volicord-mcp"),
-        ))?;
+        let plan = adapter.plan(request(HostScope::User, None, Path::new("/bin/volicord")))?;
         adapter.apply(&plan)?;
         let text = fs::read_to_string(target)?;
 
@@ -948,7 +932,7 @@ mod tests {
         assert!(text.contains("model = \"gpt-5.5\""));
         assert!(text.contains("[mcp_servers.other]"));
         assert!(text.contains("[mcp_servers.volicord]"));
-        assert!(text.contains("args = [\"--connection\", \"int_alpha\"]"));
+        assert!(text.contains("args = [\"mcp\", \"--stdio\", \"--connection\", \"int_alpha\"]"));
         Ok(())
     }
 
@@ -961,32 +945,26 @@ mod tests {
             codex_home: Some(codex_home),
             path: None,
         });
-        let first = adapter.plan(request(
-            HostScope::User,
-            None,
-            Path::new("/bin/volicord-mcp"),
-        ))?;
+        let first = adapter.plan(request(HostScope::User, None, Path::new("/bin/volicord")))?;
         adapter.apply(&first)?;
 
         let second = adapter.plan(HostPlanRequest {
             expected_fingerprint: Some(&first.fingerprint),
             installation_profile: InstallationProfile {
-                volicord_mcp_command: Path::new("/usr/local/bin/volicord-mcp"),
-                ..request(HostScope::User, None, Path::new("/bin/volicord-mcp"))
-                    .installation_profile
+                volicord_mcp_command: Path::new("/usr/local/bin/volicord"),
+                ..request(HostScope::User, None, Path::new("/bin/volicord")).installation_profile
             },
-            ..request(HostScope::User, None, Path::new("/bin/volicord-mcp"))
+            ..request(HostScope::User, None, Path::new("/bin/volicord"))
         })?;
         assert_eq!(second.change, PlannedChange::Update);
         adapter.apply(&second)?;
 
         let third = adapter.plan(HostPlanRequest {
             installation_profile: InstallationProfile {
-                volicord_mcp_command: Path::new("/usr/local/bin/volicord-mcp"),
-                ..request(HostScope::User, None, Path::new("/bin/volicord-mcp"))
-                    .installation_profile
+                volicord_mcp_command: Path::new("/usr/local/bin/volicord"),
+                ..request(HostScope::User, None, Path::new("/bin/volicord")).installation_profile
             },
-            ..request(HostScope::User, None, Path::new("/bin/volicord-mcp"))
+            ..request(HostScope::User, None, Path::new("/bin/volicord"))
         })?;
         assert_eq!(third.change, PlannedChange::Noop);
         Ok(())
@@ -1007,11 +985,7 @@ mod tests {
             path: None,
         });
 
-        let plan = adapter.plan(request(
-            HostScope::User,
-            None,
-            Path::new("/bin/volicord-mcp"),
-        ))?;
+        let plan = adapter.plan(request(HostScope::User, None, Path::new("/bin/volicord")))?;
 
         assert_eq!(
             plan.conflicts[0].kind,
@@ -1027,7 +1001,7 @@ mod tests {
         fs::create_dir_all(&codex_home)?;
         fs::write(
             codex_home.join("config.toml"),
-            "[mcp_servers.volicord]\ncommand = \"/bin/volicord-mcp\"\nargs = [\"--connection\", \"other\"]\n",
+            "[mcp_servers.volicord]\ncommand = \"/bin/volicord\"\nargs = [\"mcp\", \"--stdio\", \"--connection\", \"other\"]\n",
         )?;
         let adapter = CodexAdapter::new(CodexEnvironment {
             home: None,
@@ -1035,11 +1009,7 @@ mod tests {
             path: None,
         });
 
-        let plan = adapter.plan(request(
-            HostScope::User,
-            None,
-            Path::new("/bin/volicord-mcp"),
-        ))?;
+        let plan = adapter.plan(request(HostScope::User, None, Path::new("/bin/volicord")))?;
 
         assert_eq!(
             plan.conflicts[0].kind,
@@ -1062,11 +1032,7 @@ mod tests {
         });
 
         let error = adapter
-            .plan(request(
-                HostScope::User,
-                None,
-                Path::new("/bin/volicord-mcp"),
-            ))
+            .plan(request(HostScope::User, None, Path::new("/bin/volicord")))
             .expect_err("malformed TOML should fail");
 
         assert!(matches!(error, HostConfigError::Malformed(_)));
@@ -1083,10 +1049,10 @@ mod tests {
         let plan = adapter.plan(request(
             HostScope::Project,
             Some(&repo),
-            Path::new("/personal/target/debug/volicord-mcp"),
+            Path::new("/personal/target/debug/volicord"),
         ))?;
 
-        assert_eq!(plan.entry.command, "volicord-mcp");
+        assert_eq!(plan.entry.command, "volicord");
         assert!(!plan.entry.env.contains_key("VOLICORD_HOME"));
         Ok(())
     }
@@ -1100,18 +1066,14 @@ mod tests {
             codex_home: Some(codex_home),
             path: None,
         });
-        let plan = adapter.plan(request(
-            HostScope::User,
-            None,
-            Path::new("/bin/volicord-mcp"),
-        ))?;
+        let plan = adapter.plan(request(HostScope::User, None, Path::new("/bin/volicord")))?;
         adapter.apply(&plan)?;
         let HostTarget::File(target) = plan.target.clone() else {
             unreachable!("codex target");
         };
         fs::write(
             &target,
-            fs::read_to_string(&target)?.replace("/bin/volicord-mcp", "/tmp/manual"),
+            fs::read_to_string(&target)?.replace("/bin/volicord", "/tmp/manual"),
         )?;
 
         let error = adapter
@@ -1180,11 +1142,7 @@ mod tests {
             codex_home: Some(codex_home),
             path: Some(dir.join("empty").into_os_string()),
         });
-        let plan = adapter.plan(request(
-            HostScope::User,
-            None,
-            Path::new("/bin/volicord-mcp"),
-        ))?;
+        let plan = adapter.plan(request(HostScope::User, None, Path::new("/bin/volicord")))?;
         adapter.apply(&plan)?;
 
         let verification = adapter.verify(&plan)?;
@@ -1213,11 +1171,7 @@ mod tests {
             },
             FakeRunner::new(vec![Ok(failed_output(42))]),
         );
-        let plan = adapter.plan(request(
-            HostScope::User,
-            None,
-            Path::new("/bin/volicord-mcp"),
-        ))?;
+        let plan = adapter.plan(request(HostScope::User, None, Path::new("/bin/volicord")))?;
         adapter.apply(&plan)?;
 
         let verification = adapter.verify(&plan)?;
@@ -1250,11 +1204,7 @@ mod tests {
             },
             FakeRunner::new(vec![Err("permission denied".to_owned())]),
         );
-        let plan = adapter.plan(request(
-            HostScope::User,
-            None,
-            Path::new("/bin/volicord-mcp"),
-        ))?;
+        let plan = adapter.plan(request(HostScope::User, None, Path::new("/bin/volicord")))?;
         adapter.apply(&plan)?;
 
         let verification = adapter.verify(&plan)?;
@@ -1278,11 +1228,7 @@ mod tests {
             codex_home: Some(codex_home),
             path: Some(dir.join("empty").into_os_string()),
         });
-        let plan = adapter.plan(request(
-            HostScope::User,
-            None,
-            Path::new("/bin/volicord-mcp"),
-        ))?;
+        let plan = adapter.plan(request(HostScope::User, None, Path::new("/bin/volicord")))?;
         adapter.apply(&plan)?;
 
         let detection = adapter.detect()?;
@@ -1334,11 +1280,7 @@ mod tests {
                 Ok(ok_output()),
             ]),
         );
-        let plan = adapter.plan(request(
-            HostScope::User,
-            None,
-            Path::new("/bin/volicord-mcp"),
-        ))?;
+        let plan = adapter.plan(request(HostScope::User, None, Path::new("/bin/volicord")))?;
         assert_eq!(adapter.verify(&plan)?.status.as_str(), "missing");
         adapter.apply(&plan)?;
         assert_eq!(
@@ -1350,7 +1292,7 @@ mod tests {
         };
         fs::write(
             &target,
-            fs::read_to_string(&target)?.replace("/bin/volicord-mcp", "/tmp/manual"),
+            fs::read_to_string(&target)?.replace("/bin/volicord", "/tmp/manual"),
         )?;
         assert_eq!(adapter.verify(&plan)?.status.as_str(), "changed");
 

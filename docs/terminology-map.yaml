@@ -21,7 +21,7 @@ canonical_for:
   - "Terminology boundaries between documentation owner routing and product behavior or storage persistence conditions."
   - "Terminology distinction that Volicord is the local work-authority product/system for AI-assisted product work, while Core is the local authority record for Volicord state."
   - "Terminology routing that Volicord product identity belongs in Getting Started Overview while supported and unsupported scope belongs in Scope."
-  - "Terminology boundaries among Volicord, Core, Volicord implementation, Volicord source repository, Volicord installation, `volicord`, `volicord-mcp`, `Volicord Runtime Home`, `test harness`, and `Product Repository`."
+  - "Terminology boundaries among Volicord, Core, Volicord implementation, Volicord source repository, Volicord installation, `volicord`, `volicord mcp --stdio`, `Volicord Runtime Home`, `test harness`, and `Product Repository`."
   - "Preferred current-runtime-context wording for current scope, currently applied scope, current Change Unit, and current connection context."
   - "Terminology boundaries among Write Check, write approval, sensitive-action approval, final acceptance, residual-risk acceptance, and user-owned judgment."
   - "Terminology boundaries among Agent Connection, Connection Projects, User Channel, `actor_source`, `operation_category`, and Write Check."
@@ -218,6 +218,7 @@ identifier_preservation:
     - "volicord.check_close"
     - "volicord.close_task"
     - "volicord"
+    - "volicord mcp --stdio"
     - "volicord-mcp"
     - "volicord setup"
     - "volicord connect"
@@ -247,11 +248,11 @@ avoid:
     - phrase: "Volicord is a local authority record"
       use: "Volicord is the local work-authority product/system for AI-assisted product work; Core is the local authority record for Volicord state."
     - phrase: "local work-authority server"
-      use: "local work-authority product/system for Volicord; for implementation context use Volicord implementation, Volicord source repository, Volicord Rust workspace, Volicord installation, `volicord`, or `volicord-mcp` as applicable."
+      use: "local work-authority product/system for Volicord; for implementation context use Volicord implementation, Volicord source repository, Volicord Rust workspace, Volicord installation, `volicord`, or `volicord mcp --stdio` as applicable."
     - phrase: "coding-agent integration"
       use: "agent-host integration, Agent Connection, managed host configuration state, or agent connection according to context."
     - phrase: "Volicord-as-server product label"
-      use: "Volicord, Volicord implementation, Volicord source repository, Volicord Rust workspace, Volicord installation, `volicord`, or `volicord-mcp` according to context."
+      use: "Volicord, Volicord implementation, Volicord source repository, Volicord Rust workspace, Volicord installation, `volicord`, or `volicord mcp --stdio` according to context."
     - phrase: "server implementation set"
       use: "implementation set maintained by this repository."
     - phrase: "server files"
@@ -353,7 +354,7 @@ terms:
       - "Volicord is the local work-authority product/system for AI-assisted product work, presented publicly as a local authority control plane."
       - "Do not describe Volicord itself as the authority record; Core is the local authority record for Volicord state."
       - "Do not describe Volicord as the coding agent, workflow engine, test runner, technical-debt analyzer, security sandbox, or full agent harness."
-      - "Do not create or use a product label that combines `Volicord` with `Server`; use Volicord implementation, Volicord source repository, Volicord Rust workspace, Volicord installation, `volicord`, or `volicord-mcp` according to context."
+      - "Do not create or use a product label that combines `Volicord` with `Server`; use Volicord implementation, Volicord source repository, Volicord Rust workspace, Volicord installation, `volicord`, or `volicord mcp --stdio` according to context."
   test_harness:
     category: "technical_concept"
     en: "test harness"
@@ -453,9 +454,9 @@ terms:
         ko: "docs/ko/reference/security.md"
     notes:
       - "Use Volicord implementation for the implementation set maintained by this repository."
-      - "The Volicord implementation includes implementation crates, the `volicord` administrative CLI, the `volicord-mcp` local MCP adapter, tests, documentation, validation tooling, and repository configuration at source level."
+      - "The Volicord implementation includes implementation crates, the `volicord` administrative CLI and MCP subcommand, the `volicord-mcp` crate, tests, documentation, validation tooling, and repository configuration at source level."
       - "A Volicord installation is the deployed subset of executables and required runtime resources; do not imply that every source-repository file is installed."
-      - "`volicord` and `volicord-mcp` are distinct executable roles within the Volicord implementation; name the process when describing behavior performed by one process."
+      - "`volicord` is the installed executable; generated host configuration starts MCP through `volicord mcp --stdio`. Name the command mode when describing behavior performed by the MCP process."
       - "Do not use Volicord implementation to mean Volicord as a whole, Core, `Volicord Runtime Home`, the `Product Repository`, a single daemon, or a network listener."
       - "Do not create a product label that combines `Volicord` with `Server`."
   volicord_source_repository:
@@ -513,12 +514,12 @@ terms:
       - "Do not use `volicord` as a synonym for Volicord or the whole Volicord implementation."
   volicord_mcp_process:
     category: "identifier"
-    en: "`volicord-mcp` MCP adapter process"
-    ko_reference: "`volicord-mcp` MCP 어댑터 프로세스"
-    ko_user: "`volicord-mcp` MCP 어댑터 프로세스"
+    en: "`volicord mcp --stdio` MCP adapter process"
+    ko_reference: "`volicord mcp --stdio` MCP 어댑터 프로세스"
+    ko_user: "`volicord mcp --stdio` MCP 어댑터 프로세스"
     preserve_identifier: true
     preserve_as_identifier:
-      - "volicord-mcp"
+      - "volicord mcp --stdio"
     primary_owner:
       en: "docs/en/reference/mcp-transport.md"
       ko: "docs/ko/reference/mcp-transport.md"
@@ -528,8 +529,8 @@ terms:
       - en: "docs/en/reference/agent-connection.md"
         ko: "docs/ko/reference/agent-connection.md"
     notes:
-      - "`volicord-mcp` is the local stdio MCP adapter executable/process within the Volicord implementation."
-      - "Do not describe `volicord-mcp` as an actor separate from the Volicord implementation or as the whole Volicord implementation."
+      - "`volicord mcp --stdio` is the local stdio MCP adapter process mode within the Volicord implementation."
+      - "Do not describe `volicord mcp --stdio` as an actor separate from the Volicord implementation or as the whole Volicord implementation."
   documentation:
     category: "general_prose"
     en: "documentation"
@@ -1449,7 +1450,7 @@ terms:
       - en: "docs/en/reference/security.md"
         ko: "docs/ko/reference/security.md"
     notes:
-      - "Use for the `volicord-mcp --connection <connection_id>` process argument spelling and `connection_id:` preflight diagnostic line."
+      - "Use for the `volicord mcp --stdio --connection <connection_id>` process argument spelling and `connection_id:` preflight diagnostic line."
       - "Use in provenance placeholders such as `agent_connection:<connection_id>` where the owner defines that exact spelling."
       - "For storage primary keys, use `connection_internal_id`."
       - "Do not describe a copied `connection_id` as user authority, OS permission, or proof of capability."

@@ -106,8 +106,8 @@ Not supported:
 verifies the selected Runtime Home and stores the command paths later
 administrative, Agent Connection, export, and MCP process flows use. Setup is
 the only baseline command that directly selects the Runtime Home path or MCP
-command location. It can help make `volicord` and `volicord-mcp` available on
-`PATH`, but it cannot change the parent shell's current environment.
+launch command location. It can help make `volicord` available on `PATH`, but it
+cannot change the parent shell's current environment.
 
 In text mode, `volicord setup` may prompt only when stdin and stdout are
 interactive terminals, `--json` is absent, and `--link-bin` is absent. It
@@ -126,15 +126,15 @@ Arguments:
 | Argument | Meaning |
 |---|---|
 | `--home PATH` | Selects the `Volicord Runtime Home`. Omission uses the platform default local runtime location. The selected path must satisfy the Runtime Home/Product Repository separation contract before project state is used. |
-| `--link-bin PATH` | Creates the directory if needed, verifies it is writable, then creates or updates command links for both `volicord` and `volicord-mcp` there when feasible. The command reports each target path, refuses unsafe replacement, and does not by itself edit shell startup files or the parent shell `PATH`. |
-| `--mcp-command PATH` | Stores the exact command that managed host configuration and generic exports should use to start `volicord-mcp`. Discovery order is explicit `--mcp-command PATH` when supplied, then a sibling `volicord-mcp` next to the running `volicord` executable, then a command on `PATH`. |
+| `--link-bin PATH` | Creates the directory if needed, verifies it is writable, then creates or updates a command link for `volicord` there when feasible. The command reports the target path, refuses unsafe replacement, and does not by itself edit shell startup files or the parent shell `PATH`. |
+| `--mcp-command PATH` | Stores the exact `volicord` command that managed host configuration and generic exports should use before the `mcp --stdio --connection <connection_id>` arguments. Omission uses the running `volicord` executable selected by setup. |
 | `--json` | Selects machine-readable, noninteractive output. Setup does not prompt in JSON mode. |
 
 Setup effects:
 
 - creates or validates the Runtime Home registry
 - records Runtime Home identity and installation profile metadata
-- records the selected `volicord` and `volicord-mcp` command locations for
+- records the selected `volicord` command location and MCP launch command for
   later `connect`, `doctor`, export, and MCP startup flows
 - inspects whether selected command paths resolve through the current process
   `PATH`
@@ -144,8 +144,8 @@ Setup effects:
   user command directory such as `~/.local/bin` under `HOME` when setup can
   safely create it and verifies writability after creation, write an approved
   shell startup `PATH` block, print a shell command, or skip linking
-- may update command links named by `--link-bin` or selected through the
-  interactive prompt for both executable roles
+- may update the `volicord` command link named by `--link-bin` or selected
+  through the interactive prompt
 - may write a managed shell startup `PATH` block only after explicit
   interactive approval
 - reports a `PATH` action when a link directory is not visible to the current
@@ -242,15 +242,16 @@ The internal host configuration key `server_name` defaults to `volicord`.
 Ordinary CLI flows do not expose a server-name option. A generated host
 configuration may contain a `connection_id` process-binding value derived from
 the stored `connection_internal_id`, server name, and command arguments so that
-the host can start `volicord-mcp`; those values are saved process-binding
-details, not user authority tokens. Text-mode command input uses the selected
-host, intent, and repository root instead.
+the host can start `volicord mcp --stdio`; those values are saved
+process-binding details, not user authority tokens. Text-mode command input
+uses the selected host, intent, and repository root instead.
 
 Ordinary `volicord connect` commands use the saved profile in the resolved
 Runtime Home instead of asking for an MCP command path or Runtime Home path.
 Personal, local, or user-wide host configuration may carry that Runtime Home as
 `VOLICORD_HOME`. Shared project host configuration must not embed a personal
-Runtime Home path; it uses `volicord-mcp` as a command name that the future host
+Runtime Home path; it uses `volicord` as the command name and
+`mcp --stdio --connection <connection_id>` as arguments that the future host
 environment must resolve through `PATH`.
 
 <a id="volicord-agent-install"></a>
@@ -301,7 +302,7 @@ Text output must show the overall status, each check that was attempted or
 blocked, and the next user action when one is required. JSON output must include
 top-level `status`, `checks`, and `actions` fields for diagnostic consumers.
 
-A successful `volicord-mcp` startup check alone must not be described as a
+A successful `volicord mcp --check` startup check alone must not be described as a
 `complete` Agent Connection. It is startup validation for the MCP process only.
 
 <a id="generic-mcp-config-export"></a>
@@ -317,7 +318,7 @@ Rules:
 - It uses the installation profile's stored MCP command unless the setup is invalid,
   in which case it reports an `action_required` setup diagnostic.
 - It may create or update internal registry state needed for the exported
-  command to start a bound `volicord-mcp` process.
+  command to start a bound `volicord mcp --stdio` process.
 - Omission of `--read-only` uses workflow mode.
 - When `--output PATH` is present, the configuration is written to that exact
   output file. When `--output` is omitted, the command writes the default MCP

@@ -6,12 +6,12 @@ Volicord는 Codex, Claude Code, generic MCP 설정을 위한 직접 coding-agent
 
 ## 결정
 
-Volicord는 Agent Connection을 로컬 MCP 호스트 connection 하나의 지속 registry identity로 사용합니다. `volicord-mcp` 프로세스는 `--connection <connection_id>`로 시작합니다. Project 접근은 프로세스 시작 때 고정하지 않고 도구 호출마다 선택하고 검증합니다.
+Volicord는 Agent Connection을 로컬 MCP 호스트 connection 하나의 지속 registry identity로 사용합니다. `volicord mcp --stdio` 프로세스는 `--connection <connection_id>`로 시작합니다. Project 접근은 프로세스 시작 때 고정하지 않고 도구 호출마다 선택하고 검증합니다.
 
 이 설계는 아래 책임을 분리합니다.
 
 - Registry는 Agent Connection identity, host kind, host scope, target metadata, connection mode, enabled state, verification state, 명시적 Connection Project membership을 저장합니다.
-- `volicord-mcp`는 시작 때 Agent Connection을 검증하고, 그 connection에서 current connection context를 파생하며, connection mode에 따라 MCP-visible tool을 노출하고, `volicord.list_projects`를 제공하며, 모호한 Project 선택을 거절합니다.
+- `volicord mcp --stdio`는 시작 때 Agent Connection을 검증하고, 그 connection에서 current connection context를 파생하며, connection mode에 따라 MCP-visible tool을 노출하고, `volicord.list_projects`를 제공하며, 모호한 Project 선택을 거절합니다.
 - 관리 CLI는 지원되는 호스트 connection setup을 생성, 검증, 갱신, 제거합니다.
 - Host trust, project approval, OAuth, reload, restart, model behavior는 외부 호스트와 사용자에게 남습니다.
 
@@ -21,7 +21,7 @@ Volicord는 Agent Connection을 로컬 MCP 호스트 connection 하나의 지속
 - 호스트 MCP 명령이 같은 `connection_id`를 이미 가리키면 연결된 Project 추가나 제거에 호스트 MCP 명령 재작성이 필요하지 않습니다.
 - Project 선택 실패가 결정적입니다. 어댑터는 Project 선택 누락이나 모호함을 보고하고 연결된 Project 목록을 보도록 에이전트를 안내할 수 있습니다.
 - Host setup 상태는 설정은 되었지만 호스트 동작을 기다리는 상태와 완전한 검증 완료를 구분할 수 있습니다.
-- 생성되는 호스트 설정은 `volicord-mcp --connection <connection_id>`를 사용하며 Project, connection context, actor provenance 환경 변수를 요구하지 않습니다.
+- 생성되는 호스트 설정은 `volicord mcp --stdio --connection <connection_id>`를 사용하며 Project, connection context, actor provenance 환경 변수를 요구하지 않습니다.
 
 ## 비목표
 
@@ -35,7 +35,7 @@ Volicord는 Agent Connection을 로컬 MCP 호스트 connection 하나의 지속
 ## 관련 구현 영역
 
 - [`crates/volicord-mcp`](../../../../crates/volicord-mcp): connection-bound startup, MCP initialization, tool discovery, Project selection, Core 호출 전 adapter validation.
-- [`crates/volicord-cli`](../../../../crates/volicord-cli): 관리 connect/status/verify/uninstall 흐름.
+- [`crates/volicord-cli`](../../../../crates/volicord-cli): 공개 `volicord mcp` 프로세스 진입점, 호스트 설정 명령 생성, 관리 connect/status/verify/uninstall 흐름.
 - [`crates/volicord-store`](../../../../crates/volicord-store): registry schema, migration, Agent Connection records, Connection Project membership, Runtime Home access.
 - 저장 값 집합과 기계 판독 가능한 관리 출력에 쓰이는 공유 타입.
 

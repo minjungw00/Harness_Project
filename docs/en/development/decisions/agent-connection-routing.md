@@ -6,12 +6,12 @@ Volicord needs direct coding-agent host support for Codex, Claude Code, and gene
 
 ## Decision
 
-Volicord uses an Agent Connection as the durable registry identity for one local MCP host connection. A `volicord-mcp` process starts with `--connection <connection_id>`. Project access is selected and validated per tool call rather than fixed at process startup.
+Volicord uses an Agent Connection as the durable registry identity for one local MCP host connection. A `volicord mcp --stdio` process starts with `--connection <connection_id>`. Project access is selected and validated per tool call rather than fixed at process startup.
 
 The design keeps these responsibilities separate:
 
 - The registry stores Agent Connection identity, host kind, host scope, target metadata, connection mode, enabled state, verification state, and explicit Connection Project membership.
-- `volicord-mcp` validates the Agent Connection at startup, derives current connection context from that connection, exposes MCP-visible tools according to connection mode, provides `volicord.list_projects`, and rejects ambiguous project selection.
+- `volicord mcp --stdio` validates the Agent Connection at startup, derives current connection context from that connection, exposes MCP-visible tools according to connection mode, provides `volicord.list_projects`, and rejects ambiguous project selection.
 - The administrative CLI creates, verifies, updates, and removes supported host connection setup.
 - Host trust, project approval, OAuth, reload, restart, and model behavior stay with the external host and user.
 
@@ -21,7 +21,7 @@ The design keeps these responsibilities separate:
 - Adding or removing a connected Project does not require rewriting the host MCP command when the command already points at the same `connection_id`.
 - Project selection failures are deterministic: the adapter can report missing or ambiguous project selection and direct the agent to list connected Projects.
 - Host setup status can distinguish configured-but-awaiting-host-action from complete verification.
-- Generated host configuration uses `volicord-mcp --connection <connection_id>` and does not require project, connection-context, or actor-provenance environment variables.
+- Generated host configuration uses `volicord mcp --stdio --connection <connection_id>` and does not require project, connection-context, or actor-provenance environment variables.
 
 ## Non-Goals
 
@@ -35,7 +35,7 @@ The design keeps these responsibilities separate:
 ## Relevant Implementation Areas
 
 - [`crates/volicord-mcp`](../../../../crates/volicord-mcp): connection-bound startup, MCP initialization, tool discovery, project selection, and adapter validation before Core calls.
-- [`crates/volicord-cli`](../../../../crates/volicord-cli): administrative connect/status/verify/uninstall flows.
+- [`crates/volicord-cli`](../../../../crates/volicord-cli): public `volicord mcp` process entry, host configuration command generation, and administrative connect/status/verify/uninstall flows.
 - [`crates/volicord-store`](../../../../crates/volicord-store): registry schema, migrations, Agent Connection records, Connection Project membership, and Runtime Home access.
 - Shared types used by those crates for stored value sets and machine-readable administrative output.
 

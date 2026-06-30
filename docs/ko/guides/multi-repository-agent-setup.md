@@ -17,7 +17,7 @@
 ```mermaid
 flowchart LR
   host["호스트 설정\nCodex personal 또는 Claude Code global"]
-  mcp["volicord-mcp\nAgent Connection 하나"]
+  mcp["volicord mcp --stdio\nAgent Connection 하나"]
   memberships["Connection Projects"]
   a["acme-api\n/path/to/acme-api"]
   b["billing-api\n/path/to/billing-api"]
@@ -28,7 +28,7 @@ flowchart LR
   memberships -- "프로젝트 허용" --> b
 ```
 
-호스트 항목 하나가 Agent Connection 하나에 대한 `volicord-mcp` 프로세스 하나를
+호스트 항목 하나가 Agent Connection 하나에 대한 `volicord mcp --stdio` 프로세스 하나를
 시작합니다. 그 연결은 명시적으로 연결된 Product Repository로만 라우팅할 수 있습니다.
 Product Repository 하나를 추가해도 Runtime Home에 등록된 모든 프로젝트 접근을 부여하지 않습니다.
 

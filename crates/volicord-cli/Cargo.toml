@@ -7,6 +7,7 @@ publish = false
 
 [dependencies]
 volicord-core = { path = "../volicord-core" }
+volicord-mcp = { path = "../volicord-mcp" }
 volicord-store = { path = "../volicord-store" }
 volicord-types = { path = "../volicord-types" }
 serde = { version = "1", features = ["derive"] }

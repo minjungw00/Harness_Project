@@ -39,20 +39,20 @@ const EXPECTED_READ_ONLY_TOOLS: [&str; 3] = [
 const LIST_PROJECTS_TOOL_NAME: &str = "volicord.list_projects";
 
 #[test]
-fn volicord_mcp_binary_reports_help_version_and_preflight() -> Result<(), Box<dyn Error>> {
+fn volicord_mcp_subcommand_reports_help_version_and_preflight() -> Result<(), Box<dyn Error>> {
     let fixture = McpFixture::new("mcp-bin-preflight")?;
 
     let help = run_without_binding(["--help"])?;
     assert_success(&help);
-    assert!(stdout(&help).contains("--connection <connection_id>"));
+    assert!(stdout(&help).contains("mcp --stdio --connection <connection_id>"));
 
     let version = run_without_binding(["--version"])?;
     assert_success(&version);
-    assert!(stdout(&version).starts_with("volicord-mcp "));
+    assert!(stdout(&version).starts_with("volicord "));
 
     let no_args = run_without_binding([])?;
     assert_eq!(no_args.status.code(), Some(2));
-    assert!(stderr(&no_args).contains("--connection is required"));
+    assert!(stderr(&no_args).contains("MCP mode is required"));
 
     let check_without_connection = run_without_binding(["--check"])?;
     assert_eq!(check_without_connection.status.code(), Some(2));
@@ -139,8 +139,8 @@ fn volicord_mcp_binary_reports_help_version_and_preflight() -> Result<(), Box<dy
 }
 
 #[test]
-fn volicord_mcp_stdio_uses_line_delimited_json_and_reconnects_state() -> Result<(), Box<dyn Error>>
-{
+fn volicord_mcp_subcommand_stdio_uses_line_delimited_json_and_reconnects_state(
+) -> Result<(), Box<dyn Error>> {
     let fixture = McpFixture::new("mcp-bin-stdio")?;
     let first_messages = json_lines(&[
         initialize_request(1),
@@ -159,7 +159,7 @@ fn volicord_mcp_stdio_uses_line_delimited_json_and_reconnects_state() -> Result<
     ])?;
 
     let first = run_child(
-        fixture.connection_command(["--connection", fixture.connection_id()]),
+        fixture.connection_command(["--stdio", "--connection", fixture.connection_id()]),
         ChildStdin::WriteAndClose(first_messages),
     )?;
     assert_success_captured(&first);
@@ -243,7 +243,7 @@ fn volicord_mcp_stdio_uses_line_delimited_json_and_reconnects_state() -> Result<
     assert!(tool_error.contains("unknown field"));
 
     let reconnect_before_handshake = run_child(
-        fixture.connection_command(["--connection", fixture.connection_id()]),
+        fixture.connection_command(["--stdio", "--connection", fixture.connection_id()]),
         ChildStdin::WriteAndClose(json_lines(&[request(10, "tools/list", json!({}))])?),
     )?;
     assert_success_captured(&reconnect_before_handshake);
@@ -263,7 +263,7 @@ fn volicord_mcp_stdio_uses_line_delimited_json_and_reconnects_state() -> Result<
         ),
     ])?;
     let reconnect = run_child(
-        fixture.connection_command(["--connection", fixture.connection_id()]),
+        fixture.connection_command(["--stdio", "--connection", fixture.connection_id()]),
         ChildStdin::WriteAndClose(reconnect_messages),
     )?;
     assert_success_captured(&reconnect);
@@ -290,11 +290,11 @@ fn volicord_mcp_stdio_uses_line_delimited_json_and_reconnects_state() -> Result<
 }
 
 #[test]
-fn volicord_mcp_tools_list_respects_connection_mode_and_schema_boundary(
+fn volicord_mcp_subcommand_tools_list_respects_connection_mode_and_schema_boundary(
 ) -> Result<(), Box<dyn Error>> {
     let workflow = McpFixture::new("mcp-bin-tools-workflow")?;
     let workflow_output = run_child(
-        workflow.connection_command(["--connection", workflow.connection_id()]),
+        workflow.connection_command(["--stdio", "--connection", workflow.connection_id()]),
         ChildStdin::WriteAndClose(tools_list_messages(1, 2)?),
     )?;
     assert_success_captured(&workflow_output);
@@ -321,7 +321,7 @@ fn volicord_mcp_tools_list_respects_connection_mode_and_schema_boundary(
     let read_only = McpFixture::new("mcp-bin-tools-read-only")?;
     read_only.set_connection_mode(CONNECTION_MODE_READ_ONLY)?;
     let read_only_output = run_child(
-        read_only.connection_command(["--connection", read_only.connection_id()]),
+        read_only.connection_command(["--stdio", "--connection", read_only.connection_id()]),
         ChildStdin::WriteAndClose(tools_list_messages(10, 11)?),
     )?;
     assert_success_captured(&read_only_output);
@@ -339,7 +339,7 @@ fn volicord_mcp_tools_list_respects_connection_mode_and_schema_boundary(
 }
 
 #[test]
-fn volicord_mcp_binary_suppresses_malformed_notification_output_and_effects(
+fn volicord_mcp_subcommand_suppresses_malformed_notification_output_and_effects(
 ) -> Result<(), Box<dyn Error>> {
     let fixture = McpFixture::new("mcp-bin-notification-suppression")?;
     let before = fixture.counts()?;
@@ -368,7 +368,7 @@ fn volicord_mcp_binary_suppresses_malformed_notification_output_and_effects(
     ])?;
 
     let output = run_child(
-        fixture.connection_command(["--connection", fixture.connection_id()]),
+        fixture.connection_command(["--stdio", "--connection", fixture.connection_id()]),
         ChildStdin::WriteAndClose(messages),
     )?;
 
@@ -423,6 +423,7 @@ impl McpFixture {
     fn connection_command<const N: usize>(&self, args: [&str; N]) -> Command {
         let mut command = base_command();
         command.env("VOLICORD_HOME", self.runtime_home_path());
+        command.arg("mcp");
         command.args(args);
         command
     }
@@ -458,12 +459,13 @@ impl McpFixture {
 
 fn run_without_binding<const N: usize>(args: [&str; N]) -> Result<Output, Box<dyn Error>> {
     let mut command = base_command();
+    command.arg("mcp");
     command.args(args);
     Ok(command.output()?)
 }
 
 fn base_command() -> Command {
-    let mut command = Command::new(env!("CARGO_BIN_EXE_volicord-mcp"));
+    let mut command = Command::new(env!("CARGO_BIN_EXE_volicord"));
     command.env_clear();
     command.current_dir(env!("CARGO_MANIFEST_DIR"));
     command

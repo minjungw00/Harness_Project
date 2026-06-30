@@ -53,7 +53,7 @@ cargo build --workspace --bins
 ```
 
 Follow setup's prompt or `action_required` output if it asks how to make
-`volicord` and `volicord-mcp` available. If it prints a shell command, run that
+`volicord` available. If it prints a shell command, run that
 command in the terminal that will continue the setup. If it writes or asks you
 to update a shell startup file, open a new shell or restart or reload the agent
 host before checking again:
@@ -187,8 +187,8 @@ has identified that as the intended recovery.
 
 ## MCP Command Is Unavailable
 
-Observable symptom: setup or verification reports that `volicord-mcp` cannot be
-found, launched, or initialized.
+Observable symptom: setup or verification reports that `volicord mcp --stdio`
+cannot be found, launched, or initialized.
 
 Bounded recovery:
 

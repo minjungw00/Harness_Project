@@ -37,6 +37,12 @@ fn main() {
 
     match run_cli(args, |name| env::var_os(name), &current_dir) {
         Ok(output) => print!("{output}"),
+        Err(CliError::McpStdio { connection_id }) => {
+            if let Err(error) = volicord_mcp::run_stdio_from_env(&connection_id) {
+                eprintln!("error: {error}");
+                process::exit(1);
+            }
+        }
         Err(CliError::Usage(message)) => {
             eprintln!("{message}");
             process::exit(2);
@@ -92,6 +98,7 @@ where
         }
         "doctor" => command_outcome(run_doctor_command(&args[2..], &env_var, current_dir)?),
         "export" => run_export_command(&args[2..], &env_var, current_dir).map_err(CliError::from),
+        "mcp" => command_mcp(&args[2..], env_var, current_dir),
         "connect" => {
             if !simple_help_requested(&args[2..]) {
                 require_setup_completed(&env_var, current_dir)?;
@@ -219,6 +226,137 @@ where
     run_project_command(args, env_var, current_dir).map_err(CliError::from)
 }
 
+fn command_mcp<F>(args: &[String], env_var: F, current_dir: &Path) -> Result<String, CliError>
+where
+    F: Fn(&str) -> Option<std::ffi::OsString>,
+{
+    match dispatch_mcp_args(args)? {
+        McpCommand::Help => Ok(mcp_usage()),
+        McpCommand::Version => Ok(version()),
+        McpCommand::Check {
+            connection_id,
+            project_id,
+        } => volicord_mcp::preflight_check(
+            env_var,
+            current_dir,
+            &connection_id,
+            project_id.as_deref(),
+        )
+        .map_err(|error| CliError::runtime(error.to_string())),
+        McpCommand::Stdio { connection_id } => Err(CliError::McpStdio { connection_id }),
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum McpCommand {
+    Stdio {
+        connection_id: String,
+    },
+    Help,
+    Version,
+    Check {
+        connection_id: String,
+        project_id: Option<String>,
+    },
+}
+
+fn dispatch_mcp_args(args: &[String]) -> Result<McpCommand, CliError> {
+    match args {
+        [option] if option == "-h" || option == "--help" || option == "help" => {
+            return Ok(McpCommand::Help)
+        }
+        [option] if option == "-V" || option == "--version" => return Ok(McpCommand::Version),
+        _ => {}
+    }
+
+    let mut stdio = false;
+    let mut check = false;
+    let mut connection_id = None;
+    let mut project_id = None;
+    let mut index = 0;
+
+    while index < args.len() {
+        match args[index].as_str() {
+            "--stdio" => {
+                if stdio {
+                    return Err(CliError::usage("--stdio was supplied more than once"));
+                }
+                stdio = true;
+                index += 1;
+            }
+            "--check" => {
+                if check {
+                    return Err(CliError::usage("--check was supplied more than once"));
+                }
+                check = true;
+                index += 1;
+            }
+            "--connection" => {
+                if connection_id.is_some() {
+                    return Err(CliError::usage("--connection was supplied more than once"));
+                }
+                index += 1;
+                let value = args
+                    .get(index)
+                    .ok_or_else(|| CliError::usage("--connection requires a value"))?;
+                if value.starts_with('-') {
+                    return Err(CliError::usage("--connection requires a value"));
+                }
+                connection_id = Some(value.clone());
+                index += 1;
+            }
+            "--project" => {
+                if project_id.is_some() {
+                    return Err(CliError::usage("--project was supplied more than once"));
+                }
+                index += 1;
+                let value = args
+                    .get(index)
+                    .ok_or_else(|| CliError::usage("--project requires a value"))?;
+                if value.starts_with('-') {
+                    return Err(CliError::usage("--project requires a value"));
+                }
+                project_id = Some(value.clone());
+                index += 1;
+            }
+            "-h" | "--help" | "help" | "-V" | "--version" => {
+                return Err(CliError::usage(
+                    "cannot combine volicord mcp command-line modes",
+                ))
+            }
+            option if option.starts_with('-') => {
+                return Err(CliError::usage(format!("unknown option: {option}")));
+            }
+            argument => return Err(CliError::usage(format!("unexpected argument: {argument}"))),
+        }
+    }
+
+    if stdio && check {
+        return Err(CliError::usage("cannot combine --stdio and --check"));
+    }
+    if project_id.is_some() && !check {
+        return Err(CliError::usage("--project is only valid with --check"));
+    }
+    if !stdio && !check {
+        return Err(CliError::usage(
+            "MCP mode is required; use --stdio or --check",
+        ));
+    }
+
+    let connection_id = connection_id.ok_or_else(|| {
+        CliError::usage("--connection is required for connection-bound MCP startup")
+    })?;
+
+    if check {
+        Ok(McpCommand::Check {
+            connection_id,
+            project_id,
+        })
+    } else {
+        Ok(McpCommand::Stdio { connection_id })
+    }
+}
+
 #[cfg(test)]
 fn display_path(path: &Path) -> String {
     path.display().to_string()
@@ -226,10 +364,11 @@ fn display_path(path: &Path) -> String {
 
 fn usage() -> String {
     format!(
-        "Usage:\n  volicord --help\n  volicord --version\n{}{}{}{}{}{}{}{}\nEnvironment:\n  VOLICORD_HOME  Override Runtime Home path (default: $HOME/.volicord)\n\nAgent Connection commands manage local MCP host connections. User Channel commands record local user judgments.\nThese are local administrative commands, not public Volicord API methods.\n",
+        "Usage:\n  volicord --help\n  volicord --version\n{}{}{}{}{}{}{}{}{}\nEnvironment:\n  VOLICORD_HOME  Override Runtime Home path (default: $HOME/.volicord)\n\nAgent Connection commands manage local MCP host connections. User Channel commands record local user judgments.\nThese are local administrative commands, not public Volicord API methods.\n",
         indent_usage_block(&setup_usage()),
         indent_usage_block(&doctor_usage()),
         indent_usage_block(&export_usage()),
+        indent_usage_block(&mcp_usage()),
         indent_usage_block(&connect_usage()),
         indent_usage_block(&connections_usage()),
         indent_usage_block(&connection_usage()),
@@ -242,6 +381,10 @@ fn indent_usage_block(block: &str) -> String {
     block.lines().map(|line| format!("  {line}\n")).collect()
 }
 
+fn mcp_usage() -> String {
+    "volicord mcp --stdio --connection <connection_id>\nvolicord mcp --check --connection <connection_id>\nvolicord mcp --check --connection <connection_id> --project <project_id>\n".to_owned()
+}
+
 fn version() -> String {
     format!("volicord {}\n", env!("CARGO_PKG_VERSION"))
 }
@@ -251,6 +394,7 @@ enum CliError {
     Usage(String),
     Runtime(String),
     FailureOutput(String),
+    McpStdio { connection_id: String },
 }
 
 impl CliError {
@@ -268,6 +412,12 @@ impl fmt::Display for CliError {
         match self {
             Self::Usage(message) | Self::Runtime(message) | Self::FailureOutput(message) => {
                 formatter.write_str(message)
+            }
+            Self::McpStdio { connection_id } => {
+                write!(
+                    formatter,
+                    "MCP stdio requested for connection {connection_id}"
+                )
             }
         }
     }
@@ -396,6 +546,7 @@ mod tests {
         assert!(output.contains("volicord --version"));
         assert!(output.contains("volicord setup"));
         assert!(output.contains("volicord doctor"));
+        assert!(output.contains("volicord mcp --stdio --connection <connection_id>"));
         assert!(output.contains("\n  volicord connection verify"));
         assert!(output.contains("\n  volicord user judgments"));
         assert!(!output.contains("\nvolicord connection verify"));
@@ -441,7 +592,7 @@ mod tests {
     #[test]
     fn setup_respects_volicord_home_override() {
         let runtime_home = TempRuntimeHome::new("cli-setup").expect("temp runtime home");
-        let mcp = write_fake_executable(runtime_home.path(), "volicord-mcp")
+        let mcp = write_fake_executable(runtime_home.path(), "volicord")
             .expect("fake mcp should be created");
         let output = run_cli(
             vec![
@@ -504,7 +655,7 @@ mod tests {
             current_dir.path(),
         )
         .expect("shared resolver should resolve relative Runtime Home");
-        let mcp = write_fake_executable(current_dir.path(), "volicord-mcp")
+        let mcp = write_fake_executable(current_dir.path(), "volicord")
             .expect("fake mcp should be created");
 
         let output = run_cli(
@@ -799,7 +950,7 @@ mod tests {
     }
 
     fn setup_runtime_home(runtime_home: &TempRuntimeHome) -> Result<String, CliError> {
-        let mcp = write_fake_executable(runtime_home.path(), "volicord-mcp")
+        let mcp = write_fake_executable(runtime_home.path(), "volicord")
             .expect("fake mcp should be created");
         run_cli(
             vec![

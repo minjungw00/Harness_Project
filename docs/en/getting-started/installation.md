@@ -1,7 +1,7 @@
 # Installation
 
-This tutorial prepares the local `volicord` and `volicord-mcp` executables and
-records the installation profile used by later project, connection, export, and
+This tutorial prepares the local `volicord` executable and records the
+installation profile used by later project, connection, export, MCP, and
 `User Channel` commands. It is the setup step before the
 [Quickstart](quickstart.md).
 
@@ -25,10 +25,9 @@ From the Volicord source repository:
 cargo build --workspace --bins
 ```
 
-This builds both local executables:
+This builds the local executable:
 
 - `./target/debug/volicord`
-- `./target/debug/volicord-mcp`
 
 Then run guided setup from the freshly built CLI:
 
@@ -38,16 +37,16 @@ Then run guided setup from the freshly built CLI:
 
 `volicord setup` creates or verifies the selected `Volicord Runtime Home` and
 saves the installation profile. It discovers the running `volicord` executable,
-looks for `volicord-mcp`, and checks whether the selected commands are available
-on `PATH` for future terminals and agent hosts. Exact setup options, MCP command
-discovery order, and output behavior belong to
+stores the MCP launch command, and checks whether the selected command is
+available on `PATH` for future terminals and agent hosts. Exact setup options,
+MCP launch command behavior, and output behavior belong to
 [Administrative CLI Reference](../reference/admin-cli.md#runtime-home-selection).
 Its status answers whether the guided first-run setup experience still needs a
 named user action, so `action_required` can appear even after the installation
 profile has been saved.
 
 In an interactive terminal, setup may offer command-availability choices when
-the selected executables are not ready on `PATH`:
+the selected executable is not ready on `PATH`:
 
 - create command links in a suggested directory that setup can verify is
   writable
@@ -76,7 +75,7 @@ For automation or deterministic local layouts, use explicit setup options:
 | Option | When to use it |
 |---|---|
 | `--link-bin PATH` | Create the directory if needed, verify it is writable, then create or update command links there. This does not by itself edit shell startup files. |
-| `--mcp-command PATH` | Store a specific `volicord-mcp` executable when sibling discovery or `PATH` lookup would choose the wrong command or cannot find one. |
+| `--mcp-command PATH` | Store a specific `volicord` command for generated MCP launch entries when setup should not use the running executable. |
 | `--home PATH` | Select a non-default `Volicord Runtime Home`. |
 
 For example, a noninteractive link step can choose the link directory:
@@ -100,17 +99,17 @@ repair action, such as rerunning setup or fixing an executable path.
 
 ## Use Installed Executables
 
-If `volicord` and `volicord-mcp` already exist on `PATH`, run:
+If `volicord` already exists on `PATH`, run:
 
 ```sh
 volicord setup
 volicord doctor
 ```
 
-Setup uses the same installation-profile contract whether the executables came
+Setup uses the same installation-profile contract whether the executable came
 from a source build or an installed command directory. Use
-`volicord setup --mcp-command PATH` only when the default discovery described by
-the CLI reference cannot find the `volicord-mcp` executable you intend to use.
+`volicord setup --mcp-command PATH` only when generated host configuration
+should start MCP through a different `volicord` command path.
 If setup reports `action_required`, complete the named local action before
 starting new terminals or agent hosts. Ordinary `volicord connect` commands use
 the saved installation profile.

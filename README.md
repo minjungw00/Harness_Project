@@ -52,7 +52,7 @@ These terms appear throughout the README and the rest of the documentation:
 |---|---|
 | `Product Repository` | The code repository where you want the agent to work. Volicord reference docs use this exact product label. |
 | Agent host | The environment you chat with, such as Codex or Claude Code. The host may start local MCP tools while it works. |
-| `volicord-mcp` | The local stdio MCP adapter that an agent host uses to talk to Volicord. |
+| `volicord mcp --stdio` | The local stdio MCP process mode that an agent host uses to talk to Volicord. |
 | `Volicord Runtime Home` | The local place where Volicord stores workflow records and runtime data. It is separate from the Product Repository. |
 | `Core` | The local authority record for Volicord state. Chat summaries and generated documents can describe Core state, but they do not replace it. |
 | `Agent Connection` | The local connection record that lets one host use Volicord for repository work. |
@@ -64,7 +64,7 @@ For exact term ownership, use the
 
 ## Quick Start
 
-From this Volicord source checkout, build the local binaries, run guided setup,
+From this Volicord source checkout, build the local binary, run guided setup,
 then connect Codex from the Product Repository where you want the agent to work:
 
 ```sh
@@ -74,8 +74,8 @@ cd /path/to/your-product-repo
 volicord connect codex
 ```
 
-During setup, Volicord checks whether `volicord` and `volicord-mcp` are
-available for future terminals and agent hosts. If they are not, setup offers
+During setup, Volicord checks whether `volicord` is available for future
+terminals and agent hosts. If it is not, setup offers
 safe choices after checking the environment, such as creating command links in
 a verified writable directory, creating a missing conventional user command
 directory such as `~/.local/bin` and linking there when that is safe, printing
@@ -104,9 +104,10 @@ repository:
 
 The host remains your editor/chat agent. Volicord does not replace the editor,
 shell, test runner, or review process. Instead, the host uses Volicord tools
-through `volicord-mcp` when it needs durable workflow state. Volicord records or
-reads local workflow facts: task intent, current scope, evidence, checks and
-runs, write readiness, pending user judgments, and close-readiness blockers.
+through `volicord mcp --stdio` when it needs durable workflow state. Volicord
+records or reads local workflow facts: task intent, current scope, evidence,
+checks and runs, write readiness, pending user judgments, and close-readiness
+blockers.
 
 If the work needs a product decision, scope change, sensitive step, final
 acceptance, residual-risk acceptance, or cancellation, the host can ask for the
@@ -129,7 +130,7 @@ to the
 sequenceDiagram
   actor You as You
   participant Host as Agent host
-  participant MCP as volicord-mcp
+  participant MCP as volicord mcp
   participant Records as Volicord local records
   participant UserCLI as volicord user
 
@@ -170,7 +171,7 @@ flowchart LR
   terminal["User terminal"]
   cli["volicord<br/>administrative CLI"]
   host["Agent host<br/>Codex / Claude Code"]
-  adapter["volicord-mcp<br/>local stdio MCP adapter"]
+  adapter["volicord mcp --stdio<br/>local stdio MCP adapter"]
   home["Local Volicord data boundary<br/>(Volicord Runtime Home)"]
   repo["Product Repository<br/>product files and explicit integration files"]
   config["Host configuration<br/>owned by the agent host"]

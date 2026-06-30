@@ -1072,7 +1072,7 @@ fn resolve_connection_context(
             ..
         }) => {
             return Err(McpAdapterError::Environment(format!(
-                "setup has not been completed for Runtime Home {}; run `volicord setup` before starting volicord-mcp",
+                "setup has not been completed for Runtime Home {}; run `volicord setup` before starting `volicord mcp --stdio`",
                 runtime_home.display()
             )))
         }

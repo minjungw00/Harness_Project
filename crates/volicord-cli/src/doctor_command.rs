@@ -203,7 +203,7 @@ where
         ));
         checks.push(DiagnosticCheck::skipped(
             "volicord_mcp_command",
-            "volicord-mcp command check needs an installation profile",
+            "MCP launch command check needs an installation profile",
         ));
         checks.push(DiagnosticCheck::skipped(
             "path_or_shim",
@@ -380,7 +380,7 @@ fn inspect_installation_profile<F>(
     );
     inspect_command_path(
         "volicord_mcp_command",
-        "volicord-mcp command",
+        "MCP launch command",
         &PathBuf::from(&profile.volicord_mcp_command),
         checks,
         actions,
@@ -688,8 +688,8 @@ fn push_command_availability_action(actions: &mut Vec<DiagnosticAction>) {
         actions,
         DiagnosticAction {
             id: "make_profile_commands_available".to_owned(),
-            instruction:
-                "Run volicord setup --link-bin PATH or update PATH so volicord and volicord-mcp resolve to the installation profile commands; restart or reload existing agent hosts after PATH or command-link changes."
+        instruction:
+                "Run volicord setup --link-bin PATH or update PATH so volicord resolves to the installation profile command; restart or reload existing agent hosts after PATH or command-link changes."
                     .to_owned(),
             command: Some("volicord setup --link-bin PATH".to_owned()),
         },

@@ -18,7 +18,7 @@ Home.
 ```mermaid
 flowchart LR
   host["Host configuration\nCodex personal or Claude Code global"]
-  mcp["volicord-mcp\none Agent Connection"]
+  mcp["volicord mcp --stdio\none Agent Connection"]
   memberships["Connection Projects"]
   a["acme-api\n/path/to/acme-api"]
   b["billing-api\n/path/to/billing-api"]
@@ -29,8 +29,8 @@ flowchart LR
   memberships -- "allows project" --> b
 ```
 
-One host entry starts one `volicord-mcp` process for one Agent Connection. That
-connection can route only to Product Repositories explicitly connected to it.
+One host entry starts one `volicord mcp --stdio` process for one Agent
+Connection. That connection can route only to Product Repositories explicitly connected to it.
 Adding one Product Repository does not grant access to every project registered
 in the Runtime Home.
 

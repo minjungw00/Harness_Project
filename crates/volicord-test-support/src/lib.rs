@@ -171,7 +171,7 @@ pub mod core_fixtures {
                 InstallationProfileRegistration {
                     installation_id: "default".to_owned(),
                     volicord_command: "volicord".to_owned(),
-                    volicord_mcp_command: "volicord-mcp".to_owned(),
+                    volicord_mcp_command: "volicord".to_owned(),
                     bin_dir: runtime_home.path().join("bin"),
                     default_connection_mode: CONNECTION_MODE_WORKFLOW.to_owned(),
                     metadata_json: "{}".to_owned(),

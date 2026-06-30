@@ -49,7 +49,7 @@ const VOLICORD_HOME: &str = "VOLICORD_HOME";
 const PATH_ENV: &str = "PATH";
 const AGENT_METADATA_CREATED_BY: &str = "volicord_cli_agent_connection";
 const AGENT_RUNTIME_HOME_ID: &str = "runtime_home_agent";
-const DEFAULT_MCP_COMMAND: &str = "volicord-mcp";
+const DEFAULT_MCP_COMMAND: &str = "volicord";
 const DEFAULT_SERVER_NAME: &str = "volicord";
 const DEFAULT_TIMEOUT: Duration = Duration::from_secs(5);
 
@@ -173,7 +173,11 @@ impl ConnectionProcess for ProductionConnectionProcess {
         project_id: Option<&str>,
     ) -> Result<ConnectionProcessOutput, String> {
         let mut child = Command::new(&launch.command);
-        child.arg("--check").arg("--connection").arg(connection_id);
+        child
+            .arg("mcp")
+            .arg("--check")
+            .arg("--connection")
+            .arg(connection_id);
         if let Some(project_id) = project_id {
             child.arg("--project").arg(project_id);
         }
@@ -181,7 +185,7 @@ impl ConnectionProcess for ProductionConnectionProcess {
         child.stdin(Stdio::null());
         let output = child.output().map_err(|error| {
             format!(
-                "failed to run {} --check --connection {}: {error}",
+                "failed to run {} mcp --check --connection {}: {error}",
                 launch.command.display(),
                 connection_id
             )
@@ -1776,12 +1780,12 @@ fn run_connection_preflight(
     match process.run_preflight(launch, runtime_home, connection_id, project_id) {
         Ok(output) if output.success => {
             match validate_connection_preflight_report(&output.stdout, connection_id, mode) {
-                Ok(()) => VerificationStep::passed("volicord-mcp preflight passed"),
+                Ok(()) => VerificationStep::passed("volicord mcp preflight passed"),
                 Err(message) => VerificationStep::failed(message),
             }
         }
         Ok(output) => VerificationStep::failed(format!(
-            "volicord-mcp preflight failed with status {}; stderr: {}",
+            "volicord mcp preflight failed with status {}; stderr: {}",
             status_text(output.status_code),
             compact_stream(&output.stderr)
         )),

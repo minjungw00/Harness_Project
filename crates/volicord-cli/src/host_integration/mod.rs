@@ -15,7 +15,7 @@ pub mod generic;
 pub mod verification;
 
 pub const DEFAULT_SERVER_NAME: &str = "volicord";
-pub const DEFAULT_MCP_COMMAND: &str = "volicord-mcp";
+pub const DEFAULT_MCP_COMMAND: &str = "volicord";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -154,7 +154,12 @@ impl ManagedServerEntry {
         }
         Self {
             command: mcp_command.display().to_string(),
-            args: vec!["--connection".to_owned(), connection_id.into()],
+            args: vec![
+                "mcp".to_owned(),
+                "--stdio".to_owned(),
+                "--connection".to_owned(),
+                connection_id.into(),
+            ],
             env,
         }
     }
@@ -516,7 +521,12 @@ pub(crate) fn managed_entry_from_json(value: &Value) -> Option<ManagedServerEntr
 }
 
 pub(crate) fn is_volicord_managed_entry(entry: &ManagedServerEntry) -> bool {
-    if entry.args.len() != 2 || entry.args[0] != "--connection" || entry.args[1].trim().is_empty() {
+    if entry.args.len() != 4
+        || entry.args[0] != "mcp"
+        || entry.args[1] != "--stdio"
+        || entry.args[2] != "--connection"
+        || entry.args[3].trim().is_empty()
+    {
         return false;
     }
     Path::new(&entry.command)
@@ -562,7 +572,7 @@ mod tests {
 
     #[test]
     fn fingerprint_changes_when_entry_changes() {
-        let entry = ManagedServerEntry::new("integration", Path::new("/bin/volicord-mcp"), None);
+        let entry = ManagedServerEntry::new("integration", Path::new("/bin/volicord"), None);
         let mut changed = entry.clone();
         changed.args.push("--extra".to_owned());
 

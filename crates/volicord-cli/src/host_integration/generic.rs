@@ -310,11 +310,14 @@ mod tests {
         let adapter = GenericAdapter;
 
         let target = dir.join("volicord.mcp.json");
-        let plan = adapter.plan_export(request(&target, Path::new("/bin/volicord-mcp")))?;
+        let plan = adapter.plan_export(request(&target, Path::new("/bin/volicord")))?;
 
         assert_eq!(plan.target, HostTarget::Export(target));
-        assert_eq!(plan.entry.command, "/bin/volicord-mcp");
-        assert_eq!(plan.entry.args, ["--connection", "int_alpha"]);
+        assert_eq!(plan.entry.command, "/bin/volicord");
+        assert_eq!(
+            plan.entry.args,
+            ["mcp", "--stdio", "--connection", "int_alpha"]
+        );
         let expected_env =
             std::collections::BTreeMap::from([("VOLICORD_HOME".to_owned(), "/runtime".to_owned())]);
         assert_eq!(
@@ -335,7 +338,7 @@ mod tests {
                 installation_profile: InstallationProfile {
                     runtime_home: Path::new("/runtime"),
                     volicord_command: Path::new("/bin/volicord"),
-                    volicord_mcp_command: Path::new("/bin/volicord-mcp"),
+                    volicord_mcp_command: Path::new("/bin/volicord"),
                     default_connection_mode: "workflow",
                 },
                 connection_id: "int_alpha",
@@ -357,7 +360,7 @@ mod tests {
         )?;
         let adapter = GenericAdapter;
 
-        let plan = adapter.plan_export(request(&target, Path::new("/bin/volicord-mcp")))?;
+        let plan = adapter.plan_export(request(&target, Path::new("/bin/volicord")))?;
 
         assert_eq!(
             plan.conflicts[0].kind,
@@ -375,15 +378,15 @@ mod tests {
         let dir = temp_dir("generic-owned")?;
         let mut adapter = GenericAdapter;
         let target = dir.join("volicord.mcp.json");
-        let first = adapter.plan_export(request(&target, Path::new("/bin/volicord-mcp")))?;
+        let first = adapter.plan_export(request(&target, Path::new("/bin/volicord")))?;
         adapter.apply(&first)?;
         let second = adapter.plan_export(GenericExportRequest {
             expected_fingerprint: Some(&first.fingerprint),
             installation_profile: InstallationProfile {
-                volicord_mcp_command: Path::new("/usr/local/bin/volicord-mcp"),
-                ..request(&target, Path::new("/bin/volicord-mcp")).installation_profile
+                volicord_mcp_command: Path::new("/usr/local/bin/volicord"),
+                ..request(&target, Path::new("/bin/volicord")).installation_profile
             },
-            ..request(&target, Path::new("/bin/volicord-mcp"))
+            ..request(&target, Path::new("/bin/volicord"))
         })?;
         assert_eq!(second.change, PlannedChange::Update);
         adapter.apply(&second)?;
@@ -411,14 +414,14 @@ mod tests {
         let dir = temp_dir("generic-remove-mismatch")?;
         let mut adapter = GenericAdapter;
         let target = dir.join("volicord.mcp.json");
-        let plan = adapter.plan_export(request(&target, Path::new("/bin/volicord-mcp")))?;
+        let plan = adapter.plan_export(request(&target, Path::new("/bin/volicord")))?;
         adapter.apply(&plan)?;
         let HostTarget::Export(target) = plan.target.clone() else {
             unreachable!("generic target");
         };
         fs::write(
             &target,
-            fs::read_to_string(&target)?.replace("/bin/volicord-mcp", "/tmp/manual"),
+            fs::read_to_string(&target)?.replace("/bin/volicord", "/tmp/manual"),
         )?;
 
         let error = adapter
@@ -443,7 +446,7 @@ mod tests {
         let dir = temp_dir("generic-verify")?;
         let mut adapter = GenericAdapter;
         let target = dir.join("volicord.mcp.json");
-        let plan = adapter.plan_export(request(&target, Path::new("/bin/volicord-mcp")))?;
+        let plan = adapter.plan_export(request(&target, Path::new("/bin/volicord")))?;
         assert_eq!(adapter.verify(&plan)?.status.as_str(), "missing");
         adapter.apply(&plan)?;
         let verification = adapter.verify(&plan)?;
@@ -462,7 +465,7 @@ mod tests {
         };
         fs::write(
             &target,
-            fs::read_to_string(&target)?.replace("/bin/volicord-mcp", "/tmp/manual"),
+            fs::read_to_string(&target)?.replace("/bin/volicord", "/tmp/manual"),
         )?;
         assert_eq!(adapter.verify(&plan)?.status.as_str(), "changed");
         fs::write(&target, "{")?;

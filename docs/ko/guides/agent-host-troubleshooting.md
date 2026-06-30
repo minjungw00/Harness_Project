@@ -49,7 +49,7 @@ cargo build --workspace --bins
 ./target/debug/volicord setup
 ```
 
-Setup이 `volicord`와 `volicord-mcp`를 사용할 수 있게 만드는 방법을 묻거나
+Setup이 `volicord`를 사용할 수 있게 만드는 방법을 묻거나
 `action_required`를 보고하면 그 안내를 따릅니다. 셸 명령을 출력했다면 setup을 계속할
 터미널에서 그 명령을 실행합니다. 셸 시작 파일을 쓰거나 갱신하라고 했다면 새 셸을
 열거나 에이전트 호스트를 restart 또는 reload한 뒤 다시 확인합니다.
@@ -179,7 +179,7 @@ volicord connection verify codex
 
 ## MCP 명령을 사용할 수 없음
 
-관찰 증상: setup 또는 verification이 `volicord-mcp`를 찾거나 시작하거나 초기화할 수
+관찰 증상: setup 또는 verification이 `volicord mcp --stdio`를 찾거나 시작하거나 초기화할 수
 없다고 보고합니다.
 
 제한된 복구:
