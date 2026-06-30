@@ -6731,17 +6731,16 @@ fn authority_bearing_judgment_generates_canonical_options() -> Result<(), Box<dy
     let options = response.response_value["user_judgment"]["options"]
         .as_array()
         .expect("options should be an array");
-    assert_eq!(options.len(), 2);
+    assert_eq!(options.len(), 3);
     assert_eq!(options[0]["option_id"], "accept");
     assert_eq!(options[0]["machine_action"], "accept");
     assert_eq!(options[0]["resolution_outcome"], "accepted");
     assert_eq!(options[1]["option_id"], "reject");
     assert_eq!(options[1]["machine_action"], "reject");
     assert_eq!(options[1]["resolution_outcome"], "rejected");
-    assert!(
-        options.iter().all(|option| option["option_id"] != "defer"),
-        "defer should not appear without an owner-defined deferral path"
-    );
+    assert_eq!(options[2]["option_id"], "defer");
+    assert_eq!(options[2]["machine_action"], "defer");
+    assert_eq!(options[2]["resolution_outcome"], "deferred");
     Ok(())
 }
 

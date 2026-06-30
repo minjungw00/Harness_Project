@@ -1663,7 +1663,7 @@ fn canonical_authority_options(
 }
 
 fn authority_defer_supported(_judgment_kind: JudgmentKind) -> bool {
-    false
+    true
 }
 
 fn canonical_authority_option(

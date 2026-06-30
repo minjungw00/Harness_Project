@@ -10,11 +10,16 @@ use std::{
 
 use serde_json::{json, Value};
 use volicord_core::{CoreService, InvocationContext};
+use volicord_store::agent_connections::{
+    add_connection_project, ensure_agent_connection, AgentConnectionRegistration,
+    ConnectionProjectRegistration, CONNECTION_INTENT_SHARED, CONNECTION_MODE_WORKFLOW,
+    HOST_KIND_CODEX, HOST_SCOPE_PROJECT, VERIFIED_STATUS_COMPLETE,
+};
 use volicord_store::guards::{guard_event, list_unresolved_unrecorded_changes, prompt_capture};
-use volicord_test_support::core_fixtures::{CoreFixture, UpdateScopeFixture};
+use volicord_test_support::core_fixtures::{CoreFixture, UpdateScopeFixture, UserJudgmentFixture};
 use volicord_types::{
-    ActorSource, ChangeUnitOperation, OperationCategory, ProjectId,
-    VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
+    ActorSource, ChangeUnitOperation, JudgmentKind, OperationCategory, ProjectId,
+    VERIFICATION_BASIS_TEST_FIXTURE_BINDING, VERIFICATION_BASIS_USER_PROMPT_SUBMIT_HOOK,
 };
 
 #[test]
@@ -253,6 +258,352 @@ fn guard_prompt_capture_hashes_prompt_and_omits_text() -> Result<(), Box<dyn Err
 }
 
 #[test]
+fn guard_session_start_shows_chat_judgment_instructions() -> Result<(), Box<dyn Error>> {
+    let fixture = GuardCliFixture::new("guard-chat-instructions")?;
+    fixture.create_pending_authority_judgment("instructions")?;
+    let event = json!({
+        "event_id": "guard_session_chat_instructions",
+        "session_id": "guard_session_chat_instructions",
+        "connection_id": fixture.connection_id(),
+        "host_kind": "codex"
+    });
+
+    let output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        ["guard", "session-start", "--repo", fixture.repo_arg()],
+        &event,
+    )?;
+    assert_success(&output);
+    let value = json_stdout(&output)?;
+    let pending = &value["result"]["context"]["pending_user_judgments"][0];
+    assert_eq!(pending["chat_id"], "J-1");
+    assert_eq!(pending["answer_instruction"], "Volicord: answer J-1 1");
+    assert_eq!(pending["note_instruction"], "Volicord: note J-1 \"text\"");
+    assert_eq!(
+        pending["options"][1]["instruction"],
+        "Volicord: answer J-1 reject"
+    );
+    assert_eq!(
+        pending["options"][2]["instruction"],
+        "Volicord: answer J-1 defer"
+    );
+    assert!(
+        pending["verification_nonce"]
+            .as_str()
+            .expect("nonce should be present")
+            .len()
+            >= 10
+    );
+    Ok(())
+}
+
+#[test]
+fn guard_prompt_capture_records_answer_command() -> Result<(), Box<dyn Error>> {
+    let fixture = GuardCliFixture::new("guard-chat-answer")?;
+    let judgment_id = fixture.create_pending_authority_judgment("answer")?;
+    let event = prompt_event(
+        &fixture,
+        "guard_prompt_answer",
+        "guard_prompt_capture_answer",
+        "Volicord: answer J-1 1",
+    );
+
+    let output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        ["guard", "prompt-capture", "--repo", fixture.repo_arg()],
+        &event,
+    )?;
+    assert_success(&output);
+    let value = json_stdout(&output)?;
+    assert_eq!(value["decision"], "inject_context");
+    assert_eq!(
+        value["result"]["recognized_judgment_command"]["selected_option_id"],
+        "accept"
+    );
+    assert_eq!(
+        value["result"]["recognized_judgment_command"]["resolution_outcome"],
+        "accepted"
+    );
+    assert!(value["result"]["model_context"]
+        .as_str()
+        .expect("model context should be present")
+        .contains("Volicord recorded the user-owned judgment"));
+    fixture.assert_recorded_prompt_judgment(&judgment_id, "accepted", "accept")?;
+    Ok(())
+}
+
+#[test]
+fn guard_prompt_capture_records_reject_command() -> Result<(), Box<dyn Error>> {
+    let fixture = GuardCliFixture::new("guard-chat-reject")?;
+    let judgment_id = fixture.create_pending_authority_judgment("reject")?;
+    let event = prompt_event(
+        &fixture,
+        "guard_prompt_reject",
+        "guard_prompt_capture_reject",
+        "Volicord: answer J-1 reject",
+    );
+
+    let output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        ["guard", "prompt-capture", "--repo", fixture.repo_arg()],
+        &event,
+    )?;
+    assert_success(&output);
+    fixture.assert_recorded_prompt_judgment(&judgment_id, "rejected", "reject")?;
+    Ok(())
+}
+
+#[test]
+fn guard_prompt_capture_records_defer_command() -> Result<(), Box<dyn Error>> {
+    let fixture = GuardCliFixture::new("guard-chat-defer")?;
+    let judgment_id = fixture.create_pending_authority_judgment("defer")?;
+    let event = prompt_event(
+        &fixture,
+        "guard_prompt_defer",
+        "guard_prompt_capture_defer",
+        "Volicord: answer J-1 defer",
+    );
+
+    let output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        ["guard", "prompt-capture", "--repo", fixture.repo_arg()],
+        &event,
+    )?;
+    assert_success(&output);
+    fixture.assert_recorded_prompt_judgment(&judgment_id, "deferred", "defer")?;
+    Ok(())
+}
+
+#[test]
+fn guard_prompt_capture_records_note_as_deferred_judgment() -> Result<(), Box<dyn Error>> {
+    let fixture = GuardCliFixture::new("guard-chat-note")?;
+    let judgment_id = fixture.create_pending_authority_judgment("note")?;
+    let event = prompt_event(
+        &fixture,
+        "guard_prompt_note",
+        "guard_prompt_capture_note",
+        "Volicord: note J-1 \"Need to review this later\"",
+    );
+
+    let output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        ["guard", "prompt-capture", "--repo", fixture.repo_arg()],
+        &event,
+    )?;
+    assert_success(&output);
+    fixture.assert_recorded_prompt_judgment(&judgment_id, "deferred", "defer")?;
+    let resolution = fixture.judgment_resolution(&judgment_id)?;
+    assert_eq!(resolution["note"], "Need to review this later");
+    Ok(())
+}
+
+#[test]
+fn guard_prompt_capture_rejects_malformed_command() -> Result<(), Box<dyn Error>> {
+    let fixture = GuardCliFixture::new("guard-chat-malformed")?;
+    let judgment_id = fixture.create_pending_authority_judgment("malformed")?;
+    let event = prompt_event(
+        &fixture,
+        "guard_prompt_malformed",
+        "guard_prompt_capture_malformed",
+        "Volicord: answer J-1",
+    );
+
+    let output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        ["guard", "prompt-capture", "--repo", fixture.repo_arg()],
+        &event,
+    )?;
+    assert_eq!(output.status.code(), Some(1));
+    let value = json_stdout(&output)?;
+    assert_reason(&value, "malformed_judgment_command");
+    assert_eq!(fixture.judgment_status(&judgment_id)?, "pending");
+    Ok(())
+}
+
+#[test]
+fn guard_prompt_capture_ignores_non_command_prompt() -> Result<(), Box<dyn Error>> {
+    let fixture = GuardCliFixture::new("guard-chat-non-command")?;
+    let event = prompt_event(
+        &fixture,
+        "guard_prompt_non_command",
+        "guard_prompt_capture_non_command",
+        "Please explain what Volicord should do next.",
+    );
+
+    let output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        ["guard", "prompt-capture", "--repo", fixture.repo_arg()],
+        &event,
+    )?;
+    assert_success(&output);
+    let value = json_stdout(&output)?;
+    assert_eq!(value["decision"], "allow");
+    assert!(value["result"]["recognized_judgment_command"].is_null());
+    Ok(())
+}
+
+#[test]
+fn guard_prompt_capture_rejects_invalid_chat_id() -> Result<(), Box<dyn Error>> {
+    let fixture = GuardCliFixture::new("guard-chat-invalid-id")?;
+    let judgment_id = fixture.create_pending_authority_judgment("invalid_id")?;
+    let event = prompt_event(
+        &fixture,
+        "guard_prompt_invalid_id",
+        "guard_prompt_capture_invalid_id",
+        "Volicord: answer J-99 1",
+    );
+
+    let output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        ["guard", "prompt-capture", "--repo", fixture.repo_arg()],
+        &event,
+    )?;
+    assert_eq!(output.status.code(), Some(1));
+    assert_reason(&json_stdout(&output)?, "unknown_judgment_id");
+    assert_eq!(fixture.judgment_status(&judgment_id)?, "pending");
+    Ok(())
+}
+
+#[test]
+fn guard_prompt_capture_rejects_mismatched_project() -> Result<(), Box<dyn Error>> {
+    let fixture = GuardCliFixture::new("guard-chat-project-mismatch")?;
+    let judgment_id = fixture.create_pending_authority_judgment("project_mismatch")?;
+    let mut event = prompt_event(
+        &fixture,
+        "guard_prompt_project_mismatch",
+        "guard_prompt_capture_project_mismatch",
+        "Volicord: answer J-1 1",
+    );
+    event["project_id"] = json!("other_project");
+
+    let output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        ["guard", "prompt-capture", "--repo", fixture.repo_arg()],
+        &event,
+    )?;
+    assert_eq!(output.status.code(), Some(1));
+    assert_reason(&json_stdout(&output)?, "project_mismatch");
+    assert_eq!(fixture.judgment_status(&judgment_id)?, "pending");
+    Ok(())
+}
+
+#[test]
+fn guard_prompt_capture_rejects_mismatched_connection() -> Result<(), Box<dyn Error>> {
+    let fixture = GuardCliFixture::new("guard-chat-connection-mismatch")?;
+    let judgment_id = fixture.create_pending_authority_judgment("connection_mismatch")?;
+    fixture.register_extra_connection("other_connection")?;
+    let mut event = prompt_event(
+        &fixture,
+        "guard_prompt_connection_mismatch",
+        "guard_prompt_capture_connection_mismatch",
+        "Volicord: answer J-1 1",
+    );
+    event["connection_id"] = json!("other_connection");
+
+    let output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        ["guard", "prompt-capture", "--repo", fixture.repo_arg()],
+        &event,
+    )?;
+    assert_eq!(output.status.code(), Some(1));
+    assert_reason(&json_stdout(&output)?, "connection_mismatch");
+    assert_eq!(fixture.judgment_status(&judgment_id)?, "pending");
+    Ok(())
+}
+
+#[test]
+fn guard_prompt_capture_rejects_stale_judgment() -> Result<(), Box<dyn Error>> {
+    let fixture = GuardCliFixture::new("guard-chat-stale")?;
+    let judgment_id = fixture.create_pending_authority_judgment("stale")?;
+    fixture.set_judgment_basis_status(&judgment_id, "stale")?;
+    let event = prompt_event(
+        &fixture,
+        "guard_prompt_stale",
+        "guard_prompt_capture_stale",
+        "Volicord: answer J-1 1",
+    );
+
+    let output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        ["guard", "prompt-capture", "--repo", fixture.repo_arg()],
+        &event,
+    )?;
+    assert_eq!(output.status.code(), Some(1));
+    assert_reason(&json_stdout(&output)?, "stale_judgment");
+    assert_eq!(fixture.judgment_status(&judgment_id)?, "pending");
+    Ok(())
+}
+
+#[test]
+fn guard_prompt_capture_rejects_duplicate_answer() -> Result<(), Box<dyn Error>> {
+    let fixture = GuardCliFixture::new("guard-chat-duplicate")?;
+    let judgment_id = fixture.create_pending_authority_judgment("duplicate")?;
+    let first = prompt_event(
+        &fixture,
+        "guard_prompt_duplicate_first",
+        "guard_prompt_capture_duplicate_first",
+        "Volicord: answer J-1 1",
+    );
+    let second = prompt_event(
+        &fixture,
+        "guard_prompt_duplicate_second",
+        "guard_prompt_capture_duplicate_second",
+        "Volicord: answer J-1 1",
+    );
+
+    assert_success(&run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        ["guard", "prompt-capture", "--repo", fixture.repo_arg()],
+        &first,
+    )?);
+    let output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        ["guard", "prompt-capture", "--repo", fixture.repo_arg()],
+        &second,
+    )?;
+    assert_eq!(output.status.code(), Some(1));
+    assert_reason(&json_stdout(&output)?, "judgment_not_pending");
+    assert_eq!(fixture.judgment_status(&judgment_id)?, "resolved");
+    Ok(())
+}
+
+#[test]
+fn guard_prompt_capture_rejects_ambiguous_commands() -> Result<(), Box<dyn Error>> {
+    let fixture = GuardCliFixture::new("guard-chat-ambiguous")?;
+    let judgment_id = fixture.create_pending_authority_judgment("ambiguous")?;
+    let event = prompt_event(
+        &fixture,
+        "guard_prompt_ambiguous",
+        "guard_prompt_capture_ambiguous",
+        "Volicord: answer J-1 1\nVolicord: answer J-1 reject",
+    );
+
+    let output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        ["guard", "prompt-capture", "--repo", fixture.repo_arg()],
+        &event,
+    )?;
+    assert_eq!(output.status.code(), Some(1));
+    assert_reason(&json_stdout(&output)?, "ambiguous_judgment_command");
+    assert_eq!(fixture.judgment_status(&judgment_id)?, "pending");
+    Ok(())
+}
+
+#[test]
 fn guard_stop_denies_false_completion_when_close_readiness_blocks() -> Result<(), Box<dyn Error>> {
     let fixture = GuardCliFixture::new("guard-stop-blocked")?;
     fixture.create_active_task()?;
@@ -361,6 +712,116 @@ impl GuardCliFixture {
         Ok(())
     }
 
+    fn create_pending_authority_judgment(&self, suffix: &str) -> Result<String, Box<dyn Error>> {
+        let task_id = self.create_active_task()?;
+        let state_version = self.inner.store()?.project_state()?.state_version;
+        let service = CoreService::new(self.runtime_home());
+        let request_id = format!("req_guard_chat_judgment_{suffix}");
+        let idempotency_key = format!("idem_guard_chat_judgment_{suffix}");
+        let response = service.request_user_judgment(
+            self.inner.user_judgment_request(UserJudgmentFixture {
+                request_id: &request_id,
+                idempotency_key: &idempotency_key,
+                dry_run: false,
+                expected_state_version: Some(state_version),
+                task_id: &task_id,
+                change_unit_id: None,
+                judgment_kind: JudgmentKind::Cancellation,
+            }),
+            self.invocation(OperationCategory::AgentWorkflow),
+        )?;
+        record_id(&response.response_value["user_judgment_ref"])
+    }
+
+    fn assert_recorded_prompt_judgment(
+        &self,
+        judgment_id: &str,
+        expected_outcome: &str,
+        expected_action: &str,
+    ) -> Result<(), Box<dyn Error>> {
+        let record = self
+            .inner
+            .store()?
+            .user_judgment_record(judgment_id)?
+            .expect("judgment should be stored");
+        assert_eq!(record.status, "resolved");
+        assert_eq!(record.resolution_outcome.as_deref(), Some(expected_outcome));
+        assert_eq!(
+            record.resolution_machine_action.as_deref(),
+            Some(expected_action)
+        );
+        assert_eq!(
+            record.resolved_by_actor_source.as_deref(),
+            Some("local_user")
+        );
+        assert_eq!(
+            record.resolved_verification_basis.as_deref(),
+            Some(VERIFICATION_BASIS_USER_PROMPT_SUBMIT_HOOK)
+        );
+        assert_eq!(
+            record.resolved_assurance_level.as_deref(),
+            Some("local_user_channel")
+        );
+        Ok(())
+    }
+
+    fn judgment_status(&self, judgment_id: &str) -> Result<String, Box<dyn Error>> {
+        Ok(self.inner.user_judgment_status(judgment_id)?)
+    }
+
+    fn judgment_resolution(&self, judgment_id: &str) -> Result<Value, Box<dyn Error>> {
+        self.inner.user_judgment_resolution(judgment_id)
+    }
+
+    fn set_judgment_basis_status(
+        &self,
+        judgment_id: &str,
+        basis_status: &str,
+    ) -> Result<(), Box<dyn Error>> {
+        self.inner.conn()?.execute(
+            "UPDATE user_judgments
+                SET basis_status = ?3
+              WHERE project_id = ?1
+                AND judgment_id = ?2",
+            rusqlite::params![self.project_id(), judgment_id, basis_status],
+        )?;
+        Ok(())
+    }
+
+    fn register_extra_connection(&self, connection_id: &str) -> Result<(), Box<dyn Error>> {
+        ensure_agent_connection(
+            self.runtime_home(),
+            AgentConnectionRegistration {
+                connection_internal_id: connection_id.to_owned(),
+                host_kind: HOST_KIND_CODEX.to_owned(),
+                intent: CONNECTION_INTENT_SHARED.to_owned(),
+                host_scope: HOST_SCOPE_PROJECT.to_owned(),
+                server_name: format!("volicord-test-{connection_id}"),
+                config_target: self
+                    .runtime_home()
+                    .join("agent-connections")
+                    .join(connection_id)
+                    .to_string_lossy()
+                    .into_owned(),
+                mode: CONNECTION_MODE_WORKFLOW.to_owned(),
+                enabled: true,
+                managed_fingerprint: format!("fixture:{connection_id}"),
+                last_verification_status: VERIFIED_STATUS_COMPLETE.to_owned(),
+                last_verification_report_json: "{}".to_owned(),
+                last_user_actions_json: "[]".to_owned(),
+                metadata_json: "{}".to_owned(),
+            },
+        )?;
+        add_connection_project(
+            self.runtime_home(),
+            ConnectionProjectRegistration {
+                connection_internal_id: connection_id.to_owned(),
+                project_id: self.project_id().to_owned(),
+            },
+        )?;
+        Ok(())
+    }
+
     fn invocation(&self, operation_category: OperationCategory) -> InvocationContext {
         InvocationContext::new(
             ProjectId::new(self.project_id()),
@@ -369,6 +830,22 @@ impl GuardCliFixture {
             VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
         )
     }
+}
+
+fn prompt_event(
+    fixture: &GuardCliFixture,
+    event_id: &str,
+    capture_id: &str,
+    message: &str,
+) -> Value {
+    json!({
+        "event_id": event_id,
+        "prompt_capture_id": capture_id,
+        "session_id": "guard_session_chat",
+        "connection_id": fixture.connection_id(),
+        "host_kind": "codex",
+        "message": message
+    })
 }
 
 fn run_guard<const N: usize>(

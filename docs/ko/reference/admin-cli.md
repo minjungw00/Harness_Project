@@ -402,9 +402,16 @@ Lifecycle 동작:
   경로를 제공하고 도구가 대응되는 `volicord.record_run`이 아니면 미해결 unrecorded-change
   행을 기록하고 `warn`을 반환합니다. 변경을 찾기 위해 신뢰할 수 없는 명령을 실행하지
   않습니다.
-- `prompt-capture`는 이후 chat judgment capture에 필요한 prompt-capture 메타데이터를
-  기록합니다. 기준 동작은 판단 명령을 아무것도 인식하지 않을 수 있지만 그래도 guard
-  event와 prompt hash를 기록합니다.
+- `prompt-capture`는 prompt-capture 메타데이터를 기록하고, prompt에
+  `Volicord: answer J-3 1`, `Volicord: answer J-3 reject`,
+  `Volicord: answer J-3 defer`, `Volicord: note J-3 "text"` 같은 명시적
+  줄이 있을 때만 엄격한 chat judgment 명령으로 인식합니다. 명령이 아닌 prompt는
+  정상적으로 진행됩니다. 형식이 잘못되었거나, 모호하거나, 알 수 없거나, 오래되었거나,
+  이미 답했거나, 프로젝트나 연결이 맞지 않는 판단 명령은 판단을 기록하지 않고
+  `deny`를 반환합니다. 유효한 명령은 로컬 `User Channel`을 통해 지정된 대기 판단을
+  `actor_source=local_user`와 `resolved_verification_basis=user_prompt_submit_hook`으로
+  기록하고, prompt-capture 저장소에는 전체 prompt text를 생략하며, 그 명령을 일반
+  agent 지시로 다루지 않고 모델에 보이는 기록 완료 맥락을 반환합니다.
 - `stop`은 active task를 완료로 다뤄도 되는지 점검합니다. 닫기 준비 상태 blocker가
   남아 있거나, 사용자 소유 판단이 대기 중이거나, 미해결 unrecorded change가 남아
   있으면 `deny`를 반환하고, 그렇지 않으면 `allow`를 반환합니다.
@@ -418,6 +425,11 @@ Lifecycle 동작:
 확인하고 대기 중인 사용자 판단에 답할 수 있는 경로를 제공합니다. 이 명령은 Agent
 Connection을 만들거나, MCP 호스트 설정을 설치하거나, Agent Connection이 사용자처럼
 동작할 수 있게 하지 않습니다.
+
+연결된 호스트가 `prompt-capture` guard hook을 실행하면 chat judgment 명령이 대기
+판단의 일반적인 대화형 경로입니다. 터미널의 `volicord user` 명령은 prompt capture를
+사용할 수 없거나 비활성화되어 있거나 수동 점검이 필요할 때 쓰는 고급 또는 복구
+경로로 남습니다.
 
 프로젝트 선택은 `--repo PATH` 또는 현재 작업 디렉터리의 저장소 루트를 사용합니다.
 작업 선택은 기본적으로 active 작업을 사용합니다. `--task active`는 이를 명시하고,

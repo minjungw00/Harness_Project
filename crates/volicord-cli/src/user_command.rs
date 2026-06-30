@@ -104,6 +104,17 @@ struct SelectedJudgment {
     display_index: Option<usize>,
 }
 
+#[derive(Debug, Clone)]
+pub(crate) struct JudgmentRecordingInput<'a> {
+    pub runtime_home: &'a Path,
+    pub project_id: &'a str,
+    pub state_version: u64,
+    pub record: &'a UserJudgmentRecord,
+    pub selected_option: &'a UserJudgmentOption,
+    pub note: Option<String>,
+    pub verification_basis: &'a str,
+}
+
 pub fn user_usage() -> String {
     concat!(
         "volicord user status [--repo PATH] [--task active|ID] [--json]\n",
@@ -271,31 +282,17 @@ where
             record.status
         )));
     }
-    let judgment_kind = parse_judgment_kind(&record.judgment_kind)?;
-    let context = decode_json::<UserJudgmentContext>("context_json", &record.context_json)?;
     let options = decode_options(&record)?;
     let selected_option = select_option(&options, option_selector)?;
-    let request_id = generated_id("req_user_judgment_record");
-    let idempotency_key = generated_id("idem_user_judgment_record");
-    let response = CoreService::new(&resolved.runtime_home).record_user_judgment(
-        RecordUserJudgmentRequest {
-            envelope: envelope(
-                &resolved.project_id,
-                Some(&record.task_id),
-                request_id,
-                Some(idempotency_key),
-                Some(state_version),
-            ),
-            user_judgment_id: UserJudgmentId::new(&record.judgment_id),
-            judgment_kind,
-            selected_option_id: selected_option.option_id.clone(),
-            answer: answer_payload_for_record(judgment_kind, &selected_option, &record, &context)?,
-            rationale: rationale_for_selected_option(judgment_kind, &selected_option),
-            note: parsed.note.into(),
-            accepted_risks: accepted_risks_for_record(judgment_kind, &selected_option, &context),
-        },
-        invocation(&resolved.project_id, OperationCategory::UserOnly),
-    )?;
+    let response = record_user_judgment_from_record(JudgmentRecordingInput {
+        runtime_home: &resolved.runtime_home,
+        project_id: &resolved.project_id,
+        state_version,
+        record: &record,
+        selected_option: &selected_option,
+        note: parsed.note,
+        verification_basis: VERIFICATION_BASIS_CLI_DIRECT_USER_CHANNEL,
+    })?;
     render_record_response(&response, parsed.output, &selected_option)
 }
 
@@ -527,7 +524,7 @@ fn select_judgment(
     })
 }
 
-fn select_option(
+pub(crate) fn select_option(
     options: &[UserJudgmentOption],
     selector: &str,
 ) -> Result<UserJudgmentOption, UserCommandError> {
@@ -595,20 +592,81 @@ fn envelope(
 }
 
 fn invocation(project_id: &str, operation_category: OperationCategory) -> InvocationContext {
-    InvocationContext::new(
-        ProjectId::new(project_id),
-        ActorSource::LocalUser,
+    invocation_with_basis(
+        project_id,
         operation_category,
         VERIFICATION_BASIS_CLI_DIRECT_USER_CHANNEL,
     )
 }
 
-fn decode_options(
+fn invocation_with_basis(
+    project_id: &str,
+    operation_category: OperationCategory,
+    verification_basis: &str,
+) -> InvocationContext {
+    InvocationContext::new(
+        ProjectId::new(project_id),
+        ActorSource::LocalUser,
+        operation_category,
+        verification_basis,
+    )
+}
+
+pub(crate) fn decode_options(
     record: &UserJudgmentRecord,
 ) -> Result<Vec<UserJudgmentOption>, UserCommandError> {
     decode_json::<PersistedUserJudgmentOptions>("options_json", &record.options_json)?
         .into_current_options()
         .map_err(|error| UserCommandError::Runtime(error.to_string()))
+}
+
+pub(crate) fn record_user_judgment_from_record(
+    input: JudgmentRecordingInput<'_>,
+) -> Result<PipelineResponse, UserCommandError> {
+    if input.record.status != "pending" {
+        return Err(UserCommandError::Runtime(format!(
+            "selected judgment is not pending (status: {}); refresh `volicord user judgments`",
+            input.record.status
+        )));
+    }
+    let judgment_kind = parse_judgment_kind(&input.record.judgment_kind)?;
+    let context = decode_json::<UserJudgmentContext>("context_json", &input.record.context_json)?;
+    let request_id = generated_id("req_user_judgment_record");
+    let idempotency_key = generated_id("idem_user_judgment_record");
+    CoreService::new(input.runtime_home)
+        .record_user_judgment(
+            RecordUserJudgmentRequest {
+                envelope: envelope(
+                    input.project_id,
+                    Some(&input.record.task_id),
+                    request_id,
+                    Some(idempotency_key),
+                    Some(input.state_version),
+                ),
+                user_judgment_id: UserJudgmentId::new(&input.record.judgment_id),
+                judgment_kind,
+                selected_option_id: input.selected_option.option_id.clone(),
+                answer: answer_payload_for_record(
+                    judgment_kind,
+                    input.selected_option,
+                    input.record,
+                    &context,
+                )?,
+                rationale: rationale_for_selected_option(judgment_kind, input.selected_option),
+                note: input.note.into(),
+                accepted_risks: accepted_risks_for_record(
+                    judgment_kind,
+                    input.selected_option,
+                    &context,
+                ),
+            },
+            invocation_with_basis(
+                input.project_id,
+                OperationCategory::UserOnly,
+                input.verification_basis,
+            ),
+        )
+        .map_err(Into::into)
 }
 
 fn decode_json<T>(field: &'static str, text: &str) -> Result<T, UserCommandError>

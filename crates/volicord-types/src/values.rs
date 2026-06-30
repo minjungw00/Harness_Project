@@ -365,6 +365,12 @@ pub const VERIFICATION_BASIS_MCP_STDIO_CONNECTION_BINDING: &str = "mcp_stdio_con
 /// Controlled adapter-binding basis value for direct CLI invocation.
 pub const VERIFICATION_BASIS_CLI_DIRECT_USER_CHANNEL: &str = "cli_direct_user_channel";
 
+/// Controlled User Channel basis value for host prompt-submit hook capture.
+pub const VERIFICATION_BASIS_USER_PROMPT_SUBMIT_HOOK: &str = "user_prompt_submit_hook";
+
+/// Controlled User Channel basis value for MCP elicitation capture.
+pub const VERIFICATION_BASIS_MCP_ELICITATION_USER_CHANNEL: &str = "mcp_elicitation_user_channel";
+
 /// Controlled binding basis value for repository tests and fixtures.
 pub const VERIFICATION_BASIS_TEST_FIXTURE_BINDING: &str = "test_fixture_binding";
 

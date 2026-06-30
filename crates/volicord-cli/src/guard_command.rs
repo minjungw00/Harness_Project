@@ -14,7 +14,7 @@ use sha2::{Digest, Sha256};
 use volicord_core::{CorePipelineError, CoreService, InvocationContext};
 use volicord_store::{
     bootstrap::{project_record_for_execution, ProjectRecord},
-    core_pipeline::CoreProjectStore,
+    core_pipeline::{CoreProjectStore, UserJudgmentRecord},
     guards::{
         agent_session, guard_event, insert_agent_session, insert_guard_event,
         insert_prompt_capture, insert_unrecorded_change, list_unresolved_unrecorded_changes,
@@ -25,13 +25,18 @@ use volicord_store::{
     StoreError,
 };
 use volicord_types::{
-    ActorSource, GuardDecision, HostKind, OperationCategory, ProjectId, RequestId, StatusInclude,
-    StatusRequest, TaskId, ToolEnvelope, UtcTimestamp,
-    VERIFICATION_BASIS_MCP_STDIO_CONNECTION_BINDING,
+    ActorSource, GuardDecision, HostKind, JudgmentResolutionOutcome, OperationCategory,
+    PersistedUserJudgmentRequest, ProjectId, RequestId, StatusInclude, StatusRequest, TaskId,
+    ToolEnvelope, UserJudgmentOption, UserJudgmentOptionAction, UtcTimestamp,
+    VERIFICATION_BASIS_MCP_STDIO_CONNECTION_BINDING, VERIFICATION_BASIS_USER_PROMPT_SUBMIT_HOOK,
 };
 
 use crate::project_context::{
     registered_project_for_repo, resolve_repository_root, ProjectCommandError,
+};
+use crate::user_command::{
+    decode_options, record_user_judgment_from_record, select_option, JudgmentRecordingInput,
+    UserCommandError,
 };
 
 const GUARD_SCHEMA_VERSION: u64 = 1;
@@ -176,11 +181,34 @@ struct GuardStateSummary {
     repo_root: String,
     state_version: u64,
     active_task_id: Option<String>,
+    prompt_capture_enabled: bool,
     current_write_check_ids: Vec<String>,
     stale_write_check_ids: Vec<String>,
     pending_user_judgment_count: usize,
+    pending_user_judgments: Vec<GuardPendingJudgmentSummary>,
     active_blocker_count: usize,
     unresolved_unrecorded_change_count: usize,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct GuardPendingJudgmentSummary {
+    chat_id: String,
+    verification_nonce: String,
+    judgment_kind: String,
+    question: Option<String>,
+    answer_instruction: String,
+    note_instruction: String,
+    options: Vec<GuardPendingJudgmentOptionSummary>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct GuardPendingJudgmentOptionSummary {
+    selector: String,
+    option_id: String,
+    label: String,
+    machine_action: String,
+    resolution_outcome: String,
+    instruction: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -349,18 +377,7 @@ where
             )
         }
         GuardPhase::PromptCapture => {
-            let capture = record_prompt_capture(&runtime_home, &project, &envelope, &input)?;
-            (
-                GuardDecision::Allow,
-                json!({
-                    "decision": GuardDecision::Allow.as_str(),
-                    "allowed": true,
-                    "prompt_capture": capture,
-                    "recognized_judgment_command": null,
-                    "enforcement_level": "cooperative_detective"
-                }),
-                false,
-            )
+            handle_prompt_capture(&runtime_home, &project, &envelope, &input)?
         }
         GuardPhase::Stop => {
             let summary = guard_state_summary(&runtime_home, &project, &envelope, &input)?;
@@ -781,7 +798,9 @@ fn guard_state_summary(
     let mut current_write_check_ids = Vec::new();
     let mut stale_write_check_ids = Vec::new();
     let mut pending_user_judgment_count = 0;
+    let mut pending_user_judgments = Vec::new();
     let mut active_blocker_count = 0;
+    let prompt_capture_enabled = prompt_capture_enabled(envelope);
     if let Some(active_task_id) = project_state.active_task_id.as_deref() {
         let task_id = TaskId::new(active_task_id);
         for record in store.active_write_checks(&task_id)? {
@@ -796,6 +815,9 @@ fn guard_state_summary(
             }
         }
         pending_user_judgment_count = store.pending_user_judgment_records(&task_id)?.len();
+        if prompt_capture_enabled {
+            pending_user_judgments = pending_chat_judgment_summaries(&store, &task_id, envelope)?;
+        }
         active_blocker_count = store
             .active_blocker_refs(&task_id, project_state.state_version)?
             .len();
@@ -813,9 +835,11 @@ fn guard_state_summary(
         repo_root: project.repo_root.display().to_string(),
         state_version: project_state.state_version,
         active_task_id: project_state.active_task_id,
+        prompt_capture_enabled,
         current_write_check_ids,
         stale_write_check_ids,
         pending_user_judgment_count,
+        pending_user_judgments,
         active_blocker_count,
         unresolved_unrecorded_change_count,
     })
@@ -1362,6 +1386,586 @@ fn record_prompt_capture(
     }))
 }
 
+fn handle_prompt_capture(
+    runtime_home: &Path,
+    project: &ProjectRecord,
+    envelope: &GuardEnvelope,
+    input: &GuardInput,
+) -> Result<(GuardDecision, Value, bool), GuardCommandError> {
+    let capture = record_prompt_capture(runtime_home, project, envelope, input)?;
+    let command = extract_prompt_text(&input.raw_value)
+        .map(|prompt| parse_prompt_judgment_command(&prompt))
+        .unwrap_or(PromptCommandDetection::NoCommand);
+
+    match command {
+        PromptCommandDetection::NoCommand => Ok((
+            GuardDecision::Allow,
+            json!({
+                "decision": GuardDecision::Allow.as_str(),
+                "allowed": true,
+                "prompt_capture": capture,
+                "recognized_judgment_command": null,
+                "model_context": null,
+                "enforcement_level": "cooperative_detective"
+            }),
+            false,
+        )),
+        PromptCommandDetection::Blocked(block) => Ok(prompt_capture_blocked_result(capture, block)),
+        PromptCommandDetection::Command(command) => {
+            if !prompt_capture_enabled(envelope) {
+                return Ok(prompt_capture_blocked_result(
+                    capture,
+                    PromptCommandBlock {
+                        code: "prompt_capture_disabled",
+                        message:
+                            "Volicord prompt-capture judgment commands require guarded or managed guard mode."
+                                .to_owned(),
+                    },
+                ));
+            }
+            if let Some(event_project_id) = event_project_id(&input.raw_value) {
+                if event_project_id != project.project_id {
+                    return Ok(prompt_capture_blocked_result(
+                        capture,
+                        PromptCommandBlock {
+                            code: "project_mismatch",
+                            message: format!(
+                                "Volicord judgment command targeted project `{event_project_id}`, but this prompt hook is bound to `{}`.",
+                                project.project_id
+                            ),
+                        },
+                    ));
+                }
+            }
+            match record_prompt_judgment_command(runtime_home, project, envelope, command) {
+                Ok(recorded) => Ok((
+                    GuardDecision::InjectContext,
+                    json!({
+                        "decision": GuardDecision::InjectContext.as_str(),
+                        "allowed": true,
+                        "prompt_capture": capture,
+                        "recognized_judgment_command": {
+                            "command_kind": recorded.command_kind,
+                            "chat_id": recorded.chat_id,
+                            "verification_nonce": recorded.verification_nonce,
+                            "selected_option_id": recorded.selected_option_id,
+                            "machine_action": recorded.machine_action,
+                            "resolution_outcome": recorded.resolution_outcome,
+                            "note_text_omitted": recorded.note_text_omitted
+                        },
+                        "model_context": recorded.model_context,
+                        "enforcement_level": "cooperative_detective"
+                    }),
+                    false,
+                )),
+                Err(block) => Ok(prompt_capture_blocked_result(capture, block)),
+            }
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum PromptCommandDetection {
+    NoCommand,
+    Command(PromptJudgmentCommand),
+    Blocked(PromptCommandBlock),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum PromptJudgmentCommand {
+    Answer {
+        chat_id: String,
+        answer_selector: String,
+    },
+    Note {
+        chat_id: String,
+        note: String,
+    },
+}
+
+impl PromptJudgmentCommand {
+    fn chat_id(&self) -> &str {
+        match self {
+            Self::Answer { chat_id, .. } | Self::Note { chat_id, .. } => chat_id,
+        }
+    }
+
+    fn command_kind(&self) -> &'static str {
+        match self {
+            Self::Answer { .. } => "answer",
+            Self::Note { .. } => "note",
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct PromptCommandBlock {
+    code: &'static str,
+    message: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct RecordedPromptJudgment {
+    command_kind: &'static str,
+    chat_id: String,
+    verification_nonce: String,
+    selected_option_id: String,
+    machine_action: String,
+    resolution_outcome: String,
+    note_text_omitted: bool,
+    model_context: String,
+}
+
+fn parse_prompt_judgment_command(prompt: &str) -> PromptCommandDetection {
+    let command_lines = prompt
+        .lines()
+        .filter_map(|line| line.trim_start().strip_prefix("Volicord:").map(str::trim))
+        .collect::<Vec<_>>();
+    if command_lines.is_empty() {
+        return PromptCommandDetection::NoCommand;
+    }
+
+    let mut parsed = Vec::new();
+    for line in command_lines {
+        match parse_prompt_judgment_command_line(line) {
+            Ok(command) => parsed.push(command),
+            Err(message) => {
+                return PromptCommandDetection::Blocked(PromptCommandBlock {
+                    code: "malformed_judgment_command",
+                    message,
+                })
+            }
+        }
+    }
+
+    let Some(first) = parsed.first().cloned() else {
+        return PromptCommandDetection::NoCommand;
+    };
+    if parsed.iter().all(|command| command == &first) {
+        PromptCommandDetection::Command(first)
+    } else {
+        PromptCommandDetection::Blocked(PromptCommandBlock {
+            code: "ambiguous_judgment_command",
+            message: "Multiple distinct Volicord judgment commands were found; send exactly one command or repeat the same command only."
+                .to_owned(),
+        })
+    }
+}
+
+fn parse_prompt_judgment_command_line(line: &str) -> Result<PromptJudgmentCommand, String> {
+    let Some((action, rest)) = split_once_whitespace(line) else {
+        return Err(
+            "Volicord judgment commands must be `answer J-N OPTION` or `note J-N \"text\"`."
+                .to_owned(),
+        );
+    };
+    match action {
+        "answer" => {
+            let parts = rest.split_whitespace().collect::<Vec<_>>();
+            if parts.len() != 2 {
+                return Err(
+                    "Volicord answer commands must be exactly `Volicord: answer J-N OPTION`."
+                        .to_owned(),
+                );
+            }
+            validate_chat_id(parts[0])?;
+            if parts[1].trim().is_empty() || parts[1].starts_with('"') {
+                return Err("Volicord answer option must be a number or option id.".to_owned());
+            }
+            Ok(PromptJudgmentCommand::Answer {
+                chat_id: parts[0].to_owned(),
+                answer_selector: parts[1].to_owned(),
+            })
+        }
+        "note" => {
+            let Some((chat_id, note_text)) = split_once_whitespace(rest) else {
+                return Err(
+                    "Volicord note commands must be exactly `Volicord: note J-N \"text\"`."
+                        .to_owned(),
+                );
+            };
+            validate_chat_id(chat_id)?;
+            let note = parse_quoted_note(note_text)?;
+            Ok(PromptJudgmentCommand::Note {
+                chat_id: chat_id.to_owned(),
+                note,
+            })
+        }
+        _ => Err(
+            "Volicord judgment commands must start with `answer` or `note` after `Volicord:`."
+                .to_owned(),
+        ),
+    }
+}
+
+fn split_once_whitespace(value: &str) -> Option<(&str, &str)> {
+    let trimmed = value.trim();
+    let split_at = trimmed.find(char::is_whitespace)?;
+    let (first, rest) = trimmed.split_at(split_at);
+    Some((first, rest.trim_start()))
+}
+
+fn validate_chat_id(value: &str) -> Result<(), String> {
+    parse_chat_id(value)
+        .map(|_| ())
+        .map_err(|message| message.message)
+}
+
+fn parse_quoted_note(value: &str) -> Result<String, String> {
+    let trimmed = value.trim();
+    if !trimmed.starts_with('"') {
+        return Err("Volicord note text must be a double-quoted string.".to_owned());
+    }
+    let mut output = String::new();
+    let mut chars = trimmed[1..].chars();
+    let mut escaped = false;
+    while let Some(ch) = chars.next() {
+        if escaped {
+            match ch {
+                '"' | '\\' => output.push(ch),
+                'n' => output.push('\n'),
+                't' => output.push('\t'),
+                other => {
+                    output.push('\\');
+                    output.push(other);
+                }
+            }
+            escaped = false;
+            continue;
+        }
+        match ch {
+            '\\' => escaped = true,
+            '"' => {
+                if chars.as_str().trim().is_empty() {
+                    return Ok(output);
+                }
+                return Err(
+                    "Volicord note commands do not accept text after the closing quote.".to_owned(),
+                );
+            }
+            other => output.push(other),
+        }
+    }
+    Err("Volicord note text is missing a closing double quote.".to_owned())
+}
+
+fn prompt_capture_blocked_result(
+    capture: Value,
+    block: PromptCommandBlock,
+) -> (GuardDecision, Value, bool) {
+    (
+        GuardDecision::Deny,
+        json!({
+            "decision": GuardDecision::Deny.as_str(),
+            "allowed": false,
+            "prompt_capture": capture,
+            "recognized_judgment_command": null,
+            "reasons": [{
+                "code": block.code,
+                "message": block.message,
+                "severity": "deny"
+            }],
+            "model_context": format!("Volicord did not record a user judgment: {}", block.message),
+            "enforcement_level": "cooperative_detective"
+        }),
+        true,
+    )
+}
+
+fn record_prompt_judgment_command(
+    runtime_home: &Path,
+    project: &ProjectRecord,
+    envelope: &GuardEnvelope,
+    command: PromptJudgmentCommand,
+) -> Result<RecordedPromptJudgment, PromptCommandBlock> {
+    let store = CoreProjectStore::open(runtime_home, &ProjectId::new(&project.project_id))
+        .map_err(prompt_block_from_store_error)?;
+    let project_state = store
+        .project_state()
+        .map_err(prompt_block_from_store_error)?;
+    let Some(active_task_id) = project_state.active_task_id.as_deref() else {
+        return Err(PromptCommandBlock {
+            code: "no_active_task",
+            message: "No active Volicord task is selected for this prompt-capture session."
+                .to_owned(),
+        });
+    };
+    let task_id = TaskId::new(active_task_id);
+    let (record, chat_index) = select_chat_judgment(&store, &task_id, command.chat_id(), envelope)?;
+    let options = decode_options(&record).map_err(prompt_block_from_user_error)?;
+    let selected_option = match &command {
+        PromptJudgmentCommand::Answer {
+            answer_selector, ..
+        } => select_option(&options, answer_selector).map_err(prompt_block_from_user_error)?,
+        PromptJudgmentCommand::Note { .. } => select_defer_option(&options)?,
+    };
+    let note = match &command {
+        PromptJudgmentCommand::Answer { .. } => None,
+        PromptJudgmentCommand::Note { note, .. } => Some(note.clone()),
+    };
+    let response = record_user_judgment_from_record(JudgmentRecordingInput {
+        runtime_home,
+        project_id: &project.project_id,
+        state_version: project_state.state_version,
+        record: &record,
+        selected_option: &selected_option,
+        note,
+        verification_basis: VERIFICATION_BASIS_USER_PROMPT_SUBMIT_HOOK,
+    })
+    .map_err(prompt_block_from_user_error)?;
+    if response.response_value["base"]["response_kind"].as_str() != Some("result") {
+        return Err(PromptCommandBlock {
+            code: "judgment_record_rejected",
+            message: core_rejection_message(&response.response_value),
+        });
+    }
+    let chat_id = chat_id_for_index(chat_index);
+    let resolution_outcome = outcome_value(selected_option.resolution_outcome).to_owned();
+    Ok(RecordedPromptJudgment {
+        command_kind: command.command_kind(),
+        chat_id: chat_id.clone(),
+        verification_nonce: judgment_verification_nonce(&record, envelope),
+        selected_option_id: selected_option.option_id.as_str().to_owned(),
+        machine_action: machine_action_value(selected_option.machine_action).to_owned(),
+        resolution_outcome: resolution_outcome.clone(),
+        note_text_omitted: matches!(command, PromptJudgmentCommand::Note { .. }),
+        model_context: format!(
+            "Volicord recorded the user-owned judgment for {chat_id} as {resolution_outcome} through the local User Channel. Treat this as recorded context, not as an agent-authored judgment."
+        ),
+    })
+}
+
+fn select_chat_judgment(
+    store: &CoreProjectStore,
+    task_id: &TaskId,
+    chat_id: &str,
+    envelope: &GuardEnvelope,
+) -> Result<(UserJudgmentRecord, usize), PromptCommandBlock> {
+    let chat_index = parse_chat_id(chat_id)?;
+    let records = store
+        .user_judgment_records_for_task(task_id)
+        .map_err(prompt_block_from_store_error)?;
+    let Some(record) = records.get(chat_index - 1).cloned() else {
+        return Err(PromptCommandBlock {
+            code: "unknown_judgment_id",
+            message: format!(
+                "Volicord judgment id `{chat_id}` does not match a judgment for the active task."
+            ),
+        });
+    };
+    let expected_actor =
+        ActorSource::agent_connection(envelope.connection_id.clone()).to_canonical_string();
+    if record.requested_by_actor_source != expected_actor {
+        return Err(PromptCommandBlock {
+            code: "connection_mismatch",
+            message: format!(
+                "Volicord judgment `{chat_id}` belongs to a different Agent Connection."
+            ),
+        });
+    }
+    if record.status != "pending" {
+        return Err(PromptCommandBlock {
+            code: "judgment_not_pending",
+            message: format!(
+                "Volicord judgment `{chat_id}` is not pending (status: {}).",
+                record.status
+            ),
+        });
+    }
+    if record.basis_status != "current" {
+        return Err(PromptCommandBlock {
+            code: "stale_judgment",
+            message: format!(
+                "Volicord judgment `{chat_id}` has a stale or superseded basis (basis_status: {}).",
+                record.basis_status
+            ),
+        });
+    }
+    Ok((record, chat_index))
+}
+
+fn parse_chat_id(chat_id: &str) -> Result<usize, PromptCommandBlock> {
+    let Some(raw_index) = chat_id.strip_prefix("J-") else {
+        return Err(PromptCommandBlock {
+            code: "invalid_judgment_id",
+            message: format!("Volicord judgment id `{chat_id}` must use the chat form `J-N`."),
+        });
+    };
+    if raw_index.is_empty() || !raw_index.chars().all(|ch| ch.is_ascii_digit()) {
+        return Err(PromptCommandBlock {
+            code: "invalid_judgment_id",
+            message: format!(
+                "Volicord judgment id `{chat_id}` must use a positive numeric suffix."
+            ),
+        });
+    }
+    let index = raw_index.parse::<usize>().map_err(|_| PromptCommandBlock {
+        code: "invalid_judgment_id",
+        message: format!("Volicord judgment id `{chat_id}` is too large."),
+    })?;
+    if index == 0 {
+        return Err(PromptCommandBlock {
+            code: "invalid_judgment_id",
+            message: "Volicord judgment ids start at J-1.".to_owned(),
+        });
+    }
+    Ok(index)
+}
+
+fn select_defer_option(
+    options: &[UserJudgmentOption],
+) -> Result<UserJudgmentOption, PromptCommandBlock> {
+    options
+        .iter()
+        .find(|option| option.machine_action == UserJudgmentOptionAction::Defer)
+        .cloned()
+        .ok_or_else(|| PromptCommandBlock {
+            code: "defer_unavailable",
+            message: "The addressed judgment does not offer a defer option.".to_owned(),
+        })
+}
+
+fn prompt_block_from_user_error(error: UserCommandError) -> PromptCommandBlock {
+    PromptCommandBlock {
+        code: "invalid_judgment_command",
+        message: error.to_string(),
+    }
+}
+
+fn prompt_block_from_store_error(error: StoreError) -> PromptCommandBlock {
+    PromptCommandBlock {
+        code: "store_error",
+        message: error.to_string(),
+    }
+}
+
+fn core_rejection_message(response: &Value) -> String {
+    response["errors"]
+        .as_array()
+        .and_then(|errors| errors.first())
+        .and_then(|error| error["message"].as_str())
+        .unwrap_or("Core rejected the user judgment command.")
+        .to_owned()
+}
+
+fn pending_chat_judgment_summaries(
+    store: &CoreProjectStore,
+    task_id: &TaskId,
+    envelope: &GuardEnvelope,
+) -> Result<Vec<GuardPendingJudgmentSummary>, GuardCommandError> {
+    let expected_actor =
+        ActorSource::agent_connection(envelope.connection_id.clone()).to_canonical_string();
+    let records = store.user_judgment_records_for_task(task_id)?;
+    let mut summaries = Vec::new();
+    for (index, record) in records.iter().enumerate() {
+        if record.status != "pending" || record.requested_by_actor_source != expected_actor {
+            continue;
+        }
+        let chat_id = chat_id_for_index(index + 1);
+        let request = serde_json::from_str::<PersistedUserJudgmentRequest>(&record.request_json)
+            .map_err(|error| {
+                GuardCommandError::Runtime(format!(
+                    "failed to decode user_judgments.request_json: {error}"
+                ))
+            })?;
+        let options = decode_options(record).map_err(guard_error_from_user_error)?;
+        let option_summaries = options
+            .iter()
+            .enumerate()
+            .map(|(option_index, option)| {
+                let selector = chat_option_selector(option_index + 1, option);
+                GuardPendingJudgmentOptionSummary {
+                    instruction: format!("Volicord: answer {chat_id} {selector}"),
+                    selector,
+                    option_id: option.option_id.as_str().to_owned(),
+                    label: option.label.clone(),
+                    machine_action: machine_action_value(option.machine_action).to_owned(),
+                    resolution_outcome: outcome_value(option.resolution_outcome).to_owned(),
+                }
+            })
+            .collect::<Vec<_>>();
+        let default_selector = option_summaries
+            .first()
+            .map(|option| option.selector.clone())
+            .unwrap_or_else(|| "1".to_owned());
+        summaries.push(GuardPendingJudgmentSummary {
+            chat_id: chat_id.clone(),
+            verification_nonce: judgment_verification_nonce(record, envelope),
+            judgment_kind: record.judgment_kind.clone(),
+            question: Some(request.question),
+            answer_instruction: format!("Volicord: answer {chat_id} {default_selector}"),
+            note_instruction: format!("Volicord: note {chat_id} \"text\""),
+            options: option_summaries,
+        });
+    }
+    Ok(summaries)
+}
+
+fn guard_error_from_user_error(error: UserCommandError) -> GuardCommandError {
+    match error {
+        UserCommandError::Usage(message) => GuardCommandError::Usage(message),
+        UserCommandError::Runtime(message) => GuardCommandError::Runtime(message),
+    }
+}
+
+fn chat_option_selector(index: usize, option: &UserJudgmentOption) -> String {
+    match option.machine_action {
+        UserJudgmentOptionAction::Reject => "reject".to_owned(),
+        UserJudgmentOptionAction::Defer => "defer".to_owned(),
+        UserJudgmentOptionAction::Accept => index.to_string(),
+    }
+}
+
+fn chat_id_for_index(index: usize) -> String {
+    format!("J-{index}")
+}
+
+fn judgment_verification_nonce(record: &UserJudgmentRecord, envelope: &GuardEnvelope) -> String {
+    short_digest(&[
+        "judgment_nonce",
+        &record.project_id,
+        &record.task_id,
+        &record.judgment_id,
+        &record.requested_at,
+        &envelope.connection_id,
+        envelope.session_id.as_deref().unwrap_or(""),
+    ])
+}
+
+fn short_digest(parts: &[&str]) -> String {
+    let mut hasher = Sha256::new();
+    for part in parts {
+        hasher.update(part.as_bytes());
+        hasher.update([0]);
+    }
+    let digest = hex_bytes(&hasher.finalize());
+    digest[..10].to_owned()
+}
+
+fn machine_action_value(value: UserJudgmentOptionAction) -> &'static str {
+    match value {
+        UserJudgmentOptionAction::Accept => "accept",
+        UserJudgmentOptionAction::Reject => "reject",
+        UserJudgmentOptionAction::Defer => "defer",
+    }
+}
+
+fn outcome_value(value: JudgmentResolutionOutcome) -> &'static str {
+    match value {
+        JudgmentResolutionOutcome::Accepted => "accepted",
+        JudgmentResolutionOutcome::Rejected => "rejected",
+        JudgmentResolutionOutcome::Deferred => "deferred",
+    }
+}
+
+fn prompt_capture_enabled(envelope: &GuardEnvelope) -> bool {
+    matches!(envelope.guard_mode.as_str(), "guarded" | "managed")
+}
+
+fn event_project_id(event: &Value) -> Option<String> {
+    event_string(event, &[&["project_id"], &["project", "id"]])
+}
+
 fn stop_decision(
     runtime_home: &Path,
     project: &ProjectRecord,
@@ -1549,11 +2153,37 @@ fn context_json(summary: &GuardStateSummary) -> Value {
         "repo_root": summary.repo_root,
         "state_version": summary.state_version,
         "active_task_id": summary.active_task_id,
+        "prompt_capture_enabled": summary.prompt_capture_enabled,
         "current_write_check_ids": summary.current_write_check_ids,
         "stale_write_check_ids": summary.stale_write_check_ids,
         "pending_user_judgment_count": summary.pending_user_judgment_count,
+        "pending_user_judgments": summary.pending_user_judgments
+            .iter()
+            .map(pending_judgment_summary_json)
+            .collect::<Vec<_>>(),
         "active_blocker_count": summary.active_blocker_count,
         "unresolved_unrecorded_change_count": summary.unresolved_unrecorded_change_count
+    })
+}
+
+fn pending_judgment_summary_json(summary: &GuardPendingJudgmentSummary) -> Value {
+    json!({
+        "chat_id": summary.chat_id,
+        "verification_nonce": summary.verification_nonce,
+        "judgment_kind": summary.judgment_kind,
+        "question": summary.question,
+        "answer_instruction": summary.answer_instruction,
+        "note_instruction": summary.note_instruction,
+        "options": summary.options.iter().map(|option| {
+            json!({
+                "selector": option.selector,
+                "option_id": option.option_id,
+                "label": option.label,
+                "machine_action": option.machine_action,
+                "resolution_outcome": option.resolution_outcome,
+                "instruction": option.instruction
+            })
+        }).collect::<Vec<_>>()
     })
 }
 

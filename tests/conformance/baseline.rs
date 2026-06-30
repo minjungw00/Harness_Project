@@ -4315,7 +4315,7 @@ fn assert_current_authority_options(response_value: &Value) {
         .iter()
         .map(|option| option["option_id"].as_str().expect("option id"))
         .collect::<Vec<_>>();
-    assert_eq!(option_ids, vec!["accept", "reject"]);
+    assert_eq!(option_ids, vec!["accept", "reject", "defer"]);
     for option in options {
         match option["option_id"].as_str().expect("option id") {
             "accept" => {
@@ -4326,6 +4326,11 @@ fn assert_current_authority_options(response_value: &Value) {
             "reject" => {
                 assert_eq!(option["machine_action"], "reject");
                 assert_eq!(option["resolution_outcome"], "rejected");
+                assert_eq!(option["is_default"], false);
+            }
+            "defer" => {
+                assert_eq!(option["machine_action"], "defer");
+                assert_eq!(option["resolution_outcome"], "deferred");
                 assert_eq!(option["is_default"], false);
             }
             other => panic!("unexpected authority option id {other}"),

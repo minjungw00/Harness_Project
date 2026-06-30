@@ -92,7 +92,7 @@ RequestUserJudgmentRequest:
 
 - 다른 메서드가 반환한 `UserJudgmentCandidate`는 `volicord.request_user_judgment`가 커밋하기 전까지 지속 판단이 아닙니다.
 - `judgment_kind=final_acceptance` 또는 `judgment_kind=residual_risk_acceptance`에서는 Core가 현재 닫기 근거를 판단 근거에 캡처합니다. 필요한 현재 닫기 근거 또는 현재 잔여 위험 ID를 사용할 수 없으면 요청은 커밋 전에 거절됩니다.
-- 권한을 지니는 판단 종류에서는 Core가 생성하는 선택지 집합에 `machine_action=accept`와 `machine_action=reject`가 있어야 합니다. `machine_action=defer`는 담당 문서가 연기를 허용하는 곳에서만 나타납니다. 라벨과 설명 문구는 `machine_action`이나 `resolution_outcome`을 덮어쓰지 않습니다.
+- 권한을 지니는 판단 종류에서는 Core가 생성하는 선택지 집합에 `machine_action=accept`, `machine_action=reject`, `machine_action=defer`가 포함됩니다. 라벨과 설명 문구는 `machine_action`이나 `resolution_outcome`을 덮어쓰지 않습니다.
 - 잔여 위험 수락의 경우 요청 맥락의 보이는 위험은 정확한 현재 `risk_id` 값을 담아야 합니다.
 - `dry_run`과 거절은 대기 중인 판단, 차단 사유 갱신, 이벤트, 재실행 행, 상태 버전 증가를 만들지 않습니다.
 

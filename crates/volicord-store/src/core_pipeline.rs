@@ -983,6 +983,14 @@ impl CoreProjectStore {
         pending_user_judgment_records(&self.conn, &self.project.project_id, task_id.as_str())
     }
 
+    /// Lists all user-owned judgment records for a Task in stable creation order.
+    pub fn user_judgment_records_for_task(
+        &self,
+        task_id: &TaskId,
+    ) -> StoreResult<Vec<UserJudgmentRecord>> {
+        user_judgment_records_for_task(&self.conn, &self.project.project_id, task_id.as_str())
+    }
+
     /// Lists stale or superseded user-judgment refs for a Task and judgment kind.
     pub fn non_current_user_judgment_refs(
         &self,
@@ -3964,6 +3972,51 @@ fn pending_user_judgment_records(
            AND task_id = ?2
            AND status = 'pending'
          ORDER BY judgment_id",
+    )?;
+    let rows = stmt.query_map(params![project_id, task_id], user_judgment_record_from_row)?;
+    let mut records = Vec::new();
+    for row in rows {
+        records.push(row?);
+    }
+    Ok(records)
+}
+
+fn user_judgment_records_for_task(
+    conn: &Connection,
+    project_id: &str,
+    task_id: &str,
+) -> StoreResult<Vec<UserJudgmentRecord>> {
+    let mut stmt = conn.prepare(
+        "SELECT
+            project_id,
+            judgment_id,
+            task_id,
+            change_unit_id,
+            judgment_kind,
+            status,
+            request_json,
+            context_json,
+            options_json,
+            affected_refs_json,
+            artifact_refs_json,
+            sensitive_action_scope_json,
+            basis_json,
+            basis_status,
+            resolution_outcome,
+            resolution_machine_action,
+            resolution_json,
+            resolution_rationale_json,
+            resolved_by_actor_source,
+            resolved_verification_basis,
+            resolved_assurance_level,
+            requested_by_actor_source,
+            requested_at,
+            resolved_at,
+            metadata_json
+         FROM user_judgments
+         WHERE project_id = ?1
+           AND task_id = ?2
+         ORDER BY requested_at, judgment_id",
     )?;
     let rows = stmt.query_map(params![project_id, task_id], user_judgment_record_from_row)?;
     let mut records = Vec::new();
