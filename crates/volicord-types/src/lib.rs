@@ -57,6 +57,71 @@ mod tests {
     }
 
     #[test]
+    fn guard_values_serialize_stable_names() {
+        assert_eq!(
+            serde_json::to_value(GuardMode::McpOnly).expect("guard mode serializes"),
+            json!("mcp_only")
+        );
+        assert_eq!(
+            serde_json::to_value(GuardDecision::InjectContext).expect("guard decision serializes"),
+            json!("inject_context")
+        );
+        assert_eq!(
+            serde_json::to_value(GuardInstallationHealth::ActionRequired)
+                .expect("guard health serializes"),
+            json!("action_required")
+        );
+        assert_eq!(
+            serde_json::to_value(UnrecordedChangeStatus::Unresolved)
+                .expect("change status serializes"),
+            json!("unresolved")
+        );
+
+        let host: HostKind =
+            serde_json::from_value(json!("custom_host")).expect("custom host should decode");
+        assert_eq!(host, HostKind::Custom("custom_host".to_owned()));
+        assert_eq!(
+            serde_json::to_value(host).expect("custom host serializes"),
+            json!("custom_host")
+        );
+    }
+
+    #[test]
+    fn guard_records_serialize_documented_field_names() {
+        let capture = PromptCapture {
+            prompt_capture_id: PromptCaptureId::new("prompt_capture_001"),
+            project_id: ProjectId::new("project_guard_001"),
+            session_id: AgentSessionId::new("session_guard_001"),
+            connection_id: AgentConnectionId::new("conn_guard_001"),
+            capture_kind: "user_prompt".to_owned(),
+            prompt_sha256: "sha256:abc123".to_owned(),
+            prompt_text: RequiredNullable::null(),
+            captured_at: timestamp("2026-06-30T00:00:00Z"),
+            metadata: JsonObject::new(),
+        };
+
+        let encoded = serde_json::to_value(&capture).expect("prompt capture serializes");
+        assert_eq!(encoded["prompt_capture_id"], "prompt_capture_001");
+        assert_eq!(encoded["connection_id"], "conn_guard_001");
+        assert_eq!(encoded["prompt_text"], Value::Null);
+        assert_unknown::<PromptCapture>(
+            json!({
+                "prompt_capture_id": "prompt_capture_001",
+                "project_id": "project_guard_001",
+                "session_id": "session_guard_001",
+                "connection_id": "conn_guard_001",
+                "capture_kind": "user_prompt",
+                "prompt_sha256": "sha256:abc123",
+                "prompt_text": null,
+                "captured_at": "2026-06-30T00:00:00Z",
+                "metadata": {},
+                "extra": true
+            }),
+            "extra",
+        );
+    }
+
+    #[test]
     fn tool_envelope_round_trips_documented_field_names() {
         let envelope: ToolEnvelope = serde_json::from_value(json!({
             "project_id": "proj_onboard_001",

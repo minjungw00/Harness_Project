@@ -12,6 +12,7 @@ pub mod artifacts;
 pub mod bootstrap;
 pub mod core_pipeline;
 pub mod error;
+pub mod guards;
 pub mod inspection;
 pub mod migrations;
 pub mod runtime_home;

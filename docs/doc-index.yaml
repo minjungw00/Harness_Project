@@ -57,9 +57,9 @@ applicability:
   mcp_protocol_2025_11_25:
     description: MCP protocol version 2025-11-25 supported by the local `volicord mcp --stdio`
       process.
-  storage_baseline_sqlite_v3_schema_v1:
+  storage_baseline_sqlite_v3_schema_v2:
     description: '`baseline_sqlite_v3` storage profile with registry and project-state schema version
-      1.'
+      2.'
   doc_index_schema_v3:
     description: Documentation index metadata schema version 3 used by `docs/doc-index.yaml` and
       `docs-check`.
@@ -672,7 +672,7 @@ documents:
   applies_to:
   - volicord_workspace_0_1
   - rust_workspace_1_85
-  - storage_baseline_sqlite_v3_schema_v1
+  - storage_baseline_sqlite_v3_schema_v2
   primary_audience:
   - implementers
   - reviewers
@@ -1096,7 +1096,7 @@ documents:
   applies_to:
   - volicord_workspace_0_1
   - mcp_protocol_2025_11_25
-  - storage_baseline_sqlite_v3_schema_v1
+  - storage_baseline_sqlite_v3_schema_v2
   primary_audience:
   - implementers
   - agent integrators
@@ -1765,7 +1765,7 @@ documents:
   last_verified_on: '2026-06-24'
   applies_to:
   - volicord_workspace_0_1
-  - storage_baseline_sqlite_v3_schema_v1
+  - storage_baseline_sqlite_v3_schema_v2
   primary_audience:
   - implementers
   - maintainers
@@ -1785,11 +1785,11 @@ documents:
   translation_policy: semantic_parity
   owner_area: storage
   created_on: '2026-06-10'
-  last_updated_on: '2026-06-28'
-  last_verified_on: '2026-06-28'
+  last_updated_on: '2026-06-30'
+  last_verified_on: '2026-06-30'
   applies_to:
   - volicord_workspace_0_1
-  - storage_baseline_sqlite_v3_schema_v1
+  - storage_baseline_sqlite_v3_schema_v2
   primary_audience:
   - storage implementers
   - maintainers
@@ -1802,7 +1802,7 @@ documents:
   - table overview
   - storage-owned record values
   - storage-owned JSON placement
-  - Agent Connection, Connection Projects, and managed host configuration state record families
+  - Agent Connection, Connection Projects, managed host configuration state, and guarded-operation record families
 - doc_id: reference.storage-ddl
   path_en: docs/en/reference/storage-ddl.md
   path_ko: docs/ko/reference/storage-ddl.md
@@ -1812,11 +1812,11 @@ documents:
   translation_policy: semantic_parity
   owner_area: storage
   created_on: '2026-06-17'
-  last_updated_on: '2026-06-27'
-  last_verified_on: '2026-06-27'
+  last_updated_on: '2026-06-30'
+  last_verified_on: '2026-06-30'
   applies_to:
   - volicord_workspace_0_1
-  - storage_baseline_sqlite_v3_schema_v1
+  - storage_baseline_sqlite_v3_schema_v2
   primary_audience:
   - storage implementers
   - API implementers
@@ -1828,10 +1828,10 @@ documents:
   - baseline SQLite DDL
   - '`registry.sqlite` schema shape'
   - project `state.sqlite` schema shape
-  - Agent Connection, Connection Projects, and managed host configuration state registry tables
+  - Agent Connection, Connection Projects, managed host configuration state, and guarded-operation tables
   - baseline SQLite indexes, foreign keys, migration tables, and constraints
   - storage constraints for state clock columns, replay rows, current Change Unit uniqueness, Write Check
-    basis versions, and staged artifact provenance
+    basis versions, staged artifact provenance, and guarded-operation records
 - doc_id: reference.storage-effects
   path_en: docs/en/reference/storage-effects.md
   path_ko: docs/ko/reference/storage-effects.md
@@ -1845,7 +1845,7 @@ documents:
   last_verified_on: '2026-06-28'
   applies_to:
   - volicord_workspace_0_1
-  - storage_baseline_sqlite_v3_schema_v1
+  - storage_baseline_sqlite_v3_schema_v2
   primary_audience:
   - storage implementers
   - API implementers
@@ -1870,7 +1870,7 @@ documents:
   last_verified_on: '2026-06-29'
   applies_to:
   - volicord_workspace_0_1
-  - storage_baseline_sqlite_v3_schema_v1
+  - storage_baseline_sqlite_v3_schema_v2
   primary_audience:
   - storage implementers
   - API implementers
@@ -1896,7 +1896,7 @@ documents:
   last_verified_on: '2026-06-28'
   applies_to:
   - volicord_workspace_0_1
-  - storage_baseline_sqlite_v3_schema_v1
+  - storage_baseline_sqlite_v3_schema_v2
   primary_audience:
   - storage implementers
   - maintainers

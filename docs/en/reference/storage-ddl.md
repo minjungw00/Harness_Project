@@ -8,7 +8,7 @@ This document owns:
 
 - baseline SQLite table shape for `registry.sqlite` and project `state.sqlite`
 - baseline indexes, foreign keys, migration tables, and physical constraints
-- SQLite constraints for `project_state.state_version`, replay rows, current Change Unit uniqueness, Write Check basis versions, and staged artifact provenance
+- SQLite constraints for `project_state.state_version`, replay rows, current Change Unit uniqueness, Write Check basis versions, staged artifact provenance, and guarded-operation records
 - the DDL-level split between Runtime Home registration data and project-local Core state
 
 This document does not own:
@@ -41,9 +41,9 @@ Write Check rows record Core-state compatibility for a product-file write attemp
 
 ## `registry.sqlite`
 
-`registry.sqlite` stores Runtime Home identity, installation profile records, project registration, project aliases, Agent Connection records, Connection Projects membership, and host configuration inventory. It does not store project-local Core state.
+`registry.sqlite` stores Runtime Home identity, installation profile records, project registration, project aliases, Agent Connection records, Connection Projects membership, guard installation records, and host configuration inventory. It does not store project-local Core state.
 
-The DDL below is the initial physical registry schema for storage profile `baseline_sqlite_v3` schema version `1`. Storage profile and migration boundary behavior are owned by [Storage Versioning](storage-versioning.md).
+Applying the current migrations produces registry schema version `2` for storage profile `baseline_sqlite_v3`. The first DDL block is the initial physical registry schema version `1`; the guard-record additions after it are schema version `2`. Storage profile and migration boundary behavior are owned by [Storage Versioning](storage-versioning.md).
 
 ```sql
 CREATE TABLE schema_migrations (
@@ -176,6 +176,47 @@ CREATE UNIQUE INDEX idx_agent_connections_target_global
   WHERE project_internal_id IS NULL;
 ```
 
+Registry schema version `2` adds guarded-operation setup records:
+
+```sql
+CREATE TABLE guard_installations (
+  guard_installation_id TEXT PRIMARY KEY,
+  runtime_home_id TEXT NOT NULL,
+  connection_internal_id TEXT NOT NULL,
+  project_internal_id TEXT,
+  host_kind TEXT NOT NULL CHECK (length(trim(host_kind)) > 0),
+  guard_mode TEXT NOT NULL CHECK (guard_mode IN ('mcp_only', 'guarded', 'managed')),
+  host_capability_json TEXT NOT NULL DEFAULT '{}',
+  installation_health TEXT NOT NULL
+    CHECK (installation_health IN ('unknown', 'healthy', 'action_required', 'failed')),
+  installed_at TEXT,
+  last_checked_at TEXT NOT NULL,
+  metadata_json TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY (runtime_home_id) REFERENCES runtime_home (runtime_home_id) ON DELETE RESTRICT,
+  FOREIGN KEY (connection_internal_id)
+    REFERENCES agent_connections (connection_internal_id)
+    ON DELETE RESTRICT,
+  FOREIGN KEY (project_internal_id) REFERENCES projects (project_internal_id) ON DELETE RESTRICT
+);
+
+CREATE INDEX idx_guard_installations_connection
+  ON guard_installations (connection_internal_id);
+CREATE INDEX idx_guard_installations_project
+  ON guard_installations (project_internal_id);
+CREATE INDEX idx_guard_installations_health
+  ON guard_installations (installation_health);
+CREATE UNIQUE INDEX idx_guard_installations_scope_project
+  ON guard_installations (connection_internal_id, project_internal_id, guard_mode)
+  WHERE project_internal_id IS NOT NULL;
+CREATE UNIQUE INDEX idx_guard_installations_scope_global
+  ON guard_installations (connection_internal_id, guard_mode)
+  WHERE project_internal_id IS NULL;
+```
+
+The version `2` registry migration updates existing `runtime_home.schema_version` rows from `1` to `2`.
+
 Registry constraints:
 
 - `runtime_home` is a singleton table. It stores Runtime Home identity, the Runtime Home path, the registry database path, storage profile, schema version, metadata, and timestamps. The stored `runtime_home_id` identifies the Runtime Home record; it is not a security guarantee.
@@ -190,13 +231,14 @@ Registry constraints:
 - `agent_connections.mode` is constrained to `read_only` or `workflow`.
 - `agent_connections.last_verification_report_json` stores the latest verification report JSON object. `agent_connections.last_user_actions_json` stores the latest user-action JSON array.
 - `connection_projects` is the explicit project allowlist for one Agent Connection. It stores membership with `connection_internal_id` and `project_internal_id`. Deleting a project or connection that still has membership is restricted.
+- `guard_installations` stores local guard setup health and host capability for one Runtime Home, Agent Connection, and optional project scope. Its `guard_mode` values are `mcp_only`, `guarded`, and `managed`. Its `installation_health` values are `unknown`, `healthy`, `action_required`, and `failed`. These rows are local authority records for guarded operation; they are not OS-level enforcement proof or write-prevention proof.
 - `schema_migrations` records applied registry schema versions. Migration execution semantics stay with [Storage Versioning](storage-versioning.md).
 
 ## Project `state.sqlite`
 
 Each registered project has one project-local `state.sqlite`. It stores Core state for that project and repeats `project_id` in project-scoped rows so foreign keys and indexes can enforce same-project relationships.
 
-The DDL below is the initial physical project-state schema for storage profile `baseline_sqlite_v3` schema version `1`. Storage profile and migration boundary behavior are owned by [Storage Versioning](storage-versioning.md).
+Applying the current migrations produces project-state schema version `2` for storage profile `baseline_sqlite_v3`. The first DDL block is the initial physical project-state schema version `1`; the guard-record additions after it are schema version `2`. Storage profile and migration boundary behavior are owned by [Storage Versioning](storage-versioning.md).
 
 ```sql
 CREATE TABLE schema_migrations (
@@ -727,6 +769,115 @@ CREATE INDEX idx_task_events_task_seq
   ON task_events (project_id, task_id, event_seq);
 ```
 
+Project-state schema version `2` adds guarded-operation records:
+
+```sql
+CREATE TABLE agent_sessions (
+  project_id TEXT NOT NULL,
+  session_id TEXT NOT NULL,
+  connection_internal_id TEXT NOT NULL,
+  guard_installation_id TEXT,
+  host_kind TEXT NOT NULL CHECK (length(trim(host_kind)) > 0),
+  guard_mode TEXT NOT NULL CHECK (guard_mode IN ('mcp_only', 'guarded', 'managed')),
+  started_at TEXT NOT NULL,
+  ended_at TEXT,
+  metadata_json TEXT NOT NULL DEFAULT '{}',
+  PRIMARY KEY (project_id, session_id),
+  FOREIGN KEY (project_id) REFERENCES project_state (project_id)
+);
+
+CREATE TABLE guard_events (
+  project_id TEXT NOT NULL,
+  guard_event_id TEXT NOT NULL,
+  session_id TEXT,
+  connection_internal_id TEXT NOT NULL,
+  guard_installation_id TEXT,
+  event_kind TEXT NOT NULL,
+  decision TEXT NOT NULL CHECK (decision IN ('allow', 'deny', 'warn', 'inject_context')),
+  subject_json TEXT NOT NULL DEFAULT '{}',
+  result_json TEXT NOT NULL DEFAULT '{}',
+  occurred_at TEXT NOT NULL,
+  metadata_json TEXT NOT NULL DEFAULT '{}',
+  PRIMARY KEY (project_id, guard_event_id),
+  FOREIGN KEY (project_id) REFERENCES project_state (project_id),
+  FOREIGN KEY (project_id, session_id) REFERENCES agent_sessions (project_id, session_id)
+);
+
+CREATE TABLE prompt_captures (
+  project_id TEXT NOT NULL,
+  prompt_capture_id TEXT NOT NULL,
+  session_id TEXT NOT NULL,
+  connection_internal_id TEXT NOT NULL,
+  capture_kind TEXT NOT NULL,
+  prompt_sha256 TEXT NOT NULL,
+  prompt_text TEXT,
+  captured_at TEXT NOT NULL,
+  metadata_json TEXT NOT NULL DEFAULT '{}',
+  PRIMARY KEY (project_id, prompt_capture_id),
+  FOREIGN KEY (project_id) REFERENCES project_state (project_id),
+  FOREIGN KEY (project_id, session_id) REFERENCES agent_sessions (project_id, session_id)
+);
+
+CREATE TABLE unrecorded_changes (
+  project_id TEXT NOT NULL,
+  unrecorded_change_id TEXT NOT NULL,
+  session_id TEXT,
+  connection_internal_id TEXT NOT NULL,
+  task_id TEXT,
+  status TEXT NOT NULL CHECK (status IN ('unresolved', 'resolved')),
+  summary TEXT NOT NULL CHECK (length(trim(summary)) > 0),
+  observed_paths_json TEXT NOT NULL DEFAULT '[]',
+  detection_json TEXT NOT NULL DEFAULT '{}',
+  resolution_json TEXT,
+  detected_at TEXT NOT NULL,
+  resolved_at TEXT,
+  resolved_by_actor_source TEXT,
+  metadata_json TEXT NOT NULL DEFAULT '{}',
+  PRIMARY KEY (project_id, unrecorded_change_id),
+  CHECK (
+    (
+      status = 'unresolved'
+      AND resolution_json IS NULL
+      AND resolved_at IS NULL
+      AND resolved_by_actor_source IS NULL
+    )
+    OR (
+      status = 'resolved'
+      AND resolution_json IS NOT NULL
+      AND resolved_at IS NOT NULL
+      AND resolved_by_actor_source IS NOT NULL
+    )
+  ),
+  FOREIGN KEY (project_id) REFERENCES project_state (project_id),
+  FOREIGN KEY (project_id, session_id) REFERENCES agent_sessions (project_id, session_id),
+  FOREIGN KEY (project_id, task_id) REFERENCES tasks (project_id, task_id)
+);
+
+CREATE INDEX idx_agent_sessions_connection
+  ON agent_sessions (project_id, connection_internal_id);
+CREATE INDEX idx_agent_sessions_open
+  ON agent_sessions (project_id, connection_internal_id)
+  WHERE ended_at IS NULL;
+CREATE INDEX idx_guard_events_session
+  ON guard_events (project_id, session_id, occurred_at);
+CREATE INDEX idx_guard_events_connection
+  ON guard_events (project_id, connection_internal_id, occurred_at);
+CREATE INDEX idx_guard_events_decision
+  ON guard_events (project_id, decision, occurred_at);
+CREATE INDEX idx_prompt_captures_session
+  ON prompt_captures (project_id, session_id, captured_at);
+CREATE INDEX idx_prompt_captures_connection
+  ON prompt_captures (project_id, connection_internal_id, captured_at);
+CREATE INDEX idx_unrecorded_changes_status
+  ON unrecorded_changes (project_id, status, detected_at);
+CREATE INDEX idx_unrecorded_changes_connection
+  ON unrecorded_changes (project_id, connection_internal_id, status);
+CREATE INDEX idx_unrecorded_changes_task
+  ON unrecorded_changes (project_id, task_id, status);
+```
+
+The version `2` project-state migration updates existing `project_state.schema_version` rows from `1` to `2`.
+
 Project-state constraints:
 
 - `project_state.state_version` is the only public baseline state clock and must be monotonic according to [Storage Versioning](storage-versioning.md).
@@ -737,6 +888,9 @@ Project-state constraints:
 - `artifact_staging.created_by_actor_source` records staging provenance. Staged bytes and notices remain artifact-owned and are not evidence authority by themselves.
 - `evidence_observations.source_kind` and `assurance_level` distinguish cooperative agent reports, registered connection observations, external tool results, user observations, reused evidence, and unverified claims.
 - `tool_invocations` stores replay rows with actor provenance and operation category. Replay rows are not caller authority and do not bypass current connection context or User Channel requirements.
+- `agent_sessions`, `guard_events`, `prompt_captures`, and `unrecorded_changes` are project-local guarded-operation records. They repeat `connection_internal_id` for connection scoping and use project-local keys so records do not leak across projects.
+- `guard_events.decision` is constrained to `allow`, `deny`, `warn`, or `inject_context`. These values record local guard decisions; they are not OS-level enforcement proof.
+- `unrecorded_changes.status` is constrained to `unresolved` or `resolved`. Resolved rows must carry resolution JSON, `resolved_at`, and `resolved_by_actor_source`; unresolved rows must not carry those resolution fields.
 
 ## Related Owners
 

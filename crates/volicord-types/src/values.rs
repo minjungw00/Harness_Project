@@ -371,6 +371,180 @@ pub const VERIFICATION_BASIS_TEST_FIXTURE_BINDING: &str = "test_fixture_binding"
 /// Baseline actor assurance level for cooperative Agent Connection provenance.
 pub const ACTOR_ASSURANCE_AGENT_CONNECTION_COOPERATIVE: &str = "agent_connection_cooperative";
 
+/// Host family associated with an Agent Connection or guard record.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum HostKind {
+    Codex,
+    ClaudeCode,
+    Generic,
+    Custom(String),
+}
+
+impl HostKind {
+    /// Returns the stable host-kind string.
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Codex => "codex",
+            Self::ClaudeCode => "claude_code",
+            Self::Generic => "generic",
+            Self::Custom(value) => value.as_str(),
+        }
+    }
+
+    /// Returns the stable host-kind string as an owned value.
+    pub fn to_canonical_string(&self) -> String {
+        self.as_str().to_owned()
+    }
+}
+
+impl fmt::Display for HostKind {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(self.as_str())
+    }
+}
+
+impl FromStr for HostKind {
+    type Err = HostKindParseError;
+
+    fn from_str(raw: &str) -> Result<Self, Self::Err> {
+        if raw.trim().is_empty() || raw.contains('\0') {
+            return Err(HostKindParseError);
+        }
+        Ok(match raw {
+            "codex" => Self::Codex,
+            "claude_code" => Self::ClaudeCode,
+            "generic" => Self::Generic,
+            value => Self::Custom(value.to_owned()),
+        })
+    }
+}
+
+impl Serialize for HostKind {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(self.as_str())
+    }
+}
+
+impl<'de> Deserialize<'de> for HostKind {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let raw = String::deserialize(deserializer)?;
+        Self::from_str(&raw).map_err(de::Error::custom)
+    }
+}
+
+impl JsonSchema for HostKind {
+    fn schema_name() -> String {
+        "HostKind".to_owned()
+    }
+
+    fn json_schema(_generator: &mut SchemaGenerator) -> Schema {
+        Schema::Object(SchemaObject {
+            instance_type: Some(SingleOrVec::Single(Box::new(InstanceType::String))),
+            ..Default::default()
+        })
+    }
+}
+
+/// Error returned when a `host_kind` value is not usable.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct HostKindParseError;
+
+impl fmt::Display for HostKindParseError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("host_kind must be a non-empty string without NUL bytes")
+    }
+}
+
+impl Error for HostKindParseError {}
+
+/// Guard integration mode recorded for a connection or session.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum GuardMode {
+    McpOnly,
+    Guarded,
+    Managed,
+}
+
+impl GuardMode {
+    /// Returns the stable value name for this guard mode.
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::McpOnly => "mcp_only",
+            Self::Guarded => "guarded",
+            Self::Managed => "managed",
+        }
+    }
+}
+
+/// Guard decision recorded for a guarded operation.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum GuardDecision {
+    Allow,
+    Deny,
+    Warn,
+    InjectContext,
+}
+
+impl GuardDecision {
+    /// Returns the stable value name for this guard decision.
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Allow => "allow",
+            Self::Deny => "deny",
+            Self::Warn => "warn",
+            Self::InjectContext => "inject_context",
+        }
+    }
+}
+
+/// Local guard-installation health status.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum GuardInstallationHealth {
+    Unknown,
+    Healthy,
+    ActionRequired,
+    Failed,
+}
+
+impl GuardInstallationHealth {
+    /// Returns the stable value name for this guard-installation health.
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Unknown => "unknown",
+            Self::Healthy => "healthy",
+            Self::ActionRequired => "action_required",
+            Self::Failed => "failed",
+        }
+    }
+}
+
+/// Resolution status for an unrecorded Product Repository change.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum UnrecordedChangeStatus {
+    Unresolved,
+    Resolved,
+}
+
+impl UnrecordedChangeStatus {
+    /// Returns the stable value name for this unrecorded-change status.
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Unresolved => "unresolved",
+            Self::Resolved => "resolved",
+        }
+    }
+}
+
 /// State reference discriminator values.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]

@@ -5,21 +5,24 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_json::{Map, Value};
 
 use crate::ids::{
-    ArtifactId, ArtifactInputId, BaselineRef, ChangeUnitId, EventId, EvidenceObservationId,
-    IdempotencyKey, ProjectContinuityRecordId, ProjectId, RecordId, RequestId, RiskId, RunId,
-    StagedArtifactHandleId, StorageRef, TaskId, UserJudgmentId, UserJudgmentOptionId,
+    AgentConnectionId, AgentSessionId, ArtifactId, ArtifactInputId, BaselineRef, ChangeUnitId,
+    EventId, EvidenceObservationId, GuardEventId, GuardInstallationId, IdempotencyKey,
+    ProjectContinuityRecordId, ProjectId, PromptCaptureId, RecordId, RequestId, RiskId, RunId,
+    StagedArtifactHandleId, StorageRef, TaskId, UnrecordedChangeId, UserJudgmentId,
+    UserJudgmentOptionId,
 };
 use crate::values::{
     ActorSource, ArtifactAvailability, ArtifactInputSourceKind, ArtifactIntegrityStatus,
     ChangeUnitEffectKind, CloseReadinessBlockerCategory, CloseReason, CloseState, EffectKind,
     EnabledEnforcementMechanism, ErrorCode, EvidenceAssuranceLevel, EvidenceCoverageState,
-    EvidenceSourceKind, EvidenceStatus, GuaranteeLevel, JudgmentBasisCompatibilityStatus,
-    JudgmentKind, JudgmentPresentation, JudgmentRequiredFor, JudgmentResolutionOutcome, MethodName,
-    NextActionKind, PlannedBlockerSourceKind, ProjectContinuityKind, ProjectContinuityStatus,
+    EvidenceSourceKind, EvidenceStatus, GuaranteeLevel, GuardDecision, GuardInstallationHealth,
+    GuardMode, HostKind, JudgmentBasisCompatibilityStatus, JudgmentKind, JudgmentPresentation,
+    JudgmentRequiredFor, JudgmentResolutionOutcome, MethodName, NextActionKind,
+    PlannedBlockerSourceKind, ProjectContinuityKind, ProjectContinuityStatus,
     ProjectEnforcementProfileSource, ProjectEnforcementProfileStatus, RedactionState, ResponseKind,
-    RunKind, StateRecordKind, TaskLifecyclePhase, TaskMode, TaskResult, UserJudgmentOptionAction,
-    UserJudgmentStatus, UtcTimestamp, ValidatorSeverity, ValidatorStatus, WriteCheckStatus,
-    WriteDecisionCategory,
+    RunKind, StateRecordKind, TaskLifecyclePhase, TaskMode, TaskResult, UnrecordedChangeStatus,
+    UserJudgmentOptionAction, UserJudgmentStatus, UtcTimestamp, ValidatorSeverity, ValidatorStatus,
+    WriteCheckStatus, WriteDecisionCategory,
 };
 
 /// JSON object used where an owner document defines a field as `object`.
@@ -278,6 +281,90 @@ pub struct StateRecordRef {
     pub project_id: ProjectId,
     pub task_id: RequiredNullable<TaskId>,
     pub state_version: RequiredNullable<u64>,
+}
+
+/// Registry-scoped guard installation and host capability record.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct GuardInstallation {
+    pub guard_installation_id: GuardInstallationId,
+    pub runtime_home_id: String,
+    pub connection_id: AgentConnectionId,
+    pub project_id: RequiredNullable<ProjectId>,
+    pub host_kind: HostKind,
+    pub guard_mode: GuardMode,
+    pub host_capability: JsonObject,
+    pub installation_health: GuardInstallationHealth,
+    pub installed_at: RequiredNullable<UtcTimestamp>,
+    pub last_checked_at: UtcTimestamp,
+    pub metadata: JsonObject,
+}
+
+/// Project-scoped Agent Session record for guarded operation.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct AgentSession {
+    pub session_id: AgentSessionId,
+    pub project_id: ProjectId,
+    pub connection_id: AgentConnectionId,
+    pub guard_installation_id: RequiredNullable<GuardInstallationId>,
+    pub host_kind: HostKind,
+    pub guard_mode: GuardMode,
+    pub started_at: UtcTimestamp,
+    pub ended_at: RequiredNullable<UtcTimestamp>,
+    pub metadata: JsonObject,
+}
+
+/// Project-scoped guard event record.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct GuardEvent {
+    pub guard_event_id: GuardEventId,
+    pub project_id: ProjectId,
+    pub session_id: RequiredNullable<AgentSessionId>,
+    pub connection_id: AgentConnectionId,
+    pub guard_installation_id: RequiredNullable<GuardInstallationId>,
+    pub event_kind: String,
+    pub decision: GuardDecision,
+    pub subject: JsonObject,
+    pub result: JsonObject,
+    pub occurred_at: UtcTimestamp,
+    pub metadata: JsonObject,
+}
+
+/// Project-scoped prompt capture record.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct PromptCapture {
+    pub prompt_capture_id: PromptCaptureId,
+    pub project_id: ProjectId,
+    pub session_id: AgentSessionId,
+    pub connection_id: AgentConnectionId,
+    pub capture_kind: String,
+    pub prompt_sha256: String,
+    pub prompt_text: RequiredNullable<String>,
+    pub captured_at: UtcTimestamp,
+    pub metadata: JsonObject,
+}
+
+/// Project-scoped unrecorded Product Repository change record.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct UnrecordedChange {
+    pub unrecorded_change_id: UnrecordedChangeId,
+    pub project_id: ProjectId,
+    pub session_id: RequiredNullable<AgentSessionId>,
+    pub connection_id: AgentConnectionId,
+    pub task_id: RequiredNullable<TaskId>,
+    pub status: UnrecordedChangeStatus,
+    pub summary: String,
+    pub observed_paths: Vec<String>,
+    pub detection: JsonObject,
+    pub resolution: RequiredNullable<JsonObject>,
+    pub detected_at: UtcTimestamp,
+    pub resolved_at: RequiredNullable<UtcTimestamp>,
+    pub resolved_by_actor_source: RequiredNullable<ActorSource>,
+    pub metadata: JsonObject,
 }
 
 /// Project-level continuity record that preserves durable context after Task close.

@@ -58,6 +58,11 @@ macro_rules! opaque_string_type {
 opaque_string_type!(ProjectId, "Opaque project identifier.");
 opaque_string_type!(TaskId, "Opaque Task identifier.");
 opaque_string_type!(AgentConnectionId, "Opaque Agent Connection identifier.");
+opaque_string_type!(AgentSessionId, "Opaque Agent Session identifier.");
+opaque_string_type!(GuardInstallationId, "Opaque guard-installation identifier.");
+opaque_string_type!(GuardEventId, "Opaque guard-event identifier.");
+opaque_string_type!(PromptCaptureId, "Opaque prompt-capture identifier.");
+opaque_string_type!(UnrecordedChangeId, "Opaque unrecorded-change identifier.");
 opaque_string_type!(RequestId, "Opaque request identifier.");
 opaque_string_type!(IdempotencyKey, "Opaque idempotency-key identifier.");
 opaque_string_type!(EventId, "Opaque event identifier.");
@@ -110,6 +115,16 @@ pub enum DurableIdKind {
     Run,
     /// Core-generated committed event ids.
     Event,
+    /// Core-generated Agent Session ids.
+    AgentSession,
+    /// Core-generated guard-installation ids.
+    GuardInstallation,
+    /// Core-generated guard-event ids.
+    GuardEvent,
+    /// Core-generated prompt-capture ids.
+    PromptCapture,
+    /// Core-generated unrecorded-change ids.
+    UnrecordedChange,
     /// Core-generated transient staged artifact handles.
     StagedArtifact,
     /// Core-generated persistent artifact ids.
@@ -134,6 +149,11 @@ impl DurableIdKind {
             Self::WriteCheck => "wc_",
             Self::Run => "run_",
             Self::Event => "evt_",
+            Self::AgentSession => "session_",
+            Self::GuardInstallation => "guard_installation_",
+            Self::GuardEvent => "guard_event_",
+            Self::PromptCapture => "prompt_capture_",
+            Self::UnrecordedChange => "unrecorded_change_",
             Self::StagedArtifact => "staged_",
             Self::Artifact => "artifact_",
             Self::Evidence => "evidence_",
@@ -153,6 +173,11 @@ impl fmt::Display for DurableIdKind {
             Self::WriteCheck => "write_check",
             Self::Run => "run",
             Self::Event => "event",
+            Self::AgentSession => "agent_session",
+            Self::GuardInstallation => "guard_installation",
+            Self::GuardEvent => "guard_event",
+            Self::PromptCapture => "prompt_capture",
+            Self::UnrecordedChange => "unrecorded_change",
             Self::StagedArtifact => "staged_artifact",
             Self::Artifact => "artifact",
             Self::Evidence => "evidence",

@@ -1,6 +1,6 @@
 # Storage Records
 
-This document owns the baseline persistent storage record families, placement, relationship layout, storage-owned values, and storage-owned JSON placement. Persistent records are local records committed by Core for later reads inside the `Volicord Runtime Home`.
+This document owns the baseline persistent storage record families, placement, relationship layout, storage-owned values, and storage-owned JSON placement. Persistent records are local records committed for later reads inside the `Volicord Runtime Home`.
 
 Persistent records are the local Core storage authority for Volicord records. Security guarantees, external audit guarantees, anti-forgery claims, and `Product Repository` file write authority remain with their owners.
 
@@ -44,9 +44,9 @@ The tree is representative after the relevant storage features have been used; i
 
 Storage placement:
 
-- `registry.sqlite` stores Runtime Home identity, installation profile records, project registration mapping, project aliases, Agent Connection records, Connection Projects membership, and registry metadata. The installation profile includes the setup-time `volicord` command, MCP launch command, bin directory, default connection mode, metadata, and timestamps. Project registration includes `project_internal_id`, display name, CLI selection alias, Runtime Home relationship, registered `repo_root`, `project_home`, project `state.sqlite` path, status, metadata, and timestamps.
+- `registry.sqlite` stores Runtime Home identity, installation profile records, project registration mapping, project aliases, Agent Connection records, Connection Projects membership, guard installation records, and registry metadata. The installation profile includes the setup-time `volicord` command, MCP launch command, bin directory, default connection mode, metadata, and timestamps. Project registration includes `project_internal_id`, display name, CLI selection alias, Runtime Home relationship, registered `repo_root`, `project_home`, project `state.sqlite` path, status, metadata, and timestamps.
 - `projects/{project_internal_id}/` is the default Volicord project home shape for one registered project. It is not the same location or authority as `repo_root`.
-- `state.sqlite` stores project-local Core state for the registered project.
+- `state.sqlite` stores project-local Core state and project-scoped guarded-operation records for the registered project.
 - `artifacts/` is the project artifact store when artifact storage is used; it may be created lazily when artifact storage is first needed. `artifacts/tmp/` is transient staging space when artifact staging requires it, not evidence authority; it may be created lazily when staging occurs. These directories need not exist immediately after project registration.
 
 Artifact path bases:
@@ -56,7 +56,7 @@ Artifact path bases:
 
 For operational project records, `project_home` is the location owner for project-local runtime state. The executable project state database path is derived from the validated project home as `project_home/state.sqlite`. The stored `state_db_path` remains in `registry.sqlite` for persistence and diagnostics, but it must match that derived path before Store returns a normal `ProjectRecord`, opens or migrates project-local state, resolves Agent Connection project access, enters Core execution, or reports MCP project availability. A mismatching registration remains inspectable as raw registry content for diagnosis, but operational lookup and listing must reject it rather than omit it or return it as a normal project. Inspection must not open, create, migrate, or repair the alternate `state_db_path`.
 
-The `Product Repository` is the user product-file boundary registered by `repo_root`. It is not a Volicord runtime home, not Core authority storage, and not where runtime records, replay rows, judgments, Write Checks, or Agent Connection registry state are stored.
+The `Product Repository` is the user product-file boundary registered by `repo_root`. It is not a Volicord runtime home, not Core authority storage, and not where runtime records, replay rows, judgments, Write Checks, guard records, or Agent Connection registry state are stored.
 
 Baseline SQLite table shape, indexes, foreign keys, migration tables, and constraints belong to [Storage DDL](storage-ddl.md). The current baseline SQLite storage profile for these records is `baseline_sqlite_v3`; profile/version boundary behavior belongs to [Storage Versioning](storage-versioning.md).
 
@@ -83,7 +83,12 @@ Baseline storage persists only the record families defined by this baseline stor
 | `registry.sqlite` | Project registration and aliases | Project mapping | `project_internal_id`, display name, CLI selection alias, Runtime Home relationship, unique `repo_root`, location-owning `project_home`, stored `state_db_path` that must match `project_home/state.sqlite` for execution, status, metadata, and alias-to-internal-identity mappings. |
 | `registry.sqlite` | Agent Connection | MCP host connection unit | Durable `connection_internal_id`, host kind, connection intent, host scope, optional `project_internal_id`, internal server name, config target, mode, enabled state, managed fingerprint, verification summary status, verification report JSON, user actions JSON, metadata, and timestamps. |
 | `registry.sqlite` | Connection Projects | Connection project allowlist | Explicit many-to-many membership between an Agent Connection and registered projects using `connection_internal_id` and `project_internal_id`. |
+| `registry.sqlite` | Guard installation | Guard setup and host capability record | Runtime Home, Agent Connection, optional project scope, host kind, guard mode, host capability JSON, installation health, timestamps, and metadata. |
 | `state.sqlite` | `project_state` | Project state header | Storage profile, `state_version`, current `Task` pointer, and project enforcement profile. |
+| `state.sqlite` | `agent_sessions` | Guarded Agent Session | Project-scoped session for one Agent Connection, optional guard installation, host kind, guard mode, start/end timestamps, and metadata. |
+| `state.sqlite` | `guard_events` | Guard decision event | Project-scoped guard event tied to a connection and optional session or installation, with decision, subject JSON, result JSON, timestamp, and metadata. |
+| `state.sqlite` | `prompt_captures` | Prompt capture | Project-scoped prompt capture for a session, including connection, capture kind, prompt hash, optional prompt text, timestamp, and metadata. |
+| `state.sqlite` | `unrecorded_changes` | Unrecorded Product Repository change | Project-scoped unresolved or resolved record for observed Product Repository changes that are not yet matched to a Core run or other owner-defined record. |
 | `state.sqlite` | `tasks` | Work-unit state | User-value work unit, shaping summary, scope and close-basis revisions, nullable current close basis, lifecycle/result/terminal close summary, current `CompletionPolicy`, current Change Unit pointer, and creator actor source. |
 | `state.sqlite` | `change_units` | Scoped work boundary | Scope summaries, write basis, Change Unit lifecycle, and owning `Task` relation. |
 | `state.sqlite` | `user_judgments` | User-owned judgment state | Pending, resolved, stale, superseded, and expired user-owned judgments, including basis snapshot, request context, options, sensitive-action scope, resolution machine action and outcome, rationale metadata, User Channel actor source, verification basis, and assurance level. |
@@ -109,7 +114,9 @@ Baseline records use opaque stable ids as primary keys or equivalent unique keys
 - Project registration requires a unique `project_internal_id`, unique project alias, unique repository root, unique project home, and unique state database path. `project_name` is the display name and `project_alias` is the CLI selection aid.
 - Agent Connection identity is unique by `connection_internal_id`.
 - Connection Projects membership is unique by `connection_internal_id` and `project_internal_id`, and is the only registry membership that lets one connection address a registered project.
+- Guard installation identity is unique by `guard_installation_id`. Project-scoped guard installations must name a registered project and an Agent Connection that has Connection Projects membership for that project.
 - Project-scoped rows belong to a registered project.
+- Guard sessions, guard events, prompt captures, and unrecorded changes belong to one project-local `state.sqlite` and name the Agent Connection that observed or produced the record.
 - Task-scoped rows belong to the same project and `Task` as their owning `tasks` row.
 - Current pointers and owner references must point to same-project records.
 - A `Task` has at most one current Change Unit.
@@ -131,13 +138,20 @@ Storage must validate stored relationships before commit, including:
 - artifact staging consumption and promotion targets
 - artifact owner relations
 - Connection Projects membership and enabled-state consistency for Agent Connection routing
+- guard installation, Agent Session, guard event, prompt capture, and unrecorded-change project and connection scope
 - JSON reference arrays that SQLite cannot express as direct foreign keys
 
 ### Authority Row Preservation
 
 Ordinary baseline Core operations preserve authority rows through lifecycle or status transitions. Completing, cancelling, or superseding a `Task` changes the relevant lifecycle/status meaning while keeping committed authority rows addressable for audit and recovery.
 
-This preservation applies to `tasks`, `change_units`, `user_judgments`, `project_continuity_records`, `write_checks`, `runs`, `artifacts`, `artifact_links`, `evidence_summaries`, `evidence_observations`, `blockers`, `task_events`, and `tool_invocations`. Artifact-specific transient and durable retention rules belong to [Artifact Storage](storage-artifacts.md).
+This preservation applies to `tasks`, `change_units`, `user_judgments`, `project_continuity_records`, `write_checks`, `runs`, `artifacts`, `artifact_links`, `evidence_summaries`, `evidence_observations`, `blockers`, `task_events`, `tool_invocations`, `agent_sessions`, `guard_events`, `prompt_captures`, and `unrecorded_changes`. Artifact-specific transient and durable retention rules belong to [Artifact Storage](storage-artifacts.md).
+
+### Guarded Operation Records
+
+Guarded-operation records preserve local authority facts about host integration state. They can help Core and Store code determine whether work can honestly proceed or close, but they are not OS-level sandboxing, filesystem ACLs, external policy enforcement, anti-forgery proof, or proof that a write was prevented.
+
+`guard_installations` records setup health and host capability by Runtime Home, Agent Connection, and optional project scope. `agent_sessions`, `guard_events`, `prompt_captures`, and `unrecorded_changes` are project-local rows and must not leak across project `state.sqlite` databases. An unresolved `unrecorded_changes` row means an observed Product Repository change still needs owner-defined reconciliation; resolving the row records the local resolution facts and preserves the row.
 
 ### Current Close Basis
 
@@ -172,6 +186,11 @@ Closed storage-owned value sets are persistence constraints. Unknown values must
 | Agent Connection `mode` | `workflow`, `read_only` |
 | Agent Connection `enabled` | `0`, `1` |
 | Agent Connection `last_verification_status` | `not_verified`, `complete`, `action_required`, `failed` |
+| Guard installation `guard_mode` | `mcp_only`, `guarded`, `managed` |
+| Guard installation `installation_health` | `unknown`, `healthy`, `action_required`, `failed` |
+| `agent_sessions.guard_mode` | `mcp_only`, `guarded`, `managed` |
+| `guard_events.decision` | `allow`, `deny`, `warn`, `inject_context` |
+| `unrecorded_changes.status` | `unresolved`, `resolved` |
 | `change_units.status` | `proposed`, `active`, `replaced`, `closed` |
 | `write_checks.status` | `active`, `consumed`, `expired`, `stale`, `revoked` |
 | `user_judgments.status` | `pending`, `resolved`, `stale`, `superseded`, `expired` |
@@ -207,6 +226,11 @@ Rules:
 |---|---|
 | Installation profile | Installation-profile metadata that is not a host trust decision, user judgment, or public API schema. |
 | Agent Connection | Verification report JSON, user-action JSON, and metadata that are not used as authority, host trust proof, or a replacement for external host configuration. |
+| Guard installation | Host capability JSON and metadata for local guard setup health, not OS enforcement proof. |
+| `agent_sessions` | Non-authority metadata for a project-scoped Agent Session. |
+| `guard_events` | Guard subject JSON, result JSON, and metadata for a local guard decision event. |
+| `prompt_captures` | Non-authority metadata for a captured prompt record; prompt text is a direct nullable text column. |
+| `unrecorded_changes` | Observed path arrays, detection JSON, resolution JSON, and metadata for unrecorded Product Repository changes. |
 | `tasks` | Shaping summary, bounded lists, autonomy boundary, current close basis, terminal close summary, lifecycle summary, and `CompletionPolicy`. |
 | `change_units` | Scope summaries, bounded lists, write basis summaries, optional effect contract data, and lifecycle support data. |
 | `user_judgments` | Judgment request, context, options, affected refs, artifact refs, basis snapshot, sensitive-action scope, machine-readable resolution, and descriptive rationale metadata. |

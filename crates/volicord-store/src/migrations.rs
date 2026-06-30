@@ -8,10 +8,10 @@ pub const STORAGE_PROFILE: &str = "baseline_sqlite_v3";
 pub(crate) const OLD_STORAGE_PROFILE: &str = "baseline_sqlite";
 
 /// Latest schema version for `registry.sqlite`.
-pub const REGISTRY_SCHEMA_VERSION: i64 = 1;
+pub const REGISTRY_SCHEMA_VERSION: i64 = 2;
 
 /// Latest schema version for project `state.sqlite`.
-pub const PROJECT_STATE_SCHEMA_VERSION: i64 = 1;
+pub const PROJECT_STATE_SCHEMA_VERSION: i64 = 2;
 
 /// `schema_migrations.database_kind` for `registry.sqlite`.
 pub const REGISTRY_DATABASE_KIND: &str = "registry";
@@ -19,19 +19,35 @@ pub const REGISTRY_DATABASE_KIND: &str = "registry";
 /// `schema_migrations.database_kind` for project `state.sqlite`.
 pub const PROJECT_STATE_DATABASE_KIND: &str = "project_state";
 
-const REGISTRY_MIGRATIONS: &[Migration] = &[Migration {
-    database_kind: REGISTRY_DATABASE_KIND,
-    version: REGISTRY_SCHEMA_VERSION,
-    name: "registry_initial_v1",
-    sql: REGISTRY_INITIAL_SQL,
-}];
+const REGISTRY_MIGRATIONS: &[Migration] = &[
+    Migration {
+        database_kind: REGISTRY_DATABASE_KIND,
+        version: 1,
+        name: "registry_initial_v1",
+        sql: REGISTRY_INITIAL_SQL,
+    },
+    Migration {
+        database_kind: REGISTRY_DATABASE_KIND,
+        version: REGISTRY_SCHEMA_VERSION,
+        name: "registry_guard_records_v2",
+        sql: REGISTRY_GUARD_RECORDS_SQL,
+    },
+];
 
-const PROJECT_STATE_MIGRATIONS: &[Migration] = &[Migration {
-    database_kind: PROJECT_STATE_DATABASE_KIND,
-    version: PROJECT_STATE_SCHEMA_VERSION,
-    name: "project_state_initial_v1",
-    sql: PROJECT_STATE_INITIAL_SQL,
-}];
+const PROJECT_STATE_MIGRATIONS: &[Migration] = &[
+    Migration {
+        database_kind: PROJECT_STATE_DATABASE_KIND,
+        version: 1,
+        name: "project_state_initial_v1",
+        sql: PROJECT_STATE_INITIAL_SQL,
+    },
+    Migration {
+        database_kind: PROJECT_STATE_DATABASE_KIND,
+        version: PROJECT_STATE_SCHEMA_VERSION,
+        name: "project_state_guard_records_v2",
+        sql: PROJECT_STATE_GUARD_RECORDS_SQL,
+    },
+];
 
 struct Migration {
     database_kind: &'static str,
@@ -395,6 +411,48 @@ CREATE UNIQUE INDEX idx_agent_connections_target_global
     server_name
   )
   WHERE project_internal_id IS NULL;
+"#;
+
+const REGISTRY_GUARD_RECORDS_SQL: &str = r#"
+CREATE TABLE guard_installations (
+  guard_installation_id TEXT PRIMARY KEY,
+  runtime_home_id TEXT NOT NULL,
+  connection_internal_id TEXT NOT NULL,
+  project_internal_id TEXT,
+  host_kind TEXT NOT NULL CHECK (length(trim(host_kind)) > 0),
+  guard_mode TEXT NOT NULL CHECK (guard_mode IN ('mcp_only', 'guarded', 'managed')),
+  host_capability_json TEXT NOT NULL DEFAULT '{}',
+  installation_health TEXT NOT NULL
+    CHECK (installation_health IN ('unknown', 'healthy', 'action_required', 'failed')),
+  installed_at TEXT,
+  last_checked_at TEXT NOT NULL,
+  metadata_json TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY (runtime_home_id) REFERENCES runtime_home (runtime_home_id) ON DELETE RESTRICT,
+  FOREIGN KEY (connection_internal_id)
+    REFERENCES agent_connections (connection_internal_id)
+    ON DELETE RESTRICT,
+  FOREIGN KEY (project_internal_id) REFERENCES projects (project_internal_id) ON DELETE RESTRICT
+);
+
+CREATE INDEX idx_guard_installations_connection
+  ON guard_installations (connection_internal_id);
+CREATE INDEX idx_guard_installations_project
+  ON guard_installations (project_internal_id);
+CREATE INDEX idx_guard_installations_health
+  ON guard_installations (installation_health);
+CREATE UNIQUE INDEX idx_guard_installations_scope_project
+  ON guard_installations (connection_internal_id, project_internal_id, guard_mode)
+  WHERE project_internal_id IS NOT NULL;
+CREATE UNIQUE INDEX idx_guard_installations_scope_global
+  ON guard_installations (connection_internal_id, guard_mode)
+  WHERE project_internal_id IS NULL;
+
+UPDATE runtime_home
+   SET schema_version = 2,
+       updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+ WHERE schema_version = 1;
 "#;
 
 const PROJECT_STATE_INITIAL_SQL: &str = r#"
@@ -926,6 +984,116 @@ CREATE INDEX idx_task_events_task_seq
   ON task_events (project_id, task_id, event_seq);
 "#;
 
+const PROJECT_STATE_GUARD_RECORDS_SQL: &str = r#"
+CREATE TABLE agent_sessions (
+  project_id TEXT NOT NULL,
+  session_id TEXT NOT NULL,
+  connection_internal_id TEXT NOT NULL,
+  guard_installation_id TEXT,
+  host_kind TEXT NOT NULL CHECK (length(trim(host_kind)) > 0),
+  guard_mode TEXT NOT NULL CHECK (guard_mode IN ('mcp_only', 'guarded', 'managed')),
+  started_at TEXT NOT NULL,
+  ended_at TEXT,
+  metadata_json TEXT NOT NULL DEFAULT '{}',
+  PRIMARY KEY (project_id, session_id),
+  FOREIGN KEY (project_id) REFERENCES project_state (project_id)
+);
+
+CREATE TABLE guard_events (
+  project_id TEXT NOT NULL,
+  guard_event_id TEXT NOT NULL,
+  session_id TEXT,
+  connection_internal_id TEXT NOT NULL,
+  guard_installation_id TEXT,
+  event_kind TEXT NOT NULL,
+  decision TEXT NOT NULL CHECK (decision IN ('allow', 'deny', 'warn', 'inject_context')),
+  subject_json TEXT NOT NULL DEFAULT '{}',
+  result_json TEXT NOT NULL DEFAULT '{}',
+  occurred_at TEXT NOT NULL,
+  metadata_json TEXT NOT NULL DEFAULT '{}',
+  PRIMARY KEY (project_id, guard_event_id),
+  FOREIGN KEY (project_id) REFERENCES project_state (project_id),
+  FOREIGN KEY (project_id, session_id) REFERENCES agent_sessions (project_id, session_id)
+);
+
+CREATE TABLE prompt_captures (
+  project_id TEXT NOT NULL,
+  prompt_capture_id TEXT NOT NULL,
+  session_id TEXT NOT NULL,
+  connection_internal_id TEXT NOT NULL,
+  capture_kind TEXT NOT NULL,
+  prompt_sha256 TEXT NOT NULL,
+  prompt_text TEXT,
+  captured_at TEXT NOT NULL,
+  metadata_json TEXT NOT NULL DEFAULT '{}',
+  PRIMARY KEY (project_id, prompt_capture_id),
+  FOREIGN KEY (project_id) REFERENCES project_state (project_id),
+  FOREIGN KEY (project_id, session_id) REFERENCES agent_sessions (project_id, session_id)
+);
+
+CREATE TABLE unrecorded_changes (
+  project_id TEXT NOT NULL,
+  unrecorded_change_id TEXT NOT NULL,
+  session_id TEXT,
+  connection_internal_id TEXT NOT NULL,
+  task_id TEXT,
+  status TEXT NOT NULL CHECK (status IN ('unresolved', 'resolved')),
+  summary TEXT NOT NULL CHECK (length(trim(summary)) > 0),
+  observed_paths_json TEXT NOT NULL DEFAULT '[]',
+  detection_json TEXT NOT NULL DEFAULT '{}',
+  resolution_json TEXT,
+  detected_at TEXT NOT NULL,
+  resolved_at TEXT,
+  resolved_by_actor_source TEXT,
+  metadata_json TEXT NOT NULL DEFAULT '{}',
+  PRIMARY KEY (project_id, unrecorded_change_id),
+  CHECK (
+    (
+      status = 'unresolved'
+      AND resolution_json IS NULL
+      AND resolved_at IS NULL
+      AND resolved_by_actor_source IS NULL
+    )
+    OR (
+      status = 'resolved'
+      AND resolution_json IS NOT NULL
+      AND resolved_at IS NOT NULL
+      AND resolved_by_actor_source IS NOT NULL
+    )
+  ),
+  FOREIGN KEY (project_id) REFERENCES project_state (project_id),
+  FOREIGN KEY (project_id, session_id) REFERENCES agent_sessions (project_id, session_id),
+  FOREIGN KEY (project_id, task_id) REFERENCES tasks (project_id, task_id)
+);
+
+CREATE INDEX idx_agent_sessions_connection
+  ON agent_sessions (project_id, connection_internal_id);
+CREATE INDEX idx_agent_sessions_open
+  ON agent_sessions (project_id, connection_internal_id)
+  WHERE ended_at IS NULL;
+CREATE INDEX idx_guard_events_session
+  ON guard_events (project_id, session_id, occurred_at);
+CREATE INDEX idx_guard_events_connection
+  ON guard_events (project_id, connection_internal_id, occurred_at);
+CREATE INDEX idx_guard_events_decision
+  ON guard_events (project_id, decision, occurred_at);
+CREATE INDEX idx_prompt_captures_session
+  ON prompt_captures (project_id, session_id, captured_at);
+CREATE INDEX idx_prompt_captures_connection
+  ON prompt_captures (project_id, connection_internal_id, captured_at);
+CREATE INDEX idx_unrecorded_changes_status
+  ON unrecorded_changes (project_id, status, detected_at);
+CREATE INDEX idx_unrecorded_changes_connection
+  ON unrecorded_changes (project_id, connection_internal_id, status);
+CREATE INDEX idx_unrecorded_changes_task
+  ON unrecorded_changes (project_id, task_id, status);
+
+UPDATE project_state
+   SET schema_version = 2,
+       updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+ WHERE schema_version = 1;
+"#;
+
 #[cfg(test)]
 mod tests {
     use std::{error::Error, fs, path::Path};
@@ -942,25 +1110,39 @@ mod tests {
     };
 
     #[test]
-    fn expected_migration_catalogs_contain_only_initial_rows() {
+    fn expected_migration_catalogs_contain_ordered_rows() {
         assert_eq!(STORAGE_PROFILE, "baseline_sqlite_v3");
-        assert_eq!(REGISTRY_SCHEMA_VERSION, 1);
-        assert_eq!(PROJECT_STATE_SCHEMA_VERSION, 1);
+        assert_eq!(REGISTRY_SCHEMA_VERSION, 2);
+        assert_eq!(PROJECT_STATE_SCHEMA_VERSION, 2);
         assert_eq!(
             expected_registry_migrations(),
-            vec![ExpectedMigration {
-                database_kind: REGISTRY_DATABASE_KIND,
-                version: 1,
-                name: "registry_initial_v1",
-            }]
+            vec![
+                ExpectedMigration {
+                    database_kind: REGISTRY_DATABASE_KIND,
+                    version: 1,
+                    name: "registry_initial_v1",
+                },
+                ExpectedMigration {
+                    database_kind: REGISTRY_DATABASE_KIND,
+                    version: 2,
+                    name: "registry_guard_records_v2",
+                }
+            ]
         );
         assert_eq!(
             expected_project_state_migrations(),
-            vec![ExpectedMigration {
-                database_kind: PROJECT_STATE_DATABASE_KIND,
-                version: 1,
-                name: "project_state_initial_v1",
-            }]
+            vec![
+                ExpectedMigration {
+                    database_kind: PROJECT_STATE_DATABASE_KIND,
+                    version: 1,
+                    name: "project_state_initial_v1",
+                },
+                ExpectedMigration {
+                    database_kind: PROJECT_STATE_DATABASE_KIND,
+                    version: 2,
+                    name: "project_state_guard_records_v2",
+                }
+            ]
         );
     }
 
@@ -971,14 +1153,23 @@ mod tests {
 
         let conn = open_registry_database(&path)?;
         validate_registry_schema(&conn)?;
-        assert_single_migration(&conn, REGISTRY_DATABASE_KIND, "registry_initial_v1")?;
+        assert_migrations(
+            &conn,
+            REGISTRY_DATABASE_KIND,
+            &["registry_initial_v1", "registry_guard_records_v2"],
+        )?;
         drop(conn);
 
         let conn = open_registry_database(&path)?;
         validate_registry_schema(&conn)?;
-        assert_single_migration(&conn, REGISTRY_DATABASE_KIND, "registry_initial_v1")?;
+        assert_migrations(
+            &conn,
+            REGISTRY_DATABASE_KIND,
+            &["registry_initial_v1", "registry_guard_records_v2"],
+        )?;
         assert!(table_exists(&conn, "agent_connections")?);
         assert!(table_exists(&conn, "connection_projects")?);
+        assert!(table_exists(&conn, "guard_installations")?);
         Ok(())
     }
 
@@ -989,21 +1180,25 @@ mod tests {
 
         let conn = open_project_state_database(&path)?;
         validate_project_state_schema(&conn)?;
-        assert_single_migration(
+        assert_migrations(
             &conn,
             PROJECT_STATE_DATABASE_KIND,
-            "project_state_initial_v1",
+            &["project_state_initial_v1", "project_state_guard_records_v2"],
         )?;
         drop(conn);
 
         let conn = open_project_state_database(&path)?;
         validate_project_state_schema(&conn)?;
-        assert_single_migration(
+        assert_migrations(
             &conn,
             PROJECT_STATE_DATABASE_KIND,
-            "project_state_initial_v1",
+            &["project_state_initial_v1", "project_state_guard_records_v2"],
         )?;
         assert!(table_exists(&conn, "tool_invocations")?);
+        assert!(table_exists(&conn, "agent_sessions")?);
+        assert!(table_exists(&conn, "guard_events")?);
+        assert!(table_exists(&conn, "prompt_captures")?);
+        assert!(table_exists(&conn, "unrecorded_changes")?);
         assert!(column_exists(
             &conn,
             "project_state",
@@ -1072,7 +1267,7 @@ mod tests {
         ));
         assert!(error.to_string().contains("explicitly reinitialize"));
         assert_eq!(file_hash(&path)?, hash_before);
-        assert_eq!(migration_count(&path, REGISTRY_DATABASE_KIND)?, 1);
+        assert_eq!(migration_count(&path, REGISTRY_DATABASE_KIND)?, 2);
         assert_eq!(stored_profile(&path, "runtime_home")?, OLD_STORAGE_PROFILE);
         Ok(())
     }
@@ -1110,7 +1305,7 @@ mod tests {
         ));
         assert!(error.to_string().contains("explicitly reinitialize"));
         assert_eq!(file_hash(&path)?, hash_before);
-        assert_eq!(migration_count(&path, PROJECT_STATE_DATABASE_KIND)?, 1);
+        assert_eq!(migration_count(&path, PROJECT_STATE_DATABASE_KIND)?, 2);
         assert_eq!(stored_profile(&path, "project_state")?, OLD_STORAGE_PROFILE);
         Ok(())
     }
@@ -1141,7 +1336,7 @@ mod tests {
         assert!(matches!(error, StoreError::SchemaInvariant { .. }));
         assert!(error.to_string().contains("newer than supported"));
         assert_eq!(file_hash(&path)?, hash_before);
-        assert_eq!(migration_count(&path, PROJECT_STATE_DATABASE_KIND)?, 2);
+        assert_eq!(migration_count(&path, PROJECT_STATE_DATABASE_KIND)?, 3);
         Ok(())
     }
 
@@ -1163,23 +1358,44 @@ mod tests {
         Ok(())
     }
 
-    fn assert_single_migration(
+    fn assert_migrations(
         conn: &Connection,
         database_kind: &str,
-        expected_name: &str,
+        expected_names: &[&str],
     ) -> rusqlite::Result<()> {
-        let row: (i64, String, String) = conn.query_row(
+        let mut stmt = conn.prepare(
             "SELECT version, name, storage_profile
                FROM schema_migrations
-              WHERE database_kind = ?1",
-            [database_kind],
-            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+              WHERE database_kind = ?1
+              ORDER BY version",
         )?;
+        let rows = stmt.query_map([database_kind], |row| {
+            Ok((
+                row.get::<_, i64>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+            ))
+        })?;
+        let mut actual = Vec::new();
+        for row in rows {
+            actual.push(row?);
+        }
+        let expected = expected_names
+            .iter()
+            .enumerate()
+            .map(|(index, name)| {
+                (
+                    i64::try_from(index + 1).expect("migration index fits"),
+                    (*name).to_owned(),
+                    STORAGE_PROFILE.to_owned(),
+                )
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(actual, expected);
         assert_eq!(
-            row,
-            (1, expected_name.to_owned(), STORAGE_PROFILE.to_owned())
+            migration_count_from_conn(conn, database_kind)?,
+            i64::try_from(expected_names.len()).expect("migration count fits")
         );
-        assert_eq!(migration_count_from_conn(conn, database_kind)?, 1);
         Ok(())
     }
 
@@ -1242,10 +1458,10 @@ mod tests {
         apply_project_state_migrations(&mut conn)?;
         validate_project_state_schema(&conn)?;
 
-        assert_single_migration(
+        assert_migrations(
             &conn,
             PROJECT_STATE_DATABASE_KIND,
-            "project_state_initial_v1",
+            &["project_state_initial_v1", "project_state_guard_records_v2"],
         )?;
         Ok(())
     }

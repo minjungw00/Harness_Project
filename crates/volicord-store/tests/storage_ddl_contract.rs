@@ -94,6 +94,7 @@ fn initial_schemas_satisfy_connection_storage_contract() -> Result<(), Box<dyn E
             "project_aliases",
             "agent_connections",
             "connection_projects",
+            "guard_installations",
             "schema_migrations",
         ],
     );
@@ -133,6 +134,17 @@ fn initial_schemas_satisfy_connection_storage_contract() -> Result<(), Box<dyn E
         &initial_registry_schema,
         "connection_projects",
         &["connection_internal_id", "project_internal_id"],
+    );
+    assert_columns_include(
+        &initial_registry_schema,
+        "guard_installations",
+        &[
+            "guard_installation_id",
+            "connection_internal_id",
+            "project_internal_id",
+            "guard_mode",
+            "installation_health",
+        ],
     );
     assert_primary_key_columns(
         &initial_registry_schema,
@@ -181,10 +193,39 @@ fn initial_schemas_satisfy_connection_storage_contract() -> Result<(), Box<dyn E
     );
 
     assert!(initial_project_schema.tables.contains_key("write_checks"));
+    assert_tables_include(
+        &initial_project_schema,
+        &[
+            "agent_sessions",
+            "guard_events",
+            "prompt_captures",
+            "unrecorded_changes",
+        ],
+    );
     assert_columns_include(
         &initial_project_schema,
         "tool_invocations",
         &["actor_source", "operation_category"],
+    );
+    assert_columns_include(
+        &initial_project_schema,
+        "agent_sessions",
+        &["session_id", "connection_internal_id", "guard_mode"],
+    );
+    assert_columns_include(
+        &initial_project_schema,
+        "guard_events",
+        &["guard_event_id", "session_id", "decision"],
+    );
+    assert_columns_include(
+        &initial_project_schema,
+        "prompt_captures",
+        &["prompt_capture_id", "session_id", "prompt_sha256"],
+    );
+    assert_columns_include(
+        &initial_project_schema,
+        "unrecorded_changes",
+        &["unrecorded_change_id", "status", "resolution_json"],
     );
 
     assert_project_contract_behavior("initial project state.sqlite", &initial_project)?;

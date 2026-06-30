@@ -146,6 +146,7 @@ pub fn validate_registry_schema(conn: &Connection) -> StoreResult<()> {
             "project_aliases",
             "agent_connections",
             "connection_projects",
+            "guard_installations",
         ],
     )?;
     require_indexes(
@@ -160,6 +161,11 @@ pub fn validate_registry_schema(conn: &Connection) -> StoreResult<()> {
             "idx_agent_connections_project",
             "idx_agent_connections_target_project",
             "idx_agent_connections_target_global",
+            "idx_guard_installations_connection",
+            "idx_guard_installations_project",
+            "idx_guard_installations_health",
+            "idx_guard_installations_scope_project",
+            "idx_guard_installations_scope_global",
         ],
     )?;
     require_column_spec(
@@ -330,6 +336,24 @@ pub fn validate_registry_schema(conn: &Connection) -> StoreResult<()> {
             primary_key_position: 0,
         },
     )?;
+    for column in [
+        "guard_installation_id",
+        "runtime_home_id",
+        "connection_internal_id",
+        "project_internal_id",
+        "host_kind",
+        "guard_mode",
+        "host_capability_json",
+        "installation_health",
+        "installed_at",
+        "last_checked_at",
+        "metadata_json",
+        "created_at",
+        "updated_at",
+    ] {
+        require_column(conn, REGISTRY_DATABASE_KIND, "guard_installations", column)?;
+    }
+    validate_guard_installations_constraints(conn)?;
     validate_registry_versions(conn)?;
     validate_foreign_key_check(conn, REGISTRY_DATABASE_KIND)?;
     Ok(())
@@ -368,6 +392,10 @@ pub fn validate_project_state_schema(conn: &Connection) -> StoreResult<()> {
             "blockers",
             "task_events",
             "tool_invocations",
+            "agent_sessions",
+            "guard_events",
+            "prompt_captures",
+            "unrecorded_changes",
         ],
     )?;
     require_indexes(
@@ -397,6 +425,16 @@ pub fn validate_project_state_schema(conn: &Connection) -> StoreResult<()> {
             "idx_evidence_observations_run",
             "idx_blockers_task_status",
             "idx_task_events_task_seq",
+            "idx_agent_sessions_connection",
+            "idx_agent_sessions_open",
+            "idx_guard_events_session",
+            "idx_guard_events_connection",
+            "idx_guard_events_decision",
+            "idx_prompt_captures_session",
+            "idx_prompt_captures_connection",
+            "idx_unrecorded_changes_status",
+            "idx_unrecorded_changes_connection",
+            "idx_unrecorded_changes_task",
         ],
     )?;
     require_column(
@@ -648,6 +686,7 @@ pub fn validate_project_state_schema(conn: &Connection) -> StoreResult<()> {
     )?;
     validate_artifacts_integrity_status_constraint(conn)?;
     validate_artifacts_body_path_constraint(conn)?;
+    validate_guard_project_record_tables(conn)?;
     validate_project_state_versions(conn)?;
     validate_foreign_key_check(conn, PROJECT_STATE_DATABASE_KIND)?;
     Ok(())
@@ -1216,6 +1255,133 @@ fn validate_tool_invocations_operation_category_constraint(conn: &Connection) ->
     }
 }
 
+fn validate_guard_installations_constraints(conn: &Connection) -> StoreResult<()> {
+    let table_sql = normalized_table_sql(conn, "guard_installations")?;
+    let required_fragments = [
+        "length(trim(host_kind)) > 0",
+        "guard_mode in ('mcp_only', 'guarded', 'managed')",
+        "installation_health in ('unknown', 'healthy', 'action_required', 'failed')",
+    ];
+    for fragment in required_fragments {
+        if !table_sql.contains(fragment) {
+            return Err(StoreError::schema_invariant(
+                REGISTRY_DATABASE_KIND,
+                "guard_installations constraints are missing or malformed",
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn validate_guard_project_record_tables(conn: &Connection) -> StoreResult<()> {
+    for (table, columns) in [
+        (
+            "agent_sessions",
+            &[
+                "project_id",
+                "session_id",
+                "connection_internal_id",
+                "guard_installation_id",
+                "host_kind",
+                "guard_mode",
+                "started_at",
+                "ended_at",
+                "metadata_json",
+            ][..],
+        ),
+        (
+            "guard_events",
+            &[
+                "project_id",
+                "guard_event_id",
+                "session_id",
+                "connection_internal_id",
+                "guard_installation_id",
+                "event_kind",
+                "decision",
+                "subject_json",
+                "result_json",
+                "occurred_at",
+                "metadata_json",
+            ][..],
+        ),
+        (
+            "prompt_captures",
+            &[
+                "project_id",
+                "prompt_capture_id",
+                "session_id",
+                "connection_internal_id",
+                "capture_kind",
+                "prompt_sha256",
+                "prompt_text",
+                "captured_at",
+                "metadata_json",
+            ][..],
+        ),
+        (
+            "unrecorded_changes",
+            &[
+                "project_id",
+                "unrecorded_change_id",
+                "session_id",
+                "connection_internal_id",
+                "task_id",
+                "status",
+                "summary",
+                "observed_paths_json",
+                "detection_json",
+                "resolution_json",
+                "detected_at",
+                "resolved_at",
+                "resolved_by_actor_source",
+                "metadata_json",
+            ][..],
+        ),
+    ] {
+        for column in columns {
+            require_column(conn, PROJECT_STATE_DATABASE_KIND, table, column)?;
+        }
+    }
+
+    let sessions_sql = normalized_table_sql(conn, "agent_sessions")?;
+    if !sessions_sql.contains("guard_mode in ('mcp_only', 'guarded', 'managed')")
+        || !sessions_sql.contains("length(trim(host_kind)) > 0")
+    {
+        return Err(StoreError::schema_invariant(
+            PROJECT_STATE_DATABASE_KIND,
+            "agent_sessions constraints are missing or malformed",
+        ));
+    }
+
+    let guard_events_sql = normalized_table_sql(conn, "guard_events")?;
+    if !guard_events_sql.contains("decision in ('allow', 'deny', 'warn', 'inject_context')") {
+        return Err(StoreError::schema_invariant(
+            PROJECT_STATE_DATABASE_KIND,
+            "guard_events.decision constraint is missing or malformed",
+        ));
+    }
+
+    let unrecorded_changes_sql = normalized_table_sql(conn, "unrecorded_changes")?;
+    let has_status_values = unrecorded_changes_sql.contains("status in ('unresolved', 'resolved')");
+    let has_unresolved_group = unrecorded_changes_sql.contains("status = 'unresolved'")
+        && unrecorded_changes_sql.contains("resolution_json is null")
+        && unrecorded_changes_sql.contains("resolved_at is null")
+        && unrecorded_changes_sql.contains("resolved_by_actor_source is null");
+    let has_resolved_group = unrecorded_changes_sql.contains("status = 'resolved'")
+        && unrecorded_changes_sql.contains("resolution_json is not null")
+        && unrecorded_changes_sql.contains("resolved_at is not null")
+        && unrecorded_changes_sql.contains("resolved_by_actor_source is not null");
+    if !has_status_values || !has_unresolved_group || !has_resolved_group {
+        return Err(StoreError::schema_invariant(
+            PROJECT_STATE_DATABASE_KIND,
+            "unrecorded_changes resolution constraints are missing or malformed",
+        ));
+    }
+
+    Ok(())
+}
+
 fn validate_artifacts_integrity_status_constraint(conn: &Connection) -> StoreResult<()> {
     let table_sql: String = conn.query_row(
         "SELECT sql
@@ -1375,6 +1541,7 @@ mod tests {
         assert!(sqlite_object_exists(&conn, "table", "runtime_home")?);
         assert!(sqlite_object_exists(&conn, "table", "agent_connections")?);
         assert!(sqlite_object_exists(&conn, "table", "connection_projects")?);
+        assert!(sqlite_object_exists(&conn, "table", "guard_installations")?);
         Ok(())
     }
 
@@ -1392,8 +1559,14 @@ mod tests {
         assert!(migration_exists(
             &conn,
             PROJECT_STATE_DATABASE_KIND,
-            PROJECT_STATE_SCHEMA_VERSION,
+            1,
             "project_state_initial_v1"
+        )?);
+        assert!(migration_exists(
+            &conn,
+            PROJECT_STATE_DATABASE_KIND,
+            PROJECT_STATE_SCHEMA_VERSION,
+            "project_state_guard_records_v2"
         )?);
         drop(conn);
 
@@ -1401,6 +1574,8 @@ mod tests {
         assert_eq!(migration_count(&conn)?, PROJECT_STATE_SCHEMA_VERSION);
         assert!(foreign_keys_enabled(&conn)?);
         assert!(sqlite_object_exists(&conn, "table", "tool_invocations")?);
+        assert!(sqlite_object_exists(&conn, "table", "agent_sessions")?);
+        assert!(sqlite_object_exists(&conn, "table", "unrecorded_changes")?);
         validate_tool_invocations_columns(&conn)?;
         validate_tool_invocations_operation_category_constraint(&conn)?;
         Ok(())
