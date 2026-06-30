@@ -139,6 +139,7 @@ where
     let mut profile = None;
     let mut project_count = None;
     let mut connection_count = None;
+    let mut guard_installation_count = None;
 
     match &inspection.registry {
         DatabaseInspection::Missing { path } => {
@@ -153,6 +154,7 @@ where
             profile = snapshot.installation_profile.as_ref();
             project_count = Some(snapshot.projects.len());
             connection_count = Some(snapshot.agent_connections.len());
+            guard_installation_count = Some(snapshot.guard_installations.len());
         }
         DatabaseInspection::Unsupported {
             path,
@@ -218,12 +220,15 @@ where
         )
         .with_details(json!({ "supported_hosts": ["codex", "claude_code"] })),
     );
-    if let (Some(projects), Some(connections)) = (project_count, connection_count) {
+    if let (Some(projects), Some(connections), Some(guard_installations)) =
+        (project_count, connection_count, guard_installation_count)
+    {
         checks.push(
             DiagnosticCheck::passed("registry_counts", "registry records are readable")
                 .with_details(json!({
                     "projects": projects,
                     "connections": connections,
+                    "guard_installations": guard_installations,
                 })),
         );
     } else {

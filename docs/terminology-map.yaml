@@ -221,6 +221,7 @@ identifier_preservation:
     - "volicord mcp --stdio"
     - "volicord-mcp"
     - "volicord setup"
+    - "volicord init"
     - "volicord connect"
     - "VOLICORD_BIN"
     - "VOLICORD_PROJECT_ID"
@@ -233,6 +234,7 @@ identifier_preservation:
     - "volicord-repository-guidance-v1"
     - "<!-- BEGIN VOLICORD MANAGED GUIDANCE v1 -->"
     - "<!-- END VOLICORD MANAGED GUIDANCE v1 -->"
+    - ".volicord/policy.json"
     - ".claude/rules/volicord.md"
   product_labels:
     - "Volicord"

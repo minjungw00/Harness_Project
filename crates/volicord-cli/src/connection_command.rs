@@ -7,9 +7,10 @@ use std::{
     process::{Child, Command, Stdio},
     sync::mpsc,
     thread,
-    time::{Duration, Instant},
+    time::{Duration, Instant, SystemTime},
 };
 
+use chrono::{DateTime, SecondsFormat, Utc};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 use volicord_store::{
@@ -26,12 +27,14 @@ use volicord_store::{
     },
     bootstrap::{
         ensure_project_for_repo, initialize_runtime_home, installation_profile,
-        project_record_by_repo_root, InstallationProfileRecord, RepoProjectRegistration,
-        ACTIVE_PROJECT_STATUS,
+        project_record_by_repo_root, write_installation_profile, InstallationProfileRecord,
+        InstallationProfileRegistration, RepoProjectRegistration, ACTIVE_PROJECT_STATUS,
     },
+    guards::{upsert_guard_installation, GuardInstallationRecord, GuardInstallationUpsert},
     runtime_home::{resolve_runtime_home, RuntimeHomeResolutionError},
     StoreError,
 };
+use volicord_types::{GuardInstallationHealth, GuardMode};
 
 use crate::host_integration::{
     claude_code::{ClaudeCodeAdapter, ProductionCommandRunner},
@@ -44,14 +47,27 @@ use crate::host_integration::{
     HostRemoveRequest, HostScope, HostTarget, InstallationProfile, ManagedServerEntry,
     PlannedChange, ProjectContext, UserAction, UserActionKind,
 };
+use crate::{
+    managed_block::{self, ManagedBlockError, ManagedBlockWrite},
+    registration::ADMIN_METADATA_JSON,
+    setup_command::{is_executable_file, path_text as setup_path_text, runtime_home_id_for_path},
+};
 
 const VOLICORD_HOME: &str = "VOLICORD_HOME";
 const PATH_ENV: &str = "PATH";
 const AGENT_METADATA_CREATED_BY: &str = "volicord_cli_agent_connection";
 const AGENT_RUNTIME_HOME_ID: &str = "runtime_home_agent";
+const INIT_METADATA_CREATED_BY: &str = "volicord_cli_init";
 const DEFAULT_MCP_COMMAND: &str = "volicord";
 const DEFAULT_SERVER_NAME: &str = "volicord";
 const DEFAULT_TIMEOUT: Duration = Duration::from_secs(5);
+const INSTALLATION_ID: &str = "default";
+const VOLICORD_POLICY_SCHEMA: &str = "volicord-policy-v1";
+const VOLICORD_POLICY_FILE: &str = ".volicord/policy.json";
+const CLAUDE_RULE_FILE: &str = ".claude/rules/volicord.md";
+const AGENTS_FILE: &str = "AGENTS.md";
+const GUIDANCE_START_MARKER: &str = "<!-- BEGIN VOLICORD MANAGED GUIDANCE v1 -->";
+const GUIDANCE_END_MARKER: &str = "<!-- END VOLICORD MANAGED GUIDANCE v1 -->";
 
 const WORKFLOW_TOOL_NAMES: [&str; 10] = [
     "volicord.intake",
@@ -322,6 +338,11 @@ struct VerificationReport {
     tools: Vec<String>,
 }
 
+pub fn init_usage() -> String {
+    "volicord init --host codex|claude-code --repo PATH [--mode mcp-only|guarded|managed] [--home PATH] [--mcp-command PATH] [--dry-run] [--json]\n"
+        .to_owned()
+}
+
 pub fn connect_usage() -> String {
     "volicord connect [HOST] [--repo PATH] [--shared|--global] [--read-only] [--dry-run] [--json]\n"
         .to_owned()
@@ -359,6 +380,269 @@ fn connection_remove_usage() -> String {
         .to_owned()
 }
 
+pub fn run_init_command(
+    args: &[String],
+    current_dir: &Path,
+    process: &mut impl ConnectionProcess,
+) -> Result<String, ConnectionCommandError> {
+    if is_help_request(args) {
+        return Ok(init_usage());
+    }
+    let parsed = parse_init_options(args, current_dir)?;
+    let host_kind = parsed
+        .host_kind
+        .ok_or_else(|| ConnectionCommandError::usage("--host is required"))?;
+    let repo = parsed
+        .repo
+        .as_deref()
+        .ok_or_else(|| ConnectionCommandError::usage("--repo is required"))?;
+    let repo_root = resolve_connection_repo_root(current_dir, Some(repo))?;
+    let runtime_home = init_runtime_home_path(&parsed, current_dir, process)?;
+    let existing_profile = installation_profile(&runtime_home)?;
+    let profile_plan =
+        init_profile_plan(&parsed, &runtime_home, existing_profile.as_ref(), process)?;
+    let intent = ConnectionIntent::Shared;
+    let host_scope = host_scope_for_intent(host_kind, intent)?;
+    let mode = CONNECTION_MODE_WORKFLOW;
+    let server_name = DEFAULT_SERVER_NAME.to_owned();
+    let target_hint = connection_target_hint(host_kind, host_scope, Some(&repo_root), process)?;
+    let existing = connection_for_host_target(
+        &runtime_home,
+        host_kind,
+        intent,
+        host_scope,
+        &target_hint,
+        &server_name,
+    )?;
+    let connection_internal_id = existing
+        .as_ref()
+        .map(|connection| connection.connection_internal_id.clone())
+        .unwrap_or_else(|| {
+            deterministic_connection_id(
+                host_kind,
+                host_scope,
+                Some(&path_text(&repo_root)),
+                &target_hint,
+                &server_name,
+            )
+        });
+    let project_hint = project_record_by_repo_root(&runtime_home, &repo_root)
+        .ok()
+        .flatten();
+    let expected_fingerprint = existing
+        .as_ref()
+        .map(|connection| connection.managed_fingerprint.as_str());
+    let installation_context = InstallationProfile {
+        runtime_home: &runtime_home,
+        volicord_command: &profile_plan.volicord_command,
+        volicord_mcp_command: &profile_plan.volicord_mcp_command,
+        default_connection_mode: CONNECTION_MODE_WORKFLOW,
+    };
+    let host_plan = build_host_plan(
+        BuildHostPlanRequest {
+            host_kind,
+            connection_intent: intent,
+            connection_id: &connection_internal_id,
+            repo_root: Some(&repo_root),
+            project_id: project_hint
+                .as_ref()
+                .map(|project| project.project_id.as_str())
+                .or(Some("planned_project")),
+            project_name: project_hint
+                .as_ref()
+                .map(|project| project.project_name.as_str())
+                .or(Some("planned project")),
+            installation_profile: installation_context,
+            mode,
+            expected_fingerprint,
+            export_target: None,
+            export_dir: None,
+            current_dir,
+        },
+        process,
+    )?;
+    if let Some(conflict) = host_plan.conflicts.first() {
+        return Err(ConnectionCommandError::runtime(conflict.message.clone()));
+    }
+    let repo_root_key = path_text(&repo_root);
+    let planned_guard_installation_id = stable_id(
+        "guard_installation",
+        &[
+            &connection_internal_id,
+            &repo_root_key,
+            parsed.mode.guard_value(),
+        ],
+    );
+    let integration_plan = plan_guard_integration(
+        host_kind,
+        parsed.mode,
+        &repo_root,
+        &connection_internal_id,
+        &planned_guard_installation_id,
+        &host_plan.entry,
+    )?;
+
+    if parsed.dry_run {
+        return render_init_output(InitOutput {
+            format: init_output_format(&parsed),
+            status: AgentResultStatus::DryRun,
+            host_kind,
+            init_mode: parsed.mode,
+            runtime_home: &runtime_home,
+            repo_root: &repo_root,
+            connection_id: &connection_internal_id,
+            project_id: project_hint
+                .as_ref()
+                .map(|project| project.project_id.as_str()),
+            host_plan: &host_plan,
+            verification: None,
+            integration: &integration_plan,
+            guard_installation: None,
+            profile_action: if existing_profile.is_some() {
+                "reused"
+            } else {
+                "planned"
+            },
+        });
+    }
+
+    let runtime_home_id = runtime_home_id_for_path(&runtime_home)
+        .map_err(|error| ConnectionCommandError::runtime(error.to_string()))?;
+    initialize_runtime_home(&runtime_home, &runtime_home_id, ADMIN_METADATA_JSON)?;
+    let profile = ensure_init_installation_profile(&runtime_home, &profile_plan)?;
+    let project = ensure_project_for_repo(
+        &runtime_home,
+        RepoProjectRegistration {
+            project_name: None,
+            project_alias: None,
+            repo_root: repo_root.clone(),
+            project_home: None,
+            status: ACTIVE_PROJECT_STATUS.to_owned(),
+            metadata_json: metadata_json_base()?,
+        },
+    )?;
+    let existing = connection_for_host_target(
+        &runtime_home,
+        host_kind,
+        intent,
+        host_scope,
+        &target_hint,
+        &server_name,
+    )?;
+    let expected_fingerprint = existing
+        .as_ref()
+        .map(|connection| connection.managed_fingerprint.as_str());
+    let host_plan = build_host_plan(
+        BuildHostPlanRequest {
+            host_kind,
+            connection_intent: intent,
+            connection_id: &connection_internal_id,
+            repo_root: Some(&project.repo_root),
+            project_id: Some(&project.project_id),
+            project_name: Some(&project.project_name),
+            installation_profile: installation_profile_context(&runtime_home, &profile),
+            mode,
+            expected_fingerprint,
+            export_target: None,
+            export_dir: None,
+            current_dir,
+        },
+        process,
+    )?;
+    if let Some(conflict) = host_plan.conflicts.first() {
+        return Err(ConnectionCommandError::runtime(conflict.message.clone()));
+    }
+    let mcp_command = PathBuf::from(&host_plan.entry.command);
+    let metadata_json = connection_metadata_json(&host_plan, &mcp_command, &runtime_home)?;
+    let mut connection = ensure_agent_connection(
+        &runtime_home,
+        AgentConnectionRegistration {
+            connection_internal_id: connection_internal_id.clone(),
+            host_kind: host_kind.as_str().to_owned(),
+            intent: intent.as_str().to_owned(),
+            host_scope: host_scope.as_str().to_owned(),
+            server_name: host_plan.server_name.clone(),
+            config_target: host_target_text(&host_plan.target),
+            mode: mode.to_owned(),
+            enabled: true,
+            managed_fingerprint: host_plan.fingerprint.clone(),
+            last_verification_status: existing
+                .as_ref()
+                .map(|record| record.last_verification_status.clone())
+                .unwrap_or_else(|| VERIFIED_STATUS_NOT_VERIFIED.to_owned()),
+            last_verification_report_json: existing
+                .as_ref()
+                .map(|record| record.last_verification_report_json.clone())
+                .unwrap_or_else(|| "{}".to_owned()),
+            last_user_actions_json: user_actions_json(&host_plan.user_actions)?,
+            metadata_json,
+        },
+    )?;
+    enforce_single_project_scope(&runtime_home, &connection, &project.project_id)?;
+    add_connection_project(
+        &runtime_home,
+        ConnectionProjectRegistration {
+            connection_internal_id: connection.connection_internal_id.clone(),
+            project_id: project.project_id.clone(),
+        },
+    )?;
+    apply_host_plan(host_kind, &host_plan, process)?;
+    let integration_plan = apply_guard_integration(integration_plan)?;
+    let guard_installation = record_guard_installation(
+        &runtime_home,
+        host_kind,
+        parsed.mode,
+        &connection.connection_internal_id,
+        &project.project_id,
+        &integration_plan,
+    )?;
+    let launch = mcp_launch_from_host_plan(&host_plan, Some(&project.repo_root));
+    let verification = verify_connection(
+        &runtime_home,
+        &connection,
+        &host_plan,
+        &launch,
+        Some(&project.project_id),
+        process,
+    )?;
+    let user_actions = init_user_actions(&verification.host.user_actions, host_kind);
+    connection = update_agent_connection_verification_report(
+        &runtime_home,
+        &connection.connection_internal_id,
+        verification.status.store_status(),
+        &host_plan.fingerprint,
+        &detailed_verification_report_json(&verification)?,
+        &user_actions_json(&user_actions)?,
+    )?;
+    let status = if verification.status == AgentResultStatus::Complete && user_actions.is_empty() {
+        AgentResultStatus::Complete
+    } else if verification.status == AgentResultStatus::Failed {
+        AgentResultStatus::Failed
+    } else {
+        AgentResultStatus::ActionRequired
+    };
+    let _ = connection;
+    render_init_output(InitOutput {
+        format: init_output_format(&parsed),
+        status,
+        host_kind,
+        init_mode: parsed.mode,
+        runtime_home: &runtime_home,
+        repo_root: &project.repo_root,
+        connection_id: &connection_internal_id,
+        project_id: Some(&project.project_id),
+        host_plan: &host_plan,
+        verification: Some(&verification),
+        integration: &integration_plan,
+        guard_installation: Some(&guard_installation),
+        profile_action: if existing_profile.is_some() {
+            "reused"
+        } else {
+            "created"
+        },
+    })
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 struct ParsedConnectionOptions {
     host_kind: Option<HostKind>,
@@ -369,6 +653,43 @@ struct ParsedConnectionOptions {
     dry_run: bool,
     json: bool,
     positionals: Vec<String>,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+enum InitMode {
+    McpOnly,
+    #[default]
+    Guarded,
+    Managed,
+}
+
+impl InitMode {
+    fn cli_value(self) -> &'static str {
+        match self {
+            Self::McpOnly => "mcp-only",
+            Self::Guarded => "guarded",
+            Self::Managed => "managed",
+        }
+    }
+
+    fn guard_value(self) -> &'static str {
+        match self {
+            Self::McpOnly => GuardMode::McpOnly.as_str(),
+            Self::Guarded => GuardMode::Guarded.as_str(),
+            Self::Managed => GuardMode::Managed.as_str(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+struct ParsedInitOptions {
+    host_kind: Option<HostKind>,
+    repo: Option<PathBuf>,
+    runtime_home: Option<PathBuf>,
+    mcp_command: Option<PathBuf>,
+    mode: InitMode,
+    dry_run: bool,
+    json: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -905,6 +1226,113 @@ fn parse_connection_options(
     Ok(parsed)
 }
 
+fn parse_init_options(
+    args: &[String],
+    current_dir: &Path,
+) -> Result<ParsedInitOptions, ConnectionCommandError> {
+    let mut parsed = ParsedInitOptions {
+        mode: InitMode::Guarded,
+        ..ParsedInitOptions::default()
+    };
+    let mut seen = BTreeSet::new();
+    let mut index = 0;
+    while index < args.len() {
+        let token = &args[index];
+        if matches!(token.as_str(), "-h" | "--help" | "help") {
+            return Err(ConnectionCommandError::usage(init_usage()));
+        }
+        if !token.starts_with("--") {
+            return Err(ConnectionCommandError::usage(format!(
+                "unexpected argument: {token}"
+            )));
+        }
+        let without_prefix = &token[2..];
+        let (name, value) = if let Some((name, value)) = without_prefix.split_once('=') {
+            (name.to_owned(), Some(value.to_owned()))
+        } else if matches!(without_prefix, "dry-run" | "json") {
+            (without_prefix.to_owned(), None)
+        } else {
+            index += 1;
+            let Some(value) = args.get(index) else {
+                return Err(ConnectionCommandError::usage(format!(
+                    "missing value for --{without_prefix}"
+                )));
+            };
+            (without_prefix.to_owned(), Some(value.clone()))
+        };
+        if !matches!(
+            name.as_str(),
+            "host" | "repo" | "mode" | "home" | "mcp-command" | "dry-run" | "json"
+        ) {
+            return Err(ConnectionCommandError::usage(format!(
+                "unknown option: --{name}"
+            )));
+        }
+        if !seen.insert(name.clone()) {
+            return Err(ConnectionCommandError::usage(format!(
+                "duplicate option: --{name}"
+            )));
+        }
+        match name.as_str() {
+            "host" => {
+                parsed.host_kind = Some(parse_public_host_kind(&value_text(
+                    &name,
+                    value.as_deref(),
+                )?)?)
+            }
+            "repo" => {
+                parsed.repo = Some(absolute_path(
+                    current_dir,
+                    value_path(&name, value.as_deref())?,
+                ))
+            }
+            "mode" => parsed.mode = parse_init_mode(&value_text(&name, value.as_deref())?)?,
+            "home" => {
+                parsed.runtime_home = Some(absolute_path(
+                    current_dir,
+                    value_path(&name, value.as_deref())?,
+                ));
+            }
+            "mcp-command" => {
+                parsed.mcp_command = Some(absolute_path(
+                    current_dir,
+                    value_path(&name, value.as_deref())?,
+                ));
+            }
+            "dry-run" => {
+                reject_boolean_value(&name, value.as_deref())?;
+                parsed.dry_run = true;
+            }
+            "json" => {
+                reject_boolean_value(&name, value.as_deref())?;
+                parsed.json = true;
+            }
+            _ => unreachable!("validated option name"),
+        }
+        index += 1;
+    }
+    Ok(parsed)
+}
+
+fn parse_init_mode(value: &str) -> Result<InitMode, ConnectionCommandError> {
+    match value {
+        "mcp-only" | "mcp_only" => Ok(InitMode::McpOnly),
+        "guarded" => Ok(InitMode::Guarded),
+        "managed" => Ok(InitMode::Managed),
+        other => Err(ConnectionCommandError::usage(format!(
+            "unknown init mode: {other}; use mcp-only, guarded, or managed"
+        ))),
+    }
+}
+
+fn init_output_format(parsed: &ParsedInitOptions) -> OutputFormat {
+    if parsed.json {
+        OutputFormat::Json
+    } else {
+        OutputFormat::Text
+    }
+}
+
 fn is_boolean_connection_option(name: &str) -> bool {
     matches!(name, "shared" | "global" | "read-only" | "dry-run" | "json")
 }
@@ -1364,6 +1792,119 @@ fn required_installation_profile(
             runtime_home.display()
         ))
     })
+}
+
+struct InitProfilePlan {
+    volicord_command: PathBuf,
+    volicord_mcp_command: PathBuf,
+    bin_dir: PathBuf,
+    metadata_json: String,
+}
+
+fn init_runtime_home_path(
+    parsed: &ParsedInitOptions,
+    current_dir: &Path,
+    process: &impl ConnectionProcess,
+) -> Result<PathBuf, ConnectionCommandError> {
+    if let Some(path) = &parsed.runtime_home {
+        Ok(path.clone())
+    } else {
+        resolve_runtime_home(|name| process.env_var(name), current_dir).map_err(Into::into)
+    }
+}
+
+fn init_profile_plan(
+    parsed: &ParsedInitOptions,
+    runtime_home: &Path,
+    existing: Option<&InstallationProfileRecord>,
+    process: &impl ConnectionProcess,
+) -> Result<InitProfilePlan, ConnectionCommandError> {
+    let current_exe = canonical_existing_file(
+        &process
+            .current_exe()
+            .map_err(ConnectionCommandError::runtime)?,
+        "volicord command",
+    )?;
+    let volicord_command = existing
+        .map(|profile| PathBuf::from(&profile.volicord_command))
+        .unwrap_or_else(|| current_exe.clone());
+    let volicord_mcp_command = match &parsed.mcp_command {
+        Some(path) => canonical_existing_executable(path, "MCP launch command")?,
+        None => existing
+            .map(|profile| PathBuf::from(&profile.volicord_mcp_command))
+            .unwrap_or(current_exe),
+    };
+    let bin_dir = volicord_command
+        .parent()
+        .map(Path::to_path_buf)
+        .unwrap_or_else(|| runtime_home.join("bin"));
+    let metadata_json = serde_json::to_string(&json!({
+        "created_by": INIT_METADATA_CREATED_BY,
+        "volicord_command_source": if existing.is_some() { "existing_profile" } else { "current_exe" },
+        "volicord_mcp_command_source": if parsed.mcp_command.is_some() {
+            "explicit"
+        } else if existing.is_some() {
+            "existing_profile"
+        } else {
+            "current_exe"
+        },
+    }))
+    .map_err(|error| ConnectionCommandError::runtime(error.to_string()))?;
+    Ok(InitProfilePlan {
+        volicord_command,
+        volicord_mcp_command,
+        bin_dir,
+        metadata_json,
+    })
+}
+
+fn ensure_init_installation_profile(
+    runtime_home: &Path,
+    plan: &InitProfilePlan,
+) -> Result<InstallationProfileRecord, ConnectionCommandError> {
+    write_installation_profile(
+        runtime_home,
+        InstallationProfileRegistration {
+            installation_id: INSTALLATION_ID.to_owned(),
+            volicord_command: setup_path_text(&plan.volicord_command),
+            volicord_mcp_command: setup_path_text(&plan.volicord_mcp_command),
+            bin_dir: plan.bin_dir.clone(),
+            default_connection_mode: CONNECTION_MODE_WORKFLOW.to_owned(),
+            metadata_json: plan.metadata_json.clone(),
+        },
+    )
+    .map_err(Into::into)
+}
+
+fn canonical_existing_file(
+    path: &Path,
+    label: &'static str,
+) -> Result<PathBuf, ConnectionCommandError> {
+    let metadata = fs::metadata(path).map_err(|error| {
+        ConnectionCommandError::runtime(format!("{label} is not accessible: {error}"))
+    })?;
+    if !metadata.is_file() {
+        return Err(ConnectionCommandError::runtime(format!(
+            "{label} must be a file: {}",
+            path.display()
+        )));
+    }
+    Ok(fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf()))
+}
+
+fn canonical_existing_executable(
+    path: &Path,
+    label: &'static str,
+) -> Result<PathBuf, ConnectionCommandError> {
+    let path = canonical_existing_file(path, label)?;
+    if is_executable_file(&path) {
+        Ok(path)
+    } else {
+        Err(ConnectionCommandError::runtime(format!(
+            "{label} must be executable: {}",
+            path.display()
+        )))
+    }
 }
 
 fn installation_profile_context<'a>(
@@ -2029,6 +2570,521 @@ fn validate_tools_for_mode(mode: &str, tools: &[String]) -> Result<(), String> {
     Ok(())
 }
 
+#[derive(Debug, Clone)]
+struct GuardIntegrationPlan {
+    generated_files: Vec<GeneratedFilePlan>,
+    policy: Value,
+    guard_installation_id: String,
+}
+
+#[derive(Debug, Clone)]
+struct GeneratedFilePlan {
+    kind: &'static str,
+    path: PathBuf,
+    content: String,
+    status: FilePlanStatus,
+    write_kind: GeneratedFileWriteKind,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum GeneratedFileWriteKind {
+    ManagedBlock {
+        start_marker: &'static str,
+        end_marker: &'static str,
+        require_existing_marker: bool,
+    },
+    ManagedJson,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum FilePlanStatus {
+    PlannedCreate,
+    PlannedUpdate,
+    Unchanged,
+    Created,
+    Updated,
+}
+
+impl FilePlanStatus {
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::PlannedCreate => "planned_create",
+            Self::PlannedUpdate => "planned_update",
+            Self::Unchanged => "unchanged",
+            Self::Created => "created",
+            Self::Updated => "updated",
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+struct GuardCommandSpec {
+    command: String,
+    args: Vec<String>,
+}
+
+struct InitOutput<'a> {
+    format: OutputFormat,
+    status: AgentResultStatus,
+    host_kind: HostKind,
+    init_mode: InitMode,
+    runtime_home: &'a Path,
+    repo_root: &'a Path,
+    connection_id: &'a str,
+    project_id: Option<&'a str>,
+    host_plan: &'a HostPlan,
+    verification: Option<&'a VerificationReport>,
+    integration: &'a GuardIntegrationPlan,
+    guard_installation: Option<&'a GuardInstallationRecord>,
+    profile_action: &'a str,
+}
+
+fn plan_guard_integration(
+    host_kind: HostKind,
+    init_mode: InitMode,
+    repo_root: &Path,
+    connection_id: &str,
+    guard_installation_id: &str,
+    mcp_entry: &ManagedServerEntry,
+) -> Result<GuardIntegrationPlan, ConnectionCommandError> {
+    let guard_commands = guard_command_specs(
+        repo_root,
+        connection_id,
+        guard_installation_id,
+        host_kind,
+        init_mode,
+    );
+    let policy = policy_json(
+        host_kind,
+        init_mode,
+        repo_root,
+        connection_id,
+        guard_installation_id,
+        mcp_entry,
+        &guard_commands,
+    );
+    let mut generated_files = Vec::new();
+    let agents_path = repo_root.join(AGENTS_FILE);
+    generated_files.push(plan_managed_block_file(
+        "agents_guidance",
+        &agents_path,
+        &agents_guidance_block(),
+        GUIDANCE_START_MARKER,
+        GUIDANCE_END_MARKER,
+        false,
+    )?);
+    let policy_path = repo_root.join(VOLICORD_POLICY_FILE);
+    generated_files.push(plan_policy_file(&policy_path, &policy)?);
+    if host_kind == HostKind::ClaudeCode && init_mode != InitMode::McpOnly {
+        let rule_path = repo_root.join(CLAUDE_RULE_FILE);
+        generated_files.push(plan_managed_block_file(
+            "claude_rule",
+            &rule_path,
+            &claude_rule_block(),
+            GUIDANCE_START_MARKER,
+            GUIDANCE_END_MARKER,
+            true,
+        )?);
+    }
+    Ok(GuardIntegrationPlan {
+        generated_files,
+        policy,
+        guard_installation_id: guard_installation_id.to_owned(),
+    })
+}
+
+fn apply_guard_integration(
+    mut plan: GuardIntegrationPlan,
+) -> Result<GuardIntegrationPlan, ConnectionCommandError> {
+    for file in &mut plan.generated_files {
+        file.status = match file.write_kind {
+            GeneratedFileWriteKind::ManagedBlock {
+                start_marker,
+                end_marker,
+                require_existing_marker,
+            } => write_managed_markdown_file(
+                &file.path,
+                &file.content,
+                start_marker,
+                end_marker,
+                require_existing_marker,
+            )?,
+            GeneratedFileWriteKind::ManagedJson => {
+                write_managed_json_file(&file.path, &file.policy_value()?)?
+            }
+        };
+    }
+    Ok(plan)
+}
+
+impl GeneratedFilePlan {
+    fn policy_value(&self) -> Result<Value, ConnectionCommandError> {
+        serde_json::from_str::<Value>(&self.content)
+            .map_err(|error| ConnectionCommandError::runtime(error.to_string()))
+    }
+}
+
+fn plan_managed_block_file(
+    kind: &'static str,
+    path: &Path,
+    block: &str,
+    start_marker: &'static str,
+    end_marker: &'static str,
+    require_existing_marker: bool,
+) -> Result<GeneratedFilePlan, ConnectionCommandError> {
+    let content = block.to_owned();
+    let status = match fs::read_to_string(path) {
+        Ok(existing) => {
+            if require_existing_marker && !existing.contains(start_marker) {
+                return Err(ConnectionCommandError::runtime(format!(
+                    "{} already exists without a Volicord-managed block: {}",
+                    kind,
+                    path.display()
+                )));
+            }
+            let updated = managed_block::apply_managed_block_with_markers(
+                &existing,
+                &content,
+                start_marker,
+                end_marker,
+            )
+            .map_err(managed_block_conflict)?;
+            if updated == existing {
+                FilePlanStatus::Unchanged
+            } else {
+                FilePlanStatus::PlannedUpdate
+            }
+        }
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => FilePlanStatus::PlannedCreate,
+        Err(error) => {
+            return Err(ConnectionCommandError::runtime(format!(
+                "failed to read {}: {error}",
+                path.display()
+            )));
+        }
+    };
+    Ok(GeneratedFilePlan {
+        kind,
+        path: path.to_path_buf(),
+        content,
+        status,
+        write_kind: GeneratedFileWriteKind::ManagedBlock {
+            start_marker,
+            end_marker,
+            require_existing_marker,
+        },
+    })
+}
+
+fn plan_policy_file(
+    path: &Path,
+    policy: &Value,
+) -> Result<GeneratedFilePlan, ConnectionCommandError> {
+    let mut content = serde_json::to_string_pretty(policy)
+        .map_err(|error| ConnectionCommandError::runtime(error.to_string()))?;
+    content.push('\n');
+    let status = match fs::read_to_string(path) {
+        Ok(existing) => {
+            let value = serde_json::from_str::<Value>(&existing).map_err(|error| {
+                ConnectionCommandError::runtime(format!(
+                    "existing policy file is not valid JSON: {} ({error})",
+                    path.display()
+                ))
+            })?;
+            if !is_volicord_policy(&value) {
+                return Err(ConnectionCommandError::runtime(format!(
+                    "policy file already exists without Volicord ownership metadata: {}",
+                    path.display()
+                )));
+            }
+            if existing == content {
+                FilePlanStatus::Unchanged
+            } else {
+                FilePlanStatus::PlannedUpdate
+            }
+        }
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => FilePlanStatus::PlannedCreate,
+        Err(error) => {
+            return Err(ConnectionCommandError::runtime(format!(
+                "failed to read {}: {error}",
+                path.display()
+            )));
+        }
+    };
+    Ok(GeneratedFilePlan {
+        kind: "policy",
+        path: path.to_path_buf(),
+        content,
+        status,
+        write_kind: GeneratedFileWriteKind::ManagedJson,
+    })
+}
+
+fn write_managed_markdown_file(
+    path: &Path,
+    block: &str,
+    start_marker: &'static str,
+    end_marker: &'static str,
+    require_existing_marker: bool,
+) -> Result<FilePlanStatus, ConnectionCommandError> {
+    if require_existing_marker && path.exists() {
+        let existing = fs::read_to_string(path).map_err(|error| {
+            ConnectionCommandError::runtime(format!("failed to read {}: {error}", path.display()))
+        })?;
+        if !existing.contains(start_marker) {
+            return Err(ConnectionCommandError::runtime(format!(
+                "{} already exists without a Volicord-managed block",
+                path.display()
+            )));
+        }
+    }
+    match managed_block::write_managed_block_with_markers(path, block, start_marker, end_marker)
+        .map_err(|error| {
+            ConnectionCommandError::runtime(format!("failed to write {}: {error}", path.display()))
+        })? {
+        Ok(ManagedBlockWrite::Created(_)) => Ok(FilePlanStatus::Created),
+        Ok(ManagedBlockWrite::Updated(_)) => Ok(FilePlanStatus::Updated),
+        Ok(ManagedBlockWrite::Unchanged(_)) => Ok(FilePlanStatus::Unchanged),
+        Err(error) => Err(managed_block_conflict(error)),
+    }
+}
+
+fn write_managed_json_file(
+    path: &Path,
+    value: &Value,
+) -> Result<FilePlanStatus, ConnectionCommandError> {
+    let mut content = serde_json::to_string_pretty(value)
+        .map_err(|error| ConnectionCommandError::runtime(error.to_string()))?;
+    content.push('\n');
+    let planned = plan_policy_file(path, value)?;
+    if planned.status == FilePlanStatus::Unchanged {
+        return Ok(FilePlanStatus::Unchanged);
+    }
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(|error| {
+            ConnectionCommandError::runtime(format!(
+                "failed to create {}: {error}",
+                parent.display()
+            ))
+        })?;
+    }
+    fs::write(path, content).map_err(|error| {
+        ConnectionCommandError::runtime(format!("failed to write {}: {error}", path.display()))
+    })?;
+    Ok(match planned.status {
+        FilePlanStatus::PlannedCreate => FilePlanStatus::Created,
+        FilePlanStatus::PlannedUpdate => FilePlanStatus::Updated,
+        other => other,
+    })
+}
+
+fn managed_block_conflict(error: ManagedBlockError) -> ConnectionCommandError {
+    match error {
+        ManagedBlockError::Unterminated { start_marker } => ConnectionCommandError::runtime(
+            format!("managed block starting with {start_marker} is missing its end marker"),
+        ),
+        ManagedBlockError::Duplicate { start_marker } => ConnectionCommandError::runtime(format!(
+            "multiple managed blocks starting with {start_marker} were found"
+        )),
+    }
+}
+
+fn is_volicord_policy(value: &Value) -> bool {
+    value.get("schema").and_then(Value::as_str) == Some(VOLICORD_POLICY_SCHEMA)
+        && value.get("managed_by").and_then(Value::as_str) == Some("volicord")
+}
+
+fn agents_guidance_block() -> String {
+    format!(
+        "{GUIDANCE_START_MARKER}\n# Volicord\n\n- Check Volicord status before planning: `volicord.status`.\n- Start a task before planning implementation: `volicord.intake`.\n- Prepare write before product-file changes: `volicord.prepare_write`.\n- Request user judgment through Volicord: `volicord.request_user_judgment`; the user records decisions through the `User Channel`.\n- Check close before claiming completion: `volicord.check_close`.\n- If Volicord tools are unavailable, say so explicitly and do not imply Volicord state was updated.\n{GUIDANCE_END_MARKER}\n"
+    )
+}
+
+fn claude_rule_block() -> String {
+    format!(
+        "{GUIDANCE_START_MARKER}\n# Volicord\n\nUse the repository-local `.volicord/policy.json` guard commands for session start, tool checks, prompt capture, and stop checks. Do not record user-owned judgments through the Agent Connection.\n{GUIDANCE_END_MARKER}\n"
+    )
+}
+
+fn guard_command_specs(
+    repo_root: &Path,
+    connection_id: &str,
+    guard_installation_id: &str,
+    host_kind: HostKind,
+    init_mode: InitMode,
+) -> BTreeMap<String, GuardCommandSpec> {
+    [
+        "session-start",
+        "pre-tool",
+        "post-tool",
+        "prompt-capture",
+        "stop",
+    ]
+    .into_iter()
+    .map(|phase| {
+        let mut args = vec![
+            "guard".to_owned(),
+            phase.to_owned(),
+            "--repo".to_owned(),
+            path_text(repo_root),
+            "--connection".to_owned(),
+            connection_id.to_owned(),
+            "--guard-installation".to_owned(),
+            guard_installation_id.to_owned(),
+            "--host".to_owned(),
+            public_host_label(host_kind).to_owned(),
+            "--guard-mode".to_owned(),
+            init_mode.cli_value().to_owned(),
+        ];
+        args.push("--json".to_owned());
+        (
+            phase.replace('-', "_"),
+            GuardCommandSpec {
+                command: DEFAULT_MCP_COMMAND.to_owned(),
+                args,
+            },
+        )
+    })
+    .collect()
+}
+
+fn policy_json(
+    host_kind: HostKind,
+    init_mode: InitMode,
+    repo_root: &Path,
+    connection_id: &str,
+    guard_installation_id: &str,
+    mcp_entry: &ManagedServerEntry,
+    guard_commands: &BTreeMap<String, GuardCommandSpec>,
+) -> Value {
+    let commands = guard_commands
+        .iter()
+        .map(|(phase, spec)| {
+            (
+                phase.clone(),
+                json!({
+                    "command": &spec.command,
+                    "args": &spec.args,
+                }),
+            )
+        })
+        .collect::<serde_json::Map<_, _>>();
+    json!({
+        "schema": VOLICORD_POLICY_SCHEMA,
+        "managed_by": "volicord",
+        "host": public_host_label(host_kind),
+        "repo_root": path_text(repo_root),
+        "connection_id": connection_id,
+        "guard_installation_id": guard_installation_id,
+        "mode": init_mode.cli_value(),
+        "guard_mode": init_mode.guard_value(),
+        "mcp": {
+            "command": &mcp_entry.command,
+            "args": &mcp_entry.args,
+            "env": &mcp_entry.env,
+        },
+        "guard": {
+            "enabled": init_mode != InitMode::McpOnly,
+            "commands": commands,
+        },
+    })
+}
+
+fn record_guard_installation(
+    runtime_home: &Path,
+    host_kind: HostKind,
+    init_mode: InitMode,
+    connection_id: &str,
+    project_id: &str,
+    integration: &GuardIntegrationPlan,
+) -> Result<GuardInstallationRecord, ConnectionCommandError> {
+    let now = current_timestamp();
+    let health = match init_mode {
+        InitMode::McpOnly => GuardInstallationHealth::Unknown,
+        InitMode::Guarded | InitMode::Managed => GuardInstallationHealth::ActionRequired,
+    };
+    upsert_guard_installation(
+        runtime_home,
+        GuardInstallationUpsert {
+            guard_installation_id: integration.guard_installation_id.clone(),
+            connection_internal_id: connection_id.to_owned(),
+            project_id: Some(project_id.to_owned()),
+            host_kind: host_kind.as_str().to_owned(),
+            guard_mode: init_mode.guard_value().to_owned(),
+            host_capability_json: guard_capability_json(integration)?,
+            installation_health: health.as_str().to_owned(),
+            installed_at: (init_mode != InitMode::McpOnly).then_some(now.clone()),
+            last_checked_at: now,
+            metadata_json: serde_json::to_string(&json!({
+                "created_by": INIT_METADATA_CREATED_BY,
+                "policy_file": VOLICORD_POLICY_FILE,
+            }))
+            .map_err(|error| ConnectionCommandError::runtime(error.to_string()))?,
+        },
+    )
+    .map_err(Into::into)
+}
+
+fn guard_capability_json(plan: &GuardIntegrationPlan) -> Result<String, ConnectionCommandError> {
+    serde_json::to_string(&json!({
+        "schema": "volicord-guard-capability-v1",
+        "files": generated_files_json(&plan.generated_files),
+        "commands": plan.policy["guard"]["commands"].clone(),
+    }))
+    .map_err(|error| ConnectionCommandError::runtime(error.to_string()))
+}
+
+fn generated_files_json(files: &[GeneratedFilePlan]) -> Value {
+    Value::Array(
+        files
+            .iter()
+            .map(|file| {
+                json!({
+                    "kind": file.kind,
+                    "path": path_text(&file.path),
+                    "status": file.status.as_str(),
+                })
+            })
+            .collect(),
+    )
+}
+
+fn init_user_actions(existing: &[UserAction], host_kind: HostKind) -> Vec<UserAction> {
+    let mut actions = existing.to_vec();
+    actions.push(UserAction::new(
+        UserActionKind::ReloadRequired,
+        format!(
+            "Restart or reload {} so it loads the Volicord MCP and guard configuration",
+            public_host_label(host_kind)
+        ),
+    ));
+    actions
+}
+
+fn current_timestamp() -> String {
+    DateTime::<Utc>::from(SystemTime::now()).to_rfc3339_opts(SecondsFormat::Secs, true)
+}
+
+fn stable_id(prefix: &str, parts: &[&str]) -> String {
+    let mut hasher = Sha256::new();
+    for part in parts {
+        hasher.update(part.as_bytes());
+        hasher.update([0]);
+    }
+    let digest = hex_bytes(&hasher.finalize());
+    format!("{prefix}_{}", &digest[..16])
+}
+
+fn hex_bytes(bytes: &[u8]) -> String {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    let mut output = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        output.push(HEX[(byte >> 4) as usize] as char);
+        output.push(HEX[(byte & 0x0f) as usize] as char);
+    }
+    output
+}
+
 struct SimplifiedConnectionOutput<'a> {
     format: OutputFormat,
     action: &'a str,
@@ -2182,6 +3238,130 @@ fn render_simplified_plan_output(
                 .map(|text| format!("{text}\n"))
                 .map_err(|error| ConnectionCommandError::runtime(error.to_string()))
         }
+    }
+}
+
+fn render_init_output(data: InitOutput<'_>) -> Result<String, ConnectionCommandError> {
+    let target = host_target_text(&data.host_plan.target);
+    let planned_change = planned_change_text(data.host_plan.change);
+    let actions = data
+        .verification
+        .map(|verification| init_user_actions(&verification.host.user_actions, data.host_kind))
+        .unwrap_or_else(|| init_user_actions(&data.host_plan.user_actions, data.host_kind));
+    let guard_health = data
+        .guard_installation
+        .map(|guard| guard.installation_health.as_str())
+        .unwrap_or_else(|| {
+            if data.init_mode == InitMode::McpOnly {
+                GuardInstallationHealth::Unknown.as_str()
+            } else {
+                GuardInstallationHealth::ActionRequired.as_str()
+            }
+        });
+    match data.format {
+        OutputFormat::Text => {
+            let mut output = format!(
+                "Volicord init {}\nhost: {}\nmode: {}\nruntime_home: {}\nrepo: {}\nconnection_id: {}\nmcp_config: {}\nplanned_change: {}\nprofile: {}\nguard_installation: {} ({})\n",
+                data.status.as_str(),
+                public_host_label(data.host_kind),
+                data.init_mode.cli_value(),
+                data.runtime_home.display(),
+                data.repo_root.display(),
+                data.connection_id,
+                target,
+                planned_change,
+                data.profile_action,
+                data.integration.guard_installation_id,
+                guard_health
+            );
+            output.push_str("generated_files:\n");
+            for file in &data.integration.generated_files {
+                output.push_str(&format!(
+                    "- {}: {} ({})\n",
+                    file.kind,
+                    file.path.display(),
+                    file.status.as_str()
+                ));
+            }
+            append_user_actions_text(&mut output, &actions);
+            Ok(output)
+        }
+        OutputFormat::Json => {
+            let value = json!({
+                "action": "init",
+                "status": data.status.as_str(),
+                "host": public_host_label(data.host_kind),
+                "mode": data.init_mode.cli_value(),
+                "guard_mode": data.init_mode.guard_value(),
+                "runtime_home": path_text(data.runtime_home),
+                "repo_root": path_text(data.repo_root),
+                "profile": {
+                    "status": data.profile_action,
+                },
+                "connection": {
+                    "connection_id": data.connection_id,
+                    "host_kind": data.host_kind.as_str(),
+                    "connection_intent": ConnectionIntent::Shared.as_str(),
+                    "host_scope": HostScope::Project.as_str(),
+                    "mode": CONNECTION_MODE_WORKFLOW,
+                    "project_id": data.project_id,
+                    "config_target": target,
+                },
+                "mcp": {
+                    "command": &data.host_plan.entry.command,
+                    "args": &data.host_plan.entry.args,
+                    "env": &data.host_plan.entry.env,
+                    "config_target": target,
+                },
+                "planned_change": planned_change,
+                "generated_files": generated_files_json(&data.integration.generated_files),
+                "guard_installation": {
+                    "guard_installation_id": &data.integration.guard_installation_id,
+                    "installation_health": guard_health,
+                    "recorded": data.guard_installation.is_some(),
+                },
+                "checks": init_checks_json(data.verification),
+                "actions": actions_json_values(&actions),
+            });
+            serde_json::to_string_pretty(&value)
+                .map(|text| format!("{text}\n"))
+                .map_err(|error| ConnectionCommandError::runtime(error.to_string()))
+        }
+    }
+}
+
+fn init_checks_json(verification: Option<&VerificationReport>) -> Value {
+    if let Some(report) = verification {
+        Value::Array(vec![
+            json!({
+                "id": "host",
+                "status": report.host.status.as_str(),
+                "summary": report.host.details,
+            }),
+            json!({
+                "id": "mcp_preflight",
+                "status": report.preflight.status.as_str(),
+                "summary": report.preflight.details,
+            }),
+            json!({
+                "id": "mcp_handshake",
+                "status": report.handshake.status.as_str(),
+                "summary": report.handshake.details,
+            }),
+            json!({
+                "id": "guard_installation",
+                "status": "action_required",
+                "summary": "guard installation status was recorded; host reload or approval may still be required",
+            }),
+        ])
+    } else {
+        json!([
+            {
+                "id": "init_plan",
+                "status": "passed",
+                "summary": "init plan was built without writing files or Runtime Home records"
+            }
+        ])
     }
 }
 

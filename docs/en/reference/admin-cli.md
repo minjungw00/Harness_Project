@@ -57,6 +57,7 @@ Supported baseline commands:
 volicord --help
 volicord --version
 volicord setup [--home PATH] [--link-bin PATH] [--mcp-command PATH] [--json]
+volicord init --host codex|claude-code --repo PATH [--mode mcp-only|guarded|managed] [--home PATH] [--mcp-command PATH] [--dry-run] [--json]
 volicord doctor [--json]
 volicord connect [HOST] [--repo PATH] [--shared|--global] [--read-only] [--dry-run] [--json]
 volicord connections [--repo PATH] [--json]
@@ -118,9 +119,10 @@ Not supported:
 `volicord setup` establishes the local installation profile. It creates or
 verifies the selected Runtime Home and stores the command paths later
 administrative, Agent Connection, export, and MCP process flows use. Setup is
-the only baseline command that directly selects the Runtime Home path or MCP
-launch command location. It can help make `volicord` available on `PATH`, but it
-cannot change the parent shell's current environment.
+the standalone installation-profile command. `volicord init` may also select
+the Runtime Home path or MCP launch command while performing first-run
+repository setup and host connection. Setup can help make `volicord` available
+on `PATH`, but it cannot change the parent shell's current environment.
 
 In text mode, `volicord setup` may prompt only when stdin and stdout are
 interactive terminals, `--json` is absent, and `--link-bin` is absent. It
@@ -148,7 +150,7 @@ Setup effects:
 - creates or validates the Runtime Home registry
 - records Runtime Home identity and installation profile metadata
 - records the selected `volicord` command location and MCP launch command for
-  later `connect`, `doctor`, export, and MCP startup flows
+  later `init`, `connect`, `doctor`, export, and MCP startup flows
 - inspects whether selected command paths resolve through the current process
   `PATH`
 - may prompt in interactive text mode for safe command-availability choices:
@@ -267,6 +269,52 @@ Runtime Home path; it uses `volicord` as the command name and
 `mcp --stdio --connection <connection_id>` as arguments that the future host
 environment must resolve through `PATH`.
 
+`volicord init --host codex --repo PATH` and
+`volicord init --host claude-code --repo PATH` are the primary first-run
+repository setup and host-connection commands for chat-first use. They use the
+shared, project-scoped host layout so generated host MCP configuration starts
+`volicord mcp --stdio` through `PATH` and does not embed a personal Runtime Home
+path.
+
+`--mode` selects the guard integration level:
+
+- `mcp-only` writes MCP configuration, the managed `AGENTS.md` guidance block,
+  and policy metadata with guard commands disabled, but records guard
+  installation health as unknown.
+- `guarded` is the default. It writes MCP configuration, the managed
+  `AGENTS.md` guidance block, `.volicord/policy.json` guard command policy, and
+  host rule files where the host has a supported project-local rule convention.
+- `managed` uses the same setup surface as `guarded` and records managed guard
+  mode for hosts or future integrations that distinguish it.
+
+`--home PATH` selects the Runtime Home for this initialization. `--mcp-command
+PATH` stores the exact command path in the installation profile when init must
+create or update that profile; project-scoped host MCP configuration still uses
+`volicord` from `PATH`.
+
+Non-dry-run `volicord init`:
+
+- initializes the Runtime Home if it is missing
+- creates or updates the installation profile when needed
+- registers or reuses the selected `Product Repository`
+- creates or updates the matching Agent Connection and Connection Projects
+  membership
+- writes project-scoped Codex `.codex/config.toml` or Claude Code `.mcp.json`
+  with `volicord mcp --stdio --connection <connection_id>`
+- writes or updates only the Volicord-managed block in `AGENTS.md`
+- writes `.volicord/policy.json` with guard commands that invoke
+  `volicord guard`
+- writes supported host rule files such as `.claude/rules/volicord.md`
+- records guard installation status in the Runtime Home registry
+- reports the required host restart, reload, approval, or trust action when the
+  host must load the new MCP or guard configuration
+
+Re-running init is idempotent for matching Volicord-managed content. It updates
+managed blocks, policy files, host MCP entries, and guard installation rows
+without duplicating them. If an existing target contains unmanaged content where
+Volicord requires ownership markers or a managed fingerprint, init must report a
+conflict instead of overwriting it.
+
 <a id="volicord-agent-install"></a>
 ## Agent Connection commands
 
@@ -275,6 +323,7 @@ or looks up the stored `connection_internal_id`.
 
 | Command | Runtime Home registry effect | Host configuration effect | Verification effect |
 |---|---|---|---|
+| `volicord init` | Initializes Runtime Home and installation profile if needed, registers or reuses the selected repository project, creates or updates the shared project-scoped Agent Connection, ensures Connection Projects membership, and records guard installation status. | Installs or updates managed project-local MCP configuration, `AGENTS.md` guidance, `.volicord/policy.json`, and supported host rule files for `codex` or `claude-code`. | Runs host-config, MCP startup, initialization, and `tools/list` checks where observable, then reports any host reload, restart, trust, or approval action. |
 | `volicord connect` | Registers or reuses the selected repository project, creates or updates the matching Agent Connection, records the connection intent and mode, and ensures the project is in Connection Projects. | Installs or updates managed host configuration for `codex` or `claude-code` according to the selected intent. | Runs setup, host-config, MCP startup, initialization, and `tools/list` checks where observable. |
 | `volicord connections` | Reads matching Agent Connections and connected projects. | Does not launch the host and does not rewrite host configuration. | Reports stored and diagnostic verification state without refreshing host checks. |
 | `volicord connection status` | Reads one selected Agent Connection. | Does not launch the host and does not rewrite host configuration. | Reports full stored verification status and required user actions. |
@@ -451,7 +500,8 @@ Dry-run does not:
 - create SQLite WAL or SHM files
 - apply registry or project-state migrations
 - register or update projects, Agent Connections, Connection Projects,
-  installation profile rows, or verification status rows
+  installation profile rows, guard installation rows, or verification status
+  rows
 - create, modify, or remove host configuration files
 - create, modify, or remove `Product Repository` files or directories
 - create, modify, or remove generic export files

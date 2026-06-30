@@ -5,6 +5,7 @@ use std::{
 
 use rusqlite::{params, Connection, OptionalExtension};
 use serde_json::Value;
+use volicord_types::{GuardInstallationHealth, GuardMode};
 
 use crate::{
     agent_connections::{
@@ -93,6 +94,7 @@ pub struct RegistryInspectionSnapshot {
     pub projects: Vec<ProjectInspectionRecord>,
     pub agent_connections: Vec<AgentConnectionInspectionRecord>,
     pub connection_projects: Vec<ConnectionProjectInspectionRecord>,
+    pub guard_installations: Vec<GuardInstallationInspectionRecord>,
 }
 
 /// Runtime Home singleton row read from `registry.sqlite`.
@@ -152,6 +154,24 @@ pub struct ConnectionProjectInspectionRecord {
     pub project_internal_id: String,
     pub project_id: String,
     pub created_at: String,
+}
+
+/// Guard installation row read from the current registry schema.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct GuardInstallationInspectionRecord {
+    pub guard_installation_id: String,
+    pub connection_internal_id: String,
+    pub project_internal_id: Option<String>,
+    pub project_id: Option<String>,
+    pub host_kind: String,
+    pub guard_mode: String,
+    pub host_capability_json: String,
+    pub installation_health: String,
+    pub installed_at: Option<String>,
+    pub last_checked_at: String,
+    pub metadata_json: String,
+    pub created_at: String,
+    pub updated_at: String,
 }
 
 /// Installation profile row read from the current registry schema.
@@ -329,6 +349,15 @@ fn inspect_registry_database_at(path: &Path, runtime_home: &Path) -> RegistryDat
         Ok(records) => records,
         Err(issue) => return issue.into_database_inspection(path, REGISTRY_SCHEMA_VERSION),
     };
+    let guard_installations = match read_guard_installation_rows(
+        &conn,
+        schema.detected_version(),
+        &agent_connections,
+        &projects,
+    ) {
+        Ok(records) => records,
+        Err(issue) => return issue.into_database_inspection(path, REGISTRY_SCHEMA_VERSION),
+    };
 
     DatabaseInspection::Present(RegistryInspectionSnapshot {
         path: path.to_path_buf(),
@@ -338,6 +367,7 @@ fn inspect_registry_database_at(path: &Path, runtime_home: &Path) -> RegistryDat
         projects,
         agent_connections,
         connection_projects,
+        guard_installations,
     })
 }
 
@@ -594,6 +624,7 @@ fn validate_registry_required_schema(
             "project_aliases",
             "agent_connections",
             "connection_projects",
+            "guard_installations",
         ],
     )?;
     require_columns(
@@ -681,6 +712,26 @@ fn validate_registry_required_schema(
             "connection_internal_id",
             "project_internal_id",
             "created_at",
+        ],
+    )?;
+    require_columns(
+        conn,
+        REGISTRY_DATABASE_KIND,
+        "guard_installations",
+        &[
+            "guard_installation_id",
+            "runtime_home_id",
+            "connection_internal_id",
+            "project_internal_id",
+            "host_kind",
+            "guard_mode",
+            "host_capability_json",
+            "installation_health",
+            "installed_at",
+            "last_checked_at",
+            "metadata_json",
+            "created_at",
+            "updated_at",
         ],
     )?;
     Ok(())
@@ -1164,6 +1215,70 @@ fn read_connection_project_rows(
     Ok(memberships)
 }
 
+fn read_guard_installation_rows(
+    conn: &Connection,
+    _detected_version: i64,
+    connections: &[AgentConnectionInspectionRecord],
+    projects: &[ProjectInspectionRecord],
+) -> Result<Vec<GuardInstallationInspectionRecord>, InspectionIssue> {
+    let connection_ids = connections
+        .iter()
+        .map(|record| record.connection_internal_id.as_str())
+        .collect::<BTreeSet<_>>();
+    let project_ids = projects
+        .iter()
+        .map(|record| record.project_internal_id.as_str())
+        .collect::<BTreeSet<_>>();
+
+    let mut stmt = conn
+        .prepare(
+            "SELECT
+                gi.guard_installation_id,
+                gi.connection_internal_id,
+                gi.project_internal_id,
+                gi.host_kind,
+                gi.guard_mode,
+                gi.host_capability_json,
+                gi.installation_health,
+                gi.installed_at,
+                gi.last_checked_at,
+                gi.metadata_json,
+                gi.created_at,
+                gi.updated_at
+             FROM guard_installations AS gi
+             ORDER BY gi.connection_internal_id, gi.guard_mode, gi.guard_installation_id",
+        )
+        .map_err(sqlite_unreadable)?;
+    let rows = stmt
+        .query_map([], |row| {
+            let project_internal_id = row.get::<_, Option<String>>(2)?;
+            Ok(GuardInstallationInspectionRecord {
+                guard_installation_id: row.get(0)?,
+                connection_internal_id: row.get(1)?,
+                project_id: project_internal_id.clone(),
+                project_internal_id,
+                host_kind: row.get(3)?,
+                guard_mode: row.get(4)?,
+                host_capability_json: row.get(5)?,
+                installation_health: row.get(6)?,
+                installed_at: row.get(7)?,
+                last_checked_at: row.get(8)?,
+                metadata_json: row.get(9)?,
+                created_at: row.get(10)?,
+                updated_at: row.get(11)?,
+            })
+        })
+        .map_err(sqlite_unreadable)?;
+
+    let mut installations = Vec::new();
+    for row in rows {
+        let installation = row.map_err(registration_decode_error)?;
+        validate_guard_installation_row(&installation, &connection_ids, &project_ids)?;
+        installations.push(installation);
+    }
+    Ok(installations)
+}
+
 fn read_project_state_record(
     conn: &Connection,
     project_id: &str,
@@ -1291,6 +1406,56 @@ fn validate_connection_project_row(
     Ok(())
 }
 
+fn validate_guard_installation_row(
+    installation: &GuardInstallationInspectionRecord,
+    connection_ids: &BTreeSet<&str>,
+    project_ids: &BTreeSet<&str>,
+) -> Result<(), InspectionIssue> {
+    require_nonempty(
+        "guard_installations.guard_installation_id",
+        &installation.guard_installation_id,
+    )?;
+    require_nonempty(
+        "guard_installations.connection_internal_id",
+        &installation.connection_internal_id,
+    )?;
+    if !connection_ids.contains(installation.connection_internal_id.as_str()) {
+        return Err(InspectionIssue::Malformed(format!(
+            "guard_installations references missing connection_internal_id {}",
+            installation.connection_internal_id
+        )));
+    }
+    if let Some(project_internal_id) = &installation.project_internal_id {
+        require_nonempty(
+            "guard_installations.project_internal_id",
+            project_internal_id,
+        )?;
+        if !project_ids.contains(project_internal_id.as_str()) {
+            return Err(InspectionIssue::Malformed(format!(
+                "guard_installations references missing project_internal_id {project_internal_id}"
+            )));
+        }
+    }
+    validate_host_kind_value(&installation.host_kind)?;
+    validate_guard_mode_value(&installation.guard_mode)?;
+    validate_guard_installation_health_value(&installation.installation_health)?;
+    validate_json_object(
+        "guard_installations.host_capability_json",
+        &installation.host_capability_json,
+    )?;
+    validate_json_object(
+        "guard_installations.metadata_json",
+        &installation.metadata_json,
+    )?;
+    require_nonempty(
+        "guard_installations.last_checked_at",
+        &installation.last_checked_at,
+    )?;
+    require_nonempty("guard_installations.created_at", &installation.created_at)?;
+    require_nonempty("guard_installations.updated_at", &installation.updated_at)?;
+    Ok(())
+}
+
 fn validate_host_kind_scope(host_kind: &str, host_scope: &str) -> Result<(), InspectionIssue> {
     let valid = matches!(
         (host_kind, host_scope),
@@ -1310,6 +1475,19 @@ fn validate_host_kind_scope(host_kind: &str, host_scope: &str) -> Result<(), Ins
     }
 }
 
+fn validate_host_kind_value(host_kind: &str) -> Result<(), InspectionIssue> {
+    if matches!(
+        host_kind,
+        HOST_KIND_CODEX | HOST_KIND_CLAUDE_CODE | HOST_KIND_GENERIC
+    ) {
+        Ok(())
+    } else {
+        Err(InspectionIssue::Malformed(format!(
+            "guard_installations.host_kind is not supported: {host_kind}"
+        )))
+    }
+}
+
 fn validate_connection_intent(intent: &str) -> Result<(), InspectionIssue> {
     if matches!(
         intent,
@@ -1319,6 +1497,37 @@ fn validate_connection_intent(intent: &str) -> Result<(), InspectionIssue> {
     } else {
         Err(InspectionIssue::Malformed(format!(
             "agent_connections.intent is not supported: {intent}"
+        )))
+    }
+}
+
+fn validate_guard_mode_value(mode: &str) -> Result<(), InspectionIssue> {
+    if matches!(
+        mode,
+        value if value == GuardMode::McpOnly.as_str()
+            || value == GuardMode::Guarded.as_str()
+            || value == GuardMode::Managed.as_str()
+    ) {
+        Ok(())
+    } else {
+        Err(InspectionIssue::Malformed(format!(
+            "guard_installations.guard_mode is not supported: {mode}"
+        )))
+    }
+}
+
+fn validate_guard_installation_health_value(status: &str) -> Result<(), InspectionIssue> {
+    if matches!(
+        status,
+        value if value == GuardInstallationHealth::Unknown.as_str()
+            || value == GuardInstallationHealth::Healthy.as_str()
+            || value == GuardInstallationHealth::ActionRequired.as_str()
+            || value == GuardInstallationHealth::Failed.as_str()
+    ) {
+        Ok(())
+    } else {
+        Err(InspectionIssue::Malformed(format!(
+            "guard_installations.installation_health is not supported: {status}"
         )))
     }
 }

@@ -9,8 +9,8 @@ use std::{
 
 use volicord_cli::{
     connection_command::{
-        connect_usage, connection_usage, connections_usage, run_connect_command,
-        run_connection_command, run_connections_command, ConnectionCommandError,
+        connect_usage, connection_usage, connections_usage, init_usage, run_connect_command,
+        run_connection_command, run_connections_command, run_init_command, ConnectionCommandError,
         ProductionConnectionProcess,
     },
     doctor_command::{doctor_usage, run_doctor_command, DoctorCommandError},
@@ -100,6 +100,11 @@ where
         "doctor" => command_outcome(run_doctor_command(&args[2..], &env_var, current_dir)?),
         "export" => run_export_command(&args[2..], &env_var, current_dir).map_err(CliError::from),
         "mcp" => command_mcp(&args[2..], env_var, current_dir),
+        "init" => {
+            let mut connection_process = ProductionConnectionProcess;
+            run_init_command(&args[2..], current_dir, &mut connection_process)
+                .map_err(CliError::from)
+        }
         "guard" => {
             if !guard_help_requested(&args[2..]) {
                 require_setup_completed(&env_var, current_dir)?;
@@ -391,8 +396,9 @@ fn display_path(path: &Path) -> String {
 
 fn usage() -> String {
     format!(
-        "Usage:\n  volicord --help\n  volicord --version\n{}{}{}{}{}{}{}{}{}{}\nEnvironment:\n  VOLICORD_HOME  Override Runtime Home path (default: $HOME/.volicord)\n\nAgent Connection commands manage local MCP host connections. User Channel commands record local user judgments.\nThese are local administrative commands, not public Volicord API methods.\n",
+        "Usage:\n  volicord --help\n  volicord --version\n{}{}{}{}{}{}{}{}{}{}{}\nEnvironment:\n  VOLICORD_HOME  Override Runtime Home path (default: $HOME/.volicord)\n\nAgent Connection commands manage local MCP host connections. User Channel commands record local user judgments.\nThese are local administrative commands, not public Volicord API methods.\n",
         indent_usage_block(&setup_usage()),
+        indent_usage_block(&init_usage()),
         indent_usage_block(&doctor_usage()),
         indent_usage_block(&export_usage()),
         indent_usage_block(&mcp_usage()),
@@ -582,13 +588,13 @@ mod tests {
 
         assert!(output.contains("volicord --version"));
         assert!(output.contains("volicord setup"));
+        assert!(output.contains("volicord init"));
         assert!(output.contains("volicord doctor"));
         assert!(output.contains("volicord mcp --stdio --connection <connection_id>"));
         assert!(output.contains("\n  volicord connection verify"));
         assert!(output.contains("\n  volicord user judgments"));
         assert!(!output.contains("\nvolicord connection verify"));
         assert!(!output.contains("\nvolicord user judgments"));
-        assert!(!output.contains("volicord init"));
     }
 
     #[test]

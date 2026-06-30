@@ -1836,7 +1836,7 @@ fn setup_metadata_json(
     .map_err(|error| SetupCommandError::Runtime(error.to_string()))
 }
 
-fn runtime_home_id_for_path(path: &Path) -> Result<String, SetupCommandError> {
+pub(crate) fn runtime_home_id_for_path(path: &Path) -> Result<String, SetupCommandError> {
     let path_text = path.to_str().ok_or_else(|| {
         SetupCommandError::Runtime("Runtime Home path must be valid UTF-8".to_owned())
     })?;

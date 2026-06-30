@@ -15,6 +15,7 @@ use volicord_store::agent_connections::{
     CONNECTION_MODE_WORKFLOW, HOST_KIND_GENERIC, HOST_SCOPE_EXPORT,
     VERIFIED_STATUS_ACTION_REQUIRED,
 };
+use volicord_store::guards::list_guard_installations;
 use volicord_store::{
     bootstrap::{
         initialize_runtime_home, list_projects, register_project, write_installation_profile,
@@ -39,6 +40,7 @@ fn binary_help_uses_agent_connection_model() -> Result<(), Box<dyn Error>> {
     let text = stdout(&help);
 
     assert!(text.contains("volicord setup"));
+    assert!(text.contains("volicord init --host"));
     assert!(text.contains("volicord doctor"));
     assert!(text.contains("volicord export mcp-config"));
     assert!(text.contains("volicord guard session-start"));
@@ -57,6 +59,16 @@ fn binary_help_uses_agent_connection_model() -> Result<(), Box<dyn Error>> {
     assert!(setup_text.contains("--link-bin PATH"));
     assert!(setup_text.contains("--mcp-command PATH"));
     assert!(setup_text.contains("--json"));
+
+    let init_help = run_without_home(["init", "--help"])?;
+    assert_success(&init_help);
+    let init_text = stdout(&init_help);
+    assert!(init_text.contains("volicord init --host codex|claude-code --repo PATH"));
+    assert!(init_text.contains("--mode mcp-only|guarded|managed"));
+    assert!(init_text.contains("--home PATH"));
+    assert!(init_text.contains("--mcp-command PATH"));
+    assert!(init_text.contains("--dry-run"));
+    assert!(init_text.contains("--json"));
 
     let unknown_user = run_without_home(["user", "not-a-real-command", "--repo", "."])?;
     assert_eq!(unknown_user.status.code(), Some(2));
@@ -111,6 +123,7 @@ fn binary_help_options_match_supported_contracts() -> Result<(), Box<dyn Error>>
             "--guard-installation",
             "--host",
             "--guard-mode",
+            "--mode",
             "--text",
         ],
     )?;
@@ -140,6 +153,18 @@ fn binary_help_options_match_supported_contracts() -> Result<(), Box<dyn Error>>
             "--shared",
             "--global",
             "--read-only",
+            "--dry-run",
+            "--json",
+        ],
+    )?;
+    assert_help_options(
+        ["init", "--help"],
+        &[
+            "--host",
+            "--repo",
+            "--mode",
+            "--home",
+            "--mcp-command",
             "--dry-run",
             "--json",
         ],
@@ -338,6 +363,302 @@ fn doctor_without_setup_reports_action_required() -> Result<(), Box<dyn Error>> 
         .iter()
         .any(|action| action["id"] == "run_setup"));
     assert_eq!(fs::read_dir(runtime_home.path())?.count(), 0);
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn init_dry_run_does_not_write_runtime_or_repo_files() -> Result<(), Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new("cli-bin-init-dry-run")?;
+    let repo_root = create_git_repo(&runtime_home, "product-repo")?;
+    let bin_dir = runtime_home.path().join("bin");
+    write_fake_codex(&bin_dir)?;
+    write_fake_mcp(&bin_dir)?;
+
+    let output = run_with_home_env(
+        runtime_home.path(),
+        [
+            "init",
+            "--host",
+            "codex",
+            "--repo",
+            path_text(&repo_root).as_str(),
+            "--dry-run",
+            "--json",
+        ],
+        &[("PATH", path_env(&[bin_dir.as_path()]))],
+    )?;
+
+    assert_success(&output);
+    let value = json_stdout(&output)?;
+    assert_eq!(value["action"], "init");
+    assert_eq!(value["status"], "dry_run");
+    assert_eq!(value["host"], "codex");
+    assert_eq!(value["mode"], "guarded");
+    assert_eq!(value["profile"]["status"], "planned");
+    assert_eq!(value["mcp"]["command"], "volicord");
+    assert_eq!(value["mcp"]["args"][0], "mcp");
+    assert_eq!(value["mcp"]["args"][1], "--stdio");
+    assert_eq!(value["generated_files"][0]["kind"], "agents_guidance");
+    assert_eq!(value["generated_files"][0]["status"], "planned_create");
+    assert_eq!(value["generated_files"][1]["kind"], "policy");
+    assert_eq!(value["generated_files"][1]["status"], "planned_create");
+    assert!(!runtime_home.registry_db_path().exists());
+    assert!(!repo_root.join(".codex/config.toml").exists());
+    assert!(!repo_root.join("AGENTS.md").exists());
+    assert!(!repo_root.join(".volicord/policy.json").exists());
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Result<(), Box<dyn Error>>
+{
+    const START_MARKER: &str = "<!-- BEGIN VOLICORD MANAGED GUIDANCE v1 -->";
+    const END_MARKER: &str = "<!-- END VOLICORD MANAGED GUIDANCE v1 -->";
+
+    let runtime_home = TempRuntimeHome::new("cli-bin-init-codex")?;
+    let repo_root = create_git_repo(&runtime_home, "product-repo")?;
+    let bin_dir = runtime_home.path().join("bin");
+    write_fake_codex(&bin_dir)?;
+    write_fake_mcp(&bin_dir)?;
+    fs::write(
+        repo_root.join("AGENTS.md"),
+        format!("Existing top\n{START_MARKER}\nold managed text\n{END_MARKER}\nExisting bottom\n"),
+    )?;
+
+    let output = run_with_home_env(
+        runtime_home.path(),
+        [
+            "init",
+            "--host",
+            "codex",
+            "--repo",
+            path_text(&repo_root).as_str(),
+            "--json",
+        ],
+        &[
+            ("PATH", path_env(&[bin_dir.as_path()])),
+            ("VOLICORD_TEST_CONNECTION_MODE", "workflow".to_owned()),
+        ],
+    )?;
+
+    assert_success(&output);
+    let value = json_stdout(&output)?;
+    assert_eq!(value["action"], "init");
+    assert_eq!(value["host"], "codex");
+    assert_eq!(value["status"], "action_required");
+    assert_eq!(value["mode"], "guarded");
+    assert_eq!(value["guard_mode"], "guarded");
+    assert_eq!(value["profile"]["status"], "created");
+    assert_eq!(value["connection"]["host_kind"], "codex");
+    assert_eq!(value["connection"]["connection_intent"], "shared");
+    assert_eq!(value["connection"]["host_scope"], "project");
+    assert_eq!(value["connection"]["mode"], CONNECTION_MODE_WORKFLOW);
+    assert_eq!(value["mcp"]["command"], "volicord");
+    let connection_id = value["connection"]["connection_id"]
+        .as_str()
+        .expect("connection_id should be present")
+        .to_owned();
+    assert_eq!(
+        value["mcp"]["args"],
+        serde_json::json!(["mcp", "--stdio", "--connection", connection_id])
+    );
+    assert!(value["actions"]
+        .as_array()
+        .expect("actions should be an array")
+        .iter()
+        .any(|action| action["id"] == "reload_required"));
+
+    let record = agent_connection_record(runtime_home.path(), &connection_id)?
+        .expect("connection should be stored");
+    assert_eq!(record.mode, CONNECTION_MODE_WORKFLOW);
+    assert_eq!(record.host_kind, "codex");
+    let projects = list_connection_projects(runtime_home.path(), &connection_id)?;
+    assert_eq!(projects.len(), 1);
+    assert_eq!(projects[0].project.repo_root, repo_root);
+
+    let config = fs::read_to_string(repo_root.join(".codex/config.toml"))?;
+    assert!(config.contains(&format!(
+        "args = [\"mcp\", \"--stdio\", \"--connection\", \"{connection_id}\"]"
+    )));
+
+    let agents = fs::read_to_string(repo_root.join("AGENTS.md"))?;
+    assert_eq!(count_occurrences(&agents, START_MARKER), 1);
+    assert!(agents.contains("Existing top"));
+    assert!(agents.contains("Existing bottom"));
+    assert!(agents.contains("Check Volicord status before planning"));
+    assert!(agents.contains("Start a task before planning implementation"));
+    assert!(agents.contains("Prepare write before product-file changes"));
+    assert!(agents.contains("Request user judgment through Volicord"));
+    assert!(agents.contains("Check close before claiming completion"));
+    assert!(agents.contains("If Volicord tools are unavailable"));
+    assert!(!agents.contains("old managed text"));
+
+    let policy_path = repo_root.join(".volicord/policy.json");
+    let policy: Value = serde_json::from_str(&fs::read_to_string(&policy_path)?)?;
+    assert_eq!(policy["schema"], "volicord-policy-v1");
+    assert_eq!(policy["managed_by"], "volicord");
+    assert_eq!(policy["host"], "codex");
+    assert_eq!(policy["mode"], "guarded");
+    assert_eq!(policy["guard_mode"], "guarded");
+    assert_eq!(policy["mcp"]["command"], "volicord");
+    assert_eq!(
+        policy["mcp"]["args"],
+        serde_json::json!(["mcp", "--stdio", "--connection", connection_id])
+    );
+    assert_eq!(policy["guard"]["enabled"], true);
+    assert_eq!(
+        policy["guard"]["commands"]["pre_tool"]["command"],
+        "volicord"
+    );
+    assert_eq!(policy["guard"]["commands"]["pre_tool"]["args"][0], "guard");
+    assert_eq!(
+        policy["guard"]["commands"]["pre_tool"]["args"][1],
+        "pre-tool"
+    );
+    assert!(policy["guard"]["commands"]["pre_tool"]["args"]
+        .as_array()
+        .expect("guard args should be an array")
+        .windows(2)
+        .any(|pair| pair[0] == "--connection" && pair[1] == connection_id));
+
+    let guard_installations = list_guard_installations(
+        runtime_home.path(),
+        &connection_id,
+        Some(&projects[0].project_id),
+    )?;
+    assert_eq!(guard_installations.len(), 1);
+    assert_eq!(guard_installations[0].host_kind, "codex");
+    assert_eq!(guard_installations[0].guard_mode, "guarded");
+    assert_eq!(
+        guard_installations[0].installation_health,
+        "action_required"
+    );
+    let capability: Value = serde_json::from_str(&guard_installations[0].host_capability_json)?;
+    assert_eq!(capability["schema"], "volicord-guard-capability-v1");
+    assert!(capability["commands"]["pre_tool"]["args"]
+        .as_array()
+        .expect("capability guard args should be an array")
+        .iter()
+        .any(|arg| arg == "--json"));
+
+    let doctor = run_with_home_env(runtime_home.path(), ["doctor", "--json"], &[])?;
+    assert_success(&doctor);
+    let doctor_json = json_stdout(&doctor)?;
+    let registry_counts = doctor_json["checks"]
+        .as_array()
+        .expect("checks should be an array")
+        .iter()
+        .find(|check| check["id"] == "registry_counts")
+        .expect("doctor should report registry counts");
+    assert_eq!(registry_counts["details"]["guard_installations"], 1);
+
+    let second = run_with_home_env(
+        runtime_home.path(),
+        [
+            "init",
+            "--host",
+            "codex",
+            "--repo",
+            path_text(&repo_root).as_str(),
+            "--json",
+        ],
+        &[
+            ("PATH", path_env(&[bin_dir.as_path()])),
+            ("VOLICORD_TEST_CONNECTION_MODE", "workflow".to_owned()),
+        ],
+    )?;
+    assert_success(&second);
+    let second_json = json_stdout(&second)?;
+    assert_eq!(second_json["connection"]["connection_id"], connection_id);
+    assert_eq!(second_json["profile"]["status"], "reused");
+    assert_eq!(
+        count_occurrences(
+            &fs::read_to_string(repo_root.join("AGENTS.md"))?,
+            START_MARKER
+        ),
+        1
+    );
+    assert_eq!(
+        list_guard_installations(
+            runtime_home.path(),
+            &connection_id,
+            Some(&projects[0].project_id)
+        )?
+        .len(),
+        1
+    );
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn init_claude_code_guarded_writes_project_mcp_policy_and_rule() -> Result<(), Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new("cli-bin-init-claude")?;
+    let repo_root = create_git_repo(&runtime_home, "product-repo")?;
+    let bin_dir = runtime_home.path().join("bin");
+    write_fake_claude_code(&bin_dir)?;
+    write_fake_mcp(&bin_dir)?;
+
+    let output = run_with_home_env(
+        runtime_home.path(),
+        [
+            "init",
+            "--host",
+            "claude-code",
+            "--repo",
+            path_text(&repo_root).as_str(),
+            "--json",
+        ],
+        &[
+            ("PATH", path_env(&[bin_dir.as_path()])),
+            ("VOLICORD_TEST_CONNECTION_MODE", "workflow".to_owned()),
+        ],
+    )?;
+
+    assert_success(&output);
+    let value = json_stdout(&output)?;
+    assert_eq!(value["action"], "init");
+    assert_eq!(value["host"], "claude-code");
+    assert_eq!(value["mode"], "guarded");
+    assert_eq!(value["mcp"]["command"], "volicord");
+    let connection_id = value["connection"]["connection_id"]
+        .as_str()
+        .expect("connection_id should be present");
+
+    let mcp_config: Value =
+        serde_json::from_str(&fs::read_to_string(repo_root.join(".mcp.json"))?)?;
+    let server = &mcp_config["mcpServers"]["volicord"];
+    assert_eq!(server["command"], "volicord");
+    assert_eq!(
+        server["args"],
+        serde_json::json!(["mcp", "--stdio", "--connection", connection_id])
+    );
+
+    let policy: Value = serde_json::from_str(&fs::read_to_string(
+        repo_root.join(".volicord/policy.json"),
+    )?)?;
+    assert_eq!(policy["host"], "claude-code");
+    assert_eq!(policy["guard"]["enabled"], true);
+    assert_eq!(
+        policy["guard"]["commands"]["session_start"]["command"],
+        "volicord"
+    );
+    assert!(repo_root.join(".claude/rules/volicord.md").exists());
+    let rule = fs::read_to_string(repo_root.join(".claude/rules/volicord.md"))?;
+    assert!(rule.contains(".volicord/policy.json"));
+    assert!(rule.contains("guard commands"));
+
+    let projects = list_connection_projects(runtime_home.path(), connection_id)?;
+    let guard_installations = list_guard_installations(
+        runtime_home.path(),
+        connection_id,
+        Some(&projects[0].project_id),
+    )?;
+    assert_eq!(guard_installations.len(), 1);
+    assert_eq!(guard_installations[0].host_kind, "claude_code");
+    assert_eq!(guard_installations[0].guard_mode, "guarded");
     Ok(())
 }
 
@@ -1346,6 +1667,10 @@ fn json_stdout(output: &Output) -> Result<Value, Box<dyn Error>> {
 
 fn path_text(path: &Path) -> String {
     path.display().to_string()
+}
+
+fn count_occurrences(text: &str, needle: &str) -> usize {
+    text.matches(needle).count()
 }
 
 #[cfg(unix)]
