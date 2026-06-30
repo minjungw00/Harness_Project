@@ -117,6 +117,12 @@ fn binary_help_options_match_supported_contracts() -> Result<(), Box<dyn Error>>
             "--check",
             "--connection",
             "--project",
+            "--transport",
+            "--listen",
+            "--token",
+            "--generate-token",
+            "--allow-origin",
+            "--allow-nonlocal-listen",
             "--file",
             "--connection",
             "--session",
@@ -130,6 +136,20 @@ fn binary_help_options_match_supported_contracts() -> Result<(), Box<dyn Error>>
     assert_help_options(
         ["mcp", "--help"],
         &["--stdio", "--check", "--connection", "--project"],
+    )?;
+    assert_help_options(
+        ["serve", "--help"],
+        &[
+            "--transport",
+            "--listen",
+            "--home",
+            "--connection",
+            "--project",
+            "--token",
+            "--generate-token",
+            "--allow-origin",
+            "--allow-nonlocal-listen",
+        ],
     )?;
     assert_help_options(
         ["guard", "--help"],

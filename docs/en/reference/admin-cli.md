@@ -23,6 +23,8 @@ This document owns:
 - repository-root project detection and administrative project commands
 - Agent Connection command behavior for supported host integrations
 - generic MCP config export behavior
+- local serve command names, command-line arguments, defaults, stdout/stderr
+  routing, and startup exit codes
 - local `volicord guard` lifecycle command names, options, decisions, output,
   and event-recording behavior
 - local `User Channel` command names and command output
@@ -38,7 +40,7 @@ This document does not own:
   and actor provenance meanings; see [Agent Connection](agent-connection.md)
 - runtime data boundary meaning and `Product Repository` file-boundary
   exceptions; see [Runtime Boundaries](runtime-boundaries.md)
-- MCP process startup, stdio framing, wire behavior, response wrapping, and
+- MCP process startup, stdio and HTTP framing, wire behavior, response wrapping, and
   shutdown; see [MCP Transport](mcp-transport.md)
 - external host hook protocol schemas and host-specific response semantics
 - storage record layout, SQLite DDL, general storage migration definitions,
@@ -46,8 +48,10 @@ This document does not own:
 
 ## Command model
 
-`volicord` is a local administrative/bootstrap executable. It is not a
-long-running server. The `volicord user` command group is the local
+`volicord` is a local administrative/bootstrap executable. It is not a general
+long-running server. The explicit `volicord serve` command is limited to the
+local MCP transport process described in [MCP Transport](mcp-transport.md). The
+`volicord user` command group is the local
 `User Channel` CLI adapter over selected Core methods; its command names remain
 administrative CLI commands, not public Volicord API methods.
 
@@ -71,6 +75,7 @@ volicord project list [--json]
 volicord project rename NAME [--repo PATH] [--json]
 volicord project forget [PATH|NAME] [--json]
 volicord export mcp-config [--output PATH] [--repo PATH] [--read-only] [--json]
+volicord serve --transport streamable-http [--listen 127.0.0.1:8765] [--home PATH] [--connection <connection_id>] [--project PATH]... [--token TOKEN | --generate-token] [--allow-origin ORIGIN] [--allow-nonlocal-listen]
 volicord guard session-start [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--text]
 volicord guard pre-tool [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--text]
 volicord guard post-tool [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--text]
@@ -101,10 +106,16 @@ Exit and stream behavior:
 - `volicord guard` writes JSON by default. Its `deny` decision exits `1`;
   `allow`, `warn`, and `inject_context` exit `0`.
 - Errors remain stderr diagnostics under the CLI exit-code model.
+- `volicord serve --transport streamable-http` is an explicit long-running MCP
+  transport process. It keeps loopback as the default listener, requires bearer
+  authentication, and delegates HTTP wire behavior and transport security checks
+  to [MCP Transport](mcp-transport.md).
 
 Not supported:
 
-- The CLI has no `serve`, `server`, or daemon command.
+- The CLI has no general-purpose `server` or daemon command.
+- `volicord serve` must not be treated as a public Volicord API service or an
+  unauthenticated network service.
 - Administrative commands are not public Volicord API methods and must not be
   added to the public method list.
 - Guard commands are cooperative and detective hook commands, not OS-level

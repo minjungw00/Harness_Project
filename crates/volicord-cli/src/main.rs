@@ -17,6 +17,7 @@ use volicord_cli::{
     export_command::{export_usage, run_export_command, ExportCommandError},
     guard_command::{guard_usage, run_guard_command, GuardCommandError},
     project_context::{project_usage, run_project_command, ProjectCommandError},
+    serve_command::{run_serve_command, serve_usage, ServeCommand, ServeCommandError},
     setup_command::{
         run_setup_command, run_setup_command_interactive, setup_usage, ClosureSetupProcess,
         CommandOutcome, SetupCommandError, StdioSetupTerminal,
@@ -40,6 +41,12 @@ fn main() {
         Ok(output) => print!("{output}"),
         Err(CliError::McpStdio { connection_id }) => {
             if let Err(error) = volicord_mcp::run_stdio_from_env(&connection_id) {
+                eprintln!("error: {error}");
+                process::exit(1);
+            }
+        }
+        Err(CliError::ServeStreamableHttp { config }) => {
+            if let Err(error) = volicord_mcp::run_streamable_http_server(*config) {
                 eprintln!("error: {error}");
                 process::exit(1);
             }
@@ -100,6 +107,7 @@ where
         "doctor" => command_outcome(run_doctor_command(&args[2..], &env_var, current_dir)?),
         "export" => run_export_command(&args[2..], &env_var, current_dir).map_err(CliError::from),
         "mcp" => command_mcp(&args[2..], env_var, current_dir),
+        "serve" => command_serve(&args[2..], env_var, current_dir),
         "init" => {
             let mut connection_process = ProductionConnectionProcess;
             run_init_command(&args[2..], current_dir, &mut connection_process)
@@ -246,9 +254,22 @@ where
 
 fn setup_required_message(runtime_home: &Path) -> String {
     format!(
-        "setup has not been completed for Runtime Home {}; run `volicord setup` before project, connection, export, MCP, or user workflows",
+        "setup has not been completed for Runtime Home {}; run `volicord setup` before project, connection, export, MCP, serve, or user workflows",
         runtime_home.display()
     )
+}
+
+fn command_serve<F>(args: &[String], env_var: F, current_dir: &Path) -> Result<String, CliError>
+where
+    F: Fn(&str) -> Option<std::ffi::OsString>,
+{
+    match run_serve_command(args, env_var, current_dir)? {
+        ServeCommand::Help => Ok(serve_usage()),
+        ServeCommand::Version => Ok(version()),
+        ServeCommand::StreamableHttp { config } => Err(CliError::ServeStreamableHttp {
+            config: Box::new(config),
+        }),
+    }
 }
 
 fn command_project<F>(args: &[String], env_var: F, current_dir: &Path) -> Result<String, CliError>
@@ -396,12 +417,13 @@ fn display_path(path: &Path) -> String {
 
 fn usage() -> String {
     format!(
-        "Usage:\n  volicord --help\n  volicord --version\n{}{}{}{}{}{}{}{}{}{}{}\nEnvironment:\n  VOLICORD_HOME  Override Runtime Home path (default: $HOME/.volicord)\n\nAgent Connection commands manage local MCP host connections. User Channel commands record local user judgments.\nThese are local administrative commands, not public Volicord API methods.\n",
+        "Usage:\n  volicord --help\n  volicord --version\n{}{}{}{}{}{}{}{}{}{}{}{}\nEnvironment:\n  VOLICORD_HOME  Override Runtime Home path (default: $HOME/.volicord)\n\nAgent Connection commands manage local MCP host connections. User Channel commands record local user judgments.\nThese are local administrative commands, not public Volicord API methods.\n",
         indent_usage_block(&setup_usage()),
         indent_usage_block(&init_usage()),
         indent_usage_block(&doctor_usage()),
         indent_usage_block(&export_usage()),
         indent_usage_block(&mcp_usage()),
+        indent_usage_block(&serve_usage()),
         indent_usage_block(&guard_usage()),
         indent_usage_block(&connect_usage()),
         indent_usage_block(&connections_usage()),
@@ -428,7 +450,12 @@ enum CliError {
     Usage(String),
     Runtime(String),
     FailureOutput(String),
-    McpStdio { connection_id: String },
+    McpStdio {
+        connection_id: String,
+    },
+    ServeStreamableHttp {
+        config: Box<volicord_mcp::StreamableHttpServerConfig>,
+    },
 }
 
 impl CliError {
@@ -451,6 +478,13 @@ impl fmt::Display for CliError {
                 write!(
                     formatter,
                     "MCP stdio requested for connection {connection_id}"
+                )
+            }
+            Self::ServeStreamableHttp { config } => {
+                write!(
+                    formatter,
+                    "MCP HTTP serve requested for connection {}",
+                    config.connection_id
                 )
             }
         }
@@ -535,6 +569,15 @@ impl From<GuardCommandError> for CliError {
     }
 }
 
+impl From<ServeCommandError> for CliError {
+    fn from(error: ServeCommandError) -> Self {
+        match error {
+            ServeCommandError::Usage(message) => Self::Usage(message),
+            ServeCommandError::Runtime(message) => Self::Runtime(message),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::{
@@ -591,6 +634,7 @@ mod tests {
         assert!(output.contains("volicord init"));
         assert!(output.contains("volicord doctor"));
         assert!(output.contains("volicord mcp --stdio --connection <connection_id>"));
+        assert!(output.contains("volicord serve --transport streamable-http"));
         assert!(output.contains("\n  volicord connection verify"));
         assert!(output.contains("\n  volicord user judgments"));
         assert!(!output.contains("\nvolicord connection verify"));

@@ -19,6 +19,7 @@
 - 저장소 루트 프로젝트 감지와 관리 프로젝트 명령
 - 지원 호스트 통합을 위한 Agent Connection 명령 동작
 - generic MCP 설정 내보내기 동작
+- 로컬 serve 명령 이름, 명령줄 인자, 기본값, stdout/stderr 처리, 시작 종료 코드
 - 로컬 `volicord guard` lifecycle 명령 이름, 옵션, decision, 출력, 이벤트 기록 동작
 - 로컬 `User Channel` 명령 이름과 명령 출력
 - 진단 상태, 필요한 사용자 동작, dry-run 동작, JSON 출력, 비대화식 동작
@@ -31,7 +32,7 @@
   [Agent Connection](agent-connection.md)
 - 런타임 데이터 경계 의미와 `Product Repository` 파일 경계 예외:
   [런타임 경계](runtime-boundaries.md)
-- MCP 프로세스 시작, stdio 프레이밍, 와이어 동작, 응답 래핑, 종료:
+- MCP 프로세스 시작, stdio와 HTTP 프레이밍, 와이어 동작, 응답 래핑, 종료:
   [MCP 전송](mcp-transport.md)
 - 외부 호스트 hook 프로토콜 스키마와 호스트별 응답 의미
 - 저장소 기록 배치, SQLite DDL, 일반 저장소 마이그레이션 정의, Core 권한 의미,
@@ -39,10 +40,11 @@
 
 ## 명령 모델
 
-`volicord`는 로컬 관리/부트스트랩 실행 파일입니다. 장기 실행 서버가 아닙니다.
-`volicord user` 명령군은 선택된 Core 메서드 위에 있는 로컬 `User Channel` CLI
-어댑터입니다. 이 명령 이름은 공개 Volicord API 메서드가 아니라 관리 CLI 명령으로
-남습니다.
+`volicord`는 로컬 관리/부트스트랩 실행 파일입니다. 일반 목적의 장기 실행 서버가
+아닙니다. 명시적 `volicord serve` 명령은 [MCP 전송](mcp-transport.md)이 설명하는 로컬
+MCP 전송 프로세스로 제한됩니다. `volicord user` 명령군은 선택된 Core 메서드 위에 있는
+로컬 `User Channel` CLI 어댑터입니다. 이 명령 이름은 공개 Volicord API 메서드가 아니라
+관리 CLI 명령으로 남습니다.
 
 지원되는 기준 명령은 아래와 같습니다.
 
@@ -64,6 +66,7 @@ volicord project list [--json]
 volicord project rename NAME [--repo PATH] [--json]
 volicord project forget [PATH|NAME] [--json]
 volicord export mcp-config [--output PATH] [--repo PATH] [--read-only] [--json]
+volicord serve --transport streamable-http [--listen 127.0.0.1:8765] [--home PATH] [--connection <connection_id>] [--project PATH]... [--token TOKEN | --generate-token] [--allow-origin ORIGIN] [--allow-nonlocal-listen]
 volicord guard session-start [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--text]
 volicord guard pre-tool [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--text]
 volicord guard post-tool [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--text]
@@ -93,10 +96,15 @@ volicord user judgment answer INDEX_OR_ID OPTION_INDEX_OR_ID [--repo PATH] [--no
 - `volicord guard`는 기본적으로 JSON을 씁니다. `deny` decision은 종료 코드 `1`로
   끝나며, `allow`, `warn`, `inject_context`는 종료 코드 `0`으로 끝납니다.
 - 오류는 CLI 종료 코드 모델에 따라 stderr 진단으로 남습니다.
+- `volicord serve --transport streamable-http`는 명시적 장기 실행 MCP 전송 프로세스입니다.
+  기본 리스너는 loopback으로 유지하고 bearer 인증을 요구하며, HTTP 와이어 동작과 전송
+  보안 점검은 [MCP 전송](mcp-transport.md)에 맡깁니다.
 
 지원하지 않는 것:
 
-- CLI에는 `serve`, `server`, daemon 명령이 없습니다.
+- CLI에는 일반 목적의 `server` 또는 daemon 명령이 없습니다.
+- `volicord serve`는 공개 Volicord API 서비스나 인증 없는 네트워크 서비스로 취급하면
+  안 됩니다.
 - 관리 명령은 공개 Volicord API 메서드가 아니며 공개 메서드 목록에 추가되면
   안 됩니다.
 - Guard 명령은 협력적이고 탐지적인 hook 명령이며 OS 수준 sandboxing이나 보안 집행

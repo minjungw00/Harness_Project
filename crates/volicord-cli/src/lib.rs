@@ -13,6 +13,7 @@ pub mod host_integration;
 mod managed_block;
 pub mod project_context;
 pub mod registration;
+pub mod serve_command;
 pub mod setup_command;
 mod setup_report;
 mod shell_path;

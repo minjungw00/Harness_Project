@@ -2345,6 +2345,7 @@ fn validate_volicord_command(tokens: &[String]) -> std::result::Result<(), Strin
         "setup" => validate_setup_command(&args[1..]),
         "doctor" => validate_doctor_command(&args[1..]),
         "mcp" => validate_mcp_command(&args[1..]),
+        "serve" => validate_serve_command(&args[1..]),
         "guard" => validate_guard_command(&args[1..]),
         "connect" => validate_connect_command(&args[1..]),
         "connections" => validate_connections_command(&args[1..]),
@@ -2445,6 +2446,34 @@ fn validate_mcp_command(args: &[String]) -> std::result::Result<(), String> {
     }
     if parsed.options.contains("project") && !has_check {
         return Err("`volicord mcp --project` requires --check".to_string());
+    }
+    Ok(())
+}
+
+fn validate_serve_command(args: &[String]) -> std::result::Result<(), String> {
+    if is_help_only(args)
+        || matches!(args, [option] if matches!(option.as_str(), "-V" | "--version"))
+    {
+        return Ok(());
+    }
+
+    let parsed = parse_command_args(
+        args,
+        &["generate-token", "allow-nonlocal-listen"],
+        &[
+            "transport",
+            "listen",
+            "home",
+            "connection",
+            "project",
+            "token",
+            "allow-origin",
+        ],
+    )?;
+    reject_mutually_exclusive(&parsed, "token", "generate-token")?;
+    reject_positionals(&parsed, 0, "`volicord serve`")?;
+    if !parsed.options.contains("transport") {
+        return Err("`volicord serve` requires --transport".to_string());
     }
     Ok(())
 }

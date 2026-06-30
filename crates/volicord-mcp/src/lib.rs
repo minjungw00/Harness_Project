@@ -8,13 +8,17 @@
 //! `volicord-core`.
 
 use std::{
+    collections::{BTreeMap, BTreeSet, HashMap},
     error::Error,
     ffi::OsString,
     fmt,
-    io::{self, BufRead, Write},
+    fs::File,
+    io::{self, BufRead, Read, Write},
+    net::{SocketAddr, TcpListener, TcpStream},
     path::{Path, PathBuf},
+    str,
     sync::atomic::{AtomicU64, Ordering},
-    time::{SystemTime, UNIX_EPOCH},
+    time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
 use serde::Serialize;
@@ -46,7 +50,9 @@ use volicord_types::{
     RequiredNullable, StageArtifactRequest, StatusRequest, ToolEnvelope, UpdateScopeRequest,
     UserJudgment, UserJudgmentOption, UserJudgmentOptionAction,
     VERIFICATION_BASIS_MCP_ELICITATION_USER_CHANNEL,
-    VERIFICATION_BASIS_MCP_STDIO_CONNECTION_BINDING, VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
+    VERIFICATION_BASIS_MCP_STDIO_CONNECTION_BINDING,
+    VERIFICATION_BASIS_MCP_STREAMABLE_HTTP_CONNECTION_BINDING,
+    VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
 };
 
 const SUPPORTED_PROTOCOL_VERSION: &str = "2025-11-25";
@@ -114,6 +120,7 @@ pub struct McpConnectionContext {
     pub connection_internal_id: AgentConnectionId,
     pub mode: AgentConnectionMode,
     pub invocation_binding_basis: String,
+    pub project_allowlist: Option<Vec<ProjectId>>,
 }
 
 impl McpConnectionContext {
@@ -132,6 +139,20 @@ impl McpConnectionContext {
         let basis = basis.into();
         self.invocation_binding_basis = controlled_invocation_binding_basis(&basis).to_owned();
         self
+    }
+
+    /// Narrows this adapter context to a transport-owned project allowlist.
+    pub fn with_project_allowlist(mut self, project_ids: Vec<ProjectId>) -> Self {
+        if !project_ids.is_empty() {
+            self.project_allowlist = Some(unique_project_ids(project_ids));
+        }
+        self
+    }
+
+    fn project_allowlist_allows(&self, project_id: &str) -> bool {
+        self.project_allowlist
+            .as_ref()
+            .is_none_or(|project_ids| project_ids.iter().any(|id| id.as_str() == project_id))
     }
 }
 
@@ -197,6 +218,7 @@ impl McpConnectionStartupInspection {
             connection_internal_id: self.connection_internal_id.clone(),
             mode: self.mode,
             invocation_binding_basis: DEFAULT_INVOCATION_BINDING_BASIS.to_owned(),
+            project_allowlist: None,
         }
     }
 
@@ -678,6 +700,10 @@ impl McpAdapter {
         .map_err(McpAdapterError::Store)?;
         let items = projects
             .iter()
+            .filter(|project| {
+                self.context
+                    .project_allowlist_allows(project.project_id.as_str())
+            })
             .map(|project| inspect_allowed_project(&self.runtime_home, project))
             .map(|project| ListProjectItem {
                 project_selector: project.project_id,
@@ -783,6 +809,11 @@ impl McpAdapter {
         )?;
 
         if let Some(project_id) = requested_project_id {
+            if !self.context.project_allowlist_allows(project_id) {
+                return Err(routing_error(format!(
+                    "project selector {project_id} is outside this HTTP serve project allowlist"
+                )));
+            }
             let access = agent_connection_project_access(
                 &self.runtime_home,
                 connection_internal_id,
@@ -817,9 +848,16 @@ impl McpAdapter {
 
         let projects = list_connection_projects(&self.runtime_home, connection_internal_id)
             .map_err(McpAdapterError::Store)?;
+        let projects = projects
+            .into_iter()
+            .filter(|project| {
+                self.context
+                    .project_allowlist_allows(project.project_id.as_str())
+            })
+            .collect::<Vec<_>>();
         if projects.is_empty() {
             return Err(routing_error(
-                "connection has no allowed projects; ask the operator to add one",
+                "connection has no allowed projects matching this transport allowlist; ask the operator to add one",
             ));
         }
         if projects.len() != 1 {
@@ -1047,6 +1085,892 @@ where
     resolve_shared_runtime_home(env_var, current_dir).map_err(McpAdapterError::from)
 }
 
+/// MCP endpoint path used by the experimental Streamable HTTP transport.
+pub const STREAMABLE_HTTP_ENDPOINT_PATH: &str = "/mcp";
+
+const HTTP_HEADER_LIMIT_BYTES: usize = 16 * 1024;
+const HTTP_BODY_LIMIT_BYTES: usize = 1024 * 1024;
+const HTTP_READ_TIMEOUT: Duration = Duration::from_secs(5);
+
+/// Source of the bearer token used for the local HTTP MCP endpoint.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum StreamableHttpTokenSource {
+    Supplied,
+    Generated,
+}
+
+/// Configuration for the secure local Streamable HTTP-style MCP endpoint.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct StreamableHttpServerConfig {
+    pub runtime_home: PathBuf,
+    pub connection_id: String,
+    pub listen_addr: SocketAddr,
+    pub bearer_token: String,
+    pub token_source: StreamableHttpTokenSource,
+    pub project_allowlist: Vec<ProjectId>,
+    pub allowed_origins: Vec<String>,
+    pub allow_nonlocal_listen: bool,
+}
+
+/// Generates a bearer token from operating-system randomness.
+pub fn generate_bearer_token() -> Result<String, McpAdapterError> {
+    let mut bytes = [0_u8; 32];
+    let mut random = File::open("/dev/urandom").map_err(McpAdapterError::Io)?;
+    random.read_exact(&mut bytes).map_err(McpAdapterError::Io)?;
+    Ok(hex_encode(&bytes))
+}
+
+/// Returns whether a listen address is loopback-only.
+pub fn streamable_http_listen_is_local(addr: &SocketAddr) -> bool {
+    addr.ip().is_loopback()
+}
+
+/// Runs the secure local Streamable HTTP-style MCP endpoint until the process exits.
+pub fn run_streamable_http_server(
+    config: StreamableHttpServerConfig,
+) -> Result<(), StreamableHttpError> {
+    validate_streamable_http_server_config(&config)?;
+    let context = McpConnectionContext::resolve(&config.runtime_home, &config.connection_id)
+        .map_err(StreamableHttpError::Adapter)?
+        .with_invocation_binding_basis(VERIFICATION_BASIS_MCP_STREAMABLE_HTTP_CONNECTION_BINDING)
+        .with_project_allowlist(config.project_allowlist.clone());
+    validate_streamable_http_project_allowlist(
+        &config.runtime_home,
+        &config.connection_id,
+        &config.project_allowlist,
+    )?;
+    let adapter = McpAdapter::new(&config.runtime_home, context);
+    let listener = TcpListener::bind(config.listen_addr).map_err(StreamableHttpError::Io)?;
+    let actual_addr = listener.local_addr().map_err(StreamableHttpError::Io)?;
+
+    if !streamable_http_listen_is_local(&actual_addr) {
+        eprintln!(
+            "warning: volicord serve is listening on non-local address {actual_addr}; bearer-token authentication is still required"
+        );
+    }
+    eprintln!("volicord serve listening on http://{actual_addr}{STREAMABLE_HTTP_ENDPOINT_PATH}");
+    eprintln!(
+        "transport: streamable-http-experimental; full MCP Streamable HTTP compatibility is not claimed"
+    );
+    eprintln!("authentication: bearer token required");
+    if config.token_source == StreamableHttpTokenSource::Generated {
+        eprintln!("generated_bearer_token: {}", config.bearer_token);
+    }
+
+    let mut server = StreamableHttpServer::new(adapter, config);
+    for stream in listener.incoming() {
+        match stream {
+            Ok(mut stream) => {
+                if let Err(error) = stream.set_read_timeout(Some(HTTP_READ_TIMEOUT)) {
+                    eprintln!("warning: failed to set HTTP read timeout: {error}");
+                }
+                if let Err(error) = server.handle_stream(&mut stream) {
+                    eprintln!("warning: HTTP request handling failed: {error}");
+                }
+            }
+            Err(error) => return Err(StreamableHttpError::Io(error)),
+        }
+    }
+    Ok(())
+}
+
+fn validate_streamable_http_server_config(
+    config: &StreamableHttpServerConfig,
+) -> Result<(), StreamableHttpError> {
+    validate_bearer_token_text(&config.bearer_token).map_err(|message| {
+        StreamableHttpError::Config {
+            code: "AUTH_TOKEN_INVALID",
+            message,
+        }
+    })?;
+    if !config.allow_nonlocal_listen && !streamable_http_listen_is_local(&config.listen_addr) {
+        return Err(StreamableHttpError::Config {
+            code: "NONLOCAL_LISTEN_REQUIRES_UNSAFE_FLAG",
+            message: format!(
+                "listen address {} is not loopback; pass --allow-nonlocal-listen only when the endpoint is protected by local network controls",
+                config.listen_addr
+            ),
+        });
+    }
+    for origin in &config.allowed_origins {
+        validate_origin_text(origin).map_err(|message| StreamableHttpError::Config {
+            code: "ORIGIN_INVALID",
+            message,
+        })?;
+    }
+    Ok(())
+}
+
+fn validate_streamable_http_project_allowlist(
+    runtime_home: &Path,
+    connection_id: &str,
+    project_ids: &[ProjectId],
+) -> Result<(), StreamableHttpError> {
+    for project_id in project_ids {
+        let access =
+            agent_connection_project_access(runtime_home, connection_id, project_id.as_str())
+                .map_err(|error| StreamableHttpError::Adapter(McpAdapterError::Store(error)))?
+                .ok_or_else(|| StreamableHttpError::Config {
+                    code: "PROJECT_NOT_ALLOWED",
+                    message: format!(
+                        "connection {connection_id} is not registered for project {}",
+                        project_id.as_str()
+                    ),
+                })?;
+        if !access.connection_enabled {
+            return Err(StreamableHttpError::Config {
+                code: "PROJECT_NOT_ALLOWED",
+                message: format!("connection {connection_id} is disabled"),
+            });
+        }
+        if !access.project_allowed {
+            return Err(StreamableHttpError::Config {
+                code: "PROJECT_NOT_ALLOWED",
+                message: format!(
+                    "project {} is outside connection {connection_id} project allowlist",
+                    project_id.as_str()
+                ),
+            });
+        }
+        let Some(project) = access.project else {
+            return Err(StreamableHttpError::Config {
+                code: "PROJECT_NOT_ALLOWED",
+                message: format!("project {} is not registered", project_id.as_str()),
+            });
+        };
+        let availability = inspect_allowed_project(
+            runtime_home,
+            &ConnectionProjectRecord {
+                connection_internal_id: connection_id.to_owned(),
+                project_internal_id: project.project_internal_id.clone(),
+                project_id: project.project_id.clone(),
+                created_at: String::new(),
+                project,
+            },
+        );
+        if !availability.available {
+            return Err(StreamableHttpError::Config {
+                code: "PROJECT_NOT_ALLOWED",
+                message: format!(
+                    "project {} is unavailable: {}",
+                    availability.project_id,
+                    availability
+                        .unavailable_reason
+                        .unwrap_or_else(|| "unavailable".to_owned())
+                ),
+            });
+        }
+    }
+    Ok(())
+}
+
+fn validate_bearer_token_text(token: &str) -> Result<(), String> {
+    if token.trim().is_empty() {
+        return Err("bearer token must not be empty".to_owned());
+    }
+    if token.chars().any(|character| {
+        character.is_ascii_whitespace() || character == '\0' || !character.is_ascii()
+    }) {
+        return Err("bearer token must use visible ASCII characters without whitespace".to_owned());
+    }
+    Ok(())
+}
+
+fn validate_origin_text(origin: &str) -> Result<(), String> {
+    if origin.trim().is_empty() {
+        return Err("allowed origin must not be empty".to_owned());
+    }
+    if origin.contains('\r') || origin.contains('\n') || origin.contains('\0') {
+        return Err("allowed origin must not contain control characters".to_owned());
+    }
+    Ok(())
+}
+
+struct StreamableHttpServer {
+    adapter: McpAdapter,
+    bearer_token: String,
+    allowed_origins: Vec<String>,
+    sessions: HashMap<String, ConnectionState>,
+}
+
+impl StreamableHttpServer {
+    fn new(adapter: McpAdapter, config: StreamableHttpServerConfig) -> Self {
+        Self {
+            adapter,
+            bearer_token: config.bearer_token,
+            allowed_origins: config.allowed_origins,
+            sessions: HashMap::new(),
+        }
+    }
+
+    fn handle_stream(&mut self, stream: &mut TcpStream) -> Result<(), StreamableHttpError> {
+        let response = match read_http_request(stream) {
+            Ok(request) => self.handle_request(request),
+            Err(response) => response,
+        };
+        write_http_response(stream, response).map_err(StreamableHttpError::Io)
+    }
+
+    fn handle_request(&mut self, request: HttpRequest) -> HttpResponse {
+        let origin = request.header("origin").map(str::to_owned);
+        if let Err(response) = self.validate_origin(origin.as_deref()) {
+            return response;
+        }
+        if request.method == "OPTIONS" {
+            return self.handle_options(&request, origin.as_deref());
+        }
+        if let Err(response) = self.validate_auth(&request) {
+            return response;
+        }
+
+        match (request.method.as_str(), request.target.as_str()) {
+            ("GET", "/healthz") => HttpResponse::json(
+                200,
+                "OK",
+                json!({ "status": "ok" }),
+                self.cors_headers(origin.as_deref()),
+            ),
+            ("POST", STREAMABLE_HTTP_ENDPOINT_PATH) => {
+                self.handle_mcp_post(request, origin.as_deref())
+            }
+            ("GET", STREAMABLE_HTTP_ENDPOINT_PATH) => structured_http_error_with_headers(
+                405,
+                "Method Not Allowed",
+                "SSE_UNSUPPORTED",
+                "server-sent event streams are not implemented by this secure experimental endpoint",
+                self.cors_headers(origin.as_deref()),
+            )
+            .with_header("Allow", "POST, GET, DELETE, OPTIONS"),
+            ("DELETE", STREAMABLE_HTTP_ENDPOINT_PATH) => {
+                self.handle_mcp_delete(&request, origin.as_deref())
+            }
+            (_, STREAMABLE_HTTP_ENDPOINT_PATH) => structured_http_error_with_headers(
+                405,
+                "Method Not Allowed",
+                "METHOD_NOT_ALLOWED",
+                "method is not supported for the MCP endpoint",
+                self.cors_headers(origin.as_deref()),
+            )
+            .with_header("Allow", "POST, GET, DELETE, OPTIONS"),
+            _ => structured_http_error_with_headers(
+                404,
+                "Not Found",
+                "NOT_FOUND",
+                "HTTP path is not a Volicord MCP endpoint",
+                self.cors_headers(origin.as_deref()),
+            ),
+        }
+    }
+
+    fn handle_options(&self, request: &HttpRequest, origin: Option<&str>) -> HttpResponse {
+        if request.target != STREAMABLE_HTTP_ENDPOINT_PATH {
+            return structured_http_error(
+                404,
+                "Not Found",
+                "NOT_FOUND",
+                "HTTP path is not a Volicord MCP endpoint",
+            );
+        }
+        if origin.is_none() || self.allowed_origins.is_empty() {
+            return structured_http_error(
+                403,
+                "Forbidden",
+                "CORS_DENIED",
+                "CORS is denied unless an allowed Origin is configured",
+            );
+        }
+        HttpResponse::empty(204, "No Content", self.cors_headers(origin))
+            .with_header("Access-Control-Max-Age", "600")
+    }
+
+    fn handle_mcp_post(&mut self, request: HttpRequest, origin: Option<&str>) -> HttpResponse {
+        let mut cors_headers = self.cors_headers(origin);
+        if !accepts_content_type(request.header("accept"), "application/json")
+            || !accepts_content_type(request.header("accept"), "text/event-stream")
+        {
+            return structured_http_error_with_headers(
+                406,
+                "Not Acceptable",
+                "ACCEPT_UNSUPPORTED",
+                "Accept header must include application/json and text/event-stream",
+                cors_headers,
+            );
+        }
+        if !content_type_is_json(request.header("content-type")) {
+            return structured_http_error_with_headers(
+                415,
+                "Unsupported Media Type",
+                "CONTENT_TYPE_UNSUPPORTED",
+                "Content-Type must be application/json",
+                cors_headers,
+            );
+        }
+        let message: Value = match serde_json::from_slice(&request.body) {
+            Ok(value) => value,
+            Err(error) => {
+                return HttpResponse::json(
+                    400,
+                    "Bad Request",
+                    json_rpc_error(Value::Null, -32700, "Parse error", Some(error.to_string())),
+                    cors_headers,
+                )
+            }
+        };
+
+        if json_rpc_method(&message) == Some("initialize") {
+            if request.header("mcp-session-id").is_some() {
+                return structured_http_error_with_headers(
+                    400,
+                    "Bad Request",
+                    "SESSION_ALREADY_SUPPLIED",
+                    "initialize requests must not include Mcp-Session-Id",
+                    cors_headers,
+                );
+            }
+            let mut state = ConnectionState::default();
+            let dispatch = dispatch_http_json_rpc_message(&self.adapter, &mut state, message);
+            state.client_supports_elicitation = false;
+            match dispatch {
+                Ok(HttpMcpDispatch::Response(response)) => {
+                    if response.get("result").is_some() {
+                        match generate_http_session_id() {
+                            Ok(session_id) => {
+                                self.sessions.insert(session_id.clone(), state);
+                                cors_headers.push(("Mcp-Session-Id".to_owned(), session_id));
+                            }
+                            Err(error) => {
+                                return structured_http_error_with_headers(
+                                    500,
+                                    "Internal Server Error",
+                                    "SESSION_GENERATION_FAILED",
+                                    &error.to_string(),
+                                    cors_headers,
+                                )
+                            }
+                        }
+                    }
+                    HttpResponse::json(200, "OK", response, cors_headers)
+                }
+                Ok(HttpMcpDispatch::Accepted) => HttpResponse::empty(202, "Accepted", cors_headers),
+                Ok(HttpMcpDispatch::Invalid(response)) => {
+                    HttpResponse::json(400, "Bad Request", response, cors_headers)
+                }
+                Err(error) => structured_http_error_with_headers(
+                    500,
+                    "Internal Server Error",
+                    "MCP_DISPATCH_FAILED",
+                    &error.to_string(),
+                    cors_headers,
+                ),
+            }
+        } else {
+            let Some(session_id) = request.header("mcp-session-id").map(str::to_owned) else {
+                return structured_http_error_with_headers(
+                    400,
+                    "Bad Request",
+                    "SESSION_REQUIRED",
+                    "Mcp-Session-Id is required after initialize",
+                    cors_headers,
+                );
+            };
+            let Some(state) = self.sessions.get_mut(&session_id) else {
+                return structured_http_error_with_headers(
+                    404,
+                    "Not Found",
+                    "SESSION_NOT_FOUND",
+                    "Mcp-Session-Id does not name an active Volicord HTTP MCP session",
+                    cors_headers,
+                );
+            };
+            match dispatch_http_json_rpc_message(&self.adapter, state, message) {
+                Ok(HttpMcpDispatch::Response(response)) => {
+                    HttpResponse::json(200, "OK", response, cors_headers)
+                }
+                Ok(HttpMcpDispatch::Accepted) => HttpResponse::empty(202, "Accepted", cors_headers),
+                Ok(HttpMcpDispatch::Invalid(response)) => {
+                    HttpResponse::json(400, "Bad Request", response, cors_headers)
+                }
+                Err(error) => structured_http_error_with_headers(
+                    500,
+                    "Internal Server Error",
+                    "MCP_DISPATCH_FAILED",
+                    &error.to_string(),
+                    cors_headers,
+                ),
+            }
+        }
+    }
+
+    fn handle_mcp_delete(&mut self, request: &HttpRequest, origin: Option<&str>) -> HttpResponse {
+        let Some(session_id) = request.header("mcp-session-id") else {
+            return structured_http_error_with_headers(
+                400,
+                "Bad Request",
+                "SESSION_REQUIRED",
+                "Mcp-Session-Id is required to delete a session",
+                self.cors_headers(origin),
+            );
+        };
+        if self.sessions.remove(session_id).is_some() {
+            HttpResponse::empty(202, "Accepted", self.cors_headers(origin))
+        } else {
+            structured_http_error_with_headers(
+                404,
+                "Not Found",
+                "SESSION_NOT_FOUND",
+                "Mcp-Session-Id does not name an active Volicord HTTP MCP session",
+                self.cors_headers(origin),
+            )
+        }
+    }
+
+    fn validate_origin(&self, origin: Option<&str>) -> Result<(), HttpResponse> {
+        let Some(origin) = origin else {
+            return Ok(());
+        };
+        if self.allowed_origins.iter().any(|allowed| allowed == origin) {
+            return Ok(());
+        }
+        Err(structured_http_error(
+            403,
+            "Forbidden",
+            "ORIGIN_NOT_ALLOWED",
+            "Origin header is not in the configured allowlist",
+        ))
+    }
+
+    fn validate_auth(&self, request: &HttpRequest) -> Result<(), HttpResponse> {
+        let Some(header) = request.header("authorization") else {
+            return Err(structured_http_error(
+                401,
+                "Unauthorized",
+                "AUTH_REQUIRED",
+                "Authorization: Bearer token is required",
+            )
+            .with_header("WWW-Authenticate", "Bearer"));
+        };
+        let Some(token) = header.strip_prefix("Bearer ") else {
+            return Err(structured_http_error(
+                401,
+                "Unauthorized",
+                "AUTH_REQUIRED",
+                "Authorization header must use Bearer authentication",
+            )
+            .with_header("WWW-Authenticate", "Bearer"));
+        };
+        if constant_time_eq(token.as_bytes(), self.bearer_token.as_bytes()) {
+            Ok(())
+        } else {
+            Err(structured_http_error(
+                401,
+                "Unauthorized",
+                "AUTH_INVALID",
+                "Bearer token is not valid for this Volicord serve process",
+            )
+            .with_header("WWW-Authenticate", "Bearer"))
+        }
+    }
+
+    fn cors_headers(&self, origin: Option<&str>) -> Vec<(String, String)> {
+        let Some(origin) = origin else {
+            return Vec::new();
+        };
+        if !self.allowed_origins.iter().any(|allowed| allowed == origin) {
+            return Vec::new();
+        }
+        vec![
+            ("Access-Control-Allow-Origin".to_owned(), origin.to_owned()),
+            ("Vary".to_owned(), "Origin".to_owned()),
+            (
+                "Access-Control-Allow-Methods".to_owned(),
+                "POST, GET, DELETE, OPTIONS".to_owned(),
+            ),
+            (
+                "Access-Control-Allow-Headers".to_owned(),
+                "Authorization, Content-Type, Accept, MCP-Protocol-Version, Mcp-Session-Id"
+                    .to_owned(),
+            ),
+        ]
+    }
+}
+
+enum HttpMcpDispatch {
+    Response(Value),
+    Accepted,
+    Invalid(Value),
+}
+
+fn dispatch_http_json_rpc_message(
+    adapter: &McpAdapter,
+    state: &mut ConnectionState,
+    message: Value,
+) -> Result<HttpMcpDispatch, McpAdapterError> {
+    match parse_client_message(message) {
+        Ok(ClientMessage::Request(request)) => {
+            let mut empty_lines = io::BufReader::new(io::empty()).lines();
+            let mut sink = io::sink();
+            state.client_supports_elicitation = false;
+            handle_json_rpc_request(adapter, state, request, &mut empty_lines, &mut sink)
+                .map(HttpMcpDispatch::Response)
+        }
+        Ok(ClientMessage::Notification(notification)) => {
+            handle_json_rpc_notification(state, notification);
+            Ok(HttpMcpDispatch::Accepted)
+        }
+        Err(error) => Ok(HttpMcpDispatch::Invalid(json_rpc_error(
+            error.id,
+            error.code,
+            error.message,
+            error.data,
+        ))),
+    }
+}
+
+fn json_rpc_method(value: &Value) -> Option<&str> {
+    value.as_object()?.get("method")?.as_str()
+}
+
+#[derive(Debug)]
+struct HttpRequest {
+    method: String,
+    target: String,
+    headers: BTreeMap<String, String>,
+    body: Vec<u8>,
+}
+
+impl HttpRequest {
+    fn header(&self, name: &str) -> Option<&str> {
+        self.headers
+            .get(&name.to_ascii_lowercase())
+            .map(String::as_str)
+    }
+}
+
+#[derive(Debug)]
+struct HttpResponse {
+    status: u16,
+    reason: &'static str,
+    headers: Vec<(String, String)>,
+    body: Vec<u8>,
+}
+
+impl HttpResponse {
+    fn json(
+        status: u16,
+        reason: &'static str,
+        value: Value,
+        headers: Vec<(String, String)>,
+    ) -> Self {
+        let body = serde_json::to_vec(&value).unwrap_or_else(|_| b"{}".to_vec());
+        Self {
+            status,
+            reason,
+            headers: with_content_type(headers, "application/json"),
+            body,
+        }
+    }
+
+    fn empty(status: u16, reason: &'static str, headers: Vec<(String, String)>) -> Self {
+        Self {
+            status,
+            reason,
+            headers,
+            body: Vec::new(),
+        }
+    }
+
+    fn with_header(mut self, name: &str, value: &str) -> Self {
+        self.headers.push((name.to_owned(), value.to_owned()));
+        self
+    }
+}
+
+fn structured_http_error(
+    status: u16,
+    reason: &'static str,
+    code: &'static str,
+    message: &str,
+) -> HttpResponse {
+    structured_http_error_with_headers(status, reason, code, message, Vec::new())
+}
+
+fn structured_http_error_with_headers(
+    status: u16,
+    reason: &'static str,
+    code: &'static str,
+    message: &str,
+    headers: Vec<(String, String)>,
+) -> HttpResponse {
+    HttpResponse::json(
+        status,
+        reason,
+        json!({
+            "error": {
+                "code": code,
+                "message": message
+            }
+        }),
+        headers,
+    )
+}
+
+fn with_content_type(
+    mut headers: Vec<(String, String)>,
+    content_type: &str,
+) -> Vec<(String, String)> {
+    if !headers
+        .iter()
+        .any(|(name, _)| name.eq_ignore_ascii_case("content-type"))
+    {
+        headers.push(("Content-Type".to_owned(), content_type.to_owned()));
+    }
+    headers
+}
+
+fn read_http_request(stream: &mut TcpStream) -> Result<HttpRequest, HttpResponse> {
+    let mut buffer = Vec::new();
+    let header_end = loop {
+        let mut chunk = [0_u8; 1024];
+        let read = stream.read(&mut chunk).map_err(|error| {
+            structured_http_error(
+                400,
+                "Bad Request",
+                "HTTP_READ_FAILED",
+                &format!("failed to read HTTP request: {error}"),
+            )
+        })?;
+        if read == 0 {
+            return Err(structured_http_error(
+                400,
+                "Bad Request",
+                "HTTP_REQUEST_INCOMPLETE",
+                "HTTP request ended before headers completed",
+            ));
+        }
+        buffer.extend_from_slice(&chunk[..read]);
+        if buffer.len() > HTTP_HEADER_LIMIT_BYTES {
+            return Err(structured_http_error(
+                431,
+                "Request Header Fields Too Large",
+                "HTTP_HEADERS_TOO_LARGE",
+                "HTTP request headers exceed the Volicord limit",
+            ));
+        }
+        if let Some(index) = find_header_end(&buffer) {
+            break index;
+        }
+    };
+
+    let head = str::from_utf8(&buffer[..header_end]).map_err(|_| {
+        structured_http_error(
+            400,
+            "Bad Request",
+            "HTTP_HEADER_ENCODING_INVALID",
+            "HTTP headers must be valid UTF-8",
+        )
+    })?;
+    let (method, target, headers) = parse_http_head(head)?;
+    let content_length = match headers.get("content-length") {
+        Some(value) => value.parse::<usize>().map_err(|_| {
+            structured_http_error(
+                400,
+                "Bad Request",
+                "CONTENT_LENGTH_INVALID",
+                "Content-Length must be a decimal byte count",
+            )
+        })?,
+        None => 0,
+    };
+    if content_length > HTTP_BODY_LIMIT_BYTES {
+        return Err(structured_http_error(
+            413,
+            "Payload Too Large",
+            "HTTP_BODY_TOO_LARGE",
+            "HTTP request body exceeds the Volicord limit",
+        ));
+    }
+
+    let body_start = header_end + 4;
+    let mut body = buffer.get(body_start..).unwrap_or_default().to_vec();
+    while body.len() < content_length {
+        let remaining = content_length - body.len();
+        let mut chunk = vec![0_u8; remaining.min(8192)];
+        let read = stream.read(&mut chunk).map_err(|error| {
+            structured_http_error(
+                400,
+                "Bad Request",
+                "HTTP_BODY_READ_FAILED",
+                &format!("failed to read HTTP request body: {error}"),
+            )
+        })?;
+        if read == 0 {
+            return Err(structured_http_error(
+                400,
+                "Bad Request",
+                "HTTP_BODY_INCOMPLETE",
+                "HTTP request ended before the declared body length",
+            ));
+        }
+        body.extend_from_slice(&chunk[..read]);
+    }
+    body.truncate(content_length);
+
+    Ok(HttpRequest {
+        method,
+        target,
+        headers,
+        body,
+    })
+}
+
+fn find_header_end(buffer: &[u8]) -> Option<usize> {
+    buffer.windows(4).position(|window| window == b"\r\n\r\n")
+}
+
+fn parse_http_head(head: &str) -> Result<(String, String, BTreeMap<String, String>), HttpResponse> {
+    let mut lines = head.split("\r\n");
+    let request_line = lines.next().ok_or_else(|| {
+        structured_http_error(
+            400,
+            "Bad Request",
+            "HTTP_REQUEST_LINE_MISSING",
+            "HTTP request line is missing",
+        )
+    })?;
+    let mut parts = request_line.split_whitespace();
+    let method = parts.next().unwrap_or_default();
+    let target = parts.next().unwrap_or_default();
+    let version = parts.next().unwrap_or_default();
+    if method.is_empty() || target.is_empty() || version != "HTTP/1.1" || parts.next().is_some() {
+        return Err(structured_http_error(
+            400,
+            "Bad Request",
+            "HTTP_REQUEST_LINE_INVALID",
+            "HTTP request line must be METHOD TARGET HTTP/1.1",
+        ));
+    }
+
+    let mut headers = BTreeMap::new();
+    for line in lines {
+        if line.is_empty() {
+            continue;
+        }
+        let Some((name, value)) = line.split_once(':') else {
+            return Err(structured_http_error(
+                400,
+                "Bad Request",
+                "HTTP_HEADER_INVALID",
+                "HTTP header line must contain ':'",
+            ));
+        };
+        let name = name.trim().to_ascii_lowercase();
+        if name.is_empty() {
+            return Err(structured_http_error(
+                400,
+                "Bad Request",
+                "HTTP_HEADER_INVALID",
+                "HTTP header name must not be empty",
+            ));
+        }
+        headers.insert(name, value.trim().to_owned());
+    }
+
+    Ok((method.to_ascii_uppercase(), target.to_owned(), headers))
+}
+
+fn write_http_response(stream: &mut TcpStream, response: HttpResponse) -> io::Result<()> {
+    write!(
+        stream,
+        "HTTP/1.1 {} {}\r\nContent-Length: {}\r\nConnection: close\r\nCache-Control: no-store\r\n",
+        response.status,
+        response.reason,
+        response.body.len()
+    )?;
+    for (name, value) in response.headers {
+        write!(stream, "{name}: {value}\r\n")?;
+    }
+    stream.write_all(b"\r\n")?;
+    stream.write_all(&response.body)?;
+    stream.flush()
+}
+
+fn accepts_content_type(header: Option<&str>, expected: &str) -> bool {
+    let Some(header) = header else {
+        return false;
+    };
+    header.split(',').any(|item| {
+        let media_type = item
+            .trim()
+            .split_once(';')
+            .map(|(media_type, _)| media_type.trim())
+            .unwrap_or_else(|| item.trim());
+        media_type == expected || media_type == "*/*"
+    })
+}
+
+fn content_type_is_json(header: Option<&str>) -> bool {
+    let Some(header) = header else {
+        return false;
+    };
+    header
+        .split_once(';')
+        .map(|(media_type, _)| media_type.trim())
+        .unwrap_or_else(|| header.trim())
+        == "application/json"
+}
+
+fn constant_time_eq(left: &[u8], right: &[u8]) -> bool {
+    if left.len() != right.len() {
+        return false;
+    }
+    left.iter()
+        .zip(right.iter())
+        .fold(0_u8, |acc, (left, right)| acc | (left ^ right))
+        == 0
+}
+
+fn generate_http_session_id() -> Result<String, McpAdapterError> {
+    generate_bearer_token().map(|token| format!("mcp_session_{token}"))
+}
+
+fn hex_encode(bytes: &[u8]) -> String {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    let mut output = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        output.push(HEX[(byte >> 4) as usize] as char);
+        output.push(HEX[(byte & 0x0f) as usize] as char);
+    }
+    output
+}
+
+/// Streamable HTTP setup and listener errors.
+#[derive(Debug)]
+pub enum StreamableHttpError {
+    Config { code: &'static str, message: String },
+    Adapter(McpAdapterError),
+    Io(io::Error),
+}
+
+impl fmt::Display for StreamableHttpError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Config { code, message } => write!(formatter, "{code}: {message}"),
+            Self::Adapter(error) => write!(formatter, "{error}"),
+            Self::Io(error) => write!(formatter, "{error}"),
+        }
+    }
+}
+
+impl Error for StreamableHttpError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::Adapter(error) => Some(error),
+            Self::Io(error) => Some(error),
+            Self::Config { .. } => None,
+        }
+    }
+}
+
 fn current_dir_environment_error(error: io::Error) -> McpAdapterError {
     McpAdapterError::Environment(format!("failed to read current directory: {error}"))
 }
@@ -1079,7 +2003,7 @@ fn resolve_connection_context(
             ..
         }) => {
             return Err(McpAdapterError::Environment(format!(
-                "setup has not been completed for Runtime Home {}; run `volicord setup` before starting `volicord mcp --stdio`",
+                "setup has not been completed for Runtime Home {}; run `volicord setup` before starting a Volicord MCP transport process",
                 runtime_home.display()
             )))
         }
@@ -1096,12 +2020,18 @@ fn resolve_connection_context(
     let mode = validate_connection_record(&connection)?;
     let projects = list_connection_projects(&runtime_home, connection_internal_id)
         .map_err(McpAdapterError::Store)?;
+    if projects.is_empty() {
+        return Err(McpAdapterError::Environment(format!(
+            "connection {connection_internal_id} has no connected projects"
+        )));
+    }
 
     let context = McpConnectionContext {
         runtime_home,
         connection_internal_id: AgentConnectionId::new(connection.connection_internal_id.clone()),
         mode,
         invocation_binding_basis: DEFAULT_INVOCATION_BINDING_BASIS.to_owned(),
+        project_allowlist: None,
     };
     Ok((context, connection, projects))
 }
@@ -1265,9 +2195,23 @@ fn controlled_invocation_binding_basis(value: &str) -> &'static str {
         VERIFICATION_BASIS_MCP_STDIO_CONNECTION_BINDING => {
             VERIFICATION_BASIS_MCP_STDIO_CONNECTION_BINDING
         }
+        VERIFICATION_BASIS_MCP_STREAMABLE_HTTP_CONNECTION_BINDING => {
+            VERIFICATION_BASIS_MCP_STREAMABLE_HTTP_CONNECTION_BINDING
+        }
         VERIFICATION_BASIS_TEST_FIXTURE_BINDING => VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
         _ => DEFAULT_INVOCATION_BINDING_BASIS,
     }
+}
+
+fn unique_project_ids(project_ids: Vec<ProjectId>) -> Vec<ProjectId> {
+    let mut seen = BTreeSet::new();
+    let mut unique = Vec::new();
+    for project_id in project_ids {
+        if seen.insert(project_id.as_str().to_owned()) {
+            unique.push(project_id);
+        }
+    }
+    unique
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -2545,16 +3489,17 @@ impl From<RuntimeHomeResolutionError> for McpAdapterError {
 #[cfg(test)]
 mod tests {
     use std::{
-        collections::BTreeSet,
+        collections::{BTreeMap, BTreeSet},
         error::Error,
         io::{BufReader, Cursor},
     };
 
     use volicord_core::CoreBoundary;
     use volicord_store::agent_connections::{
-        agent_connection_record, ensure_agent_connection, AgentConnectionRegistration,
-        CONNECTION_MODE_READ_ONLY,
+        add_connection_project, agent_connection_record, ensure_agent_connection,
+        AgentConnectionRegistration, ConnectionProjectRegistration, CONNECTION_MODE_READ_ONLY,
     };
+    use volicord_store::bootstrap::{register_project, ProjectRegistration, ACTIVE_PROJECT_STATUS};
     use volicord_test_support::core_fixtures::CoreFixture;
     use volicord_types::{
         AgentConnectionMode, OperationCategory, VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
@@ -2978,6 +3923,172 @@ mod tests {
         Ok(())
     }
 
+    #[test]
+    fn streamable_http_rejects_missing_bearer_auth() -> Result<(), Box<dyn Error>> {
+        let fixture = CoreFixture::new("mcp-http-auth")?;
+        let mut server = http_server(&fixture, Vec::new(), Vec::new())?;
+
+        let response = server.handle_request(http_request(
+            "POST",
+            STREAMABLE_HTTP_ENDPOINT_PATH,
+            None,
+            None,
+            None,
+            initialize_request(1, json!({})),
+        )?);
+
+        assert_eq!(response.status, 401);
+        assert_eq!(http_json(&response)["error"]["code"], "AUTH_REQUIRED");
+        assert_eq!(http_header(&response, "WWW-Authenticate"), Some("Bearer"));
+        Ok(())
+    }
+
+    #[test]
+    fn streamable_http_rejects_origin_unless_explicitly_allowed() -> Result<(), Box<dyn Error>> {
+        let fixture = CoreFixture::new("mcp-http-origin")?;
+        let mut server = http_server(&fixture, Vec::new(), Vec::new())?;
+
+        let rejected = server.handle_request(http_request(
+            "POST",
+            STREAMABLE_HTTP_ENDPOINT_PATH,
+            Some("test_token"),
+            Some("https://example.invalid"),
+            None,
+            initialize_request(1, json!({})),
+        )?);
+
+        assert_eq!(rejected.status, 403);
+        assert_eq!(http_json(&rejected)["error"]["code"], "ORIGIN_NOT_ALLOWED");
+        assert_eq!(http_header(&rejected, "Access-Control-Allow-Origin"), None);
+
+        let denied_preflight = server.handle_request(http_request(
+            "OPTIONS",
+            STREAMABLE_HTTP_ENDPOINT_PATH,
+            None,
+            Some("https://example.invalid"),
+            None,
+            Value::Null,
+        )?);
+        assert_eq!(denied_preflight.status, 403);
+        assert_eq!(
+            http_json(&denied_preflight)["error"]["code"],
+            "ORIGIN_NOT_ALLOWED"
+        );
+
+        let mut allowed_server = http_server(
+            &fixture,
+            Vec::new(),
+            vec!["https://allowed.example".to_owned()],
+        )?;
+        let allowed = allowed_server.handle_request(http_request(
+            "POST",
+            STREAMABLE_HTTP_ENDPOINT_PATH,
+            Some("test_token"),
+            Some("https://allowed.example"),
+            None,
+            initialize_request(2, json!({})),
+        )?);
+        assert_eq!(allowed.status, 200);
+        assert_eq!(
+            http_header(&allowed, "Access-Control-Allow-Origin"),
+            Some("https://allowed.example")
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn streamable_http_requires_unsafe_flag_for_nonlocal_listen() -> Result<(), Box<dyn Error>> {
+        let fixture = CoreFixture::new("mcp-http-listen")?;
+        let mut config = http_config(&fixture, Vec::new(), Vec::new());
+        config.listen_addr = "0.0.0.0:8765".parse()?;
+
+        let error = validate_streamable_http_server_config(&config)
+            .expect_err("nonlocal listen should require explicit flag");
+
+        assert!(error
+            .to_string()
+            .contains("NONLOCAL_LISTEN_REQUIRES_UNSAFE_FLAG"));
+        config.allow_nonlocal_listen = true;
+        validate_streamable_http_server_config(&config)?;
+        Ok(())
+    }
+
+    #[test]
+    fn streamable_http_project_allowlist_narrows_connection_projects() -> Result<(), Box<dyn Error>>
+    {
+        let fixture = CoreFixture::new("mcp-http-project-allowlist")?;
+        let outside_project_id = "project_http_allowed_by_connection";
+        add_allowed_project(&fixture, outside_project_id)?;
+        let mut server = http_server(
+            &fixture,
+            vec![ProjectId::new(fixture.project_id())],
+            Vec::new(),
+        )?;
+
+        let initialize = server.handle_request(http_request(
+            "POST",
+            STREAMABLE_HTTP_ENDPOINT_PATH,
+            Some("test_token"),
+            None,
+            None,
+            initialize_request(1, json!({})),
+        )?);
+        assert_eq!(initialize.status, 200);
+        let session_id = http_header(&initialize, "Mcp-Session-Id")
+            .expect("initialize should create session")
+            .to_owned();
+
+        let initialized = server.handle_request(http_request(
+            "POST",
+            STREAMABLE_HTTP_ENDPOINT_PATH,
+            Some("test_token"),
+            None,
+            Some(&session_id),
+            initialized_notification(),
+        )?);
+        assert_eq!(initialized.status, 202);
+
+        let listed = server.handle_request(http_request(
+            "POST",
+            STREAMABLE_HTTP_ENDPOINT_PATH,
+            Some("test_token"),
+            None,
+            Some(&session_id),
+            tools_call(2, LIST_PROJECTS_TOOL_NAME, json!({})),
+        )?);
+        assert_eq!(listed.status, 200);
+        let listed_tool = volicord_response_from_tool(&http_json(&listed))?;
+        let projects = listed_tool["projects"]
+            .as_array()
+            .expect("projects should be listed");
+        assert_eq!(projects.len(), 1);
+        assert_eq!(projects[0]["project_selector"], fixture.project_id());
+
+        let rejected = server.handle_request(http_request(
+            "POST",
+            STREAMABLE_HTTP_ENDPOINT_PATH,
+            Some("test_token"),
+            None,
+            Some(&session_id),
+            tools_call(
+                3,
+                "volicord.status",
+                json!({
+                    "detail": "workflow",
+                    "project_selector": outside_project_id
+                }),
+            ),
+        )?);
+        assert_eq!(rejected.status, 200);
+        assert_eq!(http_json(&rejected)["result"]["isError"], true);
+        let error_text = http_json(&rejected)["result"]["content"][0]["text"]
+            .as_str()
+            .expect("tool error should be text")
+            .to_owned();
+        assert!(error_text.contains("outside this HTTP serve project allowlist"));
+        Ok(())
+    }
+
     fn adapter(fixture: &CoreFixture) -> Result<McpAdapter, Box<dyn Error>> {
         let context =
             McpConnectionContext::resolve(fixture.runtime_home_path(), fixture.connection_id())?
@@ -3005,6 +4116,106 @@ mod tests {
                 last_verification_report_json: existing.last_verification_report_json,
                 last_user_actions_json: existing.last_user_actions_json,
                 metadata_json: existing.metadata_json,
+            },
+        )?;
+        Ok(())
+    }
+
+    fn http_config(
+        fixture: &CoreFixture,
+        project_allowlist: Vec<ProjectId>,
+        allowed_origins: Vec<String>,
+    ) -> StreamableHttpServerConfig {
+        StreamableHttpServerConfig {
+            runtime_home: fixture.runtime_home_path().to_path_buf(),
+            connection_id: fixture.connection_id().to_owned(),
+            listen_addr: "127.0.0.1:0".parse().expect("valid test listen"),
+            bearer_token: "test_token".to_owned(),
+            token_source: StreamableHttpTokenSource::Supplied,
+            project_allowlist,
+            allowed_origins,
+            allow_nonlocal_listen: false,
+        }
+    }
+
+    fn http_server(
+        fixture: &CoreFixture,
+        project_allowlist: Vec<ProjectId>,
+        allowed_origins: Vec<String>,
+    ) -> Result<StreamableHttpServer, Box<dyn Error>> {
+        let config = http_config(fixture, project_allowlist.clone(), allowed_origins);
+        let context =
+            McpConnectionContext::resolve(fixture.runtime_home_path(), fixture.connection_id())?
+                .with_invocation_binding_basis(
+                    VERIFICATION_BASIS_MCP_STREAMABLE_HTTP_CONNECTION_BINDING,
+                )
+                .with_project_allowlist(project_allowlist);
+        Ok(StreamableHttpServer::new(
+            McpAdapter::new(fixture.runtime_home_path(), context),
+            config,
+        ))
+    }
+
+    fn http_request(
+        method: &str,
+        target: &str,
+        token: Option<&str>,
+        origin: Option<&str>,
+        session_id: Option<&str>,
+        body: Value,
+    ) -> Result<HttpRequest, serde_json::Error> {
+        let mut headers = BTreeMap::new();
+        headers.insert(
+            "accept".to_owned(),
+            "application/json, text/event-stream".to_owned(),
+        );
+        headers.insert("content-type".to_owned(), "application/json".to_owned());
+        if let Some(token) = token {
+            headers.insert("authorization".to_owned(), format!("Bearer {token}"));
+        }
+        if let Some(origin) = origin {
+            headers.insert("origin".to_owned(), origin.to_owned());
+        }
+        if let Some(session_id) = session_id {
+            headers.insert("mcp-session-id".to_owned(), session_id.to_owned());
+        }
+        Ok(HttpRequest {
+            method: method.to_owned(),
+            target: target.to_owned(),
+            headers,
+            body: serde_json::to_vec(&body)?,
+        })
+    }
+
+    fn http_json(response: &HttpResponse) -> Value {
+        serde_json::from_slice(&response.body).expect("HTTP body should be JSON")
+    }
+
+    fn http_header<'a>(response: &'a HttpResponse, name: &str) -> Option<&'a str> {
+        response
+            .headers
+            .iter()
+            .find(|(header_name, _)| header_name.eq_ignore_ascii_case(name))
+            .map(|(_, value)| value.as_str())
+    }
+
+    fn add_allowed_project(fixture: &CoreFixture, project_id: &str) -> Result<(), Box<dyn Error>> {
+        let repo_root = fixture.create_product_repo(format!("repo-{project_id}"))?;
+        register_project(
+            fixture.runtime_home_path(),
+            ProjectRegistration {
+                project_id: project_id.to_owned(),
+                repo_root,
+                project_home: None,
+                status: ACTIVE_PROJECT_STATUS.to_owned(),
+                metadata_json: "{}".to_owned(),
+            },
+        )?;
+        add_connection_project(
+            fixture.runtime_home_path(),
+            ConnectionProjectRegistration {
+                connection_internal_id: fixture.connection_id().to_owned(),
+                project_id: project_id.to_owned(),
             },
         )?;
         Ok(())

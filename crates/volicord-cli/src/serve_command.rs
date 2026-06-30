@@ -1,0 +1,443 @@
+#![forbid(unsafe_code)]
+
+use std::{
+    ffi::OsString,
+    fmt,
+    net::SocketAddr,
+    path::{Path, PathBuf},
+};
+
+use volicord_mcp::{generate_bearer_token, StreamableHttpServerConfig, StreamableHttpTokenSource};
+use volicord_store::{
+    agent_connections::{list_agent_connections, list_connection_projects},
+    bootstrap::project_record_by_repo_root,
+    runtime_home::{resolve_runtime_home, RuntimeHomeResolutionError},
+    StoreError,
+};
+use volicord_types::ProjectId;
+
+use crate::project_context::{resolve_repository_root, ProjectCommandError};
+
+const DEFAULT_STREAMABLE_HTTP_LISTEN: &str = "127.0.0.1:8765";
+const STREAMABLE_HTTP_TRANSPORT: &str = "streamable-http";
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ServeCommand {
+    Help,
+    Version,
+    StreamableHttp { config: StreamableHttpServerConfig },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ServeCommandError {
+    Usage(String),
+    Runtime(String),
+}
+
+impl ServeCommandError {
+    fn usage(message: impl Into<String>) -> Self {
+        Self::Usage(message.into())
+    }
+
+    fn runtime(message: impl Into<String>) -> Self {
+        Self::Runtime(message.into())
+    }
+}
+
+impl fmt::Display for ServeCommandError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Usage(message) | Self::Runtime(message) => formatter.write_str(message),
+        }
+    }
+}
+
+impl std::error::Error for ServeCommandError {}
+
+impl From<StoreError> for ServeCommandError {
+    fn from(error: StoreError) -> Self {
+        Self::runtime(error.to_string())
+    }
+}
+
+impl From<RuntimeHomeResolutionError> for ServeCommandError {
+    fn from(error: RuntimeHomeResolutionError) -> Self {
+        Self::runtime(error.to_string())
+    }
+}
+
+impl From<ProjectCommandError> for ServeCommandError {
+    fn from(error: ProjectCommandError) -> Self {
+        match error {
+            ProjectCommandError::Usage(message) => Self::Usage(message),
+            ProjectCommandError::Runtime(message) => Self::Runtime(message),
+        }
+    }
+}
+
+#[derive(Debug, Default)]
+struct ServeOptions {
+    transport: Option<String>,
+    listen: Option<SocketAddr>,
+    home: Option<PathBuf>,
+    token: Option<String>,
+    generate_token: bool,
+    connection_id: Option<String>,
+    project_paths: Vec<PathBuf>,
+    allowed_origins: Vec<String>,
+    allow_nonlocal_listen: bool,
+}
+
+pub fn run_serve_command<F>(
+    args: &[String],
+    env_var: F,
+    current_dir: &Path,
+) -> Result<ServeCommand, ServeCommandError>
+where
+    F: Fn(&str) -> Option<OsString>,
+{
+    match args {
+        [] => return Err(ServeCommandError::usage(serve_usage())),
+        [option] if option == "-h" || option == "--help" || option == "help" => {
+            return Ok(ServeCommand::Help)
+        }
+        [option] if option == "-V" || option == "--version" => return Ok(ServeCommand::Version),
+        _ => {}
+    }
+
+    let options = parse_serve_options(args)?;
+    let transport = options
+        .transport
+        .as_deref()
+        .ok_or_else(|| ServeCommandError::usage("--transport is required"))?;
+    if transport != STREAMABLE_HTTP_TRANSPORT {
+        return Err(ServeCommandError::usage(format!(
+            "UNSUPPORTED_TRANSPORT: --transport must be {STREAMABLE_HTTP_TRANSPORT}"
+        )));
+    }
+
+    let home_override = options.home.clone();
+    let runtime_home = resolve_runtime_home(
+        |name| {
+            if name == "VOLICORD_HOME" {
+                home_override
+                    .as_ref()
+                    .map(|path| path.as_os_str().to_owned())
+                    .or_else(|| env_var(name))
+            } else {
+                env_var(name)
+            }
+        },
+        current_dir,
+    )?;
+    let listen_addr = options.listen.unwrap_or_else(|| {
+        DEFAULT_STREAMABLE_HTTP_LISTEN
+            .parse()
+            .expect("valid default listen")
+    });
+    let project_allowlist = resolve_project_allowlist(&runtime_home, current_dir, &options)?;
+    let connection_id = match options.connection_id {
+        Some(connection_id) => connection_id,
+        None => infer_connection_id(&runtime_home, &project_allowlist)?,
+    };
+    let (bearer_token, token_source) = match options.token {
+        Some(token) => {
+            if options.generate_token {
+                return Err(ServeCommandError::usage(
+                    "cannot combine --token and --generate-token",
+                ));
+            }
+            (token, StreamableHttpTokenSource::Supplied)
+        }
+        None => (
+            generate_bearer_token()
+                .map_err(|error| ServeCommandError::runtime(error.to_string()))?,
+            StreamableHttpTokenSource::Generated,
+        ),
+    };
+
+    Ok(ServeCommand::StreamableHttp {
+        config: StreamableHttpServerConfig {
+            runtime_home,
+            connection_id,
+            listen_addr,
+            bearer_token,
+            token_source,
+            project_allowlist,
+            allowed_origins: options.allowed_origins,
+            allow_nonlocal_listen: options.allow_nonlocal_listen,
+        },
+    })
+}
+
+pub fn serve_usage() -> String {
+    "volicord serve --transport streamable-http [--listen 127.0.0.1:8765] [--home PATH] [--connection <connection_id>] [--project PATH]... [--token TOKEN | --generate-token] [--allow-origin ORIGIN] [--allow-nonlocal-listen]\n"
+        .to_owned()
+}
+
+fn parse_serve_options(args: &[String]) -> Result<ServeOptions, ServeCommandError> {
+    let mut options = ServeOptions::default();
+    let mut index = 0;
+    while index < args.len() {
+        match args[index].as_str() {
+            "--transport" => {
+                set_once_string(args, &mut index, &mut options.transport, "--transport")?;
+            }
+            "--listen" => {
+                index += 1;
+                let value = option_value(args, index, "--listen")?;
+                options.listen = Some(value.parse::<SocketAddr>().map_err(|error| {
+                    ServeCommandError::usage(format!("--listen must be host:port: {error}"))
+                })?);
+                index += 1;
+            }
+            "--home" => {
+                index += 1;
+                let value = option_value(args, index, "--home")?;
+                if options.home.is_some() {
+                    return Err(ServeCommandError::usage(
+                        "--home was supplied more than once",
+                    ));
+                }
+                options.home = Some(PathBuf::from(value));
+                index += 1;
+            }
+            "--token" => {
+                set_once_string(args, &mut index, &mut options.token, "--token")?;
+            }
+            "--generate-token" => {
+                if options.generate_token {
+                    return Err(ServeCommandError::usage(
+                        "--generate-token was supplied more than once",
+                    ));
+                }
+                options.generate_token = true;
+                index += 1;
+            }
+            "--connection" => {
+                set_once_string(args, &mut index, &mut options.connection_id, "--connection")?;
+            }
+            "--project" => {
+                index += 1;
+                let value = option_value(args, index, "--project")?;
+                options.project_paths.push(PathBuf::from(value));
+                index += 1;
+            }
+            "--allow-origin" => {
+                index += 1;
+                let value = option_value(args, index, "--allow-origin")?;
+                options.allowed_origins.push(value.to_owned());
+                index += 1;
+            }
+            "--allow-nonlocal-listen" => {
+                if options.allow_nonlocal_listen {
+                    return Err(ServeCommandError::usage(
+                        "--allow-nonlocal-listen was supplied more than once",
+                    ));
+                }
+                options.allow_nonlocal_listen = true;
+                index += 1;
+            }
+            "-h" | "--help" | "help" | "-V" | "--version" => {
+                return Err(ServeCommandError::usage(
+                    "cannot combine volicord serve command-line modes",
+                ));
+            }
+            option if option.starts_with('-') => {
+                return Err(ServeCommandError::usage(format!(
+                    "unknown option: {option}"
+                )));
+            }
+            argument => {
+                return Err(ServeCommandError::usage(format!(
+                    "unexpected argument: {argument}"
+                )));
+            }
+        }
+    }
+
+    Ok(options)
+}
+
+fn set_once_string(
+    args: &[String],
+    index: &mut usize,
+    target: &mut Option<String>,
+    option: &'static str,
+) -> Result<(), ServeCommandError> {
+    if target.is_some() {
+        return Err(ServeCommandError::usage(format!(
+            "{option} was supplied more than once"
+        )));
+    }
+    *index += 1;
+    let value = option_value(args, *index, option)?;
+    *target = Some(value.to_owned());
+    *index += 1;
+    Ok(())
+}
+
+fn option_value<'a>(
+    args: &'a [String],
+    index: usize,
+    option: &'static str,
+) -> Result<&'a str, ServeCommandError> {
+    let value = args
+        .get(index)
+        .ok_or_else(|| ServeCommandError::usage(format!("{option} requires a value")))?;
+    if value.starts_with('-') {
+        return Err(ServeCommandError::usage(format!(
+            "{option} requires a value"
+        )));
+    }
+    Ok(value)
+}
+
+fn resolve_project_allowlist(
+    runtime_home: &Path,
+    current_dir: &Path,
+    options: &ServeOptions,
+) -> Result<Vec<ProjectId>, ServeCommandError> {
+    let mut project_ids = Vec::new();
+    for project_path in &options.project_paths {
+        let repo_root = resolve_repository_root(current_dir, Some(project_path.as_path()))?;
+        let project = project_record_by_repo_root(runtime_home, &repo_root)?.ok_or_else(|| {
+            ServeCommandError::runtime(format!(
+                "PROJECT_NOT_REGISTERED: repository {} is not registered; run `volicord project use {}` first",
+                repo_root.display(),
+                repo_root.display()
+            ))
+        })?;
+        let project_id = ProjectId::new(project.project_id);
+        if !project_ids
+            .iter()
+            .any(|existing: &ProjectId| existing.as_str() == project_id.as_str())
+        {
+            project_ids.push(project_id);
+        }
+    }
+    Ok(project_ids)
+}
+
+fn infer_connection_id(
+    runtime_home: &Path,
+    project_allowlist: &[ProjectId],
+) -> Result<String, ServeCommandError> {
+    let mut candidates = Vec::new();
+    for connection in list_agent_connections(runtime_home)? {
+        if !connection.enabled {
+            continue;
+        }
+        let projects = list_connection_projects(runtime_home, &connection.connection_internal_id)?;
+        if projects.is_empty() {
+            continue;
+        }
+        let project_matches = project_allowlist.iter().all(|project_id| {
+            projects
+                .iter()
+                .any(|project| project.project_id == project_id.as_str())
+        });
+        if project_matches {
+            candidates.push(connection.connection_internal_id);
+        }
+    }
+
+    match candidates.as_slice() {
+        [connection_id] => Ok(connection_id.clone()),
+        [] => Err(ServeCommandError::runtime(
+            "CONNECTION_REQUIRED: no enabled Agent Connection matches the serve project allowlist; pass --connection",
+        )),
+        _ => Err(ServeCommandError::runtime(format!(
+            "CONNECTION_AMBIGUOUS: multiple enabled Agent Connections match; pass --connection ({})",
+            candidates.join(", ")
+        ))),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::Path;
+
+    use volicord_test_support::core_fixtures::CoreFixture;
+
+    use super::*;
+
+    #[test]
+    fn serve_streamable_http_generates_token_and_defaults_to_localhost(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let fixture = CoreFixture::new("serve-command-generated-token")?;
+
+        let command = run_serve_command(
+            &["--transport".to_owned(), "streamable-http".to_owned()],
+            |name| {
+                if name == "VOLICORD_HOME" {
+                    Some(fixture.runtime_home_path().as_os_str().to_owned())
+                } else {
+                    None
+                }
+            },
+            Path::new(env!("CARGO_MANIFEST_DIR")),
+        )?;
+
+        let ServeCommand::StreamableHttp { config } = command else {
+            panic!("serve command should build HTTP server config");
+        };
+        assert_eq!(config.connection_id, fixture.connection_id());
+        assert_eq!(config.listen_addr, "127.0.0.1:8765".parse()?);
+        assert_eq!(config.token_source, StreamableHttpTokenSource::Generated);
+        assert!(!config.bearer_token.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    fn serve_home_option_overrides_environment_home() -> Result<(), Box<dyn std::error::Error>> {
+        let env_fixture = CoreFixture::new("serve-command-env-home")?;
+        let home_fixture = CoreFixture::new("serve-command-option-home")?;
+
+        let command = run_serve_command(
+            &[
+                "--transport".to_owned(),
+                "streamable-http".to_owned(),
+                "--home".to_owned(),
+                home_fixture.runtime_home_path().display().to_string(),
+                "--connection".to_owned(),
+                home_fixture.connection_id().to_owned(),
+                "--token".to_owned(),
+                "token".to_owned(),
+            ],
+            |name| {
+                if name == "VOLICORD_HOME" {
+                    Some(env_fixture.runtime_home_path().as_os_str().to_owned())
+                } else {
+                    None
+                }
+            },
+            Path::new(env!("CARGO_MANIFEST_DIR")),
+        )?;
+
+        let ServeCommand::StreamableHttp { config } = command else {
+            panic!("serve command should build HTTP server config");
+        };
+        assert_eq!(config.runtime_home, home_fixture.runtime_home_path());
+        assert_eq!(config.connection_id, home_fixture.connection_id());
+        assert_eq!(config.token_source, StreamableHttpTokenSource::Supplied);
+        Ok(())
+    }
+
+    #[test]
+    fn serve_rejects_unsupported_transport() {
+        let error = run_serve_command(
+            &["--transport".to_owned(), "stdio".to_owned()],
+            |_| None,
+            Path::new(env!("CARGO_MANIFEST_DIR")),
+        )
+        .expect_err("unsupported transport should be a usage error");
+
+        assert_eq!(
+            error,
+            ServeCommandError::Usage(
+                "UNSUPPORTED_TRANSPORT: --transport must be streamable-http".to_owned()
+            )
+        );
+    }
+}

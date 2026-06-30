@@ -1,10 +1,12 @@
 # MCP transport reference
 
-This document owns the local `volicord mcp --stdio` process contract: process
-startup, process environment, MCP protocol-version negotiation, initialization
-lifecycle, stdio transport framing, JSON-RPC message validation,
-Agent-Connection-bound startup validation, MCP-visible tool discovery, MCP
-response wrapping, and shutdown/reconnection behavior.
+This document owns the local `volicord mcp --stdio` process contract and the
+experimental `volicord serve --transport streamable-http` process-boundary
+contract: process startup, process environment, MCP protocol-version
+negotiation, initialization lifecycle, stdio transport framing, local HTTP MCP
+request handling, JSON-RPC message validation, Agent-Connection-bound startup
+validation, MCP-visible tool discovery, MCP response wrapping, and
+shutdown/reconnection behavior.
 
 It does not define public Volicord API method behavior, public request or
 response schemas, Agent Connection meaning, storage record layout, security
@@ -15,11 +17,14 @@ guarantees, or Core authority semantics.
 This document owns:
 
 - `volicord mcp --stdio` process startup and exit behavior
+- `volicord serve --transport streamable-http` startup, local listener, and
+  transport-bound security checks
 - process configuration used by generated host configuration and exported MCP
   config
 - MCP Runtime Home environment resolution
 - MCP protocol-version negotiation and initialization lifecycle
 - stdio JSON-RPC framing, message validation, and supported MCP methods
+- local HTTP JSON-RPC request handling for the experimental serve transport
 - server-initiated MCP elicitation at the stdio transport boundary
 - MCP startup validation for one internal Agent Connection binding
 - MCP `tools/list` and `tools/call` behavior at the transport boundary
@@ -48,6 +53,19 @@ This document does not own:
 `volicord` executable. An MCP host starts it as a child process and communicates
 through stdin/stdout. It is not a TCP listener, HTTP listener, Unix-domain
 socket listener, or other network listener.
+
+`volicord serve --transport streamable-http` is a separate explicit process mode
+for Docker and localhost MCP use. It starts a local HTTP listener and reuses the
+same Agent-Connection-bound MCP adapter logic as stdio where possible. It is not
+the default MCP transport, not used by generated local non-Docker host
+configuration, and not a general unauthenticated Volicord network service.
+
+The current serve transport is a secure experimental Streamable HTTP-style
+subset. It accepts JSON-RPC over HTTP `POST /mcp` with MCP session headers and
+returns JSON responses. It does not implement server-sent event streams, HTTP
+elicitation, or full MCP Streamable HTTP compatibility. Documentation and
+startup diagnostics must not claim full protocol compatibility until those
+transport features are implemented and tested.
 
 Generated host configuration and generic exports may launch the stdio loop with
 an internal connection binding:
@@ -78,14 +96,63 @@ Baseline command-line behavior:
 - Help and version handling happen before Runtime Home or Agent Connection
   lookup.
 
+Experimental HTTP serve command-line behavior:
+
+- `volicord serve --transport streamable-http` is the only supported serve
+  transport spelling. Other transport values are usage errors.
+- `--listen 127.0.0.1:<port>` selects the listener. Omission uses
+  `127.0.0.1:8765`.
+- The default listener is loopback-only. Binding `0.0.0.0`, `::`, or another
+  non-loopback address requires `--allow-nonlocal-listen` and writes a clear
+  warning at startup.
+- `--home PATH` selects the Runtime Home for the process. Without `--home`, the
+  shared `VOLICORD_HOME` and platform default Runtime Home resolution apply.
+- `--connection <connection_id>` binds the server to one stored Agent
+  Connection. Without it, startup succeeds only when exactly one enabled Agent
+  Connection with connected projects matches the optional serve project
+  allowlist.
+- `--project PATH` may be repeated. Each path resolves to a registered
+  repository root and narrows the serve process to those project identities.
+  The narrowed set must still be inside the selected Agent Connection's
+  connected-project allowlist.
+- `--token TOKEN` supplies the bearer token for this process. If omitted,
+  Volicord generates a process-local token and writes it to stderr during
+  startup. Tokens are not stored in repository files.
+- `--allow-origin ORIGIN` may be repeated to permit browser-capable requests
+  from exact Origin values. Without it, requests carrying an `Origin` header are
+  rejected and CORS response headers are not emitted.
+
 Exit and stream behavior:
 
 - Normal stdin EOF shutdown flushes stdout and exits with code `0`.
 - Successful `--check` writes its report to stdout and exits with code `0`.
 - Startup configuration, JSON, or storage failures write diagnostics to stderr
   and exit with code `1`.
+- HTTP serve startup configuration, listener, authentication-token, Origin, and
+  project-allowlist failures write diagnostics to stderr and exit with code
+  `1`.
 - Once the stdio loop is running, malformed JSON and unsupported JSON-RPC
   requests return JSON-RPC errors when a response can be written.
+
+HTTP serve request behavior:
+
+- The MCP endpoint path is `/mcp`.
+- `POST /mcp` requires `Authorization: Bearer <token>`, `Content-Type:
+  application/json`, and an `Accept` header that includes both
+  `application/json` and `text/event-stream`.
+- Successful `initialize` creates an `Mcp-Session-Id`. Later JSON-RPC requests
+  must supply that session ID.
+- `DELETE /mcp` deletes a session when the bearer token and session ID are
+  valid.
+- `GET /mcp` returns `SSE_UNSUPPORTED`; server-sent event streams are not
+  implemented by this experimental endpoint.
+- `GET /healthz` is a minimal local health endpoint, but it still requires the
+  same bearer token. There are no unauthenticated resource endpoints.
+- CORS preflight is accepted only for the MCP endpoint, only after Origin
+  allowlist validation, and only when at least one allowed Origin is configured.
+- Structured HTTP errors use stable transport error codes for authentication,
+  Origin, project allowlist, unsupported transport, unsupported method, and
+  unsupported content negotiation failures.
 
 <a id="process-environment"></a>
 ## Process Environment

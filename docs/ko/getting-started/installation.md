@@ -105,6 +105,50 @@ volicord doctor
 시작하기 전에 이름 붙은 로컬 동작을 완료합니다. 일반 `volicord connect` 명령은
 저장된 설치 프로필을 사용합니다.
 
+## Docker 이미지
+
+Docker 지원은 로컬 컨테이너 배치와 localhost MCP 접근을 위한 것입니다. Volicord 소스
+저장소에서 이미지를 빌드합니다.
+
+```sh
+docker build -t volicord:local .
+```
+
+setup, project, connection, serve 명령을 실행할 때는 Runtime Home 볼륨을 사용하고 Product
+Repository를 같은 컨테이너 경로에 마운트합니다. 프로젝트 등록은 저장소 루트를 저장하므로,
+한 경로 배치에서 준비한 Runtime Home을 다른 컨테이너 workspace 경로와 함께 재사용하면
+안 됩니다.
+
+예를 들어 같은 마운트로 Docker Runtime Home을 준비하거나 점검합니다.
+
+```sh
+docker run --rm -it \
+  -v volicord-home:/var/lib/volicord \
+  -v "$PWD:/workspace" \
+  volicord:local setup
+```
+
+Runtime Home에 serve할 프로젝트 등록과 Agent Connection이 들어간 뒤, 운영자가 제공한
+token으로 로컬 HTTP MCP endpoint를 시작합니다.
+
+```sh
+VOLICORD_HTTP_TOKEN="$(openssl rand -hex 32)"
+docker run --rm \
+  -p 127.0.0.1:8765:8765 \
+  -v volicord-home:/var/lib/volicord \
+  -v "$PWD:/workspace" \
+  volicord:local serve --transport streamable-http \
+    --listen 0.0.0.0:8765 \
+    --allow-nonlocal-listen \
+    --token "$VOLICORD_HTTP_TOKEN" \
+    --project /workspace
+```
+
+컨테이너는 Docker가 포트를 publish할 수 있도록 Docker 내부에서만 `0.0.0.0`에
+리스닝합니다. 호스트 publish 주소는 `127.0.0.1`로 남으며 Volicord는 여전히
+`--allow-nonlocal-listen`과 bearer 인증을 요구합니다. `VOLICORD_HTTP_TOKEN`을 저장소
+파일에 저장하지 마세요.
+
 ## 설정이 하지 않는 일
 
 `volicord setup`은 Product Repository를 등록하지 않고 호스트 설정을 설치하지도 않습니다.

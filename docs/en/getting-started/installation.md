@@ -114,6 +114,51 @@ If setup reports `action_required`, complete the named local action before
 starting new terminals or agent hosts. Ordinary `volicord connect` commands use
 the saved installation profile.
 
+## Docker Image
+
+Docker support is for local container layouts and localhost MCP access. Build
+the image from the Volicord source repository:
+
+```sh
+docker build -t volicord:local .
+```
+
+Use a Runtime Home volume and mount the Product Repository at the same container
+path whenever you run setup, project, connection, and serve commands. Project
+registrations store repository roots, so a Runtime Home prepared for one path
+layout should not be reused with a different container workspace path.
+
+For example, prepare or inspect the Docker Runtime Home with the same mounts:
+
+```sh
+docker run --rm -it \
+  -v volicord-home:/var/lib/volicord \
+  -v "$PWD:/workspace" \
+  volicord:local setup
+```
+
+After the Runtime Home contains the project registration and Agent Connection
+you want to serve, start the local HTTP MCP endpoint with an operator-provided
+token:
+
+```sh
+VOLICORD_HTTP_TOKEN="$(openssl rand -hex 32)"
+docker run --rm \
+  -p 127.0.0.1:8765:8765 \
+  -v volicord-home:/var/lib/volicord \
+  -v "$PWD:/workspace" \
+  volicord:local serve --transport streamable-http \
+    --listen 0.0.0.0:8765 \
+    --allow-nonlocal-listen \
+    --token "$VOLICORD_HTTP_TOKEN" \
+    --project /workspace
+```
+
+The container listens on `0.0.0.0` only inside Docker so Docker can publish the
+port. The host publish address remains `127.0.0.1`, and Volicord still requires
+`--allow-nonlocal-listen` plus bearer authentication. Do not store
+`VOLICORD_HTTP_TOKEN` in repository files.
+
 ## What Setup Does Not Do
 
 Setup does not register a Product Repository and does not install host

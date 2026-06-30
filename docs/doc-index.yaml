@@ -224,8 +224,8 @@ shared_documents:
   normative_level: maintenance
   owner_area: documentation_maintenance
   created_on: '2026-06-07'
-  last_updated_on: '2026-06-30'
-  last_verified_on: '2026-06-30'
+  last_updated_on: '2026-07-01'
+  last_verified_on: '2026-07-01'
   applies_to:
   - volicord_workspace_0_1
   - doc_index_schema_v3
@@ -359,8 +359,8 @@ documents:
   translation_policy: semantic_parity
   owner_area: onboarding
   created_on: '2026-06-20'
-  last_updated_on: '2026-06-30'
-  last_verified_on: '2026-06-30'
+  last_updated_on: '2026-07-01'
+  last_verified_on: '2026-07-01'
   applies_to:
   - volicord_workspace_0_1
   - rust_workspace_1_85
@@ -1091,8 +1091,8 @@ documents:
   translation_policy: semantic_parity
   owner_area: agent_connection
   created_on: '2026-06-19'
-  last_updated_on: '2026-06-30'
-  last_verified_on: '2026-06-30'
+  last_updated_on: '2026-07-01'
+  last_verified_on: '2026-07-01'
   applies_to:
   - volicord_workspace_0_1
   - mcp_protocol_2025_11_25
@@ -1113,6 +1113,7 @@ documents:
   - administrative Agent Connection and User Channel registration command behavior
   - agent connection connect, connections, status, verify, mode, and remove commands
   - local `volicord guard` lifecycle hook command behavior
+  - local `volicord serve` command-line startup and safety-gate behavior
   - Codex and Claude Code host setup intent support, plus generic MCP config export
   - managed host configuration state setup result states and verification reporting
   - administrative dry-run, machine output, and noninteractive approval behavior
@@ -1130,13 +1131,13 @@ documents:
   path_en: docs/en/reference/mcp-transport.md
   path_ko: docs/ko/reference/mcp-transport.md
   kind: reference
-  summary: Reference contract for MCP transport startup, framing, and response wrapping.
+  summary: Reference contract for MCP transport startup, framing, HTTP serve handling, and response wrapping.
   normative_level: contract
   translation_policy: semantic_parity
   owner_area: agent_connection
   created_on: '2026-06-19'
-  last_updated_on: '2026-06-30'
-  last_verified_on: '2026-06-30'
+  last_updated_on: '2026-07-01'
+  last_verified_on: '2026-07-01'
   applies_to:
   - volicord_workspace_0_1
   - mcp_protocol_2025_11_25
@@ -1149,7 +1150,9 @@ documents:
   - implement
   canonical_for:
   - local `volicord mcp --stdio` process command contract
+  - experimental local `volicord serve --transport streamable-http` process command contract
   - MCP stdio process startup and exit behavior
+  - MCP local HTTP serve startup and transport-bound security checks
   - MCP process environment variables and integration-bound startup
   - MCP startup validation and integration process binding
   - MCP Runtime Home environment resolution
