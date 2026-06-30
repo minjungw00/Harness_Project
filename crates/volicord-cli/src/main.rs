@@ -15,6 +15,7 @@ use volicord_cli::{
     },
     doctor_command::{doctor_usage, run_doctor_command, DoctorCommandError},
     export_command::{export_usage, run_export_command, ExportCommandError},
+    guard_command::{guard_usage, run_guard_command, GuardCommandError},
     project_context::{project_usage, run_project_command, ProjectCommandError},
     setup_command::{
         run_setup_command, run_setup_command_interactive, setup_usage, ClosureSetupProcess,
@@ -99,6 +100,12 @@ where
         "doctor" => command_outcome(run_doctor_command(&args[2..], &env_var, current_dir)?),
         "export" => run_export_command(&args[2..], &env_var, current_dir).map_err(CliError::from),
         "mcp" => command_mcp(&args[2..], env_var, current_dir),
+        "guard" => {
+            if !guard_help_requested(&args[2..]) {
+                require_setup_completed(&env_var, current_dir)?;
+            }
+            guard_command_outcome(run_guard_command(&args[2..], env_var, current_dir)?)
+        }
         "connect" => {
             if !simple_help_requested(&args[2..]) {
                 require_setup_completed(&env_var, current_dir)?;
@@ -188,8 +195,28 @@ fn connection_help_requested(args: &[String]) -> bool {
     }
 }
 
+fn guard_help_requested(args: &[String]) -> bool {
+    matches!(
+        args.first().map(String::as_str),
+        None | Some("-h" | "--help" | "help")
+    ) || matches!(
+        args.get(1).map(String::as_str),
+        Some("-h" | "--help" | "help")
+    )
+}
+
 fn command_outcome(outcome: CommandOutcome) -> Result<String, CliError> {
     if outcome.status.exits_failure() {
+        Err(CliError::FailureOutput(outcome.output))
+    } else {
+        Ok(outcome.output)
+    }
+}
+
+fn guard_command_outcome(
+    outcome: volicord_cli::guard_command::GuardCommandOutcome,
+) -> Result<String, CliError> {
+    if outcome.exits_failure {
         Err(CliError::FailureOutput(outcome.output))
     } else {
         Ok(outcome.output)
@@ -364,11 +391,12 @@ fn display_path(path: &Path) -> String {
 
 fn usage() -> String {
     format!(
-        "Usage:\n  volicord --help\n  volicord --version\n{}{}{}{}{}{}{}{}{}\nEnvironment:\n  VOLICORD_HOME  Override Runtime Home path (default: $HOME/.volicord)\n\nAgent Connection commands manage local MCP host connections. User Channel commands record local user judgments.\nThese are local administrative commands, not public Volicord API methods.\n",
+        "Usage:\n  volicord --help\n  volicord --version\n{}{}{}{}{}{}{}{}{}{}\nEnvironment:\n  VOLICORD_HOME  Override Runtime Home path (default: $HOME/.volicord)\n\nAgent Connection commands manage local MCP host connections. User Channel commands record local user judgments.\nThese are local administrative commands, not public Volicord API methods.\n",
         indent_usage_block(&setup_usage()),
         indent_usage_block(&doctor_usage()),
         indent_usage_block(&export_usage()),
         indent_usage_block(&mcp_usage()),
+        indent_usage_block(&guard_usage()),
         indent_usage_block(&connect_usage()),
         indent_usage_block(&connections_usage()),
         indent_usage_block(&connection_usage()),
@@ -488,6 +516,15 @@ impl From<ExportCommandError> for CliError {
         match error {
             ExportCommandError::Usage(message) => Self::Usage(message),
             ExportCommandError::Runtime(message) => Self::Runtime(message),
+        }
+    }
+}
+
+impl From<GuardCommandError> for CliError {
+    fn from(error: GuardCommandError) -> Self {
+        match error {
+            GuardCommandError::Usage(message) => Self::Usage(message),
+            GuardCommandError::Runtime(message) => Self::Runtime(message),
         }
     }
 }

@@ -3,8 +3,9 @@
 이 문서는 로컬 `volicord` 관리/부트스트랩 CLI 계약을 담당합니다. CLI는
 `Volicord Runtime Home`을 마련하고, 저장소 루트에서 프로젝트를 등록하며, 사용자가
 내부 식별 정보를 다루지 않아도 되도록 Agent Connection을 관리하고, 로컬
-`User Channel` 명령 경로를 제공하며, generic MCP 설정을 내보내고, 설정 또는 연결
-진단을 보고합니다. 이 명령들은 공개 Volicord API 메서드가 아닙니다.
+`User Channel` 명령 경로를 제공하며, generic MCP 설정을 내보내고, 로컬 guard hook
+명령을 제공하며, 설정 또는 연결 진단을 보고합니다. 이 명령들은 공개 Volicord API
+메서드가 아닙니다.
 
 이 문서는 공개 API 메서드 동작, API 스키마, 저장소 기록 배치, 보안 보장, Core
 권한 의미, MCP stdio 전송 동작을 정의하지 않습니다.
@@ -18,6 +19,7 @@
 - 저장소 루트 프로젝트 감지와 관리 프로젝트 명령
 - 지원 호스트 통합을 위한 Agent Connection 명령 동작
 - generic MCP 설정 내보내기 동작
+- 로컬 `volicord guard` lifecycle 명령 이름, 옵션, decision, 출력, 이벤트 기록 동작
 - 로컬 `User Channel` 명령 이름과 명령 출력
 - 진단 상태, 필요한 사용자 동작, dry-run 동작, JSON 출력, 비대화식 동작
 - 관리 명령, 로컬 `User Channel` 명령, 공개 Volicord API 메서드 사이의 경계
@@ -31,6 +33,7 @@
   [런타임 경계](runtime-boundaries.md)
 - MCP 프로세스 시작, stdio 프레이밍, 와이어 동작, 응답 래핑, 종료:
   [MCP 전송](mcp-transport.md)
+- 외부 호스트 hook 프로토콜 스키마와 호스트별 응답 의미
 - 저장소 기록 배치, SQLite DDL, 일반 저장소 마이그레이션 정의, Core 권한 의미,
   보안 보장 의미
 
@@ -60,6 +63,11 @@ volicord project list [--json]
 volicord project rename NAME [--repo PATH] [--json]
 volicord project forget [PATH|NAME] [--json]
 volicord export mcp-config [--output PATH] [--repo PATH] [--read-only] [--json]
+volicord guard session-start [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--text]
+volicord guard pre-tool [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--text]
+volicord guard post-tool [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--text]
+volicord guard prompt-capture [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--text]
+volicord guard stop [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--text]
 volicord user status [--repo PATH] [--task active|ID] [--json]
 volicord user judgments [--repo PATH] [--task active|ID] [--json]
 volicord user judgment show INDEX_OR_ID [--repo PATH] [--json]
@@ -81,6 +89,8 @@ volicord user judgment answer INDEX_OR_ID OPTION_INDEX_OR_ID [--repo PATH] [--no
 - `volicord --version`은 stdout에 `volicord <version>`을 쓰며 Runtime Home 해석을
   요구하지 않습니다.
 - `--json`은 stdout에 JSON 문서 정확히 하나를 쓰며 사람용 설명을 섞지 않습니다.
+- `volicord guard`는 기본적으로 JSON을 씁니다. `deny` decision은 종료 코드 `1`로
+  끝나며, `allow`, `warn`, `inject_context`는 종료 코드 `0`으로 끝납니다.
 - 오류는 CLI 종료 코드 모델에 따라 stderr 진단으로 남습니다.
 
 지원하지 않는 것:
@@ -88,6 +98,8 @@ volicord user judgment answer INDEX_OR_ID OPTION_INDEX_OR_ID [--repo PATH] [--no
 - CLI에는 `serve`, `server`, daemon 명령이 없습니다.
 - 관리 명령은 공개 Volicord API 메서드가 아니며 공개 메서드 목록에 추가되면
   안 됩니다.
+- Guard 명령은 협력적이고 탐지적인 hook 명령이며 OS 수준 sandboxing이나 보안 집행
+  증명이 아닙니다.
 - 텍스트 모드 사용자 흐름은 `project_internal_id`, `connection_internal_id`,
   호스트 설정 키, 프로토콜 래퍼, 저장된 registry 필드를 사용자가 입력하도록 요구하면
   안 됩니다.
@@ -304,6 +316,55 @@ JSON 출력은 진단 소비자를 위해 최상위 `status`, `checks`, `actions
   `volicord.mcp.json`입니다.
 - 내보낸 설정은 export 뒤에도 사용자 관리 설정으로 남습니다. Volicord는 임의 외부
   호스트가 이를 로드, 신뢰, 승인, 초기화, 노출했다고 주장하면 안 됩니다.
+
+## Guard hook 명령
+
+`volicord guard` 명령은 agent lifecycle event 때 명령을 실행할 수 있는 호스트를
+위한 로컬 hook 진입점입니다. 이 명령은 등록된 프로젝트 상태를 검사하고
+guarded-operation 이벤트를 기록하며 기계 판독 가능한 로컬 decision을 반환합니다.
+Core 메서드, 사용자 소유 판단, `Write Check`, 닫기 준비 상태 점검, 호스트 신뢰,
+셸 승인, OS 수준 sandboxing을 대체하지 않습니다.
+
+각 guard 명령은 기본적으로 stdin에서 JSON hook event 하나를 읽습니다. `--file PATH`는
+테스트나 이벤트를 파일에 준비하는 호스트 통합을 위해 그 파일에서 JSON event를
+읽습니다. 기본 출력은 JSON이며 `decision`, `allowed`, `guard_event_id`, 선택적
+`session_id`, 명령별 `result`를 포함합니다. `--text`는 사람이 읽기 쉬운 짧은 한 줄
+출력을 선택합니다. 지원되는 decision은 `allow`, `deny`, `warn`, `inject_context`입니다.
+
+프로젝트 선택은 `--repo PATH`, event에 있는 프로젝트나 저장소 필드, 또는 현재 작업
+디렉터리를 사용합니다. Hook event에 `connection_id`가 없으면 `--connection ID`로
+Agent Connection 식별 정보를 제공합니다. `--session ID`, `--guard-installation ID`,
+`--host HOST`, `--guard-mode MODE`로 기록되는 세션, 설치, 호스트 종류, guard 모드를
+고정할 수 있습니다. 호스트 종류는 `codex`, `claude_code`, `generic` 같은 저장소 값을
+사용합니다. Guard 모드는 `mcp_only`, `guarded`, `managed`입니다.
+
+입력 event 계약은 호스트 중립입니다. Guard 파서는 호스트 종류, 세션, 도구 이름,
+명령, prompt, 결과, 변경 경로의 일반적인 필드 위치를 관대하게 읽고, 알 수 없는
+필드는 저장되는 guard event의 redacted subject에 보존합니다. Prompt 형태 필드는
+기본적으로 hash하거나 생략합니다. Prompt capture 기록은 이후 담당 문서가 별도
+정책을 정의하기 전까지 prompt hash를 저장하고 prompt text는 생략합니다.
+
+Lifecycle 동작:
+
+- `session-start`는 Agent Session을 기록하거나 재사용하고, 호스트 세션 주입용으로
+  간결한 프로젝트, active task, `Write Check`, 대기 판단, blocker, 미해결 변경
+  맥락과 함께 `inject_context`를 반환합니다.
+- `pre-tool`은 읽기 전용, 명확한 변경, 불확실한 도구 시도를 분류합니다. 읽기와 상태
+  명령은 blocker를 만들지 않고 허용됩니다. 제품 파일 쓰기 시도는 active task가
+  없거나, 현재 active `Write Check`가 없거나, 시도 대상이 선택된 `Product Repository`
+  밖에 있거나, policy가 명확한 변경 shell 명령을 차단할 때 `deny` 또는 `warn`을
+  반환할 수 있습니다. 불확실한 shell 명령은 guard policy가 `deny`를 요구하지 않으면
+  기본적으로 `warn`입니다.
+- `post-tool`은 관찰된 도구 결과를 기록합니다. Event가 변경된 `Product Repository`
+  경로를 제공하고 도구가 대응되는 `volicord.record_run`이 아니면 미해결 unrecorded-change
+  행을 기록하고 `warn`을 반환합니다. 변경을 찾기 위해 신뢰할 수 없는 명령을 실행하지
+  않습니다.
+- `prompt-capture`는 이후 chat judgment capture에 필요한 prompt-capture 메타데이터를
+  기록합니다. 기준 동작은 판단 명령을 아무것도 인식하지 않을 수 있지만 그래도 guard
+  event와 prompt hash를 기록합니다.
+- `stop`은 active task를 완료로 다뤄도 되는지 점검합니다. 닫기 준비 상태 blocker가
+  남아 있거나, 사용자 소유 판단이 대기 중이거나, 미해결 unrecorded change가 남아
+  있으면 `deny`를 반환하고, 그렇지 않으면 `allow`를 반환합니다.
 
 ## User Channel 명령
 

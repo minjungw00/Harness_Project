@@ -2345,6 +2345,7 @@ fn validate_volicord_command(tokens: &[String]) -> std::result::Result<(), Strin
         "setup" => validate_setup_command(&args[1..]),
         "doctor" => validate_doctor_command(&args[1..]),
         "mcp" => validate_mcp_command(&args[1..]),
+        "guard" => validate_guard_command(&args[1..]),
         "connect" => validate_connect_command(&args[1..]),
         "connections" => validate_connections_command(&args[1..]),
         "connection" => validate_connection_command(&args[1..]),
@@ -2446,6 +2447,41 @@ fn validate_mcp_command(args: &[String]) -> std::result::Result<(), String> {
         return Err("`volicord mcp --project` requires --check".to_string());
     }
     Ok(())
+}
+
+fn validate_guard_command(args: &[String]) -> std::result::Result<(), String> {
+    if is_help_only(args) {
+        return Ok(());
+    }
+    let Some(subcommand) = args.first().map(String::as_str) else {
+        return Err("`volicord guard` requires a lifecycle subcommand".to_string());
+    };
+    if matches!(subcommand, "-h" | "--help" | "help") {
+        return validate_no_more_args(args, "`volicord guard` help");
+    }
+    if !matches!(
+        subcommand,
+        "session-start" | "pre-tool" | "post-tool" | "prompt-capture" | "stop"
+    ) {
+        return Err(format!(
+            "unknown `volicord guard` subcommand `{subcommand}`; use session-start, pre-tool, post-tool, prompt-capture, or stop"
+        ));
+    }
+    let parsed = parse_command_args(
+        &args[1..],
+        &["json", "text"],
+        &[
+            "file",
+            "repo",
+            "connection",
+            "session",
+            "guard-installation",
+            "host",
+            "guard-mode",
+        ],
+    )?;
+    reject_mutually_exclusive(&parsed, "json", "text")?;
+    reject_positionals(&parsed, 0, &format!("`volicord guard {subcommand}`"))
 }
 
 fn validate_connect_command(args: &[String]) -> std::result::Result<(), String> {

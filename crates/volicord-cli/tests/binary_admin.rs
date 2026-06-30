@@ -41,6 +41,7 @@ fn binary_help_uses_agent_connection_model() -> Result<(), Box<dyn Error>> {
     assert!(text.contains("volicord setup"));
     assert!(text.contains("volicord doctor"));
     assert!(text.contains("volicord export mcp-config"));
+    assert!(text.contains("volicord guard session-start"));
     assert!(text.contains("volicord connect [HOST]"));
     assert!(text.contains("volicord connections [--repo PATH]"));
     assert!(text.contains("volicord connection status [HOST]"));
@@ -104,11 +105,31 @@ fn binary_help_options_match_supported_contracts() -> Result<(), Box<dyn Error>>
             "--check",
             "--connection",
             "--project",
+            "--file",
+            "--connection",
+            "--session",
+            "--guard-installation",
+            "--host",
+            "--guard-mode",
+            "--text",
         ],
     )?;
     assert_help_options(
         ["mcp", "--help"],
         &["--stdio", "--check", "--connection", "--project"],
+    )?;
+    assert_help_options(
+        ["guard", "--help"],
+        &[
+            "--file",
+            "--repo",
+            "--connection",
+            "--session",
+            "--guard-installation",
+            "--host",
+            "--guard-mode",
+            "--text",
+        ],
     )?;
     assert_help_options(["setup", "--help"], SETUP_HELP_OPTIONS)?;
     assert_help_options(["doctor", "--help"], &["--json"])?;

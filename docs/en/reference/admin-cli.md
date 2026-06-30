@@ -4,7 +4,8 @@ This document owns the local `volicord` administrative and bootstrap CLI
 contract. The CLI establishes the `Volicord Runtime Home`, registers projects
 from repository roots, manages Agent Connections without requiring users to
 handle internal identities, provides the local `User Channel` command path,
-exports generic MCP configuration, and reports setup or connection diagnostics.
+exports generic MCP configuration, provides local guard hook commands, and
+reports setup or connection diagnostics.
 These commands are not public Volicord API methods.
 
 It does not define public API method behavior, API schemas, storage record
@@ -22,6 +23,8 @@ This document owns:
 - repository-root project detection and administrative project commands
 - Agent Connection command behavior for supported host integrations
 - generic MCP config export behavior
+- local `volicord guard` lifecycle command names, options, decisions, output,
+  and event-recording behavior
 - local `User Channel` command names and command output
 - diagnostic status, required user actions, dry-run behavior, JSON output, and
   noninteractive behavior
@@ -37,6 +40,7 @@ This document does not own:
   exceptions; see [Runtime Boundaries](runtime-boundaries.md)
 - MCP process startup, stdio framing, wire behavior, response wrapping, and
   shutdown; see [MCP Transport](mcp-transport.md)
+- external host hook protocol schemas and host-specific response semantics
 - storage record layout, SQLite DDL, general storage migration definitions,
   Core authority semantics, and security guarantee meanings
 
@@ -66,6 +70,11 @@ volicord project list [--json]
 volicord project rename NAME [--repo PATH] [--json]
 volicord project forget [PATH|NAME] [--json]
 volicord export mcp-config [--output PATH] [--repo PATH] [--read-only] [--json]
+volicord guard session-start [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--text]
+volicord guard pre-tool [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--text]
+volicord guard post-tool [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--text]
+volicord guard prompt-capture [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--text]
+volicord guard stop [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--text]
 volicord user status [--repo PATH] [--task active|ID] [--json]
 volicord user judgments [--repo PATH] [--task active|ID] [--json]
 volicord user judgment show INDEX_OR_ID [--repo PATH] [--json]
@@ -88,6 +97,8 @@ Exit and stream behavior:
   require Runtime Home resolution.
 - `--json` writes exactly one JSON document to stdout and does not mix human
   explanation into stdout.
+- `volicord guard` writes JSON by default. Its `deny` decision exits `1`;
+  `allow`, `warn`, and `inject_context` exit `0`.
 - Errors remain stderr diagnostics under the CLI exit-code model.
 
 Not supported:
@@ -95,6 +106,8 @@ Not supported:
 - The CLI has no `serve`, `server`, or daemon command.
 - Administrative commands are not public Volicord API methods and must not be
   added to the public method list.
+- Guard commands are cooperative and detective hook commands, not OS-level
+  sandboxing or a security-enforcement proof.
 - Text-mode user flows must not require users to type `project_internal_id`,
   `connection_internal_id`, host config keys, protocol envelopes, or stored
   registry fields.
@@ -327,6 +340,60 @@ Rules:
 - Exported configuration remains user-managed after export. Volicord must not
   claim that an arbitrary external host loaded, trusted, approved, initialized,
   or exposed it.
+
+## Guard hook commands
+
+`volicord guard` commands are local hook entry points for hosts that can run a
+command during agent lifecycle events. They inspect registered project state,
+record guarded-operation events, and return a machine-readable local decision.
+They do not replace Core methods, user-owned judgments, `Write Check`,
+close-readiness checks, host trust, shell approval, or OS-level sandboxing.
+
+Each guard command reads one JSON hook event from stdin by default. `--file PATH`
+reads that JSON event from a file for tests or host integrations that stage
+events. JSON output is the default and includes `decision`, `allowed`,
+`guard_event_id`, optional `session_id`, and a command-specific `result`.
+`--text` selects a concise human-readable line. Supported decisions are
+`allow`, `deny`, `warn`, and `inject_context`.
+
+Project selection uses `--repo PATH`, an event project or repository field when
+present, or the current working directory. `--connection ID` supplies the
+Agent Connection identity when the hook event does not contain `connection_id`.
+`--session ID`, `--guard-installation ID`, `--host HOST`, and
+`--guard-mode MODE` can pin the recorded session, installation, host kind, and
+guard mode. Host kinds use storage values such as `codex`, `claude_code`, or
+`generic`. Guard modes are `mcp_only`, `guarded`, or `managed`.
+
+The input event contract is host-neutral. Guard parsing is tolerant of common
+field placements for host kind, session, tool name, command, prompt, result,
+and changed paths, and preserves unknown fields in the stored guard event's
+redacted subject. Prompt-like fields are hashed or omitted by default; prompt
+capture records store the prompt hash and omit prompt text unless a future
+owner-defined policy says otherwise.
+
+Lifecycle behavior:
+
+- `session-start` records or reuses the Agent Session and returns
+  `inject_context` with concise project, active task, Write Check, pending
+  judgment, blocker, and unresolved-change context for host-session injection.
+- `pre-tool` classifies read-only, clearly mutating, and uncertain tool
+  attempts. Read and status commands are allowed without creating blockers. A
+  product-file write attempt may return `deny` or `warn` when there is no active
+  task, no current active `Write Check`, an attempted target is outside the
+  selected Product Repository, or policy blocks a clearly mutating shell
+  command. Uncertain shell commands default to `warn` unless guard policy asks
+  for `deny`.
+- `post-tool` records the observed tool outcome. When the event supplies
+  changed Product Repository paths and the tool was not a matching
+  `volicord.record_run`, it records an unresolved unrecorded-change row and
+  returns `warn`. It does not execute untrusted commands to discover changes.
+- `prompt-capture` records prompt-capture metadata needed for future chat
+  judgment capture. Baseline behavior may recognize no judgment command and
+  still records the guard event and prompt hash.
+- `stop` checks whether the active task can safely be treated as complete. It
+  returns `deny` when close-readiness blockers remain, user-owned judgments are
+  pending, or unresolved unrecorded changes remain; otherwise it returns
+  `allow`.
 
 ## User Channel commands
 
