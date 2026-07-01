@@ -468,15 +468,19 @@ fn init_codex_guarded_without_degraded_opt_in_generates_hooks() -> Result<(), Bo
     let hooks = fs::read_to_string(repo_root.join(".codex/hooks.json"))?;
     assert!(!hooks.contains("\"command\": \".codex/hooks/"));
     assert!(hooks.contains("git rev-parse --show-toplevel"));
-    assert!(hooks.contains(".codex/hooks/volicord-session-start.sh"));
-    assert!(hooks.contains(".codex/hooks/volicord-pre-tool.sh"));
-    assert!(hooks.contains(".codex/hooks/volicord-post-tool.sh"));
-    assert!(hooks.contains(".codex/hooks/volicord-prompt-capture.sh"));
-    assert!(hooks.contains(".codex/hooks/volicord-stop.sh"));
+    assert!(hooks.contains(".codex/hooks/volicord-dispatch.sh"));
+    assert!(hooks.contains("session-start"));
+    assert!(hooks.contains("pre-tool"));
+    assert!(hooks.contains("post-tool"));
+    assert!(hooks.contains("prompt-capture"));
+    assert!(hooks.contains("stop"));
     assert!(!hooks.contains("volicord guard "));
     assert!(hooks.contains(
         "Bash|apply_patch|Edit|Write|mcp__.*__(write|edit|create|update|delete|remove|move|patch).*"
     ));
+    let dispatch = repo_root.join(".codex/hooks/volicord-dispatch.sh");
+    assert!(fs::read_to_string(&dispatch)?.contains("phase=dispatch"));
+    assert!(is_executable(&dispatch)?);
     let wrapper = repo_root.join(".codex/hooks/volicord-pre-tool.sh");
     let wrapper_text = fs::read_to_string(&wrapper)?;
     assert!(wrapper_text.contains("exec volicord guard pre-tool"));
@@ -717,6 +721,15 @@ fn init_dry_run_does_not_write_runtime_or_repo_files() -> Result<(), Box<dyn Err
             .as_array()
             .expect("generated files should be an array")
             .iter()
+            .filter(|file| file["kind"] == "host_hook_dispatch")
+            .count(),
+        1
+    );
+    assert_eq!(
+        value["generated_files"]
+            .as_array()
+            .expect("generated files should be an array")
+            .iter()
             .filter(|file| file["kind"] == "host_hook_wrapper")
             .count(),
         5
@@ -729,6 +742,7 @@ fn init_dry_run_does_not_write_runtime_or_repo_files() -> Result<(), Box<dyn Err
     assert!(!runtime_home.registry_db_path().exists());
     assert!(!repo_root.join(".codex/config.toml").exists());
     assert!(!repo_root.join(".codex/hooks.json").exists());
+    assert!(!repo_root.join(".codex/hooks/volicord-dispatch.sh").exists());
     assert!(!repo_root.join(".codex/hooks/volicord-pre-tool.sh").exists());
     assert!(!repo_root.join(".codex/rules/volicord.rules").exists());
     assert!(!repo_root.join("AGENTS.md").exists());
@@ -968,11 +982,12 @@ fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Resul
     assert!(hooks.contains("Stop"));
     assert!(!hooks.contains("\"command\": \".codex/hooks/"));
     assert!(hooks.contains("git rev-parse --show-toplevel"));
-    assert!(hooks.contains(".codex/hooks/volicord-session-start.sh"));
-    assert!(hooks.contains(".codex/hooks/volicord-pre-tool.sh"));
-    assert!(hooks.contains(".codex/hooks/volicord-post-tool.sh"));
-    assert!(hooks.contains(".codex/hooks/volicord-prompt-capture.sh"));
-    assert!(hooks.contains(".codex/hooks/volicord-stop.sh"));
+    assert!(hooks.contains(".codex/hooks/volicord-dispatch.sh"));
+    assert!(hooks.contains("session-start"));
+    assert!(hooks.contains("pre-tool"));
+    assert!(hooks.contains("post-tool"));
+    assert!(hooks.contains("prompt-capture"));
+    assert!(hooks.contains("stop"));
     assert!(!hooks.contains("volicord guard "));
     assert!(hooks.contains(
         "Bash|apply_patch|Edit|Write|mcp__.*__(write|edit|create|update|delete|remove|move|patch).*"
@@ -981,8 +996,9 @@ fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Resul
     assert!(rules.contains("# BEGIN VOLICORD MANAGED CODEX RULES v1"));
     assert!(rules.contains("prefix_rule("));
     assert!(rules.contains("git rev-parse --show-toplevel"));
-    assert!(rules.contains(".codex/hooks/volicord-session-start.sh"));
-    assert!(rules.contains(".codex/hooks/volicord-stop.sh"));
+    assert!(rules.contains(".codex/hooks/volicord-dispatch.sh"));
+    assert!(rules.contains("session-start"));
+    assert!(rules.contains("stop"));
 
     let agents = fs::read_to_string(repo_root.join("AGENTS.md"))?;
     assert_eq!(count_occurrences(&agents, START_MARKER), 1);
@@ -1068,6 +1084,13 @@ fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Resul
         .expect("capability guard args should be an array")
         .windows(2)
         .any(|pair| pair[0] == "--host-output" && pair[1] == "codex"));
+    let dispatch_path = repo_root.join(".codex/hooks/volicord-dispatch.sh");
+    let dispatch = fs::read_to_string(&dispatch_path)?;
+    assert!(dispatch.contains("phase=dispatch"));
+    assert!(dispatch.contains("git rev-parse --show-toplevel"));
+    assert!(dispatch.contains(".codex/hooks/volicord-$phase.sh"));
+    assert!(dispatch.contains("exec \"$wrapper\""));
+    assert!(is_executable(&dispatch_path)?);
     let wrapper_path = repo_root.join(".codex/hooks/volicord-pre-tool.sh");
     let wrapper = fs::read_to_string(&wrapper_path)?;
     assert!(wrapper.contains("exec volicord guard pre-tool"));
@@ -1083,6 +1106,13 @@ fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Resul
     ));
     assert!(wrapper.contains("--host-output codex"));
     assert!(is_executable(&wrapper_path)?);
+    assert!(capability["files"]
+        .as_array()
+        .expect("capability files should be an array")
+        .iter()
+        .any(|file| file["kind"] == "host_hook_dispatch"
+            && file["path"] == path_text(&dispatch_path)
+            && file["executable_required"] == true));
     assert!(capability["files"]
         .as_array()
         .expect("capability files should be an array")

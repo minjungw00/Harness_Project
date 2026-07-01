@@ -60,6 +60,10 @@ mod unix {
         assert_file_contains(&fixture.repo_root.join(".codex/hooks.json"), "PreToolUse")?;
         assert!(fixture
             .repo_root
+            .join(".codex/hooks/volicord-dispatch.sh")
+            .exists());
+        assert!(fixture
+            .repo_root
             .join(".codex/hooks/volicord-pre-tool.sh")
             .exists());
         assert!(fixture

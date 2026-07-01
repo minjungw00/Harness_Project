@@ -986,18 +986,26 @@ fn validate_codex_volicord_hook_command(
     command: &str,
 ) -> Result<(), HostContractValidationError> {
     let wrapper = format!(".codex/hooks/volicord-{}.sh", phase.command_name());
-    if command == wrapper {
+    let dispatch = ".codex/hooks/volicord-dispatch.sh";
+    if command == wrapper || command == dispatch {
         return Err(HostContractValidationError::new(format!(
             "{} hook command must not use a bare relative Volicord wrapper path",
             phase.capability_name()
         )));
     }
-    if !command.contains(&wrapper) && !command.contains("volicord guard") {
+    let uses_phase_wrapper = command.contains(&wrapper);
+    let mentions_dispatch = command.contains(dispatch);
+    let uses_dispatch = mentions_dispatch && command.contains(phase.command_name());
+    if !uses_phase_wrapper
+        && !mentions_dispatch
+        && !uses_dispatch
+        && !command.contains("volicord guard")
+    {
         return Ok(());
     }
     if command.starts_with("sh -c ")
         && command.contains("git rev-parse --show-toplevel")
-        && command.contains(&wrapper)
+        && (uses_phase_wrapper || uses_dispatch)
     {
         Ok(())
     } else {
@@ -1361,6 +1369,18 @@ mod tests {
         )
         .expect_err("Codex bare wrapper command should not validate");
         assert!(error.message().contains("bare relative"));
+
+        let mut dispatch_without_phase: Value =
+            serde_json::from_str(CODEX_HOOKS).expect("fixture should be JSON");
+        dispatch_without_phase["hooks"]["PreToolUse"][0]["hooks"][0]["command"] =
+            Value::String("sh -c 'root=$(git rev-parse --show-toplevel) || exit $?; exec \"$root/.codex/hooks/volicord-dispatch.sh\"'".to_owned());
+        let error = validate_contract_config(
+            HostKind::Codex,
+            HostContractConfigKind::HookConfig,
+            &dispatch_without_phase.to_string(),
+        )
+        .expect_err("Codex dispatch command without phase should not validate");
+        assert!(error.message().contains("Git work-tree root"));
 
         let mut bare_claude: Value =
             serde_json::from_str(CLAUDE_HOOKS).expect("fixture should be JSON");

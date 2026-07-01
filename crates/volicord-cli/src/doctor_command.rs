@@ -876,6 +876,10 @@ fn doctor_generated_config_verified(findings: &DoctorGuardFileFindings) -> bool 
             .is_some_and(|state| state == "installed")
         && findings
             .file_states
+            .get("host_hook_dispatch")
+            .is_none_or(|state| state == "installed")
+        && findings
+            .file_states
             .get("host_hook_wrapper")
             .is_some_and(|state| state == "installed")
 }
@@ -957,6 +961,10 @@ fn doctor_verify_managed_script(
         findings.set_file_state(kind, "broken");
         return;
     }
+    if kind == "host_hook_dispatch" {
+        doctor_verify_managed_dispatch_script(file, kind, path_text, text, expected_hash, findings);
+        return;
+    }
     let Some(expected_command) = file
         .get("managed_script_command")
         .and_then(Value::as_str)
@@ -987,6 +995,52 @@ fn doctor_verify_managed_script(
         if hook_wrapper_comment_value(text, key) != Some(expected) {
             findings.stale_files.push(path_text.to_owned());
             state = "stale";
+        }
+    }
+    if sha256_text(text) != expected_hash {
+        findings.stale_files.push(path_text.to_owned());
+        state = "stale";
+    }
+    if file
+        .get("executable_required")
+        .and_then(Value::as_bool)
+        .unwrap_or(false)
+        && !script_is_executable(Path::new(path_text))
+    {
+        findings.stale_files.push(path_text.to_owned());
+        state = "stale";
+    }
+    findings.set_file_state(kind, state);
+}
+
+fn doctor_verify_managed_dispatch_script(
+    file: &Value,
+    kind: &str,
+    path_text: &str,
+    text: &str,
+    expected_hash: &str,
+    findings: &mut DoctorGuardFileFindings,
+) {
+    let mut state = "installed";
+    if file.get("managed_script_role").and_then(Value::as_str) != Some("codex_dispatch")
+        || hook_wrapper_comment_value(text, "host_kind") != Some("codex")
+        || hook_wrapper_comment_value(text, "phase") != Some("dispatch")
+        || hook_wrapper_comment_value(text, "script_role") != Some("codex_dispatch")
+    {
+        findings.broken_files.push(path_text.to_owned());
+        findings.set_file_state(kind, "broken");
+        return;
+    }
+    for required in [
+        "git rev-parse --show-toplevel",
+        "session-start|pre-tool|post-tool|prompt-capture|stop",
+        ".codex/hooks/volicord-$phase.sh",
+        "exec \"$wrapper\"",
+    ] {
+        if !text.contains(required) {
+            findings.broken_files.push(path_text.to_owned());
+            findings.set_file_state(kind, "broken");
+            return;
         }
     }
     if sha256_text(text) != expected_hash {

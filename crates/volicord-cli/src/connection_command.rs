@@ -78,6 +78,7 @@ const GUIDANCE_END_MARKER: &str = "<!-- END VOLICORD MANAGED GUIDANCE v1 -->";
 const CODEX_RULE_START_MARKER: &str = "# BEGIN VOLICORD MANAGED CODEX RULES v1";
 const CODEX_RULE_END_MARKER: &str = "# END VOLICORD MANAGED CODEX RULES v1";
 const HOOK_WRAPPER_MARKER: &str = "VOLICORD_MANAGED_HOOK_WRAPPER v1";
+const CODEX_DISPATCH_WRAPPER: &str = ".codex/hooks/volicord-dispatch.sh";
 
 const WORKFLOW_TOOL_NAMES: [&str; 10] = [
     "volicord.intake",
@@ -3032,6 +3033,7 @@ fn plan_guard_integration(
     let policy_path = repo_root.join(VOLICORD_POLICY_FILE);
     generated_files.push(plan_policy_file(&policy_path, &policy)?);
     if host_kind == HostKind::Codex && init_mode != InitMode::McpOnly {
+        generated_files.push(plan_codex_dispatch_wrapper_file(repo_root)?);
         generated_files.extend(plan_hook_wrapper_files(
             repo_root,
             host_kind,
@@ -3180,7 +3182,9 @@ fn apply_guard_integration(
             GeneratedFileWriteKind::JsonProjection { projection } => {
                 write_managed_json_projection_file(&file.path, &file.policy_value()?, projection)?
             }
-            GeneratedFileWriteKind::Script => write_managed_script_file(&file.path, &file.content)?,
+            GeneratedFileWriteKind::Script => {
+                write_managed_script_file(&file.path, &file.content, file.kind)?
+            }
         };
     }
     Ok(plan)
@@ -3368,6 +3372,18 @@ fn hook_wrapper_relative_path(
     Ok(base.join(format!("volicord-{}.sh", phase.command_name())))
 }
 
+fn codex_dispatch_wrapper_relative_path() -> PathBuf {
+    PathBuf::from(CODEX_DISPATCH_WRAPPER)
+}
+
+fn plan_codex_dispatch_wrapper_file(
+    repo_root: &Path,
+) -> Result<GeneratedFilePlan, ConnectionCommandError> {
+    let path = repo_root.join(codex_dispatch_wrapper_relative_path());
+    let content = codex_dispatch_wrapper_script_content();
+    plan_managed_script_file(&path, &content, HostIntegrationFileKind::HostHookDispatch)
+}
+
 fn host_hook_command_specs(
     host_kind: HostKind,
     repo_root: &Path,
@@ -3393,12 +3409,15 @@ fn host_hook_command_spec(
     phase: HostLifecyclePhase,
 ) -> Result<HostHookCommand, ConnectionCommandError> {
     let relative_path = hook_wrapper_relative_path(host_kind, phase)?;
-    let expected_wrapper_path = repo_root.join(&relative_path);
     let relative = path_text(&relative_path);
     match host_kind {
         HostKind::Codex => {
+            let dispatch_relative = codex_dispatch_wrapper_relative_path();
+            let dispatch_relative_text = path_text(&dispatch_relative);
+            let expected_wrapper_path = repo_root.join(&dispatch_relative);
             let script = format!(
-                "root=$(git rev-parse --show-toplevel) || exit $?; exec \"$root/{relative}\""
+                "root=$(git rev-parse --show-toplevel) || exit $?; exec \"$root/{dispatch_relative_text}\" {}",
+                phase.command_name()
             );
             Ok(HostHookCommand {
                 host_kind,
@@ -3416,21 +3435,24 @@ fn host_hook_command_spec(
                 },
             })
         }
-        HostKind::ClaudeCode => Ok(HostHookCommand {
-            host_kind,
-            phase,
-            generated_command_shape: HostHookCommandShape::Exec {
-                command: format!("${{CLAUDE_PROJECT_DIR}}/{relative}"),
-                args: Vec::new(),
-            },
-            expected_wrapper_path,
-            root_resolution_basis: HookRootResolutionBasis::ClaudeProjectDir,
-            cwd_independent: true,
-            verification: HostHookCommandVerification {
-                basis_verified_by: "verified_claude_project_dir_placeholder".to_owned(),
-                host_contract_source: "claude_code_hook_exec_form".to_owned(),
-            },
-        }),
+        HostKind::ClaudeCode => {
+            let expected_wrapper_path = repo_root.join(&relative_path);
+            Ok(HostHookCommand {
+                host_kind,
+                phase,
+                generated_command_shape: HostHookCommandShape::Exec {
+                    command: format!("${{CLAUDE_PROJECT_DIR}}/{relative}"),
+                    args: Vec::new(),
+                },
+                expected_wrapper_path,
+                root_resolution_basis: HookRootResolutionBasis::ClaudeProjectDir,
+                cwd_independent: true,
+                verification: HostHookCommandVerification {
+                    basis_verified_by: "verified_claude_project_dir_placeholder".to_owned(),
+                    host_contract_source: "claude_code_hook_exec_form".to_owned(),
+                },
+            })
+        }
         HostKind::Generic => Err(ConnectionCommandError::runtime(
             "generic host integrations do not define hook commands",
         )),
@@ -3461,6 +3483,52 @@ fn hook_wrapper_script_content(
         "#!/bin/sh\n# {HOOK_WRAPPER_MARKER}\n# host_kind={}\n# phase={}\n# connection_id={connection_id}\n# guard_installation_id={guard_installation_id}\n# policy_hash={policy_hash}\n# host_output={host_output}\nexec {command_line}\n",
         public_host_label(host_kind),
         phase.policy_key(),
+    )
+}
+
+fn codex_dispatch_wrapper_script_content() -> String {
+    format!(
+        concat!(
+            "#!/bin/sh\n",
+            "# {}\n",
+            "# host_kind=codex\n",
+            "# phase=dispatch\n",
+            "# script_role=codex_dispatch\n",
+            "if [ \"$#\" -ne 1 ]; then\n",
+            "    printf '%s\\n' 'volicord dispatch: expected one guard phase argument' >&2\n",
+            "    exit 64\n",
+            "fi\n",
+            "phase=$1\n",
+            "case \"$phase\" in\n",
+            "    session-start|pre-tool|post-tool|prompt-capture|stop) ;;\n",
+            "    *)\n",
+            "        printf '%s\\n' \"volicord dispatch: unsupported guard phase: $phase\" >&2\n",
+            "        exit 64\n",
+            "        ;;\n",
+            "esac\n",
+            "root=$(git rev-parse --show-toplevel 2>/dev/null) || {{\n",
+            "    printf '%s\\n' 'volicord dispatch: failed to resolve Git work-tree root' >&2\n",
+            "    exit 70\n",
+            "}}\n",
+            "case \"$root\" in\n",
+            "    /*) ;;\n",
+            "    *)\n",
+            "        printf '%s\\n' 'volicord dispatch: resolved Git work-tree root is not absolute' >&2\n",
+            "        exit 70\n",
+            "        ;;\n",
+            "esac\n",
+            "wrapper=\"$root/.codex/hooks/volicord-$phase.sh\"\n",
+            "if [ ! -f \"$wrapper\" ]; then\n",
+            "    printf '%s\\n' \"volicord dispatch: missing phase wrapper: $wrapper\" >&2\n",
+            "    exit 70\n",
+            "fi\n",
+            "if [ ! -x \"$wrapper\" ]; then\n",
+            "    printf '%s\\n' \"volicord dispatch: phase wrapper is not executable: $wrapper\" >&2\n",
+            "    exit 70\n",
+            "fi\n",
+            "exec \"$wrapper\"\n",
+        ),
+        HOOK_WRAPPER_MARKER
     )
 }
 
@@ -3995,8 +4063,9 @@ fn write_managed_json_projection_file(
 fn write_managed_script_file(
     path: &Path,
     content: &str,
+    kind: HostIntegrationFileKind,
 ) -> Result<FilePlanStatus, ConnectionCommandError> {
-    let planned = plan_managed_script_file(path, content)?;
+    let planned = plan_managed_script_file(path, content, kind)?;
     if planned.status != FilePlanStatus::Unchanged {
         let existing_matches = fs::read_to_string(path)
             .map(|existing| existing == content)
@@ -4029,6 +4098,7 @@ fn write_managed_script_file(
 fn plan_managed_script_file(
     path: &Path,
     content: &str,
+    kind: HostIntegrationFileKind,
 ) -> Result<GeneratedFilePlan, ConnectionCommandError> {
     let status = match fs::read_to_string(path) {
         Ok(existing) => {
@@ -4043,7 +4113,7 @@ fn plan_managed_script_file(
             } else {
                 return Err(ConnectionCommandError::runtime(format!(
                     "{} already exists with unmanaged content: {}",
-                    HostIntegrationFileKind::HostHookWrapper.as_str(),
+                    kind.as_str(),
                     path.display()
                 )));
             }
@@ -4057,7 +4127,7 @@ fn plan_managed_script_file(
         }
     };
     Ok(GeneratedFilePlan {
-        kind: HostIntegrationFileKind::HostHookWrapper,
+        kind,
         path: path.to_path_buf(),
         content: content.to_owned(),
         status,
@@ -4575,7 +4645,8 @@ fn is_volicord_codex_hook_handler(phase: HostLifecyclePhase, handler: &Value) ->
                 let wrapper = command.contains(&format!(
                     ".codex/hooks/volicord-{}.sh",
                     phase.command_name()
-                ));
+                )) || (command.contains(CODEX_DISPATCH_WRAPPER)
+                    && command.contains(phase.command_name()));
                 direct_guard || wrapper
             })
 }
@@ -4912,7 +4983,12 @@ fn generated_files_json(files: &[GeneratedFilePlan]) -> Value {
                             "executable_required".to_owned(),
                             Value::Bool(script_executable_required()),
                         );
-                        if let Some(command) = hook_wrapper_exec_command(&file.content) {
+                        if file.kind == HostIntegrationFileKind::HostHookDispatch {
+                            object.insert(
+                                "managed_script_role".to_owned(),
+                                Value::String("codex_dispatch".to_owned()),
+                            );
+                        } else if let Some(command) = hook_wrapper_exec_command(&file.content) {
                             object.insert(
                                 "managed_script_command".to_owned(),
                                 Value::String(command.to_owned()),
@@ -5477,11 +5553,18 @@ fn planned_hook_config_state(init_mode: InitMode, integration: &GuardIntegration
         &integration.generated_files,
         HostIntegrationFileKind::HostHookConfig,
     );
+    let dispatch_state = generated_file_kind_state(
+        &integration.generated_files,
+        HostIntegrationFileKind::HostHookDispatch,
+    );
     let wrapper_state = generated_file_kind_state(
         &integration.generated_files,
         HostIntegrationFileKind::HostHookWrapper,
     );
-    let state = combine_optional_file_states(&config_state, &wrapper_state);
+    let state = combine_optional_file_states(
+        &combine_optional_file_states(&config_state, &dispatch_state),
+        &wrapper_state,
+    );
     if state != "not_configured" {
         state
     } else if integration.missing_required_hooks.is_empty() {
@@ -7360,7 +7443,10 @@ impl GuardFileFindings {
             return "disabled".to_owned();
         }
         let state = combine_optional_file_states(
-            self.kind_state(HostIntegrationFileKind::HostHookConfig),
+            &combine_optional_file_states(
+                self.kind_state(HostIntegrationFileKind::HostHookConfig),
+                self.kind_state(HostIntegrationFileKind::HostHookDispatch),
+            ),
             self.kind_state(HostIntegrationFileKind::HostHookWrapper),
         );
         if state != "not_configured" {
@@ -7378,6 +7464,10 @@ impl GuardFileFindings {
             && self.broken_files.is_empty()
             && self.kind_state(HostIntegrationFileKind::VolicordPolicy) == "installed"
             && self.kind_state(HostIntegrationFileKind::HostHookConfig) == "installed"
+            && matches!(
+                self.kind_state(HostIntegrationFileKind::HostHookDispatch),
+                "not_configured" | "installed"
+            )
             && self.kind_state(HostIntegrationFileKind::HostHookWrapper) == "installed"
     }
 
@@ -7707,6 +7797,7 @@ fn verify_managed_json_file(
     }
 }
 
+#[derive(Clone, Copy)]
 struct ManagedFileRead<'a> {
     path: &'a Path,
     path_text: &'a str,
@@ -7735,6 +7826,10 @@ fn verify_managed_script_file(
         if let Some(kind) = kind {
             findings.set_kind_state(kind, "broken");
         }
+        return;
+    }
+    if kind == Some(HostIntegrationFileKind::HostHookDispatch) {
+        verify_managed_dispatch_script_file(file, kind, managed, findings);
         return;
     }
     let Some(expected_command) = file
@@ -7806,6 +7901,62 @@ fn verify_managed_script_file(
         if hook_wrapper_comment_value(text, key) != Some(expected) {
             findings.stale_files.push(path_text.to_owned());
             state = "stale";
+        }
+    }
+    if sha256_text(text) != expected_hash {
+        findings.stale_files.push(path_text.to_owned());
+        state = "stale";
+    }
+    if file
+        .get("executable_required")
+        .and_then(Value::as_bool)
+        .unwrap_or(false)
+        && !script_is_executable(path)
+    {
+        findings.stale_files.push(path_text.to_owned());
+        state = "stale";
+    }
+    if let Some(kind) = kind {
+        findings.set_kind_state(kind, state);
+    }
+}
+
+fn verify_managed_dispatch_script_file(
+    file: &Value,
+    kind: Option<HostIntegrationFileKind>,
+    managed: ManagedFileRead<'_>,
+    findings: &mut GuardFileFindings,
+) {
+    let ManagedFileRead {
+        path,
+        path_text,
+        text,
+        expected_hash,
+    } = managed;
+    let mut state = "installed";
+    if file.get("managed_script_role").and_then(Value::as_str) != Some("codex_dispatch")
+        || hook_wrapper_comment_value(text, "host_kind") != Some("codex")
+        || hook_wrapper_comment_value(text, "phase") != Some("dispatch")
+        || hook_wrapper_comment_value(text, "script_role") != Some("codex_dispatch")
+    {
+        findings.broken_files.push(path_text.to_owned());
+        if let Some(kind) = kind {
+            findings.set_kind_state(kind, "broken");
+        }
+        return;
+    }
+    for required in [
+        "git rev-parse --show-toplevel",
+        "session-start|pre-tool|post-tool|prompt-capture|stop",
+        ".codex/hooks/volicord-$phase.sh",
+        "exec \"$wrapper\"",
+    ] {
+        if !text.contains(required) {
+            findings.broken_files.push(path_text.to_owned());
+            if let Some(kind) = kind {
+                findings.set_kind_state(kind, "broken");
+            }
+            return;
         }
     }
     if sha256_text(text) != expected_hash {
@@ -7930,6 +8081,7 @@ fn host_integration_file_kind_from_str(value: &str) -> Option<HostIntegrationFil
         "volicord_policy" => Some(HostIntegrationFileKind::VolicordPolicy),
         "host_mcp_config" => Some(HostIntegrationFileKind::HostMcpConfig),
         "host_hook_config" => Some(HostIntegrationFileKind::HostHookConfig),
+        "host_hook_dispatch" => Some(HostIntegrationFileKind::HostHookDispatch),
         "host_hook_wrapper" => Some(HostIntegrationFileKind::HostHookWrapper),
         "host_rule_instruction" => Some(HostIntegrationFileKind::HostRuleInstruction),
         "agents_managed_block" => Some(HostIntegrationFileKind::AgentsManagedBlock),
@@ -8546,6 +8698,13 @@ mod tests {
         assert_eq!(
             generated_files
                 .iter()
+                .filter(|file| file["kind"] == "host_hook_dispatch")
+                .count(),
+            1
+        );
+        assert_eq!(
+            generated_files
+                .iter()
                 .filter(|file| file["kind"] == "host_hook_wrapper")
                 .count(),
             REQUIRED_GUARD_PHASES.len()
@@ -8557,16 +8716,25 @@ mod tests {
         assert!(!hooks_text.contains("\"command\": \".codex/hooks/"));
         assert!(hooks_text.contains("sh -c"));
         assert!(hooks_text.contains("git rev-parse --show-toplevel"));
-        assert!(hooks_text.contains(".codex/hooks/volicord-session-start.sh"));
-        assert!(hooks_text.contains(".codex/hooks/volicord-pre-tool.sh"));
-        assert!(hooks_text.contains(".codex/hooks/volicord-post-tool.sh"));
-        assert!(hooks_text.contains(".codex/hooks/volicord-prompt-capture.sh"));
-        assert!(hooks_text.contains(".codex/hooks/volicord-stop.sh"));
+        assert!(hooks_text.contains(".codex/hooks/volicord-dispatch.sh"));
+        assert!(hooks_text.contains("session-start"));
+        assert!(hooks_text.contains("pre-tool"));
+        assert!(hooks_text.contains("post-tool"));
+        assert!(hooks_text.contains("prompt-capture"));
+        assert!(hooks_text.contains("stop"));
         assert!(!hooks_text.contains("volicord guard "));
         assert!(hooks_text.contains(
             "Bash|apply_patch|Edit|Write|mcp__.*__(write|edit|create|update|delete|remove|move|patch).*"
         ));
         assert!(!hooks_text.contains("--json"));
+        let dispatch_wrapper_path = repo.join(".codex/hooks/volicord-dispatch.sh");
+        let dispatch_wrapper = fs::read_to_string(&dispatch_wrapper_path)?;
+        assert!(dispatch_wrapper.contains(HOOK_WRAPPER_MARKER));
+        assert!(dispatch_wrapper.contains("phase=dispatch"));
+        assert!(dispatch_wrapper.contains("git rev-parse --show-toplevel"));
+        assert!(dispatch_wrapper.contains(".codex/hooks/volicord-$phase.sh"));
+        assert!(dispatch_wrapper.contains("exec \"$wrapper\""));
+        assert!(script_is_executable(&dispatch_wrapper_path));
         let pre_tool_wrapper_path = repo.join(".codex/hooks/volicord-pre-tool.sh");
         let pre_tool_wrapper = fs::read_to_string(&pre_tool_wrapper_path)?;
         assert!(pre_tool_wrapper.contains(HOOK_WRAPPER_MARKER));
@@ -8583,6 +8751,70 @@ mod tests {
         ));
         assert!(pre_tool_wrapper.contains("--host-output codex"));
         assert!(script_is_executable(&pre_tool_wrapper_path));
+        Ok(())
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn codex_dispatch_executes_from_subdirectory_and_preserves_host_protocol(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        use std::io::Write as _;
+
+        let repo = temp_dir("codex dispatch repo spaces")?;
+        init_real_git_repo(&repo)?;
+        let entry = ManagedServerEntry::new("conn_alpha", Path::new("volicord"), None);
+        apply_guard_integration(plan_guard_integration(
+            HostKind::Codex,
+            InitMode::Guarded,
+            false,
+            &repo,
+            "conn_alpha",
+            "guard_installation_alpha",
+            &entry,
+        )?)?;
+        let bin_dir = repo.join("fake bin");
+        write_fake_guard_volicord(&bin_dir)?;
+        let subdir = repo.join("nested dir").join("inner");
+        fs::create_dir_all(&subdir)?;
+        let hooks: Value =
+            serde_json::from_str(&fs::read_to_string(repo.join(".codex/hooks.json"))?)?;
+        let command = hooks["hooks"]["PreToolUse"][0]["hooks"][0]["command"]
+            .as_str()
+            .expect("PreToolUse command should be present");
+        assert!(command.contains(CODEX_DISPATCH_WRAPPER));
+        assert!(command.contains("pre-tool"));
+
+        let mut child = Command::new("sh")
+            .arg("-c")
+            .arg(command)
+            .current_dir(&subdir)
+            .env("PATH", path_with_prefix(&bin_dir)?)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()?;
+        let mut stdin = child.stdin.take().expect("stdin should be piped");
+        stdin.write_all(b"payload via stdin")?;
+        drop(stdin);
+        let output = child.wait_with_output()?;
+
+        assert_eq!(output.status.code(), Some(37));
+        assert_eq!(
+            String::from_utf8_lossy(&output.stdout),
+            "stdout:payload via stdin\n"
+        );
+        assert_eq!(
+            String::from_utf8_lossy(&output.stderr),
+            "stderr:guard reached\n"
+        );
+
+        let invalid = Command::new(repo.join(CODEX_DISPATCH_WRAPPER))
+            .arg("bad-phase")
+            .current_dir(&subdir)
+            .output()?;
+        assert!(!invalid.status.success());
+        assert_eq!(String::from_utf8_lossy(&invalid.stdout), "");
+        assert!(String::from_utf8_lossy(&invalid.stderr).contains("unsupported guard phase"));
         Ok(())
     }
 
@@ -8907,6 +9139,34 @@ mod tests {
         Ok(())
     }
 
+    #[test]
+    fn guarded_integration_rejects_unmanaged_codex_dispatch_wrapper(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let repo = temp_dir("hook-dispatch-conflict")?;
+        fs::create_dir_all(repo.join(".git"))?;
+        let dispatch_path = repo.join(".codex/hooks/volicord-dispatch.sh");
+        fs::create_dir_all(dispatch_path.parent().expect("dispatch should have parent"))?;
+        fs::write(&dispatch_path, "#!/bin/sh\nexec echo user-owned\n")?;
+        let entry = ManagedServerEntry::new("conn_alpha", Path::new("volicord"), None);
+
+        let error = plan_guard_integration(
+            HostKind::Codex,
+            InitMode::Guarded,
+            false,
+            &repo,
+            "conn_alpha",
+            "guard_installation_alpha",
+            &entry,
+        )
+        .expect_err("unmanaged dispatch wrapper should be rejected");
+
+        assert!(error
+            .to_string()
+            .contains("host_hook_dispatch already exists with unmanaged content"));
+        assert!(error.to_string().contains(&path_text(&dispatch_path)));
+        Ok(())
+    }
+
     #[cfg(unix)]
     #[test]
     fn guarded_integration_rerun_repairs_hook_wrapper_executable_bit(
@@ -8926,7 +9186,9 @@ mod tests {
             &entry,
         )?)?;
         let wrapper_path = repo.join(".codex/hooks/volicord-pre-tool.sh");
+        let dispatch_path = repo.join(".codex/hooks/volicord-dispatch.sh");
         assert!(script_is_executable(&wrapper_path));
+        assert!(script_is_executable(&dispatch_path));
         let capability_json = guard_capability_json(&applied)?;
 
         let mut permissions = fs::metadata(&wrapper_path)?.permissions();
@@ -8934,6 +9196,12 @@ mod tests {
         fs::set_permissions(&wrapper_path, permissions)?;
         let findings = guard_file_findings(&capability_json);
         assert!(findings.stale_files.contains(&path_text(&wrapper_path)));
+
+        let mut permissions = fs::metadata(&dispatch_path)?.permissions();
+        permissions.set_mode(0o644);
+        fs::set_permissions(&dispatch_path, permissions)?;
+        let findings = guard_file_findings(&capability_json);
+        assert!(findings.stale_files.contains(&path_text(&dispatch_path)));
 
         let repaired = apply_guard_integration(plan_guard_integration(
             HostKind::Codex,
@@ -8945,9 +9213,15 @@ mod tests {
             &entry,
         )?)?;
         assert!(script_is_executable(&wrapper_path));
+        assert!(script_is_executable(&dispatch_path));
         assert!(repaired.generated_files.iter().any(|file| {
             file.kind == HostIntegrationFileKind::HostHookWrapper
                 && file.path == wrapper_path
+                && file.status == FilePlanStatus::Updated
+        }));
+        assert!(repaired.generated_files.iter().any(|file| {
+            file.kind == HostIntegrationFileKind::HostHookDispatch
+                && file.path == dispatch_path
                 && file.status == FilePlanStatus::Updated
         }));
         Ok(())
@@ -9057,6 +9331,15 @@ mod tests {
 
         fs::write(&wrapper_path, &wrapper_text)?;
         set_script_executable(&wrapper_path)?;
+        let dispatch_path = repo.join(".codex/hooks/volicord-dispatch.sh");
+        let dispatch_text = fs::read_to_string(&dispatch_path)?;
+        fs::remove_file(&dispatch_path)?;
+        let findings = guard_file_findings(&capability_json);
+        assert!(findings.missing_files.contains(&path_text(&dispatch_path)));
+        assert_eq!(findings.hook_config_state(false), "missing");
+
+        fs::write(&dispatch_path, &dispatch_text)?;
+        set_script_executable(&dispatch_path)?;
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
@@ -9478,6 +9761,45 @@ mod tests {
             user_actions: Vec::new(),
             file_snapshot: None,
         }
+    }
+
+    #[cfg(unix)]
+    fn init_real_git_repo(repo: &Path) -> Result<(), Box<dyn std::error::Error>> {
+        let output = Command::new("git")
+            .arg("init")
+            .arg("-q")
+            .current_dir(repo)
+            .output()?;
+        if !output.status.success() {
+            return Err(format!(
+                "git init failed\nstdout:\n{}\nstderr:\n{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr)
+            )
+            .into());
+        }
+        Ok(())
+    }
+
+    #[cfg(unix)]
+    fn write_fake_guard_volicord(dir: &Path) -> Result<PathBuf, Box<dyn std::error::Error>> {
+        fs::create_dir_all(dir)?;
+        let path = dir.join("volicord");
+        fs::write(
+            &path,
+            "#!/bin/sh\ninput=$(cat)\nprintf 'stdout:%s\\n' \"$input\"\nprintf 'stderr:guard reached\\n' >&2\nexit 37\n",
+        )?;
+        set_script_executable(&path)?;
+        Ok(path)
+    }
+
+    #[cfg(unix)]
+    fn path_with_prefix(prefix: &Path) -> Result<OsString, Box<dyn std::error::Error>> {
+        let mut paths = vec![prefix.to_path_buf()];
+        if let Some(existing) = std::env::var_os("PATH") {
+            paths.extend(std::env::split_paths(&existing));
+        }
+        Ok(std::env::join_paths(paths)?)
     }
 
     fn temp_dir(prefix: &str) -> Result<PathBuf, Box<dyn std::error::Error>> {

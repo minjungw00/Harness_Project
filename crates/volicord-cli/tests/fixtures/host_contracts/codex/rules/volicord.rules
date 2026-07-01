@@ -3,8 +3,8 @@ prefix_rule(
     decision = "prompt",
     justification = "Volicord hook wrappers may observe local lifecycle state.",
     match = [
-        "sh -c 'root=$(git rev-parse --show-toplevel) || exit $?; exec \"$root/.codex/hooks/volicord-session-start.sh\"'",
-        "sh -c 'root=$(git rev-parse --show-toplevel) || exit $?; exec \"$root/.codex/hooks/volicord-pre-tool.sh\"'",
+        "sh -c 'root=$(git rev-parse --show-toplevel) || exit $?; exec \"$root/.codex/hooks/volicord-dispatch.sh\" session-start'",
+        "sh -c 'root=$(git rev-parse --show-toplevel) || exit $?; exec \"$root/.codex/hooks/volicord-dispatch.sh\" pre-tool'",
     ],
     not_match = [
         "volicord status",
