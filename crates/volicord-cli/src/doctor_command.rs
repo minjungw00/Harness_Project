@@ -1964,7 +1964,7 @@ mod tests {
                         "hooks": [
                             {
                                 "type": "command",
-                                "command": "volicord guard pre-tool --host claude-code --json",
+                                "command": "volicord guard pre-tool --host claude-code --host-output claude-code",
                                 "timeout": 30
                             }
                         ]

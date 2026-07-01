@@ -64,6 +64,15 @@ fn main() {
             print!("{output}");
             process::exit(1);
         }
+        Err(CliError::ProcessOutput {
+            stdout,
+            stderr,
+            exit_code,
+        }) => {
+            print!("{stdout}");
+            eprint!("{stderr}");
+            process::exit(exit_code);
+        }
     }
 }
 
@@ -240,10 +249,14 @@ fn command_outcome(outcome: CommandOutcome) -> Result<String, CliError> {
 fn guard_command_outcome(
     outcome: volicord_cli::guard_command::GuardCommandOutcome,
 ) -> Result<String, CliError> {
-    if outcome.exits_failure {
-        Err(CliError::FailureOutput(outcome.output))
+    if outcome.exit_code == 0 && outcome.stderr.is_empty() {
+        Ok(outcome.stdout)
     } else {
-        Ok(outcome.output)
+        Err(CliError::ProcessOutput {
+            stdout: outcome.stdout,
+            stderr: outcome.stderr,
+            exit_code: outcome.exit_code,
+        })
     }
 }
 
@@ -469,6 +482,11 @@ enum CliError {
     Usage(String),
     Runtime(String),
     FailureOutput(String),
+    ProcessOutput {
+        stdout: String,
+        stderr: String,
+        exit_code: i32,
+    },
     McpStdio {
         connection_id: String,
     },
@@ -493,6 +511,7 @@ impl fmt::Display for CliError {
             Self::Usage(message) | Self::Runtime(message) | Self::FailureOutput(message) => {
                 formatter.write_str(message)
             }
+            Self::ProcessOutput { stdout, .. } => formatter.write_str(stdout),
             Self::McpStdio { connection_id } => {
                 write!(
                     formatter,

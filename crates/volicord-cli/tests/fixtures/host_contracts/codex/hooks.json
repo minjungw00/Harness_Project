@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "volicord guard session-start --json",
+            "command": "volicord guard session-start --host-output codex",
             "timeout": 30,
             "statusMessage": "Checking Volicord session"
           }
@@ -19,7 +19,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "volicord guard pre-tool --json",
+            "command": "volicord guard pre-tool --host-output codex",
             "timeout": 30,
             "statusMessage": "Checking Volicord write"
           }
@@ -32,7 +32,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "volicord guard post-tool --json",
+            "command": "volicord guard post-tool --host-output codex",
             "timeout": 30,
             "statusMessage": "Recording Volicord write"
           }
@@ -44,7 +44,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "volicord guard prompt-capture --json",
+            "command": "volicord guard prompt-capture --host-output codex",
             "timeout": 30
           }
         ]
@@ -55,7 +55,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "volicord guard stop --json",
+            "command": "volicord guard stop --host-output codex",
             "timeout": 30
           }
         ]

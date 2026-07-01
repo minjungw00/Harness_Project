@@ -196,6 +196,180 @@ fn guard_pre_tool_allows_read_status_without_active_task() -> Result<(), Box<dyn
 }
 
 #[test]
+fn guard_pre_tool_codex_host_output_deny_is_native_json() -> Result<(), Box<dyn Error>> {
+    let fixture = GuardCliFixture::new("guard-host-codex-deny")?;
+    let event = json!({
+        "event_id": "guard_host_codex_pre_deny",
+        "session_id": "guard_host_codex_pre_deny_session",
+        "connection_id": fixture.connection_id(),
+        "tool_name": "shell",
+        "command": "touch src/lib.rs",
+        "paths": ["src/lib.rs"]
+    });
+
+    let output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        [
+            "guard",
+            "pre-tool",
+            "--repo",
+            fixture.repo_arg(),
+            "--host-output",
+            "codex",
+        ],
+        &event,
+    )?;
+    assert_success(&output);
+    assert!(stderr(&output).is_empty());
+    assert!(!stdout(&output).contains("schema_version"));
+    assert!(!stdout(&output).contains("\"result\""));
+    let value = json_stdout(&output)?;
+    assert_eq!(value["hookSpecificOutput"]["hookEventName"], "PreToolUse");
+    assert_eq!(value["hookSpecificOutput"]["permissionDecision"], "deny");
+    assert!(value["hookSpecificOutput"]["permissionDecisionReason"]
+        .as_str()
+        .expect("deny reason should be a string")
+        .contains("no_active_task"));
+
+    let stored = guard_event(
+        fixture.runtime_home(),
+        fixture.project_id(),
+        "guard_host_codex_pre_deny",
+    )?
+    .expect("host-native deny event should be stored");
+    assert_eq!(stored.decision, "deny");
+    Ok(())
+}
+
+#[test]
+fn guard_pre_tool_claude_host_output_deny_never_uses_exit_one() -> Result<(), Box<dyn Error>> {
+    let fixture = GuardCliFixture::new("guard-host-claude-deny")?;
+    let event = json!({
+        "event_id": "guard_host_claude_pre_deny",
+        "session_id": "guard_host_claude_pre_deny_session",
+        "connection_id": fixture.connection_id(),
+        "tool_name": "Write",
+        "tool_input": {
+            "file_path": "src/lib.rs",
+            "content": "changed"
+        }
+    });
+
+    let output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        [
+            "guard",
+            "pre-tool",
+            "--repo",
+            fixture.repo_arg(),
+            "--host-output",
+            "claude-code",
+        ],
+        &event,
+    )?;
+    assert_eq!(output.status.code(), Some(0));
+    assert!(stderr(&output).is_empty());
+    let value = json_stdout(&output)?;
+    assert_eq!(value["hookSpecificOutput"]["hookEventName"], "PreToolUse");
+    assert_eq!(value["hookSpecificOutput"]["permissionDecision"], "deny");
+    Ok(())
+}
+
+#[test]
+fn guard_pre_tool_host_output_allow_has_empty_streams() -> Result<(), Box<dyn Error>> {
+    for host_output in ["codex", "claude-code"] {
+        let fixture = GuardCliFixture::new(&format!("guard-host-allow-{host_output}"))?;
+        let event = json!({
+            "event_id": format!("guard_host_pre_allow_{host_output}"),
+            "connection_id": fixture.connection_id(),
+            "tool_name": "shell",
+            "command": "git status --short"
+        });
+
+        let output = run_guard(
+            fixture.runtime_home(),
+            fixture.repo_root(),
+            [
+                "guard",
+                "pre-tool",
+                "--repo",
+                fixture.repo_arg(),
+                "--host-output",
+                host_output,
+            ],
+            &event,
+        )?;
+        assert_success(&output);
+        assert!(stdout(&output).is_empty());
+        assert!(stderr(&output).is_empty());
+    }
+    Ok(())
+}
+
+#[test]
+fn guard_session_start_host_output_injects_context() -> Result<(), Box<dyn Error>> {
+    let fixture = GuardCliFixture::new("guard-host-session-context")?;
+    let event = json!({
+        "event_id": "guard_host_session_context",
+        "session_id": "guard_host_session_context_session",
+        "connection_id": fixture.connection_id()
+    });
+
+    let output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        [
+            "guard",
+            "session-start",
+            "--repo",
+            fixture.repo_arg(),
+            "--host-output",
+            "codex",
+        ],
+        &event,
+    )?;
+    assert_success(&output);
+    let value = json_stdout(&output)?;
+    assert_eq!(value["hookSpecificOutput"]["hookEventName"], "SessionStart");
+    assert!(value["hookSpecificOutput"]["additionalContext"]
+        .as_str()
+        .expect("context should be a string")
+        .contains("Volicord context"));
+    assert!(!stdout(&output).contains("schema_version"));
+    Ok(())
+}
+
+#[test]
+fn guard_host_output_non_policy_error_uses_stderr_not_stdout() -> Result<(), Box<dyn Error>> {
+    let fixture = GuardCliFixture::new("guard-host-non-policy-error")?;
+    let event = json!({
+        "event_id": "guard_host_non_policy_error",
+        "tool_name": "shell",
+        "command": "git status --short"
+    });
+
+    let output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        [
+            "guard",
+            "pre-tool",
+            "--repo",
+            fixture.repo_arg(),
+            "--host-output",
+            "claude-code",
+        ],
+        &event,
+    )?;
+    assert_eq!(output.status.code(), Some(2));
+    assert!(stdout(&output).is_empty());
+    assert!(stderr(&output).contains("requires --connection"));
+    Ok(())
+}
+
+#[test]
 fn guard_pre_tool_rejects_paths_outside_project_allowlist() -> Result<(), Box<dyn Error>> {
     let fixture = GuardCliFixture::new("guard-pre-outside-project")?;
     let event = json!({
@@ -318,6 +492,52 @@ fn guard_post_tool_records_unrecorded_product_file_changes() -> Result<(), Box<d
     .expect("post-tool guard event should be stored");
     assert_eq!(stored.decision, "warn");
     assert_eq!(stored.event_kind, "post_tool");
+    Ok(())
+}
+
+#[test]
+fn guard_post_tool_host_output_warns_with_context() -> Result<(), Box<dyn Error>> {
+    let fixture = GuardCliFixture::new("guard-host-post-context")?;
+    fixture.create_active_task()?;
+    let event = json!({
+        "event_id": "guard_host_post_context",
+        "session_id": "guard_host_post_context_session",
+        "connection_id": fixture.connection_id(),
+        "host_kind": "claude_code",
+        "tool_name": "Write",
+        "tool_input": {
+            "file_path": "src/export.rs",
+            "content": "changed"
+        },
+        "tool_response": {
+            "filePath": "src/export.rs",
+            "success": true
+        },
+        "changed_paths": ["src/export.rs"]
+    });
+
+    let output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        [
+            "guard",
+            "post-tool",
+            "--repo",
+            fixture.repo_arg(),
+            "--host-output",
+            "claude-code",
+        ],
+        &event,
+    )?;
+    assert_success(&output);
+    assert!(stderr(&output).is_empty());
+    let value = json_stdout(&output)?;
+    assert_eq!(value["hookSpecificOutput"]["hookEventName"], "PostToolUse");
+    assert!(value["hookSpecificOutput"]["additionalContext"]
+        .as_str()
+        .expect("context should be a string")
+        .contains("unresolved Product Repository change"));
+    assert!(!stdout(&output).contains("\"result\""));
     Ok(())
 }
 
@@ -894,6 +1114,48 @@ fn guard_prompt_capture_records_answer_command() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
+fn guard_prompt_capture_host_output_injects_recorded_context() -> Result<(), Box<dyn Error>> {
+    let fixture = GuardCliFixture::with_prompt_capture("guard-host-prompt-context")?;
+    let judgment_id = fixture.create_pending_authority_judgment("host_context")?;
+    let verification_code = fixture.prompt_verification_code(&judgment_id)?;
+    let message = format!("Volicord: answer J-1 1 {verification_code}");
+    let event = prompt_event(
+        &fixture,
+        "guard_host_prompt_context",
+        "guard_host_prompt_capture_context",
+        &message,
+    );
+
+    let output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        [
+            "guard",
+            "prompt-capture",
+            "--repo",
+            fixture.repo_arg(),
+            "--host-output",
+            "codex",
+        ],
+        &event,
+    )?;
+    assert_success(&output);
+    assert!(stderr(&output).is_empty());
+    let value = json_stdout(&output)?;
+    assert_eq!(
+        value["hookSpecificOutput"]["hookEventName"],
+        "UserPromptSubmit"
+    );
+    assert!(value["hookSpecificOutput"]["additionalContext"]
+        .as_str()
+        .expect("context should be a string")
+        .contains("Volicord recorded"));
+    assert!(!stdout(&output).contains("schema_version"));
+    fixture.assert_recorded_prompt_judgment(&judgment_id, "accepted", "accept")?;
+    Ok(())
+}
+
+#[test]
 fn guard_prompt_capture_records_reject_command() -> Result<(), Box<dyn Error>> {
     let fixture = GuardCliFixture::with_prompt_capture("guard-chat-reject")?;
     let judgment_id = fixture.create_pending_authority_judgment("reject")?;
@@ -1099,6 +1361,45 @@ fn guard_prompt_capture_rejects_malformed_command() -> Result<(), Box<dyn Error>
     assert_eq!(output.status.code(), Some(1));
     let value = json_stdout(&output)?;
     assert_reason(&value, "malformed_judgment_command");
+    assert_eq!(fixture.judgment_status(&judgment_id)?, "pending");
+    Ok(())
+}
+
+#[test]
+fn guard_prompt_capture_host_output_blocks_malformed_prompt() -> Result<(), Box<dyn Error>> {
+    let fixture = GuardCliFixture::with_prompt_capture("guard-host-prompt-block")?;
+    let judgment_id = fixture.create_pending_authority_judgment("host_block")?;
+    let verification_code = fixture.prompt_verification_code(&judgment_id)?;
+    let message = format!("Volicord: note J-1 not-quoted {verification_code}");
+    let event = prompt_event(
+        &fixture,
+        "guard_host_prompt_block",
+        "guard_host_prompt_capture_block",
+        &message,
+    );
+
+    let output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        [
+            "guard",
+            "prompt-capture",
+            "--repo",
+            fixture.repo_arg(),
+            "--host-output",
+            "claude-code",
+        ],
+        &event,
+    )?;
+    assert_success(&output);
+    assert!(stderr(&output).is_empty());
+    let value = json_stdout(&output)?;
+    assert_eq!(value["decision"], "block");
+    assert!(value["reason"]
+        .as_str()
+        .expect("block reason should be a string")
+        .contains("malformed_judgment_command"));
+    assert!(!stdout(&output).contains("schema_version"));
     assert_eq!(fixture.judgment_status(&judgment_id)?, "pending");
     Ok(())
 }
@@ -1441,6 +1742,65 @@ fn guard_stop_denies_false_completion_when_close_readiness_blocks() -> Result<()
         .expect("close blockers should be an array")
         .iter()
         .any(|blocker| blocker["code"] == "missing_current_close_basis"));
+    Ok(())
+}
+
+#[test]
+fn guard_stop_host_output_blocks_and_allows_continue() -> Result<(), Box<dyn Error>> {
+    let blocked = GuardCliFixture::new("guard-host-stop-block")?;
+    blocked.create_active_task()?;
+    let blocked_event = json!({
+        "event_id": "guard_host_stop_block",
+        "session_id": "guard_host_stop_block_session",
+        "connection_id": blocked.connection_id(),
+        "host_kind": "codex",
+        "message": "All done."
+    });
+    let blocked_output = run_guard(
+        blocked.runtime_home(),
+        blocked.repo_root(),
+        [
+            "guard",
+            "stop",
+            "--repo",
+            blocked.repo_arg(),
+            "--host-output",
+            "codex",
+        ],
+        &blocked_event,
+    )?;
+    assert_success(&blocked_output);
+    let blocked_value = json_stdout(&blocked_output)?;
+    assert_eq!(blocked_value["decision"], "block");
+    assert!(blocked_value["reason"]
+        .as_str()
+        .expect("stop block reason should be a string")
+        .contains("close_readiness_blocked"));
+
+    let allowed = GuardCliFixture::new("guard-host-stop-allow")?;
+    let allowed_event = json!({
+        "event_id": "guard_host_stop_allow",
+        "session_id": "guard_host_stop_allow_session",
+        "connection_id": allowed.connection_id(),
+        "host_kind": "claude_code",
+        "message": "Nothing active."
+    });
+    let allowed_output = run_guard(
+        allowed.runtime_home(),
+        allowed.repo_root(),
+        [
+            "guard",
+            "stop",
+            "--repo",
+            allowed.repo_arg(),
+            "--host-output",
+            "claude-code",
+        ],
+        &allowed_event,
+    )?;
+    assert_success(&allowed_output);
+    assert_eq!(json_stdout(&allowed_output)?["continue"], true);
+    assert!(stderr(&allowed_output).is_empty());
     Ok(())
 }
 

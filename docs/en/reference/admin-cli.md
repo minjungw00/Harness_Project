@@ -77,11 +77,11 @@ volicord project rename NAME [--repo PATH] [--json]
 volicord project forget [PATH|NAME] [--json]
 volicord export mcp-config [--output PATH] [--repo PATH] [--read-only] [--json]
 volicord serve --transport streamable-http [--listen 127.0.0.1:8765] [--home PATH] [--connection <connection_id>] [--project PATH]... [--token TOKEN | --generate-token] [--allow-origin ORIGIN] [--allow-nonlocal-listen]
-volicord guard session-start [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--text]
-volicord guard pre-tool [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--text]
-volicord guard post-tool [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--text]
-volicord guard prompt-capture [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--text]
-volicord guard stop [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--text]
+volicord guard session-start [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--output volicord-json|text] [--host-output codex|claude-code]
+volicord guard pre-tool [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--output volicord-json|text] [--host-output codex|claude-code]
+volicord guard post-tool [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--output volicord-json|text] [--host-output codex|claude-code]
+volicord guard prompt-capture [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--output volicord-json|text] [--host-output codex|claude-code]
+volicord guard stop [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--output volicord-json|text] [--host-output codex|claude-code]
 volicord changes reconcile [--repo PATH] [--task active|ID] [--json]
 volicord user status [--repo PATH] [--task active|ID] [--json]
 volicord user judgments [--repo PATH] [--task active|ID] [--json]
@@ -105,8 +105,14 @@ Exit and stream behavior:
   require Runtime Home resolution.
 - `--json` writes exactly one JSON document to stdout and does not mix human
   explanation into stdout.
-- `volicord guard` writes JSON by default. Its `deny` decision exits `1`;
-  `allow`, `warn`, and `inject_context` exit `0`.
+- `volicord guard` uses `--output volicord-json` by default. In
+  `volicord-json` mode it writes the Volicord wrapper JSON, `deny` exits `1`,
+  and `allow`, `warn`, and `inject_context` exit `0`. `--output text` uses the
+  same exit behavior with a concise human-readable line.
+- `volicord guard --host-output codex|claude-code` writes host-native hook
+  output instead of the Volicord wrapper JSON. Policy decisions use the host's
+  stdout, stderr, and exit-code rules; generated Codex and Claude Code hooks use
+  this mode, and Claude Code policy blocks are not represented as exit code `1`.
 - Errors remain stderr diagnostics under the CLI exit-code model.
 - `volicord serve --transport streamable-http` is an explicit long-running MCP
   transport process. It keeps loopback as the default listener, requires bearer
@@ -480,10 +486,17 @@ close-readiness checks, host trust, shell approval, or OS-level sandboxing.
 
 Each guard command reads one JSON hook event from stdin by default. `--file PATH`
 reads that JSON event from a file for tests or host integrations that stage
-events. JSON output is the default and includes `decision`, `allowed`,
-`guard_event_id`, optional `session_id`, and a command-specific `result`.
-`--text` selects a concise human-readable line. Supported decisions are
+events. The default `--output volicord-json` output includes `decision`,
+`allowed`, `guard_event_id`, optional `session_id`, and a command-specific
+`result`. `--output text` selects a concise human-readable line. Legacy `--json`
+and `--text` flags remain accepted for compatibility. Supported decisions are
 `allow`, `deny`, `warn`, and `inject_context`.
+
+`--host-output codex|claude-code` selects host-native hook rendering for
+installed host hooks. In this mode stdout contains only host-recognized response
+JSON or context, or is empty when the host expects no output; stdout does not
+contain the Volicord wrapper JSON. Stored guard events keep the internal
+decision and result details used by Volicord.
 
 Project selection uses `--repo PATH`, an event project or repository field when
 present, or the current working directory. `--connection ID` supplies the

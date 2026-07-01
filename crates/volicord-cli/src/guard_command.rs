@@ -52,8 +52,9 @@ const EXPECTED_WRITE_TTL_MINUTES: i64 = 15;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct GuardCommandOutcome {
-    pub output: String,
-    pub exits_failure: bool,
+    pub stdout: String,
+    pub stderr: String,
+    pub exit_code: i32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -132,8 +133,37 @@ impl GuardPhase {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum OutputFormat {
-    Json,
+    VolicordJson,
     Text,
+    HostNative(HostOutputMode),
+}
+
+impl OutputFormat {
+    fn default_host_kind(self) -> Option<&'static str> {
+        match self {
+            Self::HostNative(HostOutputMode::Codex) => Some("codex"),
+            Self::HostNative(HostOutputMode::ClaudeCode) => Some("claude_code"),
+            Self::VolicordJson | Self::Text => None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum HostOutputMode {
+    Codex,
+    ClaudeCode,
+}
+
+impl HostOutputMode {
+    fn from_cli(value: &str) -> Result<Self, GuardCommandError> {
+        match value {
+            "codex" => Ok(Self::Codex),
+            "claude-code" | "claude_code" => Ok(Self::ClaudeCode),
+            _ => Err(GuardCommandError::Usage(
+                "--host-output must be codex or claude-code".to_owned(),
+            )),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -158,9 +188,16 @@ impl Default for GuardOptions {
             guard_installation_id: None,
             host_kind: None,
             guard_mode: None,
-            output: OutputFormat::Json,
+            output: OutputFormat::VolicordJson,
         }
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct RenderedGuardOutput {
+    stdout: String,
+    stderr: String,
+    exit_code: i32,
 }
 
 #[derive(Debug, Clone)]
@@ -302,11 +339,11 @@ enum ExpectedWriteMatchOutcome {
 
 pub fn guard_usage() -> String {
     concat!(
-        "volicord guard session-start [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--text]\n",
-        "volicord guard pre-tool [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--text]\n",
-        "volicord guard post-tool [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--text]\n",
-        "volicord guard prompt-capture [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--text]\n",
-        "volicord guard stop [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--text]\n",
+        "volicord guard session-start [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--output volicord-json|text] [--host-output codex|claude-code]\n",
+        "volicord guard pre-tool [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--output volicord-json|text] [--host-output codex|claude-code]\n",
+        "volicord guard post-tool [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--output volicord-json|text] [--host-output codex|claude-code]\n",
+        "volicord guard prompt-capture [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--output volicord-json|text] [--host-output codex|claude-code]\n",
+        "volicord guard stop [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--output volicord-json|text] [--host-output codex|claude-code]\n",
     )
     .to_owned()
 }
@@ -321,15 +358,17 @@ where
 {
     let Some(subcommand) = args.first().map(String::as_str) else {
         return Ok(GuardCommandOutcome {
-            output: guard_usage(),
-            exits_failure: false,
+            stdout: guard_usage(),
+            stderr: String::new(),
+            exit_code: 0,
         });
     };
     if matches!(subcommand, "-h" | "--help" | "help") {
         if args.len() == 1 {
             return Ok(GuardCommandOutcome {
-                output: guard_usage(),
-                exits_failure: false,
+                stdout: guard_usage(),
+                stderr: String::new(),
+                exit_code: 0,
             });
         }
         return Err(GuardCommandError::Usage(format!(
@@ -361,7 +400,7 @@ where
     let _activation =
         observe_guard_installation_activation(&runtime_home, &project, &envelope, phase)?;
 
-    let (decision, result, exits_failure, expected_write) = match phase {
+    let (decision, result, expected_write) = match phase {
         GuardPhase::SessionStart => {
             let summary = guard_state_summary(&runtime_home, &project, &envelope, &input)?;
             (
@@ -372,7 +411,6 @@ where
                     "context": context_json(&summary),
                     "enforcement_level": "cooperative_detective"
                 }),
-                false,
                 None,
             )
         }
@@ -380,7 +418,6 @@ where
             let summary = guard_state_summary(&runtime_home, &project, &envelope, &input)?;
             let observation = tool_observation(&input.raw_value, &project.repo_root);
             let (decision, reasons) = pre_tool_decision(&summary, &observation, &input.raw_value);
-            let exits_failure = decision == GuardDecision::Deny;
             let expected_write = expected_write_candidate(
                 &project,
                 &envelope,
@@ -404,7 +441,6 @@ where
                     "context": context_json(&summary),
                     "enforcement_level": "cooperative_detective"
                 }),
-                exits_failure,
                 expected_write,
             )
         }
@@ -434,20 +470,18 @@ where
                     "context": context_json(&summary),
                     "enforcement_level": "cooperative_detective"
                 }),
-                false,
                 None,
             )
         }
         GuardPhase::PromptCapture => {
-            let (decision, result, exits_failure) =
+            let (decision, result, _exits_failure) =
                 handle_prompt_capture(&runtime_home, &project, &envelope, &input)?;
-            (decision, result, exits_failure, None)
+            (decision, result, None)
         }
         GuardPhase::Stop => {
             let summary = guard_state_summary(&runtime_home, &project, &envelope, &input)?;
             let (decision, reasons, close_status) =
                 stop_decision(&runtime_home, &project, &envelope, &summary)?;
-            let exits_failure = decision == GuardDecision::Deny;
             (
                 decision,
                 json!({
@@ -458,7 +492,6 @@ where
                     "context": context_json(&summary),
                     "enforcement_level": "cooperative_detective"
                 }),
-                exits_failure,
                 None,
             )
         }
@@ -477,9 +510,11 @@ where
     if let Some(expected_write) = expected_write {
         persist_expected_write(&runtime_home, &project, expected_write)?;
     }
+    let rendered = render_guard_output(phase, decision, &envelope, result, options.output)?;
     Ok(GuardCommandOutcome {
-        output: render_guard_output(phase, decision, &envelope, result, options.output)?,
-        exits_failure,
+        stdout: rendered.stdout,
+        stderr: rendered.stderr,
+        exit_code: rendered.exit_code,
     })
 }
 
@@ -558,7 +593,23 @@ fn parse_guard_options(args: &[String]) -> Result<GuardOptions, GuardCommandErro
         } else if token == "--text" {
             options.output = OutputFormat::Text;
         } else if token == "--json" {
-            options.output = OutputFormat::Json;
+            options.output = OutputFormat::VolicordJson;
+        } else if let Some(value) = token.strip_prefix("--output=") {
+            options.output = parse_output_format(value)?;
+        } else if token == "--output" {
+            index += 1;
+            let value = args
+                .get(index)
+                .ok_or_else(|| GuardCommandError::Usage("--output requires a value".to_owned()))?;
+            options.output = parse_output_format(value)?;
+        } else if let Some(value) = token.strip_prefix("--host-output=") {
+            options.output = OutputFormat::HostNative(HostOutputMode::from_cli(value)?);
+        } else if token == "--host-output" {
+            index += 1;
+            let value = args.get(index).ok_or_else(|| {
+                GuardCommandError::Usage("--host-output requires a value".to_owned())
+            })?;
+            options.output = OutputFormat::HostNative(HostOutputMode::from_cli(value)?);
         } else if token.starts_with('-') {
             return Err(GuardCommandError::Usage(format!("unknown option: {token}")));
         } else {
@@ -569,6 +620,16 @@ fn parse_guard_options(args: &[String]) -> Result<GuardOptions, GuardCommandErro
         index += 1;
     }
     Ok(options)
+}
+
+fn parse_output_format(value: &str) -> Result<OutputFormat, GuardCommandError> {
+    match value {
+        "volicord-json" | "volicord_json" | "json" => Ok(OutputFormat::VolicordJson),
+        "text" => Ok(OutputFormat::Text),
+        other => Err(GuardCommandError::Usage(format!(
+            "unsupported --output value: {other}"
+        ))),
+    }
 }
 
 fn set_path_option(
@@ -715,6 +776,7 @@ fn guard_envelope(
                     ],
                 )
             })
+            .or_else(|| options.output.default_host_kind().map(str::to_owned))
             .unwrap_or_else(|| "generic".to_owned()),
     )?;
     let guard_mode = normalize_guard_mode(
@@ -2885,35 +2947,222 @@ fn render_guard_output(
     envelope: &GuardEnvelope,
     result: Value,
     output: OutputFormat,
-) -> Result<String, GuardCommandError> {
+) -> Result<RenderedGuardOutput, GuardCommandError> {
     match output {
-        OutputFormat::Json => Ok(format!(
-            "{}\n",
-            serde_json::to_string_pretty(&json!({
-                "schema_version": GUARD_SCHEMA_VERSION,
-                "phase": phase.event_kind(),
-                "decision": decision.as_str(),
-                "allowed": decision != GuardDecision::Deny,
-                "guard_event_id": envelope.event_id,
-                "session_id": envelope.session_id,
-                "result": result
-            }))
-            .map_err(json_error)?
-        )),
+        OutputFormat::VolicordJson => Ok(RenderedGuardOutput {
+            stdout: format!(
+                "{}\n",
+                serde_json::to_string_pretty(&json!({
+                    "schema_version": GUARD_SCHEMA_VERSION,
+                    "phase": phase.event_kind(),
+                    "decision": decision.as_str(),
+                    "allowed": decision != GuardDecision::Deny,
+                    "guard_event_id": envelope.event_id,
+                    "session_id": envelope.session_id,
+                    "result": result
+                }))
+                .map_err(json_error)?
+            ),
+            stderr: String::new(),
+            exit_code: if decision == GuardDecision::Deny {
+                1
+            } else {
+                0
+            },
+        }),
         OutputFormat::Text => {
             let allowed = if decision == GuardDecision::Deny {
                 "blocked"
             } else {
                 "allowed"
             };
-            Ok(format!(
-                "Volicord guard {}: {} ({})\n",
-                phase.command_name(),
-                decision.as_str(),
-                allowed
-            ))
+            Ok(RenderedGuardOutput {
+                stdout: format!(
+                    "Volicord guard {}: {} ({})\n",
+                    phase.command_name(),
+                    decision.as_str(),
+                    allowed
+                ),
+                stderr: String::new(),
+                exit_code: if decision == GuardDecision::Deny {
+                    1
+                } else {
+                    0
+                },
+            })
         }
+        OutputFormat::HostNative(host) => render_host_native_output(host, phase, decision, result),
     }
+}
+
+fn render_host_native_output(
+    host: HostOutputMode,
+    phase: GuardPhase,
+    decision: GuardDecision,
+    result: Value,
+) -> Result<RenderedGuardOutput, GuardCommandError> {
+    let event_name = host_hook_event_name(phase);
+    let value = match phase {
+        GuardPhase::SessionStart => context_output(event_name, guard_context_message(&result)),
+        GuardPhase::PreTool => match decision {
+            GuardDecision::Deny => Some(json!({
+                "hookSpecificOutput": {
+                    "hookEventName": event_name,
+                    "permissionDecision": "deny",
+                    "permissionDecisionReason": blocking_reason(phase, &result)
+                }
+            })),
+            GuardDecision::Warn | GuardDecision::InjectContext => {
+                context_output(event_name, guard_context_message(&result))
+            }
+            GuardDecision::Allow => None,
+        },
+        GuardPhase::PostTool => match decision {
+            GuardDecision::Deny => Some(json!({
+                "decision": "block",
+                "reason": blocking_reason(phase, &result)
+            })),
+            GuardDecision::Warn | GuardDecision::InjectContext => {
+                context_output(event_name, post_tool_context_message(&result))
+            }
+            GuardDecision::Allow => None,
+        },
+        GuardPhase::PromptCapture => match decision {
+            GuardDecision::Deny => Some(json!({
+                "decision": "block",
+                "reason": blocking_reason(phase, &result)
+            })),
+            GuardDecision::InjectContext | GuardDecision::Warn => {
+                context_output(event_name, prompt_context_message(&result))
+            }
+            GuardDecision::Allow => prompt_context_message(&result)
+                .filter(|message| !message.trim().is_empty())
+                .and_then(|message| context_output(event_name, Some(message))),
+        },
+        GuardPhase::Stop => match decision {
+            GuardDecision::Deny => Some(json!({
+                "decision": "block",
+                "reason": blocking_reason(phase, &result)
+            })),
+            GuardDecision::Allow | GuardDecision::Warn | GuardDecision::InjectContext => {
+                Some(json!({ "continue": true }))
+            }
+        },
+    };
+    let stdout = match value {
+        Some(value) => format!("{}\n", serde_json::to_string(&value).map_err(json_error)?),
+        None => String::new(),
+    };
+    Ok(RenderedGuardOutput {
+        stdout,
+        stderr: String::new(),
+        exit_code: host_success_exit_code(host),
+    })
+}
+
+fn host_success_exit_code(_host: HostOutputMode) -> i32 {
+    0
+}
+
+fn host_hook_event_name(phase: GuardPhase) -> &'static str {
+    match phase {
+        GuardPhase::SessionStart => "SessionStart",
+        GuardPhase::PreTool => "PreToolUse",
+        GuardPhase::PostTool => "PostToolUse",
+        GuardPhase::PromptCapture => "UserPromptSubmit",
+        GuardPhase::Stop => "Stop",
+    }
+}
+
+fn context_output(event_name: &str, message: Option<String>) -> Option<Value> {
+    let message = message.filter(|message| !message.trim().is_empty())?;
+    Some(json!({
+        "hookSpecificOutput": {
+            "hookEventName": event_name,
+            "additionalContext": message
+        }
+    }))
+}
+
+fn blocking_reason(phase: GuardPhase, result: &Value) -> String {
+    first_reason_message(result).unwrap_or_else(|| match phase {
+        GuardPhase::SessionStart => "Volicord session context could not be prepared.".to_owned(),
+        GuardPhase::PreTool => "Volicord blocked this tool call.".to_owned(),
+        GuardPhase::PostTool => "Volicord blocked normal handling of this tool result.".to_owned(),
+        GuardPhase::PromptCapture => "Volicord blocked this user prompt.".to_owned(),
+        GuardPhase::Stop => "Volicord needs more work before this session stops.".to_owned(),
+    })
+}
+
+fn first_reason_message(result: &Value) -> Option<String> {
+    result
+        .get("reasons")
+        .and_then(Value::as_array)
+        .and_then(|reasons| reasons.first())
+        .and_then(|reason| {
+            let message = reason.get("message").and_then(Value::as_str)?;
+            let code = reason.get("code").and_then(Value::as_str);
+            Some(match code {
+                Some(code) if !code.trim().is_empty() => format!("{message} ({code})"),
+                _ => message.to_owned(),
+            })
+        })
+        .or_else(|| {
+            result
+                .get("model_context")
+                .and_then(Value::as_str)
+                .filter(|message| !message.trim().is_empty())
+                .map(str::to_owned)
+        })
+}
+
+fn guard_context_message(result: &Value) -> Option<String> {
+    let context = result.get("context")?;
+    let project_name = context.get("project_name").and_then(Value::as_str)?;
+    let state_version = context.get("state_version").and_then(Value::as_u64)?;
+    let active_task = context
+        .get("active_task_id")
+        .and_then(Value::as_str)
+        .unwrap_or("none");
+    let write_checks = context
+        .get("current_write_check_ids")
+        .and_then(Value::as_array)
+        .map(Vec::len)
+        .unwrap_or(0);
+    let pending_judgments = context
+        .get("pending_user_judgment_count")
+        .and_then(Value::as_u64)
+        .unwrap_or(0);
+    let unresolved_changes = context
+        .get("unresolved_unrecorded_change_count")
+        .and_then(Value::as_u64)
+        .unwrap_or(0);
+    Some(format!(
+        "Volicord context: project `{project_name}`, state_version {state_version}, active_task {active_task}, current_write_checks {write_checks}, pending_user_judgments {pending_judgments}, unresolved_unrecorded_changes {unresolved_changes}."
+    ))
+}
+
+fn post_tool_context_message(result: &Value) -> Option<String> {
+    let changes = result
+        .get("unrecorded_changes")
+        .and_then(Value::as_array)
+        .map(Vec::len)
+        .unwrap_or(0);
+    if changes == 0 {
+        return guard_context_message(result);
+    }
+    Some(format!(
+        "Volicord observed {changes} unresolved Product Repository change finding(s) after this tool call. Reconcile them before close."
+    ))
+}
+
+fn prompt_context_message(result: &Value) -> Option<String> {
+    result
+        .get("model_context")
+        .and_then(Value::as_str)
+        .filter(|message| !message.trim().is_empty())
+        .map(str::to_owned)
+        .or_else(|| guard_context_message(result))
 }
 
 fn context_json(summary: &GuardStateSummary) -> Value {

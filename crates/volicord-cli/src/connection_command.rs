@@ -4026,7 +4026,7 @@ fn is_volicord_codex_hook_handler(phase: HostLifecyclePhase, handler: &Value) ->
                     && command.contains("--connection")
                     && command.contains("--guard-installation")
                     && command.contains("--host codex")
-                    && command.contains("--json")
+                    && command.contains("--host-output codex")
             })
 }
 
@@ -4080,7 +4080,20 @@ fn guard_command_specs(
                 "--guard-mode".to_owned(),
                 init_mode.cli_value().to_owned(),
             ];
-            args.push("--json".to_owned());
+            match (host_kind, init_mode) {
+                (HostKind::Codex, InitMode::Guarded | InitMode::Managed) => {
+                    args.push("--host-output".to_owned());
+                    args.push("codex".to_owned());
+                }
+                (HostKind::ClaudeCode, InitMode::Guarded | InitMode::Managed) => {
+                    args.push("--host-output".to_owned());
+                    args.push("claude-code".to_owned());
+                }
+                _ => {
+                    args.push("--output".to_owned());
+                    args.push("volicord-json".to_owned());
+                }
+            }
             (
                 phase.policy_key().to_owned(),
                 GuardCommandSpec {
@@ -7525,6 +7538,8 @@ mod tests {
         assert!(hooks_text.contains("--connection conn_alpha"));
         assert!(hooks_text.contains("--guard-installation guard_installation_alpha"));
         assert!(hooks_text.contains("--host codex"));
+        assert!(hooks_text.contains("--host-output codex"));
+        assert!(!hooks_text.contains("--json"));
         Ok(())
     }
 
@@ -7640,6 +7655,7 @@ mod tests {
             assert!(settings_text.contains(command), "missing {command}");
         }
         assert!(settings_text.contains("--host claude-code"));
+        assert!(settings_text.contains("--host-output claude-code"));
         assert!(settings_text.contains("--guard-installation guard_installation_alpha"));
         assert!(settings_text.contains("\"matcher\": \"Edit|Write|MultiEdit\""));
         assert!(fs::read_to_string(repo.join(".claude/rules/volicord.md"))?
@@ -7747,7 +7763,7 @@ mod tests {
         "hooks": [
           {
             "type": "command",
-            "command": "volicord guard pre-tool --host claude-code --json",
+            "command": "volicord guard pre-tool --host claude-code --host-output claude-code",
             "timeout": 30
           }
         ]

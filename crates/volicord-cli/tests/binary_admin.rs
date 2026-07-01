@@ -134,9 +134,9 @@ fn binary_help_options_match_supported_contracts() -> Result<(), Box<dyn Error>>
             "--session",
             "--guard-installation",
             "--host",
+            "--host-output",
             "--guard-mode",
             "--mode",
-            "--text",
         ],
     )?;
     assert_help_options(
@@ -166,8 +166,9 @@ fn binary_help_options_match_supported_contracts() -> Result<(), Box<dyn Error>>
             "--session",
             "--guard-installation",
             "--host",
+            "--host-output",
             "--guard-mode",
-            "--text",
+            "--output",
         ],
     )?;
     assert_help_options(["setup", "--help"], SETUP_HELP_OPTIONS)?;
@@ -998,8 +999,8 @@ fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Resul
     assert!(capability["commands"]["pre_tool"]["args"]
         .as_array()
         .expect("capability guard args should be an array")
-        .iter()
-        .any(|arg| arg == "--json"));
+        .windows(2)
+        .any(|pair| pair[0] == "--host-output" && pair[1] == "codex"));
 
     let doctor = run_with_home_env(runtime_home.path(), ["doctor", "--json"], &[])?;
     assert_success(&doctor);
@@ -2689,7 +2690,12 @@ fn assert_guard_policy_invokes_required_phases(policy: &Value, connection_id: &s
         assert_eq!(args.first().and_then(Value::as_str), Some("guard"));
         assert_eq!(args.get(1).and_then(Value::as_str), Some(command_name));
         assert!(arg_pair(args, "--connection", connection_id));
-        assert!(args.iter().any(|arg| arg == "--json"));
+        let host_output = match policy["host"].as_str() {
+            Some("codex") => "codex",
+            Some("claude-code") => "claude-code",
+            other => panic!("unexpected guard policy host: {other:?}"),
+        };
+        assert!(arg_pair(args, "--host-output", host_output));
     }
 }
 
