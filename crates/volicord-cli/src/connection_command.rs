@@ -6825,6 +6825,12 @@ fn verify_managed_json_file(
                 return;
             }
         }
+        if validate_contract_config(HostKind::Codex, HostContractConfigKind::HookConfig, text)
+            .is_err()
+        {
+            findings.stale_files.push(path_text.to_owned());
+            state = "stale";
+        }
     }
     if file.get("kind").and_then(Value::as_str) != Some("volicord_policy") {
         if let Some(kind) = kind {
@@ -6931,6 +6937,24 @@ fn verify_managed_json_projection_file(
         }
     };
     if actual_projection == desired && sha256_text(expected_projection_json) == expected_hash {
+        if projection == ManagedJsonProjection::ClaudeCodeSettingsHooks
+            && serde_json::to_string(&actual_projection)
+                .ok()
+                .is_none_or(|text| {
+                    validate_contract_config(
+                        HostKind::ClaudeCode,
+                        HostContractConfigKind::ProjectSettings,
+                        &text,
+                    )
+                    .is_err()
+                })
+        {
+            findings.stale_files.push(path_text.to_owned());
+            if let Some(kind) = kind {
+                findings.set_kind_state(kind, "stale");
+            }
+            return;
+        }
         if let Some(kind) = kind {
             findings.set_kind_state(kind, "installed");
         }
@@ -7539,6 +7563,9 @@ mod tests {
         assert!(hooks_text.contains("--guard-installation guard_installation_alpha"));
         assert!(hooks_text.contains("--host codex"));
         assert!(hooks_text.contains("--host-output codex"));
+        assert!(hooks_text.contains(
+            "Bash|apply_patch|Edit|Write|mcp__.*__(write|edit|create|update|delete|remove|move|patch).*"
+        ));
         assert!(!hooks_text.contains("--json"));
         Ok(())
     }
@@ -7657,7 +7684,9 @@ mod tests {
         assert!(settings_text.contains("--host claude-code"));
         assert!(settings_text.contains("--host-output claude-code"));
         assert!(settings_text.contains("--guard-installation guard_installation_alpha"));
-        assert!(settings_text.contains("\"matcher\": \"Edit|Write|MultiEdit\""));
+        assert!(settings_text.contains(
+            "\"matcher\": \"Bash|Edit|Write|MultiEdit|mcp__.*__(write|edit|create|update|delete|remove|move|patch).*\""
+        ));
         assert!(fs::read_to_string(repo.join(".claude/rules/volicord.md"))?
             .contains("Configured local guard commands"));
 
@@ -7735,7 +7764,8 @@ mod tests {
             .expect("PreToolUse should be an array");
         assert!(pre_tool.iter().any(|group| group["matcher"] == "Bash"));
         assert!(pre_tool.iter().any(|group| {
-            group["matcher"] == "Edit|Write|MultiEdit"
+            group["matcher"]
+                == "Bash|Edit|Write|MultiEdit|mcp__.*__(write|edit|create|update|delete|remove|move|patch).*"
                 && group["hooks"][0]["command"]
                     .as_str()
                     .is_some_and(|command| command.contains("volicord guard pre-tool"))
@@ -8006,6 +8036,130 @@ mod tests {
         assert_eq!(guard_state.managed_bundle_hash, None);
         assert_eq!(guard_state.managed_verification_state, "not_applicable");
         assert_eq!(guard_state.prompt_capture_state, "observed");
+        Ok(())
+    }
+
+    #[test]
+    fn guard_state_downgrades_when_required_shell_matcher_is_missing(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let runtime_home = temp_dir("codex-missing-shell-matcher-runtime")?;
+        let repo = temp_dir("codex-missing-shell-matcher-repo")?;
+        fs::create_dir_all(repo.join(".git"))?;
+        initialize_runtime_home(&runtime_home, "runtime_home_test", "{}")?;
+        let project = ensure_project_for_repo(
+            &runtime_home,
+            RepoProjectRegistration {
+                project_name: None,
+                project_alias: None,
+                repo_root: repo.clone(),
+                project_home: None,
+                status: ACTIVE_PROJECT_STATUS.to_owned(),
+                metadata_json: "{}".to_owned(),
+            },
+        )?;
+        let entry = ManagedServerEntry::new("conn_codex_missing_bash", Path::new("volicord"), None);
+        let integration = apply_guard_integration(plan_guard_integration(
+            HostKind::Codex,
+            InitMode::Guarded,
+            false,
+            &repo,
+            "conn_codex_missing_bash",
+            "guard_installation_missing_bash",
+            &entry,
+        )?)?;
+
+        let hooks_path = repo.join(".codex/hooks.json");
+        let hooks_without_bash = fs::read_to_string(&hooks_path)?.replace("Bash|", "");
+        fs::write(&hooks_path, &hooks_without_bash)?;
+        let mut capability: Value = serde_json::from_str(&guard_capability_json(&integration)?)?;
+        let hook_file = capability["files"]
+            .as_array_mut()
+            .and_then(|files| {
+                files
+                    .iter_mut()
+                    .find(|file| file["kind"] == HostIntegrationFileKind::HostHookConfig.as_str())
+            })
+            .expect("capability should record hook config file");
+        hook_file["content_hash"] = Value::String(sha256_text(&hooks_without_bash));
+
+        ensure_agent_connection(
+            &runtime_home,
+            AgentConnectionRegistration {
+                connection_internal_id: "conn_codex_missing_bash".to_owned(),
+                host_kind: HostKind::Codex.as_str().to_owned(),
+                intent: ConnectionIntent::Shared.as_str().to_owned(),
+                host_scope: HostScope::Project.as_str().to_owned(),
+                server_name: DEFAULT_SERVER_NAME.to_owned(),
+                config_target: path_text(&repo.join(".codex/config.toml")),
+                mode: CONNECTION_MODE_WORKFLOW.to_owned(),
+                enabled: true,
+                managed_fingerprint: "fingerprint".to_owned(),
+                last_verification_status: VERIFIED_STATUS_COMPLETE.to_owned(),
+                last_verification_report_json: "{}".to_owned(),
+                last_user_actions_json: "[]".to_owned(),
+                metadata_json: "{}".to_owned(),
+            },
+        )?;
+        add_connection_project(
+            &runtime_home,
+            ConnectionProjectRegistration {
+                connection_internal_id: "conn_codex_missing_bash".to_owned(),
+                project_id: project.project_id.clone(),
+            },
+        )?;
+        upsert_guard_installation(
+            &runtime_home,
+            GuardInstallationUpsert {
+                guard_installation_id: "guard_installation_missing_bash".to_owned(),
+                connection_internal_id: "conn_codex_missing_bash".to_owned(),
+                project_id: Some(project.project_id.clone()),
+                host_kind: HostKind::Codex.as_str().to_owned(),
+                guard_mode: GuardMode::Guarded.as_str().to_owned(),
+                host_capability_json: serde_json::to_string(&capability)?,
+                installation_status: GuardInstallationStatus::ReloadRequired.as_str().to_owned(),
+                installed_at: Some("2026-07-01T00:00:00Z".to_owned()),
+                last_checked_at: "2026-07-01T00:00:00Z".to_owned(),
+                first_seen_at: None,
+                last_seen_at: None,
+                last_seen_phase: None,
+                observed_host_kind: None,
+                observed_policy_hash: None,
+                observed_binary_version: None,
+                metadata_json: "{}".to_owned(),
+            },
+        )?;
+        volicord_store::guards::observe_guard_installation(
+            &runtime_home,
+            volicord_store::guards::GuardInstallationObservation {
+                guard_installation_id: "guard_installation_missing_bash".to_owned(),
+                connection_internal_id: "conn_codex_missing_bash".to_owned(),
+                project_id: project.project_id.clone(),
+                host_kind: HostKind::Codex.as_str().to_owned(),
+                guard_mode: GuardMode::Guarded.as_str().to_owned(),
+                observed_policy_hash: integration.policy_hash.clone(),
+                observed_binary_version: Some("test".to_owned()),
+                observed_phase: "session_start".to_owned(),
+                observed_at: "2026-07-01T00:01:00Z".to_owned(),
+            },
+        )?;
+
+        let projects = list_connection_projects(&runtime_home, "conn_codex_missing_bash")?;
+        let guard_state =
+            guard_state_for_connection(&runtime_home, "conn_codex_missing_bash", &projects)?;
+
+        assert_eq!(guard_state.hook_config_state, "stale");
+        assert_eq!(guard_state.effective_state, "degraded");
+        assert!(guard_state.stale_files.contains(&path_text(&hooks_path)));
+        assert_eq!(
+            guard_state.guard_strength(),
+            GuardStrength::AuthorityRecordOnly.as_str()
+        );
+        assert_ne!(
+            guard_state.guard_strength(),
+            GuardStrength::HostHookGuarded.as_str()
+        );
+        assert!(!guard_state.pre_tool_blocking_available());
+        assert!(!guard_state.post_tool_correlation_available());
         Ok(())
     }
 

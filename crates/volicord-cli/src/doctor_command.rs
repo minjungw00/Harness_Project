@@ -1960,7 +1960,7 @@ mod tests {
             "hooks": {
                 "PreToolUse": [
                     {
-                        "matcher": "Edit|Write|MultiEdit",
+                        "matcher": "Bash|Edit|Write|MultiEdit|mcp__.*__(write|edit|create|update|delete|remove|move|patch).*",
                         "hooks": [
                             {
                                 "type": "command",

@@ -253,8 +253,9 @@ const CLAUDE_CODE_PATHS: [HostConfigPath; 6] = [
     },
 ];
 
-const CODEX_WRITE_MATCHERS: [&str; 3] = ["apply_patch", "Edit", "Write"];
-const CLAUDE_WRITE_MATCHERS: [&str; 3] = ["Edit", "Write", "MultiEdit"];
+const MCP_WRITE_MATCHER: &str = "mcp__.*__(write|edit|create|update|delete|remove|move|patch).*";
+const CODEX_WRITE_MATCHERS: [&str; 5] = ["Bash", "apply_patch", "Edit", "Write", MCP_WRITE_MATCHER];
+const CLAUDE_WRITE_MATCHERS: [&str; 5] = ["Bash", "Edit", "Write", "MultiEdit", MCP_WRITE_MATCHER];
 
 const CODEX_HOOK_EVENTS: [HostHookEventContract; 5] = [
     HostHookEventContract {
@@ -879,7 +880,7 @@ fn validate_json_hook_value(
                 event.event_name
             )));
         }
-        let mut saw_write_matcher = event.write_matcher_tokens.is_empty();
+        let mut missing_write_matcher_tokens = event.write_matcher_tokens.to_vec();
         for group in groups {
             let group_object = group.as_object().ok_or_else(|| {
                 HostContractValidationError::new(format!(
@@ -889,9 +890,7 @@ fn validate_json_hook_value(
             })?;
             if let Some(matcher) = group_object.get("matcher") {
                 let matcher = require_string(Some(matcher), "matcher")?;
-                if matcher_contains_any(matcher, event.write_matcher_tokens) {
-                    saw_write_matcher = true;
-                }
+                remove_covered_matcher_tokens(&mut missing_write_matcher_tokens, matcher);
             }
             let handlers = group_object
                 .get("hooks")
@@ -912,10 +911,11 @@ fn validate_json_hook_value(
                 validate_hook_handler(event.event_name, handler)?;
             }
         }
-        if !saw_write_matcher {
+        if !missing_write_matcher_tokens.is_empty() {
             return Err(HostContractValidationError::new(format!(
-                "{} hook config must include a write matcher",
-                event.event_name
+                "{} hook config must include required write matcher tokens: {}",
+                event.event_name,
+                missing_write_matcher_tokens.join(", ")
             )));
         }
     }
@@ -1019,10 +1019,10 @@ fn validate_tool_event_input(
             }
         }
         HostKind::ClaudeCode => {
-            if CLAUDE_WRITE_MATCHERS.contains(&tool_name) {
-                require_string(tool_input.get("file_path"), "tool_input.file_path")?;
-            } else if tool_name == "Bash" {
+            if tool_name == "Bash" {
                 require_string(tool_input.get("command"), "tool_input.command")?;
+            } else if CLAUDE_WRITE_MATCHERS.contains(&tool_name) {
+                require_string(tool_input.get("file_path"), "tool_input.file_path")?;
             } else {
                 return Err(HostContractValidationError::new(
                     "Claude Code write hook fixture must use a write tool or Bash",
@@ -1043,8 +1043,8 @@ fn validate_tool_event_input(
     Ok(())
 }
 
-fn matcher_contains_any(matcher: &str, tokens: &[&str]) -> bool {
-    tokens.is_empty() || tokens.iter().any(|token| matcher.contains(token))
+fn remove_covered_matcher_tokens(missing_tokens: &mut Vec<&'static str>, matcher: &str) {
+    missing_tokens.retain(|token| !matcher.contains(*token));
 }
 
 fn require_string<'a>(
@@ -1114,6 +1114,18 @@ mod tests {
         assert_eq!(contract.hook_config_shape.root_key, "hooks");
         assert_eq!(contract.supported_lifecycle_phases, REQUIRED_GUARD_PHASES);
         assert_eq!(contract.required_lifecycle_phases, REQUIRED_GUARD_PHASES);
+        assert_eq!(
+            hook_event_for_phase(contract, HostLifecyclePhase::PreTool)
+                .expect("pre-tool contract should exist")
+                .write_matcher_tokens,
+            CODEX_WRITE_MATCHERS
+        );
+        assert_eq!(
+            hook_event_for_phase(contract, HostLifecyclePhase::PostTool)
+                .expect("post-tool contract should exist")
+                .write_matcher_tokens,
+            CODEX_WRITE_MATCHERS
+        );
         assert!(contract.optional_lifecycle_phases.is_empty());
         assert_eq!(
             contract.prompt_capture.status,
@@ -1146,6 +1158,18 @@ mod tests {
         assert_eq!(contract.hook_config_shape.root_key, "hooks");
         assert_eq!(contract.supported_lifecycle_phases, REQUIRED_GUARD_PHASES);
         assert_eq!(contract.required_lifecycle_phases, REQUIRED_GUARD_PHASES);
+        assert_eq!(
+            hook_event_for_phase(contract, HostLifecyclePhase::PreTool)
+                .expect("pre-tool contract should exist")
+                .write_matcher_tokens,
+            CLAUDE_WRITE_MATCHERS
+        );
+        assert_eq!(
+            hook_event_for_phase(contract, HostLifecyclePhase::PostTool)
+                .expect("post-tool contract should exist")
+                .write_matcher_tokens,
+            CLAUDE_WRITE_MATCHERS
+        );
         assert_eq!(
             contract.prompt_capture.status,
             ContractSupportStatus::Verified
@@ -1214,6 +1238,27 @@ mod tests {
             CLAUDE_RULES,
         )
         .expect("Claude Code rule fixture should validate");
+    }
+
+    #[test]
+    fn hook_config_validation_requires_every_declared_write_matcher() {
+        let missing_bash = CODEX_HOOKS.replace("Bash|", "");
+        let error = validate_contract_config(
+            HostKind::Codex,
+            HostContractConfigKind::HookConfig,
+            &missing_bash,
+        )
+        .expect_err("Codex hook config without Bash matcher should be degraded");
+        assert!(error.message().contains("Bash"));
+
+        let missing_mcp = CLAUDE_HOOKS.replace(&format!("|{MCP_WRITE_MATCHER}"), "");
+        let error = validate_contract_config(
+            HostKind::ClaudeCode,
+            HostContractConfigKind::HookConfig,
+            &missing_mcp,
+        )
+        .expect_err("Claude Code hook config without MCP write matcher should be degraded");
+        assert!(error.message().contains(MCP_WRITE_MATCHER));
     }
 
     #[test]

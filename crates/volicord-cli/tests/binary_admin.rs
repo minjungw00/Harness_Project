@@ -471,6 +471,9 @@ fn init_codex_guarded_without_degraded_opt_in_generates_hooks() -> Result<(), Bo
     assert!(hooks.contains("--guard-installation"));
     assert!(hooks.contains("--host codex"));
     assert!(hooks.contains("--host-output codex"));
+    assert!(hooks.contains(
+        "Bash|apply_patch|Edit|Write|mcp__.*__(write|edit|create|update|delete|remove|move|patch).*"
+    ));
     assert!(repo_root.join(".codex/rules/volicord.rules").exists());
     Ok(())
 }
@@ -520,7 +523,9 @@ fn init_claude_code_guarded_without_degraded_opt_in_generates_hooks() -> Result<
     assert!(settings.contains("volicord guard stop"));
     assert!(settings.contains("--host claude-code"));
     assert!(settings.contains("--host-output claude-code"));
-    assert!(settings.contains("Edit|Write|MultiEdit"));
+    assert!(settings.contains(
+        "Bash|Edit|Write|MultiEdit|mcp__.*__(write|edit|create|update|delete|remove|move|patch).*"
+    ));
     assert!(repo_root.join(".claude/rules/volicord.md").exists());
     Ok(())
 }
@@ -923,6 +928,9 @@ fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Resul
     assert!(hooks.contains("--guard-installation"));
     assert!(hooks.contains("--host codex"));
     assert!(hooks.contains("--guard-mode guarded"));
+    assert!(hooks.contains(
+        "Bash|apply_patch|Edit|Write|mcp__.*__(write|edit|create|update|delete|remove|move|patch).*"
+    ));
     assert!(hooks.contains("volicord guard prompt-capture"));
     let rules = fs::read_to_string(repo_root.join(".codex/rules/volicord.rules"))?;
     assert!(rules.contains("# BEGIN VOLICORD MANAGED CODEX RULES v1"));
@@ -1165,7 +1173,9 @@ fn init_claude_code_guarded_writes_project_mcp_policy_and_rule() -> Result<(), B
     assert!(settings.contains(&format!("--connection {connection_id}")));
     assert!(settings.contains("--guard-installation"));
     assert!(settings.contains("--host claude-code"));
-    assert!(settings.contains("\"matcher\": \"Edit|Write|MultiEdit\""));
+    assert!(settings.contains(
+        "\"matcher\": \"Bash|Edit|Write|MultiEdit|mcp__.*__(write|edit|create|update|delete|remove|move|patch).*\""
+    ));
     assert!(repo_root.join(".claude/rules/volicord.md").exists());
     let rule = fs::read_to_string(repo_root.join(".claude/rules/volicord.md"))?;
     assert!(rule.contains(".volicord/policy.json"));

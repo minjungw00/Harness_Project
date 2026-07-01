@@ -158,7 +158,7 @@ fn guard_pre_tool_denies_product_write_without_active_task() -> Result<(), Box<d
         "session_id": "guard_session_pre_no_task",
         "connection_id": fixture.connection_id(),
         "host": {"kind": "claude_code"},
-        "tool_name": "shell",
+        "tool_name": "Bash",
         "command": "touch src/lib.rs",
         "paths": ["src/lib.rs"]
     });
@@ -191,7 +191,7 @@ fn guard_pre_tool_allows_read_status_without_active_task() -> Result<(), Box<dyn
         "event_id": "guard_pre_read",
         "connection_id": fixture.connection_id(),
         "host_kind": "codex",
-        "tool_name": "shell",
+        "tool_name": "Bash",
         "command": "git status --short"
     });
 
@@ -205,6 +205,7 @@ fn guard_pre_tool_allows_read_status_without_active_task() -> Result<(), Box<dyn
     let value = json_stdout(&output)?;
     assert_eq!(value["decision"], "allow");
     assert_eq!(value["allowed"], true);
+    assert_eq!(value["result"]["tool"]["classification"], "read_only");
     assert!(value["result"]["reasons"]
         .as_array()
         .expect("reasons should be an array")
@@ -226,7 +227,7 @@ fn guard_pre_tool_codex_host_output_deny_is_native_json() -> Result<(), Box<dyn 
         "event_id": "guard_host_codex_pre_deny",
         "session_id": "guard_host_codex_pre_deny_session",
         "connection_id": fixture.connection_id(),
-        "tool_name": "shell",
+        "tool_name": "Bash",
         "command": "touch src/lib.rs",
         "paths": ["src/lib.rs"]
     });
@@ -308,7 +309,7 @@ fn guard_pre_tool_host_output_allow_has_empty_streams() -> Result<(), Box<dyn Er
         let event = json!({
             "event_id": format!("guard_host_pre_allow_{host_output}"),
             "connection_id": fixture.connection_id(),
-            "tool_name": "shell",
+            "tool_name": "Bash",
             "command": "git status --short"
         });
 
@@ -619,7 +620,7 @@ fn guard_host_output_non_policy_error_uses_stderr_not_stdout() -> Result<(), Box
     let fixture = GuardCliFixture::new("guard-host-non-policy-error")?;
     let event = json!({
         "event_id": "guard_host_non_policy_error",
-        "tool_name": "shell",
+        "tool_name": "Bash",
         "command": "git status --short"
     });
 
@@ -685,7 +686,7 @@ fn guard_pre_tool_requires_current_write_readiness() -> Result<(), Box<dyn Error
         "session_id": "guard_session_write_ready",
         "connection_id": fixture.connection_id(),
         "host_kind": "codex",
-        "tool_name": "shell",
+        "tool_name": "Bash",
         "command": "touch src/export.rs",
         "paths": ["src/export.rs"]
     });
@@ -705,7 +706,7 @@ fn guard_pre_tool_requires_current_write_readiness() -> Result<(), Box<dyn Error
         "session_id": "guard_session_write_ready",
         "connection_id": fixture.connection_id(),
         "host_kind": "codex",
-        "tool_name": "shell",
+        "tool_name": "Bash",
         "command": "touch src/export.rs",
         "paths": ["src/export.rs"]
     });
@@ -719,6 +720,8 @@ fn guard_pre_tool_requires_current_write_readiness() -> Result<(), Box<dyn Error
     let value = json_stdout(&allowed)?;
     assert_eq!(value["decision"], "allow");
     assert_eq!(value["allowed"], true);
+    assert_eq!(value["result"]["tool"]["classification"], "mutating");
+    assert!(value["result"]["expected_write"]["expected_write_id"].is_string());
     Ok(())
 }
 
@@ -731,7 +734,7 @@ fn guard_post_tool_records_unrecorded_product_file_changes() -> Result<(), Box<d
         "session_id": "guard_session_post",
         "connection_id": fixture.connection_id(),
         "host_kind": "codex",
-        "tool_name": "shell",
+        "tool_name": "Bash",
         "command": "touch src/export.rs",
         "success": true,
         "changed_paths": ["src/export.rs"]
@@ -824,9 +827,11 @@ fn guard_post_tool_matches_expected_allowed_write() -> Result<(), Box<dyn Error>
         "session_id": "guard_session_expected",
         "connection_id": fixture.connection_id(),
         "host_kind": "codex",
-        "tool_name": "shell",
+        "tool_name": "Bash",
         "tool_call_id": "tool_call_expected",
-        "command": "touch src/export.rs",
+        "tool_input": {
+            "command": "touch src/export.rs"
+        },
         "paths": ["src/export.rs"],
         "timestamp": "2026-06-30T05:00:00Z"
     });
@@ -859,9 +864,11 @@ fn guard_post_tool_matches_expected_allowed_write() -> Result<(), Box<dyn Error>
         "session_id": "guard_session_expected",
         "connection_id": fixture.connection_id(),
         "host_kind": "codex",
-        "tool_name": "shell",
+        "tool_name": "Bash",
         "tool_call_id": "tool_call_expected",
-        "command": "touch src/export.rs",
+        "tool_input": {
+            "command": "touch src/export.rs"
+        },
         "success": true,
         "changed_paths": ["src/export.rs"],
         "timestamp": "2026-06-30T05:01:00Z"
@@ -893,6 +900,7 @@ fn guard_post_tool_matches_expected_allowed_write() -> Result<(), Box<dyn Error>
         expected_write(fixture.runtime_home(), fixture.project_id(), &expected_id)?
             .expect("expected write should be stored");
     assert_eq!(stored_expected.status, "matched");
+    assert_eq!(stored_expected.tool_name.as_deref(), Some("Bash"));
     assert_eq!(
         stored_expected.matched_post_tool_guard_event_id.as_deref(),
         Some("guard_post_expected")
@@ -910,7 +918,7 @@ fn guard_post_tool_records_out_of_scope_expected_write() -> Result<(), Box<dyn E
         "session_id": "guard_session_scope_expected",
         "connection_id": fixture.connection_id(),
         "host_kind": "codex",
-        "tool_name": "shell",
+        "tool_name": "Bash",
         "tool_call_id": "tool_call_scope_expected",
         "command": "touch src/export.rs",
         "paths": ["src/export.rs"],
@@ -928,7 +936,7 @@ fn guard_post_tool_records_out_of_scope_expected_write() -> Result<(), Box<dyn E
         "session_id": "guard_session_scope_expected",
         "connection_id": fixture.connection_id(),
         "host_kind": "codex",
-        "tool_name": "shell",
+        "tool_name": "Bash",
         "tool_call_id": "tool_call_scope_expected",
         "command": "touch src/other.rs",
         "success": true,
@@ -970,7 +978,7 @@ fn guard_pre_tool_ambiguous_shell_does_not_create_expected_write() -> Result<(),
         "session_id": "guard_session_ambiguous_shell",
         "connection_id": fixture.connection_id(),
         "host_kind": "codex",
-        "tool_name": "shell",
+        "tool_name": "Bash",
         "command": "python scripts/rewrite.py src/export.rs",
         "paths": ["src/export.rs"],
         "timestamp": "2026-06-30T05:20:00Z"
@@ -993,12 +1001,43 @@ fn guard_pre_tool_ambiguous_shell_does_not_create_expected_write() -> Result<(),
     )?
     .is_empty());
 
+    let denied_pre = json!({
+        "event_id": "guard_pre_ambiguous_shell_policy_deny",
+        "session_id": "guard_session_ambiguous_shell",
+        "connection_id": fixture.connection_id(),
+        "host_kind": "codex",
+        "tool_name": "Bash",
+        "command": "python scripts/rewrite.py src/export.rs",
+        "paths": ["src/export.rs"],
+        "guard_policy": {
+            "unknown_mutation_decision": "deny"
+        },
+        "timestamp": "2026-06-30T05:20:30Z"
+    });
+    let denied_output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        ["guard", "pre-tool", "--repo", fixture.repo_arg()],
+        &denied_pre,
+    )?;
+    assert_eq!(denied_output.status.code(), Some(1));
+    let denied_value = json_stdout(&denied_output)?;
+    assert_eq!(denied_value["decision"], "deny");
+    assert_reason(&denied_value, "unknown_mutation_risk");
+    assert!(denied_value["result"]["expected_write"].is_null());
+    assert!(list_pending_expected_writes(
+        fixture.runtime_home(),
+        fixture.project_id(),
+        fixture.connection_id(),
+    )?
+    .is_empty());
+
     let post = json!({
         "event_id": "guard_post_ambiguous_shell",
         "session_id": "guard_session_ambiguous_shell",
         "connection_id": fixture.connection_id(),
         "host_kind": "codex",
-        "tool_name": "shell",
+        "tool_name": "Bash",
         "command": "python scripts/rewrite.py src/export.rs",
         "success": true,
         "changed_paths": ["src/export.rs"],
@@ -1034,7 +1073,7 @@ fn guard_expected_write_does_not_leak_between_sessions() -> Result<(), Box<dyn E
         "session_id": "guard_session_a",
         "connection_id": fixture.connection_id(),
         "host_kind": "codex",
-        "tool_name": "shell",
+        "tool_name": "Bash",
         "tool_call_id": "shared_tool_call",
         "command": "touch src/export.rs",
         "paths": ["src/export.rs"],
@@ -1052,7 +1091,7 @@ fn guard_expected_write_does_not_leak_between_sessions() -> Result<(), Box<dyn E
         "session_id": "guard_session_b",
         "connection_id": fixture.connection_id(),
         "host_kind": "codex",
-        "tool_name": "shell",
+        "tool_name": "Bash",
         "tool_call_id": "shared_tool_call",
         "command": "touch src/export.rs",
         "success": true,
@@ -1089,7 +1128,7 @@ fn guard_expected_write_does_not_leak_between_projects() -> Result<(), Box<dyn E
         "session_id": "guard_session_project",
         "connection_id": first.connection_id(),
         "host_kind": "codex",
-        "tool_name": "shell",
+        "tool_name": "Bash",
         "tool_call_id": "tool_call_project",
         "command": "touch src/export.rs",
         "paths": ["src/export.rs"],
@@ -1109,7 +1148,7 @@ fn guard_expected_write_does_not_leak_between_projects() -> Result<(), Box<dyn E
         "session_id": "guard_session_project",
         "connection_id": second.connection_id(),
         "host_kind": "codex",
-        "tool_name": "shell",
+        "tool_name": "Bash",
         "tool_call_id": "tool_call_project",
         "command": "touch src/export.rs",
         "success": true,
@@ -2094,7 +2133,7 @@ fn guarded_init_hook_write_prompt_lifecycle_closes() -> Result<(), Box<dyn Error
         "connection_id": fixture.connection_id(),
         "guard_installation_id": fixture.guard_installation_id(),
         "host_kind": "codex",
-        "tool_name": "shell",
+        "tool_name": "Bash",
         "tool_call_id": "tool_lifecycle_write",
         "command": "touch src/export.rs",
         "paths": [DEFAULT_PRODUCT_PATH],
@@ -2113,7 +2152,7 @@ fn guarded_init_hook_write_prompt_lifecycle_closes() -> Result<(), Box<dyn Error
         "connection_id": fixture.connection_id(),
         "guard_installation_id": fixture.guard_installation_id(),
         "host_kind": "codex",
-        "tool_name": "shell",
+        "tool_name": "Bash",
         "tool_call_id": "tool_lifecycle_write",
         "command": "touch src/export.rs",
         "success": true,
@@ -2198,7 +2237,7 @@ fn guarded_bypass_reconcile_prompt_acceptance_unblocks_close() -> Result<(), Box
         "connection_id": fixture.connection_id(),
         "guard_installation_id": fixture.guard_installation_id(),
         "host_kind": "codex",
-        "tool_name": "shell",
+        "tool_name": "Bash",
         "tool_call_id": "tool_bypass_write",
         "command": "touch src/export.rs",
         "success": true,
