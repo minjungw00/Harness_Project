@@ -37,7 +37,7 @@ use volicord_store::{
     runtime_home::{resolve_runtime_home, RuntimeHomeResolutionError},
     StoreError,
 };
-use volicord_types::{GuardInstallationStatus, GuardMode};
+use volicord_types::{GuardInstallationStatus, GuardMode, PromptCaptureStatus};
 
 use crate::host_integration::{
     claude_code::{self, ClaudeCodeAdapter, ProductionCommandRunner},
@@ -3372,7 +3372,7 @@ impl GuardOperationalState {
             degraded_allowed: false,
             last_observed_at: None,
             last_guard_event_at: None,
-            prompt_capture_state: "unavailable".to_owned(),
+            prompt_capture_state: PromptCaptureStatus::NotConfigured.as_str().to_owned(),
             missing_files: Vec::new(),
             stale_files: Vec::new(),
             broken_files: Vec::new(),
@@ -3412,11 +3412,7 @@ impl GuardOperationalState {
             degraded_allowed: integration.allow_degraded,
             last_observed_at: None,
             last_guard_event_at: None,
-            prompt_capture_state: if init_mode == InitMode::McpOnly {
-                "disabled".to_owned()
-            } else {
-                "planned".to_owned()
-            },
+            prompt_capture_state: planned_prompt_capture_state(init_mode, integration).to_owned(),
             missing_files: Vec::new(),
             stale_files: Vec::new(),
             broken_files: Vec::new(),
@@ -3460,21 +3456,17 @@ impl GuardOperationalState {
             } else {
                 "installed".to_owned()
             },
-            hook_observed_state,
+            hook_observed_state: hook_observed_state.clone(),
             degraded_allowed: integration.allow_degraded,
             last_observed_at: None,
             last_guard_event_at: None,
-            prompt_capture_state: if init_mode == InitMode::McpOnly {
-                "disabled".to_owned()
-            } else if health == GuardInstallationStatus::Active.as_str() {
-                "available".to_owned()
-            } else if health == GuardInstallationStatus::ReloadRequired.as_str() {
-                "reload_required".to_owned()
-            } else if health == GuardInstallationStatus::Configured.as_str() {
-                "configured".to_owned()
-            } else {
-                "unavailable".to_owned()
-            },
+            prompt_capture_state: init_prompt_capture_state(
+                init_mode,
+                integration,
+                health,
+                &hook_observed_state,
+            )
+            .to_owned(),
             missing_files: Vec::new(),
             stale_files: Vec::new(),
             broken_files: Vec::new(),
@@ -3507,6 +3499,52 @@ impl GuardOperationalState {
             "missing_required_hooks": &self.missing_required_hooks,
             "unresolved_blockers": &self.unresolved_blockers,
         })
+    }
+}
+
+fn planned_prompt_capture_state(
+    init_mode: InitMode,
+    integration: &GuardIntegrationPlan,
+) -> &'static str {
+    if init_mode == InitMode::McpOnly {
+        return PromptCaptureStatus::NotConfigured.as_str();
+    }
+    if !integration.capabilities.user_prompt_submit_hook {
+        return PromptCaptureStatus::UnsupportedByHost.as_str();
+    }
+    if !guard_has_prompt_capture_commands(&integration.policy)
+        || integration
+            .missing_required_hooks
+            .contains(&HostLifecyclePhase::UserPromptSubmit)
+    {
+        return PromptCaptureStatus::NotConfigured.as_str();
+    }
+    if !integration.missing_required_hooks.is_empty() {
+        return PromptCaptureStatus::Degraded.as_str();
+    }
+    PromptCaptureStatus::Configured.as_str()
+}
+
+fn init_prompt_capture_state(
+    init_mode: InitMode,
+    integration: &GuardIntegrationPlan,
+    installation_status: &str,
+    hook_observed_state: &str,
+) -> &'static str {
+    let planned = planned_prompt_capture_state(init_mode, integration);
+    if !matches!(
+        planned,
+        "configured" | "observed" | "active" | "reload_required"
+    ) {
+        return planned;
+    }
+    match installation_status {
+        "active" if hook_observed_state == "observed" => PromptCaptureStatus::Observed.as_str(),
+        "active" => PromptCaptureStatus::Configured.as_str(),
+        "reload_required" => PromptCaptureStatus::ReloadRequired.as_str(),
+        "configured" => PromptCaptureStatus::Configured.as_str(),
+        "degraded" | "stale" | "broken" => PromptCaptureStatus::Degraded.as_str(),
+        _ => PromptCaptureStatus::Unavailable.as_str(),
     }
 }
 
@@ -4572,7 +4610,9 @@ fn guard_state_for_connection(
     }
 
     let mut file_findings = GuardFileFindings::default();
-    let mut prompt_capture_available = false;
+    let mut prompt_capture_configured = false;
+    let mut prompt_capture_host_supported = false;
+    let mut prompt_capture_observed = false;
     let prompt_capture_disabled = installations
         .iter()
         .all(|installation| installation.guard_mode == GuardMode::McpOnly.as_str());
@@ -4588,11 +4628,15 @@ fn guard_state_for_connection(
                 installation.last_seen_at.as_deref().map(str::to_owned),
             );
         }
-        if installation.guard_mode != GuardMode::McpOnly.as_str()
-            && file_findings.prompt_capture_available
-        {
-            prompt_capture_available = true;
+        if installation.last_seen_phase.as_deref() == Some("prompt_capture") {
+            prompt_capture_observed = true;
         }
+        if installation.guard_mode != GuardMode::McpOnly.as_str()
+            && file_findings.prompt_capture_configured
+        {
+            prompt_capture_configured = true;
+        }
+        prompt_capture_host_supported |= file_findings.prompt_capture_host_supported;
     }
     file_findings.sort_dedup();
 
@@ -4629,7 +4673,7 @@ fn guard_state_for_connection(
                 connection_id,
                 projects,
             )?,
-            prompt_capture_state: "unavailable".to_owned(),
+            prompt_capture_state: PromptCaptureStatus::Degraded.as_str().to_owned(),
             missing_files: file_findings.missing_files,
             stale_files: file_findings.stale_files,
             broken_files: file_findings.broken_files,
@@ -4675,7 +4719,7 @@ fn guard_state_for_connection(
                 connection_id,
                 projects,
             )?,
-            prompt_capture_state: "unavailable".to_owned(),
+            prompt_capture_state: PromptCaptureStatus::NotConfigured.as_str().to_owned(),
             missing_files: file_findings.missing_files,
             stale_files: file_findings.stale_files,
             broken_files: file_findings.broken_files,
@@ -4717,7 +4761,7 @@ fn guard_state_for_connection(
                 connection_id,
                 projects,
             )?,
-            prompt_capture_state: "unavailable".to_owned(),
+            prompt_capture_state: PromptCaptureStatus::Degraded.as_str().to_owned(),
             missing_files: file_findings.missing_files,
             stale_files: file_findings.stale_files,
             broken_files: file_findings.broken_files,
@@ -4760,19 +4804,28 @@ fn guard_state_for_connection(
     } else {
         installations[0].installation_status.as_str()
     };
-    let prompt_capture_state = if prompt_capture_available
-        && installation_state == GuardInstallationStatus::Active.as_str()
-        && observed
-    {
-        "available"
-    } else if prompt_capture_disabled {
-        "disabled"
+    let prompt_capture_state = if prompt_capture_disabled {
+        PromptCaptureStatus::NotConfigured.as_str()
+    } else if !prompt_capture_host_supported {
+        PromptCaptureStatus::UnsupportedByHost.as_str()
+    } else if !prompt_capture_configured {
+        PromptCaptureStatus::NotConfigured.as_str()
+    } else if matches!(installation_state, "broken" | "stale" | "degraded") {
+        PromptCaptureStatus::Degraded.as_str()
     } else if installation_state == GuardInstallationStatus::ReloadRequired.as_str() {
-        "reload_required"
-    } else if installation_state == GuardInstallationStatus::Configured.as_str() {
-        "configured"
+        PromptCaptureStatus::ReloadRequired.as_str()
+    } else if installation_state == GuardInstallationStatus::Active.as_str()
+        && prompt_capture_observed
+    {
+        PromptCaptureStatus::Active.as_str()
+    } else if installation_state == GuardInstallationStatus::Active.as_str() && observed {
+        PromptCaptureStatus::Observed.as_str()
+    } else if installation_state == GuardInstallationStatus::Configured.as_str()
+        || installation_state == GuardInstallationStatus::Active.as_str()
+    {
+        PromptCaptureStatus::Configured.as_str()
     } else {
-        "unavailable"
+        PromptCaptureStatus::Unavailable.as_str()
     };
     let mode_state = guard_mode_state(&installations);
     let hook_observed_state = if prompt_capture_disabled {
@@ -4797,7 +4850,7 @@ fn guard_state_for_connection(
         observation_state,
         effective_state,
         files_state: if prompt_capture_disabled {
-            "disabled".to_owned()
+            "not_configured".to_owned()
         } else {
             "installed".to_owned()
         },
@@ -4935,7 +4988,8 @@ struct GuardFileFindings {
     stale_files: Vec<String>,
     broken_files: Vec<String>,
     missing_required_hooks: Vec<String>,
-    prompt_capture_available: bool,
+    prompt_capture_configured: bool,
+    prompt_capture_host_supported: bool,
     allow_degraded: bool,
 }
 
@@ -4946,7 +5000,8 @@ impl GuardFileFindings {
         self.broken_files.extend(other.broken_files);
         self.missing_required_hooks
             .extend(other.missing_required_hooks);
-        self.prompt_capture_available |= other.prompt_capture_available;
+        self.prompt_capture_configured |= other.prompt_capture_configured;
+        self.prompt_capture_host_supported |= other.prompt_capture_host_supported;
         self.allow_degraded |= other.allow_degraded;
     }
 
@@ -4970,8 +5025,13 @@ fn guard_file_findings(capability_json: &str) -> GuardFileFindings {
             .push("guard_capability_json".to_owned());
         return findings;
     };
-    findings.prompt_capture_available = value
+    findings.prompt_capture_configured = value
         .get("prompt_capture")
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
+    findings.prompt_capture_host_supported = value
+        .get("host_capabilities")
+        .and_then(|capabilities| capabilities.get("user_prompt_submit_hook"))
         .and_then(Value::as_bool)
         .unwrap_or(false);
     findings.allow_degraded = value

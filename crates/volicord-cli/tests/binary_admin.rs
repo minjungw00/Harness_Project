@@ -556,7 +556,7 @@ fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Resul
     assert_eq!(value["states"]["guard_installation"], "degraded");
     assert_eq!(value["states"]["guard_degraded_allowed"], true);
     assert_eq!(value["degraded"]["allowed"], true);
-    assert_eq!(value["states"]["prompt_capture"], "unavailable");
+    assert_eq!(value["states"]["prompt_capture"], "unsupported_by_host");
     assert_eq!(value["states"]["host_reload_required"], true);
     assert_eq!(
         value["primary_next_action"]["id"],
@@ -604,7 +604,7 @@ fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Resul
     assert!(init_text.contains("mcp_config_state: match"));
     assert!(init_text.contains("guard_installation_state: degraded"));
     assert!(init_text.contains("guard_degraded_allowed: yes"));
-    assert!(init_text.contains("prompt_capture_state: unavailable"));
+    assert!(init_text.contains("prompt_capture_state: unsupported_by_host"));
     assert!(init_text.contains("host_reload_required: yes"));
     assert!(init_text.contains("next_action: Guarded mode is degraded"));
 
@@ -749,7 +749,10 @@ fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Resul
     assert_eq!(second_json["profile"]["status"], "reused");
     assert_eq!(second_json["states"]["guard_installation"], "degraded");
     assert_eq!(second_json["states"]["guard_degraded_allowed"], true);
-    assert_eq!(second_json["states"]["prompt_capture"], "unavailable");
+    assert_eq!(
+        second_json["states"]["prompt_capture"],
+        "unsupported_by_host"
+    );
     assert_eq!(
         count_occurrences(
             &fs::read_to_string(repo_root.join("AGENTS.md"))?,
@@ -803,7 +806,7 @@ fn init_claude_code_guarded_writes_project_mcp_policy_and_rule() -> Result<(), B
     assert_eq!(value["states"]["guard_installation"], "degraded");
     assert_eq!(value["states"]["guard_degraded_allowed"], true);
     assert_eq!(value["degraded"]["allowed"], true);
-    assert_eq!(value["states"]["prompt_capture"], "unavailable");
+    assert_eq!(value["states"]["prompt_capture"], "unsupported_by_host");
     assert_eq!(value["mcp"]["command"], "volicord");
     let connection_id = value["connection"]["connection_id"]
         .as_str()
@@ -1342,7 +1345,7 @@ fn connection_status_reports_missing_guard_files_as_primary_action() -> Result<(
     assert_success(&status);
     let value = json_stdout(&status)?;
     assert_eq!(value["states"]["guard_installation"], "files_missing");
-    assert_eq!(value["states"]["prompt_capture"], "unavailable");
+    assert_eq!(value["states"]["prompt_capture"], "not_configured");
     assert_eq!(value["primary_next_action"]["id"], "guard_files_missing");
     assert!(value["guard"]["missing_files"]
         .as_array()

@@ -16,13 +16,14 @@ use volicord_store::{
     bootstrap::{project_record_for_execution, ProjectRecord},
     core_pipeline::{CoreProjectStore, UserJudgmentRecord},
     guards::{
-        agent_session, guard_event, insert_agent_session, insert_expected_write,
-        insert_guard_event, insert_prompt_capture, insert_unrecorded_change,
+        agent_session, guard_event, guard_health_record, insert_agent_session,
+        insert_expected_write, insert_guard_event, insert_prompt_capture, insert_unrecorded_change,
         list_expected_writes_matched_by_post_event, list_pending_expected_writes,
         list_unresolved_unrecorded_changes, mark_expected_write_matched,
-        observe_guard_installation, prompt_capture, unrecorded_change, AgentSessionInsert,
-        ExpectedWriteInsert, ExpectedWriteMatch, ExpectedWriteRecord, GuardEventInsert,
-        GuardInstallationObservation, PromptCaptureInsert, UnrecordedChangeInsert,
+        observe_guard_installation, prompt_capture, prompt_capture_availability, unrecorded_change,
+        AgentSessionInsert, ExpectedWriteInsert, ExpectedWriteMatch, ExpectedWriteRecord,
+        GuardEventInsert, GuardInstallationObservation, PromptCaptureAvailability,
+        PromptCaptureInsert, UnrecordedChangeInsert,
     },
     runtime_home::{resolve_runtime_home, RuntimeHomeResolutionError},
     StoreError,
@@ -30,9 +31,10 @@ use volicord_store::{
 use volicord_types::{
     chat_judgment_verification_code, ActorSource, GuardDecision, HostKind,
     JudgmentResolutionOutcome, OperationCategory, PersistedJudgmentBasis,
-    PersistedUserJudgmentRequest, ProjectId, RequestId, StatusInclude, StatusRequest, TaskId,
-    ToolEnvelope, UserJudgmentOption, UserJudgmentOptionAction, UtcTimestamp,
-    VERIFICATION_BASIS_MCP_STDIO_CONNECTION_BINDING, VERIFICATION_BASIS_USER_PROMPT_SUBMIT_HOOK,
+    PersistedUserJudgmentRequest, ProjectId, PromptCaptureStatus, RequestId, StatusInclude,
+    StatusRequest, TaskId, ToolEnvelope, UserJudgmentOption, UserJudgmentOptionAction,
+    UtcTimestamp, VERIFICATION_BASIS_MCP_STDIO_CONNECTION_BINDING,
+    VERIFICATION_BASIS_USER_PROMPT_SUBMIT_HOOK,
 };
 
 use crate::project_context::{
@@ -188,6 +190,7 @@ struct GuardStateSummary {
     state_version: u64,
     active_task_id: Option<String>,
     active_change_unit_id: Option<String>,
+    prompt_capture_status: PromptCaptureStatus,
     prompt_capture_enabled: bool,
     current_write_check_ids: Vec<String>,
     stale_write_check_ids: Vec<String>,
@@ -921,7 +924,10 @@ fn guard_state_summary(
     let mut pending_user_judgment_count = 0;
     let mut pending_user_judgments = Vec::new();
     let mut active_blocker_count = 0;
-    let prompt_capture_enabled = prompt_capture_enabled(envelope);
+    let prompt_capture_availability =
+        prompt_capture_availability_for_event(runtime_home, project, envelope)?;
+    let prompt_capture_status = prompt_capture_availability.status;
+    let prompt_capture_enabled = prompt_capture_availability.can_use_chat_commands();
     if let Some(active_task_id) = project_state.active_task_id.as_deref() {
         let task_id = TaskId::new(active_task_id);
         active_change_unit_id = store
@@ -960,6 +966,7 @@ fn guard_state_summary(
         state_version: project_state.state_version,
         active_task_id: project_state.active_task_id,
         active_change_unit_id,
+        prompt_capture_status,
         prompt_capture_enabled,
         current_write_check_ids,
         stale_write_check_ids,
@@ -1855,6 +1862,114 @@ fn matched_expected_write_json(record: &ExpectedWriteRecord, changed: &[String])
     })
 }
 
+fn prompt_capture_availability_for_event(
+    runtime_home: &Path,
+    project: &ProjectRecord,
+    envelope: &GuardEnvelope,
+) -> Result<PromptCaptureAvailability, GuardCommandError> {
+    let record = guard_health_record(runtime_home, &project.project_id, &envelope.connection_id)?;
+    let mut availability = prompt_capture_availability(&record)?;
+    let Some(installation) = record.guard_installation.as_ref() else {
+        return Ok(availability);
+    };
+    if envelope
+        .guard_installation_id
+        .as_deref()
+        .is_some_and(|id| id != installation.guard_installation_id)
+        || installation.connection_internal_id != envelope.connection_id
+        || installation.host_kind != envelope.host_kind
+        || installation.guard_mode != envelope.guard_mode
+        || installation.project_id.as_deref() != Some(project.project_id.as_str())
+    {
+        availability.status = PromptCaptureStatus::Unavailable;
+        return Ok(availability);
+    }
+    let expected_policy_hash = expected_policy_hash(&installation.host_capability_json)?;
+    match (
+        current_policy_hash(project)?,
+        expected_policy_hash.as_deref(),
+    ) {
+        (Some(current), Some(expected)) if current == expected => {}
+        (Some(_), Some(_)) => availability.status = PromptCaptureStatus::ReloadRequired,
+        (None, Some(_)) => availability.status = PromptCaptureStatus::NotConfigured,
+        _ => {}
+    }
+    Ok(availability)
+}
+
+fn expected_policy_hash(host_capability_json: &str) -> Result<Option<String>, GuardCommandError> {
+    let value = serde_json::from_str::<Value>(host_capability_json).map_err(json_error)?;
+    Ok(value
+        .get("policy_hash")
+        .and_then(Value::as_str)
+        .filter(|value| !value.trim().is_empty())
+        .map(str::to_owned))
+}
+
+fn prompt_capture_unavailable_result(
+    availability: &PromptCaptureAvailability,
+) -> (GuardDecision, Value, bool) {
+    let (code, message, next_action) = prompt_capture_unavailable_reason(availability.status);
+    (
+        GuardDecision::Deny,
+        json!({
+            "decision": GuardDecision::Deny.as_str(),
+            "allowed": false,
+            "prompt_capture": {
+                "captured": false,
+                "reason": code,
+                "prompt_capture_status": availability.status.as_str(),
+                "host_supports_prompt_capture": availability.host_supports_prompt_capture,
+                "prompt_capture_configured": availability.prompt_capture_configured,
+                "next_action": next_action
+            },
+            "recognized_judgment_command": null,
+            "reasons": [{
+                "code": code,
+                "message": message,
+                "severity": "deny",
+                "next_action": next_action
+            }],
+            "next_action": next_action,
+            "model_context": format!("Volicord did not record a user judgment: {message}"),
+            "enforcement_level": "cooperative_detective"
+        }),
+        true,
+    )
+}
+
+fn prompt_capture_unavailable_reason(
+    status: PromptCaptureStatus,
+) -> (&'static str, String, &'static str) {
+    match status {
+        PromptCaptureStatus::UnsupportedByHost => (
+            "prompt_capture_unsupported",
+            "This host does not support user prompt-submit hooks.".to_owned(),
+            "Use MCP elicitation if available; otherwise use the local volicord user command as the recovery path.",
+        ),
+        PromptCaptureStatus::NotConfigured => (
+            "prompt_capture_not_configured",
+            "Prompt capture is not configured for this host, project, and connection.".to_owned(),
+            "Configure a host prompt-capture hook, or use the local volicord user command as the recovery path.",
+        ),
+        PromptCaptureStatus::ReloadRequired => (
+            "prompt_capture_reload_required",
+            "Prompt capture configuration is installed but the host must reload the current policy.".to_owned(),
+            "Restart or reload the host before using prompt-capture chat commands.",
+        ),
+        PromptCaptureStatus::Degraded => (
+            "prompt_capture_degraded",
+            "Prompt capture is degraded for this host, project, and connection.".to_owned(),
+            "Repair the guard integration before using prompt-capture chat commands.",
+        ),
+        _ => (
+            "prompt_capture_unavailable",
+            "Prompt capture is unavailable for this host, project, and connection.".to_owned(),
+            "Use MCP elicitation if available; otherwise use the local volicord user command as the recovery path.",
+        ),
+    }
+}
+
 fn record_prompt_capture(
     runtime_home: &Path,
     project: &ProjectRecord,
@@ -1914,6 +2029,10 @@ fn handle_prompt_capture(
     envelope: &GuardEnvelope,
     input: &GuardInput,
 ) -> Result<(GuardDecision, Value, bool), GuardCommandError> {
+    let availability = prompt_capture_availability_for_event(runtime_home, project, envelope)?;
+    if !availability.can_use_chat_commands() {
+        return Ok(prompt_capture_unavailable_result(&availability));
+    }
     let capture = record_prompt_capture(runtime_home, project, envelope, input)?;
     let command = extract_prompt_text(&input.raw_value)
         .map(|prompt| parse_prompt_judgment_command(&prompt))
@@ -1934,17 +2053,6 @@ fn handle_prompt_capture(
         )),
         PromptCommandDetection::Blocked(block) => Ok(prompt_capture_blocked_result(capture, block)),
         PromptCommandDetection::Command(command) => {
-            if !prompt_capture_enabled(envelope) {
-                return Ok(prompt_capture_blocked_result(
-                    capture,
-                    PromptCommandBlock {
-                        code: "prompt_capture_disabled",
-                        message:
-                            "Volicord prompt-capture judgment commands require guarded or managed guard mode."
-                                .to_owned(),
-                    },
-                ));
-            }
             if let Some(event_project_id) = event_project_id(&input.raw_value) {
                 if event_project_id != project.project_id {
                     return Ok(prompt_capture_blocked_result(
@@ -2624,10 +2732,6 @@ fn outcome_value(value: JudgmentResolutionOutcome) -> &'static str {
     }
 }
 
-fn prompt_capture_enabled(envelope: &GuardEnvelope) -> bool {
-    matches!(envelope.guard_mode.as_str(), "guarded" | "managed")
-}
-
 fn event_project_id(event: &Value) -> Option<String> {
     event_string(event, &[&["project_id"], &["project", "id"]])
 }
@@ -2820,6 +2924,7 @@ fn context_json(summary: &GuardStateSummary) -> Value {
         "state_version": summary.state_version,
         "active_task_id": summary.active_task_id,
         "active_change_unit_id": summary.active_change_unit_id,
+        "prompt_capture_status": summary.prompt_capture_status.as_str(),
         "prompt_capture_enabled": summary.prompt_capture_enabled,
         "current_write_check_ids": summary.current_write_check_ids,
         "stale_write_check_ids": summary.stale_write_check_ids,

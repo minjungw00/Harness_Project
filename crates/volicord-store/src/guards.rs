@@ -3,7 +3,8 @@ use std::{path::Path, str::FromStr};
 use rusqlite::{params, Connection, OptionalExtension, Row};
 use serde_json::Value;
 use volicord_types::{
-    GuardDecision, GuardInstallationStatus, GuardMode, HostKind, UnrecordedChangeStatus,
+    GuardDecision, GuardInstallationStatus, GuardMode, HostKind, PromptCaptureStatus,
+    UnrecordedChangeStatus,
 };
 
 use crate::{
@@ -284,6 +285,21 @@ pub struct GuardHealthRecord {
     pub latest_session: Option<AgentSessionRecord>,
     pub latest_event: Option<GuardEventRecord>,
     pub unresolved_unrecorded_changes: Vec<UnrecordedChangeRecord>,
+}
+
+/// Derived prompt-capture availability for one project and Agent Connection.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PromptCaptureAvailability {
+    pub status: PromptCaptureStatus,
+    pub host_supports_prompt_capture: bool,
+    pub prompt_capture_configured: bool,
+    pub policy_hash_matches_observation: bool,
+}
+
+impl PromptCaptureAvailability {
+    pub fn can_use_chat_commands(&self) -> bool {
+        self.status.allows_chat_judgment_commands()
+    }
 }
 
 /// Creates or updates one guard installation in the Runtime Home registry.
@@ -1191,6 +1207,108 @@ pub fn guard_health_record(
         latest_session,
         latest_event,
         unresolved_unrecorded_changes,
+    })
+}
+
+/// Derives prompt-capture availability from the selected guard-health record.
+pub fn prompt_capture_availability(
+    record: &GuardHealthRecord,
+) -> StoreResult<PromptCaptureAvailability> {
+    let Some(installation) = record.guard_installation.as_ref() else {
+        return Ok(PromptCaptureAvailability {
+            status: PromptCaptureStatus::Unavailable,
+            host_supports_prompt_capture: false,
+            prompt_capture_configured: false,
+            policy_hash_matches_observation: false,
+        });
+    };
+    let facts = prompt_capture_capability_facts(&installation.host_capability_json)?;
+    let policy_hash_matches_observation = installation
+        .observed_policy_hash
+        .as_deref()
+        .zip(facts.expected_policy_hash.as_deref())
+        .is_some_and(|(observed, expected)| observed == expected);
+    let status = if installation.guard_mode == GuardMode::McpOnly.as_str() {
+        PromptCaptureStatus::NotConfigured
+    } else if !facts.host_supports_prompt_capture {
+        PromptCaptureStatus::UnsupportedByHost
+    } else if !facts.prompt_capture_configured || facts.prompt_capture_hook_missing {
+        PromptCaptureStatus::NotConfigured
+    } else if matches!(
+        installation.installation_status.as_str(),
+        "broken" | "stale" | "degraded"
+    ) {
+        PromptCaptureStatus::Degraded
+    } else if installation.installation_status == GuardInstallationStatus::ReloadRequired.as_str()
+        || (installation.observed_policy_hash.is_some() && !policy_hash_matches_observation)
+    {
+        PromptCaptureStatus::ReloadRequired
+    } else if installation.installation_status == GuardInstallationStatus::Active.as_str()
+        && installation.last_seen_phase.as_deref() == Some("prompt_capture")
+    {
+        PromptCaptureStatus::Active
+    } else if installation.installation_status == GuardInstallationStatus::Active.as_str()
+        && installation.last_seen_at.is_some()
+    {
+        PromptCaptureStatus::Observed
+    } else if matches!(
+        installation.installation_status.as_str(),
+        "configured" | "active"
+    ) {
+        PromptCaptureStatus::Configured
+    } else {
+        PromptCaptureStatus::Unavailable
+    };
+    Ok(PromptCaptureAvailability {
+        status,
+        host_supports_prompt_capture: facts.host_supports_prompt_capture,
+        prompt_capture_configured: facts.prompt_capture_configured,
+        policy_hash_matches_observation,
+    })
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct PromptCaptureCapabilityFacts {
+    expected_policy_hash: Option<String>,
+    host_supports_prompt_capture: bool,
+    prompt_capture_configured: bool,
+    prompt_capture_hook_missing: bool,
+}
+
+fn prompt_capture_capability_facts(
+    host_capability_json: &str,
+) -> StoreResult<PromptCaptureCapabilityFacts> {
+    let value = serde_json::from_str::<Value>(host_capability_json).map_err(|error| {
+        StoreError::InvalidInput {
+            detail: format!("guard_installations.host_capability_json must be JSON: {error}"),
+        }
+    })?;
+    let expected_policy_hash = value
+        .get("policy_hash")
+        .and_then(Value::as_str)
+        .filter(|value| !value.trim().is_empty())
+        .map(str::to_owned);
+    let host_supports_prompt_capture = value
+        .get("host_capabilities")
+        .and_then(|capabilities| capabilities.get("user_prompt_submit_hook"))
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
+    let prompt_capture_configured = value
+        .get("prompt_capture")
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
+    let prompt_capture_hook_missing = value
+        .get("missing_required_hooks")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(Value::as_str)
+        .any(|phase| phase == "user_prompt_submit_hook");
+    Ok(PromptCaptureCapabilityFacts {
+        expected_policy_hash,
+        host_supports_prompt_capture,
+        prompt_capture_configured,
+        prompt_capture_hook_missing,
     })
 }
 

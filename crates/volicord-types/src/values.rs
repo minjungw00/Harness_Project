@@ -657,6 +657,41 @@ impl GuardEffectiveStatus {
     }
 }
 
+/// Derived prompt-capture availability for guarded User Channel chat commands.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum PromptCaptureStatus {
+    Unavailable,
+    UnsupportedByHost,
+    NotConfigured,
+    ReloadRequired,
+    Configured,
+    Observed,
+    Active,
+    Degraded,
+}
+
+impl PromptCaptureStatus {
+    /// Returns the stable value name for this prompt-capture status.
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Unavailable => "unavailable",
+            Self::UnsupportedByHost => "unsupported_by_host",
+            Self::NotConfigured => "not_configured",
+            Self::ReloadRequired => "reload_required",
+            Self::Configured => "configured",
+            Self::Observed => "observed",
+            Self::Active => "active",
+            Self::Degraded => "degraded",
+        }
+    }
+
+    /// Returns true when chat judgment commands may be presented or recorded.
+    pub const fn allows_chat_judgment_commands(self) -> bool {
+        matches!(self, Self::Configured | Self::Observed | Self::Active)
+    }
+}
+
 /// Resolution status for an unrecorded Product Repository change.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]

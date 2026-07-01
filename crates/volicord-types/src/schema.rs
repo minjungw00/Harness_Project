@@ -20,8 +20,8 @@ use crate::values::{
     JudgmentBasisCompatibilityStatus, JudgmentKind, JudgmentPresentation, JudgmentRequiredFor,
     JudgmentResolutionOutcome, MethodName, NextActionKind, PlannedBlockerSourceKind,
     ProjectContinuityKind, ProjectContinuityStatus, ProjectEnforcementProfileSource,
-    ProjectEnforcementProfileStatus, RedactionState, ResponseKind, RunKind, StateRecordKind,
-    TaskLifecyclePhase, TaskMode, TaskResult, UnrecordedChangeResolutionBasis,
+    ProjectEnforcementProfileStatus, PromptCaptureStatus, RedactionState, ResponseKind, RunKind,
+    StateRecordKind, TaskLifecyclePhase, TaskMode, TaskResult, UnrecordedChangeResolutionBasis,
     UnrecordedChangeStatus, UserJudgmentOptionAction, UserJudgmentStatus, UtcTimestamp,
     ValidatorSeverity, ValidatorStatus, WriteCheckStatus, WriteDecisionCategory,
 };
@@ -414,6 +414,7 @@ pub struct GuardHealthSummary {
     pub observed_binary_version: RequiredNullable<String>,
     pub required_hook_phases: Vec<String>,
     pub missing_required_hook_phases: Vec<String>,
+    pub prompt_capture_status: PromptCaptureStatus,
     pub prompt_capture_available: bool,
     pub mcp_connection_healthy: bool,
     pub mcp_connection_status: RequiredNullable<String>,

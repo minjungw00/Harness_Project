@@ -34,6 +34,7 @@ use volicord_store::{
     },
     bootstrap::{require_installation_profile, runtime_home_record, ACTIVE_PROJECT_STATUS},
     core_pipeline::CoreProjectStore,
+    guards::{guard_health_record, prompt_capture_availability},
     runtime_home::{
         resolve_runtime_home as resolve_shared_runtime_home, RuntimeHomeResolutionError,
     },
@@ -3173,6 +3174,20 @@ fn chat_capture_fallback_instructions(
     adapter: &McpAdapter,
     judgment: &UserJudgment,
 ) -> Result<String, McpAdapterError> {
+    let availability = guard_health_record(
+        &adapter.runtime_home,
+        judgment.project_id.as_str(),
+        adapter.context.connection_internal_id.as_str(),
+    )
+    .and_then(|record| prompt_capture_availability(&record))
+    .map_err(McpAdapterError::Store)?;
+    if !availability.can_use_chat_commands() {
+        return Ok(format!(
+            "MCP elicitation is unavailable. The pending judgment `{}` remains unresolved. Prompt-capture chat commands are not available for this connection (prompt_capture_status={}). Use `volicord user judgments` and `volicord user judgment answer` as the local CLI recovery path.",
+            judgment.judgment_id.as_str(),
+            availability.status.as_str()
+        ));
+    }
     let store = CoreProjectStore::open(&adapter.runtime_home, &judgment.project_id)
         .map_err(McpAdapterError::Store)?;
     let records = store
@@ -3545,6 +3560,7 @@ mod tests {
         AgentConnectionRegistration, ConnectionProjectRegistration, CONNECTION_MODE_READ_ONLY,
     };
     use volicord_store::bootstrap::{register_project, ProjectRegistration, ACTIVE_PROJECT_STATUS};
+    use volicord_store::guards::{upsert_guard_installation, GuardInstallationUpsert};
     use volicord_test_support::core_fixtures::CoreFixture;
     use volicord_types::{
         AgentConnectionMode, OperationCategory, VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
@@ -3937,9 +3953,44 @@ mod tests {
     }
 
     #[test]
-    fn stdio_without_elicitation_capability_returns_chat_capture_fallback(
+    fn stdio_without_elicitation_capability_returns_cli_recovery_when_prompt_capture_unavailable(
     ) -> Result<(), Box<dyn Error>> {
         let fixture = CoreFixture::new("mcp-elicitation-unavailable")?;
+        let setup_adapter = adapter(&fixture)?;
+        let (task_id, state_version) = create_task(&setup_adapter)?;
+        let adapter = adapter(&fixture)?;
+        let input = Cursor::new(json_lines(&[
+            initialize_request(1, json!({})),
+            initialized_notification(),
+            tools_call(
+                2,
+                "volicord.request_user_judgment",
+                product_judgment_args(&fixture, &task_id, state_version),
+            ),
+        ])?);
+        let mut output = Vec::new();
+
+        run_stdio(adapter, BufReader::new(input), &mut output)?;
+
+        let values = stdio_responses(&output)?;
+        assert_eq!(values.len(), 2);
+        let response = volicord_response_from_tool(&values[1])?;
+        assert_eq!(response["user_judgment"]["status"], "pending");
+        let fallback = values[1]["result"]["content"][1]["text"]
+            .as_str()
+            .expect("fallback text");
+        assert!(fallback.contains("MCP elicitation is unavailable"));
+        assert!(fallback.contains("local CLI recovery path"));
+        assert!(fallback.contains("volicord user judgment answer"));
+        assert!(!fallback.contains("Volicord: answer J-1 1 #"));
+        Ok(())
+    }
+
+    #[test]
+    fn stdio_without_elicitation_capability_returns_chat_capture_when_configured(
+    ) -> Result<(), Box<dyn Error>> {
+        let fixture = CoreFixture::new("mcp-elicitation-chat-capture")?;
+        install_prompt_capture_guard(&fixture)?;
         let setup_adapter = adapter(&fixture)?;
         let (task_id, state_version) = create_task(&setup_adapter)?;
         let adapter = adapter(&fixture)?;
@@ -4140,6 +4191,47 @@ mod tests {
             McpConnectionContext::resolve(fixture.runtime_home_path(), fixture.connection_id())?
                 .with_invocation_binding_basis(VERIFICATION_BASIS_TEST_FIXTURE_BINDING);
         Ok(McpAdapter::new(fixture.runtime_home_path(), context))
+    }
+
+    fn install_prompt_capture_guard(fixture: &CoreFixture) -> Result<(), Box<dyn Error>> {
+        upsert_guard_installation(
+            fixture.runtime_home_path(),
+            GuardInstallationUpsert {
+                guard_installation_id: "guard_installation_mcp_prompt_capture".to_owned(),
+                connection_internal_id: fixture.connection_id().to_owned(),
+                project_id: Some(fixture.project_id().to_owned()),
+                host_kind: "prompt_capture_test_host".to_owned(),
+                guard_mode: "guarded".to_owned(),
+                host_capability_json: json!({
+                    "schema": "volicord-guard-capability-v1",
+                    "policy_hash": "sha256:mcp-prompt-capture",
+                    "host_capabilities": {
+                        "user_prompt_submit_hook": true
+                    },
+                    "required_guard_phases": [
+                        "session_start_hook",
+                        "pre_tool_hook",
+                        "post_tool_hook",
+                        "user_prompt_submit_hook",
+                        "stop_hook"
+                    ],
+                    "missing_required_hooks": [],
+                    "prompt_capture": true
+                })
+                .to_string(),
+                installation_status: "configured".to_owned(),
+                installed_at: Some("2026-06-30T00:00:00Z".to_owned()),
+                last_checked_at: "2026-06-30T00:00:00Z".to_owned(),
+                first_seen_at: None,
+                last_seen_at: None,
+                last_seen_phase: None,
+                observed_host_kind: None,
+                observed_policy_hash: None,
+                observed_binary_version: None,
+                metadata_json: "{}".to_owned(),
+            },
+        )?;
+        Ok(())
     }
 
     fn set_mode(fixture: &CoreFixture, mode: &str) -> Result<(), Box<dyn Error>> {

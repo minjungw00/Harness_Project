@@ -210,6 +210,10 @@ fn plan_reconcile_changes(
                 error,
             )))
         })?;
+    let user_channel_guard_health =
+        adjusted_guard_health(store, verified_invocation, &request, &[])?;
+    let can_resolve_in_chat =
+        close_task::user_channel_can_resolve_in_chat(user_channel_guard_health.as_ref());
 
     let mut planned_resolutions = Vec::new();
     let mut planned_judgments = Vec::new();
@@ -306,6 +310,7 @@ fn plan_reconcile_changes(
             record,
             &request,
             project_state.state_version,
+            can_resolve_in_chat,
         )?);
     }
 
@@ -417,8 +422,12 @@ fn plan_reconcile_changes(
         .iter()
         .map(|resolution| resolution_summary(resolution, &request, planned_state_version))
         .collect::<Vec<_>>();
-    let result_next_actions =
-        reconcile_next_actions(&request, &unresolved_findings, &planned_judgments);
+    let result_next_actions = reconcile_next_actions(
+        &request,
+        &unresolved_findings,
+        &planned_judgments,
+        user_channel_guard_health.as_ref(),
+    );
     let result = ReconcileChangesResult {
         base: placeholder_base(),
         task_ref,
@@ -933,6 +942,7 @@ fn unrecorded_finding(
     record: &UnrecordedChangeRecord,
     request: &ReconcileChangesRequest,
     state_version: u64,
+    can_resolve_in_chat: bool,
 ) -> CoreResult<UnrecordedChangeFinding> {
     Ok(UnrecordedChangeFinding {
         unrecorded_change_ref: unrecorded_change_ref(record, request, state_version),
@@ -945,7 +955,7 @@ fn unrecorded_finding(
             "detected_at",
             &record.detected_at,
         )?,
-        can_resolve_in_chat: true,
+        can_resolve_in_chat,
         next_action: NextActionSummary {
             action_kind: NextActionKind::ReconcileChanges,
             owner_method: Some(MethodName::ReconcileChanges),
@@ -997,6 +1007,7 @@ fn reconcile_next_actions(
     request: &ReconcileChangesRequest,
     unresolved_findings: &[UnrecordedChangeFinding],
     planned_judgments: &[PlannedJudgment],
+    guard_health: Option<&GuardHealthSummary>,
 ) -> Vec<NextActionSummary> {
     if planned_judgments.is_empty() && unresolved_findings.is_empty() {
         return Vec::new();
@@ -1005,7 +1016,7 @@ fn reconcile_next_actions(
         return vec![NextActionSummary {
             action_kind: NextActionKind::RecordUserJudgment,
             owner_method: Some(MethodName::RecordUserJudgment),
-            label: "Answer the created user-owned judgment before closing the Task.".to_owned(),
+            label: close_task::user_channel_pending_judgment_instruction(guard_health),
             blocking_question: Some(
                 "Does the user accept the observed Product Repository change as intentional?"
                     .to_owned(),

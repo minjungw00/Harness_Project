@@ -461,14 +461,20 @@ Lifecycle 동작:
   미해결 unrecorded-change 행을 기록하고 `warn`을 반환합니다. Post-tool 관찰과 매칭은
   guarded-operation 기록이지 제품 정확성 증명이 아닙니다. 변경을 찾기 위해 신뢰할 수
   없는 명령을 실행하지 않습니다.
-- `prompt-capture`는 prompt-capture 메타데이터를 기록하고, prompt에
+- `prompt-capture`는 현재 host, project, connection의 prompt-capture 사용 가능
+  상태가 `configured`, `observed`, `active`일 때만 prompt-capture 메타데이터를
+  기록하고 엄격한 chat judgment 명령을 인식합니다. prompt에는
   `Volicord: answer J-3 1 #AB7K`, `Volicord: answer J-3 reject #AB7K`,
   `Volicord: answer J-3 defer #AB7K`, `Volicord: note J-3 "text" #AB7K` 같은 명시적
-  줄이 있을 때만 엄격한 chat judgment 명령으로 인식합니다. 명령이 아닌 prompt는
-  정상적으로 진행됩니다. 형식이 잘못되었거나, 모호하거나, 알 수 없거나, 코드가
-  없거나, 코드가 틀렸거나, 오래되었거나, 이미 답했거나, 프로젝트나 연결이 맞지
-  않는 판단 명령은 판단을 기록하지 않고 `deny`를 반환합니다. 유효한 명령은 로컬
-  `User Channel`을 통해 지정된 대기 판단을 `actor_source=local_user`와
+  줄이 있어야 합니다. 지원되지 않거나, 설정되지 않았거나, 다시 읽어야 하거나,
+  저하된 prompt capture는 `prompt_capture_unsupported`,
+  `prompt_capture_not_configured`, `prompt_capture_reload_required` 같은 구조화된
+  비기록 출력을 하나의 다음 행동과 함께 반환합니다. 명령이 아닌 prompt는 prompt
+  capture를 사용할 수 있을 때만 정상적으로 진행됩니다. 형식이 잘못되었거나,
+  모호하거나, 알 수 없거나, 코드가 없거나, 코드가 틀렸거나, 오래되었거나, 이미
+  답했거나, 프로젝트나 연결이 맞지 않는 판단 명령은 판단을 기록하지 않고 `deny`를
+  반환합니다. 유효한 명령은 로컬 `User Channel`을 통해 지정된 대기 판단을
+  `actor_source=local_user`와
   `resolved_verification_basis=user_prompt_submit_hook`으로
   기록하고, prompt-capture 저장소에는 전체 prompt text를 생략하며, 그 명령을 일반
   agent 지시로 다루지 않고 모델에 보이는 기록 완료 맥락을 반환합니다.

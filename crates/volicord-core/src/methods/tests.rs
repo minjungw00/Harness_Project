@@ -12327,6 +12327,10 @@ fn guarded_close_complete_success_reports_guard_health() -> Result<(), Box<dyn E
         true
     );
     assert_eq!(
+        status.response_value["guard_health"]["prompt_capture_status"],
+        "observed"
+    );
+    assert_eq!(
         status.response_value["guard_health"]["mcp_connection_healthy"],
         true
     );
@@ -12495,7 +12499,11 @@ fn guarded_close_blocks_configured_guard_before_observation() -> Result<(), Box<
     );
     assert_eq!(
         status.response_value["guard_health"]["prompt_capture_available"],
-        false
+        true
+    );
+    assert_eq!(
+        status.response_value["guard_health"]["prompt_capture_status"],
+        "configured"
     );
     assert_eq!(harness.counts()?, before);
 
@@ -12605,6 +12613,9 @@ fn guarded_degraded_installation_with_valid_event_still_blocks_missing_required_
     let degraded_capability = json!({
         "schema": "volicord-guard-capability-v1",
         "policy_hash": "sha256:guardedfixture",
+        "host_capabilities": {
+            "user_prompt_submit_hook": true
+        },
         "required_guard_phases": [
             "session_start_hook",
             "pre_tool_hook",
@@ -12706,6 +12717,9 @@ fn guarded_partial_required_phase_configuration_with_event_still_blocks_missing_
     let partial_capability = json!({
         "schema": "volicord-guard-capability-v1",
         "policy_hash": "sha256:guardedfixture",
+        "host_capabilities": {
+            "user_prompt_submit_hook": true
+        },
         "required_guard_phases": ["session_start_hook"],
         "missing_required_hooks": [],
         "prompt_capture": true
@@ -13778,8 +13792,8 @@ fn guarded_pending_judgment_displays_user_answer_paths() -> Result<(), Box<dyn E
         .as_str()
         .expect("pending blocker should include answer-path guidance");
     assert!(guidance.contains("MCP elicitation"), "{guidance}");
-    assert!(guidance.contains("prompt-capture"), "{guidance}");
-    assert!(guidance.contains("volicord user"), "{guidance}");
+    assert!(!guidance.contains("prompt-capture"), "{guidance}");
+    assert!(!guidance.contains("volicord user"), "{guidance}");
     assert_eq!(
         response.response_value["guard_health"]["prompt_capture_available"],
         true
@@ -14636,6 +14650,9 @@ fn complete_guard_capability_json() -> String {
     json!({
         "schema": "volicord-guard-capability-v1",
         "policy_hash": "sha256:guardedfixture",
+        "host_capabilities": {
+            "user_prompt_submit_hook": true
+        },
         "required_guard_phases": [
             "session_start_hook",
             "pre_tool_hook",

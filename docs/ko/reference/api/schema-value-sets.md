@@ -397,7 +397,20 @@ degraded
 broken
 ```
 
-이 값들은 닫기 준비 상태와 상태 조회 보기에 쓰이는 guard 통합 상태를 보고합니다. `guard_installation_status`는 저장된 생명주기 값이고, `guard_configuration_status`는 파일과 required hook 완전성을 도출하며, `guard_observation_status`는 현재 설치에 일치하는 hook 관찰이 있는지를 도출합니다. `effective_guard_status`는 guarded 또는 managed 경로의 닫기 준비 상태 건강 점검에 쓰는 값입니다. 효과적인 `active` 건강 상태에는 guarded 또는 managed 모드, 완전한 required hook 설정, 오래되거나 깨지지 않은 설치, 현재 일치하는 관찰, 일치하는 호스트와 policy 식별 정보가 필요합니다. 이 값들은 제품 정확성, 테스트 충분성, OS 강제, 샌드박싱, 보안 격리, 최종 수락, 잔여 위험 수락을 증명하지 않습니다. `mcp_only`는 담당 문서가 정의한 설정이 guarded 또는 managed 동작을 선택하지 않는 한 협력형으로 남습니다.
+`GuardHealthSummary.prompt_capture_status`는 아래 값을 사용합니다.
+
+```text
+unavailable
+unsupported_by_host
+not_configured
+reload_required
+configured
+observed
+active
+degraded
+```
+
+이 값들은 닫기 준비 상태와 상태 조회 보기에 쓰이는 guard 통합 상태를 보고합니다. `guard_installation_status`는 저장된 생명주기 값이고, `guard_configuration_status`는 파일과 required hook 완전성을 도출하며, `guard_observation_status`는 현재 설치에 일치하는 hook 관찰이 있는지를 도출합니다. `effective_guard_status`는 guarded 또는 managed 경로의 닫기 준비 상태 건강 점검에 쓰는 값입니다. 효과적인 `active` 건강 상태에는 guarded 또는 managed 모드, 완전한 required hook 설정, 오래되거나 깨지지 않은 설치, 현재 일치하는 관찰, 일치하는 호스트와 policy 식별 정보가 필요합니다. `prompt_capture_status`는 사용자 소유 판단 채팅 명령을 위한 prompt capture 사용 가능 상태입니다. `unsupported_by_host`는 호스트 기능이 없음을 뜻하고, `not_configured`는 선택된 연결에 prompt-capture 단계가 설정되어 있지 않음을 뜻합니다. `reload_required`는 사용 전에 설치된 설정이나 policy 식별 정보를 다시 읽어야 함을 뜻합니다. `configured`는 prompt-capture 관찰 전에도 검증 코드 채팅 명령을 표시할 수 있음을 뜻하고, `observed`는 일치하는 guard hook이 관찰되었음을 뜻합니다. `active`는 일치하는 prompt-capture hook 관찰이 기록되었음을 뜻하고, `degraded`는 저하된 guard 건강 상태 때문에 prompt capture가 차단됨을 뜻합니다. 이 값들은 제품 정확성, 테스트 충분성, OS 강제, 샌드박싱, 보안 격리, 최종 수락, 잔여 위험 수락을 증명하지 않습니다. `mcp_only`는 담당 문서가 정의한 설정이 guarded 또는 managed 동작을 선택하지 않는 한 협력형으로 남습니다.
 
 `UnrecordedChangeFinding.status`는 아래 값을 사용합니다.
 

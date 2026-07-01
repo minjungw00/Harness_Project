@@ -508,11 +508,16 @@ Lifecycle behavior:
   records, not proof of product correctness. It does not execute untrusted
   commands to discover changes.
 - `prompt-capture` records prompt-capture metadata and recognizes strict
-  chat judgment commands only when the prompt contains an explicit line such
-  as `Volicord: answer J-3 1 #AB7K`, `Volicord: answer J-3 reject #AB7K`,
-  `Volicord: answer J-3 defer #AB7K`, or `Volicord: note J-3 "text" #AB7K`.
-  Non-command prompts proceed normally. Malformed, ambiguous, unknown,
-  missing-code, wrong-code, stale, duplicate, wrong-project, or
+  chat judgment commands only when prompt-capture availability for the current
+  host, project, and connection is `configured`, `observed`, or `active`, and
+  the prompt contains an explicit line such as `Volicord: answer J-3 1 #AB7K`,
+  `Volicord: answer J-3 reject #AB7K`, `Volicord: answer J-3 defer #AB7K`, or
+  `Volicord: note J-3 "text" #AB7K`. Unsupported, unconfigured, reload-needed,
+  or degraded prompt capture returns structured non-recording output such as
+  `prompt_capture_unsupported`, `prompt_capture_not_configured`, or
+  `prompt_capture_reload_required`, with one next action. Non-command prompts
+  proceed normally only when prompt capture is available. Malformed, ambiguous,
+  unknown, missing-code, wrong-code, stale, duplicate, wrong-project, or
   wrong-connection judgment commands return `deny` without recording a judgment.
   A valid command records the addressed pending judgment through the local
   `User Channel` with `actor_source=local_user` and

@@ -395,7 +395,20 @@ degraded
 broken
 ```
 
-These values report guard integration state for close-readiness and status projections. `guard_installation_status` is the stored lifecycle value, `guard_configuration_status` derives file and required-hook completeness, `guard_observation_status` derives whether the current installation has a matching hook observation, and `effective_guard_status` is the close-readiness health used for guarded or managed paths. `active` effective health requires guarded or managed mode, complete required hook configuration, a non-stale and non-broken installation, a current matching observation, and matching host and policy identity. These values do not prove product correctness, test sufficiency, OS enforcement, sandboxing, security isolation, final acceptance, or residual-risk acceptance. `mcp_only` remains cooperative unless an owner-defined configuration selects guarded or managed behavior.
+`GuardHealthSummary.prompt_capture_status` uses:
+
+```text
+unavailable
+unsupported_by_host
+not_configured
+reload_required
+configured
+observed
+active
+degraded
+```
+
+These values report guard integration state for close-readiness and status projections. `guard_installation_status` is the stored lifecycle value, `guard_configuration_status` derives file and required-hook completeness, `guard_observation_status` derives whether the current installation has a matching hook observation, and `effective_guard_status` is the close-readiness health used for guarded or managed paths. `active` effective health requires guarded or managed mode, complete required hook configuration, a non-stale and non-broken installation, a current matching observation, and matching host and policy identity. `prompt_capture_status` is the prompt-capture availability state for user-owned judgment chat commands: `unsupported_by_host` means the host capability is absent, `not_configured` means the prompt-capture phase is not configured for the selected connection, `reload_required` means installed configuration or policy identity must be reloaded before use, `configured` means verification-code chat commands may be shown before a prompt-capture observation, `observed` means a matching guard hook has been observed, `active` means a matching prompt-capture hook observation is recorded, and `degraded` means prompt capture is blocked by degraded guard health. These values do not prove product correctness, test sufficiency, OS enforcement, sandboxing, security isolation, final acceptance, or residual-risk acceptance. `mcp_only` remains cooperative unless an owner-defined configuration selects guarded or managed behavior.
 
 `UnrecordedChangeFinding.status` uses:
 

@@ -816,7 +816,6 @@ struct GuardCapabilityFacts {
     expected_policy_hash: Option<String>,
     required_hook_phases: Vec<String>,
     missing_required_hook_phases: Vec<String>,
-    prompt_capture_configured: bool,
 }
 
 pub(super) fn guard_health_summary_from_record(
@@ -922,9 +921,11 @@ pub(super) fn guard_health_summary_from_record(
     let mcp_connection_healthy = record.connection.as_ref().is_some_and(|connection| {
         connection.enabled && connection.last_verification_status == "complete"
     });
-    let prompt_capture_available = guard_mode_supports_prompt_capture(guard_mode)
-        && effective_guard_status == GuardEffectiveStatus::Active
-        && capability.prompt_capture_configured;
+    let prompt_capture_availability = volicord_store::guards::prompt_capture_availability(&record)
+        .map_err(CorePipelineError::from)
+        .map_err(PlanError::Core)?;
+    let prompt_capture_status = prompt_capture_availability.status;
+    let prompt_capture_available = prompt_capture_availability.can_use_chat_commands();
     let missing_or_stale_write_readiness = record
         .latest_event
         .as_ref()
@@ -957,6 +958,7 @@ pub(super) fn guard_health_summary_from_record(
             .into(),
         required_hook_phases: capability.required_hook_phases,
         missing_required_hook_phases: capability.missing_required_hook_phases,
+        prompt_capture_status,
         prompt_capture_available,
         mcp_connection_healthy,
         mcp_connection_status,
@@ -970,7 +972,6 @@ fn default_guard_capability_facts() -> GuardCapabilityFacts {
         expected_policy_hash: None,
         required_hook_phases: Vec::new(),
         missing_required_hook_phases: Vec::new(),
-        prompt_capture_configured: false,
     }
 }
 
@@ -994,15 +995,10 @@ fn guard_capability_facts(
         &required_hook_phases,
         string_array_field(&capability, "missing_required_hooks").unwrap_or_default(),
     );
-    let prompt_capture_configured = capability
-        .get("prompt_capture")
-        .and_then(Value::as_bool)
-        .unwrap_or(false);
     Ok(GuardCapabilityFacts {
         expected_policy_hash,
         required_hook_phases,
         missing_required_hook_phases,
-        prompt_capture_configured,
     })
 }
 
@@ -1166,10 +1162,6 @@ fn parse_guard_installation_status(
         .map_err(PlanError::Core)
 }
 
-fn guard_mode_supports_prompt_capture(guard_mode: GuardMode) -> bool {
-    matches!(guard_mode, GuardMode::Guarded | GuardMode::Managed)
-}
-
 fn latest_guard_event_has_write_readiness_issue(
     event: &volicord_store::guards::GuardEventRecord,
 ) -> Result<bool, PlanError> {
@@ -1253,8 +1245,7 @@ fn guard_close_blockers(
         ));
     }
     if summary.unresolved_unrecorded_change_count > 0 {
-        let can_resolve_in_chat =
-            summary.prompt_capture_available || summary.mcp_connection_healthy;
+        let can_resolve_in_chat = user_channel_can_resolve_in_chat(Some(summary));
         blockers.push(close_blocker_with_resolution(
             CloseReadinessBlockerCategory::ConnectionCapability,
             "unresolved_unrecorded_changes",
@@ -1291,6 +1282,25 @@ fn guard_close_blockers(
         ));
     }
     blockers
+}
+
+pub(super) fn user_channel_pending_judgment_instruction(
+    guard_health: Option<&GuardHealthSummary>,
+) -> String {
+    if guard_health.is_some_and(|summary| summary.mcp_connection_healthy) {
+        "Use MCP elicitation for the pending user-owned judgment.".to_owned()
+    } else if guard_health.is_some_and(|summary| summary.prompt_capture_available) {
+        "Use the displayed prompt-capture chat command with the current verification code."
+            .to_owned()
+    } else {
+        "Use the local volicord user command as the recovery path.".to_owned()
+    }
+}
+
+pub(super) fn user_channel_can_resolve_in_chat(guard_health: Option<&GuardHealthSummary>) -> bool {
+    guard_health
+        .map(|summary| summary.mcp_connection_healthy || summary.prompt_capture_available)
+        .unwrap_or(false)
 }
 
 fn guard_installation_close_blocker(
@@ -1489,9 +1499,9 @@ fn terminal_close_blockers(
                         owner_method: Some(MethodName::RecordUserJudgment),
                         label: "Resolve pending user-owned judgments through the User Channel."
                             .to_owned(),
-                        blocking_question: Some(
-                            "Use MCP elicitation or prompt-capture chat commands when available, or use the local volicord user command.".to_owned(),
-                        ),
+                        blocking_question: Some(user_channel_pending_judgment_instruction(
+                            context.guard_health.as_ref(),
+                        )),
                         required_refs: pending_refs,
                     }],
                 ));
@@ -1823,9 +1833,9 @@ fn completion_close_blockers(
                 action_kind: NextActionKind::RecordUserJudgment,
                 owner_method: Some(MethodName::RecordUserJudgment),
                 label: "Resolve pending user-owned judgments through the User Channel.".to_owned(),
-                blocking_question: Some(
-                    "Use MCP elicitation or prompt-capture chat commands when available, or use the local volicord user command.".to_owned(),
-                ),
+                blocking_question: Some(user_channel_pending_judgment_instruction(
+                    context.guard_health.as_ref(),
+                )),
                 required_refs: close_complete_pending_refs,
             }],
         ));

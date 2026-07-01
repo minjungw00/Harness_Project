@@ -107,9 +107,10 @@ Agent Connection은 초점이 맞춰진 판단 필요를 요청하거나 보여 
 권한을 지니는 사용자 답변은 로컬 `User Channel`을 거칩니다.
 
 호스트와 클라이언트가 지원하면 MCP 어댑터는 대기 판단에 MCP elicitation을 사용할 수
-있습니다. guarded prompt-capture hook이 설정되어 있으면 일반 채팅 경로는
-`Volicord: answer J-3 1 #AB7K` 같은 엄격한 prompt 명령입니다. elicitation이나 prompt
-capture를 사용할 수 없을 때는 아래 터미널 명령을 안정적인 복구 경로로 사용합니다.
+있습니다. guard health가 prompt capture를 `configured`, `observed`, `active`로
+보고할 때 채팅 경로는 `Volicord: answer J-3 1 #AB7K` 같은 엄격한 prompt 명령입니다.
+elicitation과 prompt capture를 사용할 수 없을 때는 아래 터미널 명령을 안정적인 복구
+경로로 사용합니다.
 
 ```sh
 volicord user status
