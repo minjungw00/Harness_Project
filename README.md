@@ -215,8 +215,8 @@ Supported capture paths:
 | Path | When it is used |
 |---|---|
 | MCP elicitation | If the initialized MCP client declares `capabilities.elicitation`, Volicord can send an `elicitation/create` request for a focused pending judgment. A valid response is recorded through the local `User Channel` with user provenance. |
-| Chat prompt capture | If elicitation is unavailable and guarded prompt capture is active, Volicord returns exact chat commands such as `Volicord: answer J-3 1 #AB7K`, `Volicord: answer J-3 reject #AB7K`, `Volicord: answer J-3 defer #AB7K`, or `Volicord: note J-3 "text" #AB7K`. The prompt-capture hook records only strict valid commands with the current verification code. |
-| CLI fallback | If chat capture is unavailable, disabled, or needs inspection, use `volicord user` from the Product Repository. |
+| Chat prompt capture | If elicitation is unavailable and prompt-capture availability is `configured`, `observed`, or `active`, Volicord returns exact chat commands such as `Volicord: answer J-3 1 #AB7K`, `Volicord: answer J-3 reject #AB7K`, `Volicord: answer J-3 defer #AB7K`, or `Volicord: note J-3 "text" #AB7K`. The prompt-capture hook records only strict valid commands with the current verification code. |
+| CLI fallback | If chat capture is unavailable, disabled, degraded, or needs inspection, use `volicord user` from the Product Repository. |
 
 CLI fallback example:
 

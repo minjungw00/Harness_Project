@@ -201,8 +201,8 @@ Product Repository 변경을 보고할 수 있습니다. 이런 항목은 조정
 | 경로 | 쓰이는 때 |
 |---|---|
 | MCP elicitation | 초기화된 MCP client가 `capabilities.elicitation`을 선언하면 Volicord는 초점이 맞춰진 대기 판단에 대해 `elicitation/create` 요청을 보낼 수 있습니다. 유효한 응답은 사용자 출처로 로컬 `User Channel`을 통해 기록됩니다. |
-| 채팅 prompt capture | elicitation을 사용할 수 없고 guarded prompt capture가 활성화되어 있으면 Volicord는 `Volicord: answer J-3 1 #AB7K`, `Volicord: answer J-3 reject #AB7K`, `Volicord: answer J-3 defer #AB7K`, `Volicord: note J-3 "text" #AB7K` 같은 정확한 채팅 명령을 반환합니다. prompt-capture hook은 현재 검증 코드가 있는 엄격하게 유효한 명령만 기록합니다. |
-| CLI fallback | 채팅 캡처를 사용할 수 없거나 비활성화되어 있거나 수동 점검이 필요하면 Product Repository에서 `volicord user`를 사용합니다. |
+| 채팅 prompt capture | elicitation을 사용할 수 없고 prompt-capture 사용 가능 상태가 `configured`, `observed`, `active`이면 Volicord는 `Volicord: answer J-3 1 #AB7K`, `Volicord: answer J-3 reject #AB7K`, `Volicord: answer J-3 defer #AB7K`, `Volicord: note J-3 "text" #AB7K` 같은 정확한 채팅 명령을 반환합니다. prompt-capture hook은 현재 검증 코드가 있는 엄격하게 유효한 명령만 기록합니다. |
+| CLI fallback | 채팅 캡처를 사용할 수 없거나 비활성화, 저하 상태이거나 수동 점검이 필요하면 Product Repository에서 `volicord user`를 사용합니다. |
 
 CLI fallback 예시:
 

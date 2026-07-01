@@ -90,9 +90,10 @@ This loop separates what an agent can do through an [Agent Connection](../refere
 When a choice must become authority-bearing Core state, use a supported
 `User Channel`. Current supported paths are MCP elicitation when the host
 client declares that capability, guarded prompt-capture chat commands when the
-prompt-capture hook is configured, and the stable local CLI recovery path
-`volicord user`. No baseline local web User Channel is implemented. Exact
-command behavior belongs to [Administrative CLI](../reference/admin-cli.md#user-channel-commands);
+prompt-capture availability is `configured`, `observed`, or `active`, and the
+stable local CLI recovery path `volicord user`. No baseline local web User
+Channel is implemented. Exact command behavior belongs to
+[Administrative CLI](../reference/admin-cli.md#user-channel-commands);
 authority meaning belongs to [Core Model](../reference/core-model.md), and
 Agent Connection boundaries belong to
 [Agent Connection Reference](../reference/agent-connection.md).
@@ -126,10 +127,11 @@ the options. An Agent Connection must not record your authority-bearing decision
 for you, call `volicord.record_user_judgment`, or convert a chat reply into
 authority-bearing Core state outside a supported User Channel path. A strict
 prompt-capture command such as `Volicord: answer J-3 1 #AB7K` is a User Channel path
-only when the configured local hook validates and records it. Generated
-Markdown, status summaries, ordinary chat text, Product Repository guidance,
-and rendered projections can help you read state, but they are not Core
-authority; for projection boundaries, see
+only when the local prompt-capture path is available and the current
+verification code is validated and recorded by the guard hook. Generated
+Markdown, status summaries, ordinary chat text, Product Repository guidance, and
+rendered projections can help you read state, but they are not Core authority;
+for projection boundaries, see
 [Projection and template display boundaries](../reference/projection-and-templates.md).
 
 ## Reconcile unrecorded changes

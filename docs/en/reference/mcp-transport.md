@@ -522,8 +522,11 @@ commits a pending judgment:
   pending judgment remains pending.
 - If elicitation is unavailable because the client did not declare the
   capability, the adapter records no answer and returns the pending
-  `RequestUserJudgmentResult` plus additional text content with chat
-  prompt-capture commands compatible with the prompt-submit hook path.
+  `RequestUserJudgmentResult` plus additional text content. When prompt-capture
+  availability is `configured`, `observed`, or `active`, that text may include
+  exact chat prompt-capture commands compatible with the prompt-submit hook path
+  and the current verification code. Otherwise, that text points to the
+  `volicord user` local CLI recovery path.
 
 For all branches, `result.content[0].text` remains the Volicord response JSON
 string. Additional `content[]` text, when present, is adapter guidance such as

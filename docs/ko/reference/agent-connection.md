@@ -308,9 +308,10 @@ Agent Connection은 에이전트 대상 연결입니다. 모델이 사용자의 
   `volicord mcp --stdio`는 `volicord.request_user_judgment`가 만든 대기 판단에 대해 서버
   시작 elicitation을 User Channel 경로로 사용할 수 있습니다. 전송 동작은
   [MCP 전송](mcp-transport.md#user-judgment-elicitation)이 담당합니다.
-- MCP elicitation을 사용할 수 없으면 MCP 대체 안내 텍스트는 그 로컬 경로가 설정되어 있을
-  때 prompt-submit hook 경로와 호환되는 채팅 prompt-capture 명령으로 사람 사용자를 안내할
-  수 있습니다.
+- MCP elicitation을 사용할 수 없으면 MCP 대체 안내 텍스트는 prompt-capture 사용 가능
+  상태가 `configured`, `observed`, `active`일 때 prompt-submit hook 경로와 호환되는
+  채팅 prompt-capture 명령으로 사람 사용자를 안내할 수 있습니다. 그렇지 않으면 대체
+  안내 텍스트는 사용자를 `volicord user` 로컬 CLI 복구 경로로 안내합니다.
 - 기준 local web `User Channel`은 구현되어 있지 않습니다. 실험적 HTTP serve 전송은 MCP
   전송 경계이지 브라우저 판단 UI가 아닙니다.
 - 권한을 지니는 사용자 판단 해결에는 `actor_source=local_user`,

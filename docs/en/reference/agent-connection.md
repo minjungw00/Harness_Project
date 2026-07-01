@@ -346,7 +346,9 @@ Conditions:
   wire behavior is owned by [MCP Transport](mcp-transport.md#user-judgment-elicitation).
 - When MCP elicitation is unavailable, MCP fallback text may route the human
   user to chat prompt-capture commands compatible with the prompt-submit hook
-  path, when that local path is configured.
+  path when prompt-capture availability is `configured`, `observed`, or
+  `active`; otherwise the fallback text routes the user to the `volicord user`
+  local CLI recovery path.
 - No baseline local web User Channel is implemented. The experimental HTTP
   serve transport is an MCP transport boundary, not a browser judgment UI.
 - Authority-bearing user-judgment resolution requires `actor_source=local_user`,

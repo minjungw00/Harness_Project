@@ -500,10 +500,13 @@ Lifecycle 동작:
 Connection을 만들거나, MCP 호스트 설정을 설치하거나, Agent Connection이 사용자처럼
 동작할 수 있게 하지 않습니다.
 
-연결된 호스트가 `prompt-capture` guard hook을 실행하면 chat judgment 명령이 대기
-판단의 일반적인 대화형 경로입니다. 터미널의 `volicord user` 명령은 prompt capture를
-사용할 수 없거나 비활성화되어 있거나 수동 점검이 필요할 때 쓰는 고급 또는 복구
-경로로 남습니다.
+초기화된 MCP 클라이언트가 elicitation 지원을 선언하면 MCP elicitation은
+`volicord.request_user_judgment`로 만들어진 대기 판단의 선호 대화형 경로입니다.
+elicitation을 사용할 수 없고 prompt-capture 사용 가능 상태가 `configured`, `observed`,
+`active`이면 fallback 안내가 현재 검증 코드가 포함된
+`Volicord: answer J-3 1 #AB7K` 같은 정확한 채팅 명령을 보여 줄 수 있습니다. 터미널의
+`volicord user` 명령은 elicitation이나 prompt capture를 사용할 수 없거나, 비활성화,
+저하, 또는 작업 흐름에 부적합할 때 쓰는 로컬 복구와 수동 점검 경로로 남습니다.
 
 프로젝트 선택은 `--repo PATH` 또는 현재 작업 디렉터리의 저장소 루트를 사용합니다.
 작업 선택은 기본적으로 active 작업을 사용합니다. `--task active`는 이를 명시하고,

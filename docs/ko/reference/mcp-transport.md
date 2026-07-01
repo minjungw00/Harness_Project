@@ -471,8 +471,11 @@ Agent Connection 도구로 노출하지 않으며, 에이전트가 넣은 답변
 - elicitation 응답이 `action=cancel`이거나, 유효하지 않거나, 형식이 잘못되었거나, 대기
   판단과 맞출 수 없으면 어댑터는 답변을 기록하지 않으며 대기 판단은 대기 상태로 남습니다.
 - 클라이언트가 capability를 선언하지 않아 elicitation을 사용할 수 없으면 어댑터는 답변을
-  기록하지 않고 대기 `RequestUserJudgmentResult`와 함께 prompt-submit hook 경로와 호환되는
-  채팅 prompt-capture 명령 안내를 추가 text content로 반환합니다.
+  기록하지 않고 대기 `RequestUserJudgmentResult`와 추가 text content를 반환합니다.
+  prompt-capture 사용 가능 상태가 `configured`, `observed`, `active`이면 그 text에
+  prompt-submit hook 경로와 호환되고 현재 검증 코드를 포함한 정확한 채팅
+  prompt-capture 명령이 들어갈 수 있습니다. 그렇지 않으면 그 text는 `volicord user`
+  로컬 CLI 복구 경로를 안내합니다.
 
 모든 분기에서 `result.content[0].text`는 Volicord 응답 JSON 문자열로 남습니다. 추가
 `content[]` text가 있으면 fallback 안내나 elicitation 취소/무효 설명 같은 어댑터

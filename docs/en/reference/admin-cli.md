@@ -548,10 +548,14 @@ task status and answer pending user judgments through the `User Channel`. They
 do not create an Agent Connection, install MCP host configuration, or make an
 Agent Connection eligible to act as the user.
 
-When a connected host runs the `prompt-capture` guard hook, chat judgment
-commands are the normal interactive path for pending judgments. The terminal
-`volicord user` commands remain the advanced or recovery path when prompt
-capture is unavailable, disabled, or needs manual inspection.
+When the initialized MCP client declares elicitation support, MCP elicitation
+is the preferred interactive path for pending judgments created through
+`volicord.request_user_judgment`. If elicitation is unavailable and
+prompt-capture availability is `configured`, `observed`, or `active`, fallback
+guidance may show exact chat commands such as `Volicord: answer J-3 1 #AB7K`
+with the current verification code. The terminal `volicord user` commands
+remain the local recovery and manual-inspection path when elicitation or prompt
+capture is unavailable, disabled, degraded, or inappropriate for the workflow.
 
 Project selection uses `--repo PATH` or the current working directory's
 repository root. Task selection uses the active task by default; `--task active`
