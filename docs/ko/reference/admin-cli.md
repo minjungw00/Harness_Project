@@ -68,11 +68,11 @@ volicord project rename NAME [--repo PATH] [--json]
 volicord project forget [PATH|NAME] [--json]
 volicord export mcp-config [--output PATH] [--repo PATH] [--read-only] [--json]
 volicord serve --transport streamable-http [--listen 127.0.0.1:8765] [--home PATH] [--connection <connection_id>] [--project PATH]... [--token TOKEN | --generate-token] [--allow-origin ORIGIN] [--allow-nonlocal-listen]
-volicord guard session-start [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--output volicord-json|text] [--host-output codex|claude-code]
-volicord guard pre-tool [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--output volicord-json|text] [--host-output codex|claude-code]
-volicord guard post-tool [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--output volicord-json|text] [--host-output codex|claude-code]
-volicord guard prompt-capture [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--output volicord-json|text] [--host-output codex|claude-code]
-volicord guard stop [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--output volicord-json|text] [--host-output codex|claude-code]
+volicord guard session-start [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--policy-hash HASH] [--output volicord-json|text] [--host-output codex|claude-code]
+volicord guard pre-tool [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--policy-hash HASH] [--output volicord-json|text] [--host-output codex|claude-code]
+volicord guard post-tool [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--policy-hash HASH] [--output volicord-json|text] [--host-output codex|claude-code]
+volicord guard prompt-capture [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--policy-hash HASH] [--output volicord-json|text] [--host-output codex|claude-code]
+volicord guard stop [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--policy-hash HASH] [--output volicord-json|text] [--host-output codex|claude-code]
 volicord changes reconcile [--repo PATH] [--task active|ID] [--json]
 volicord user status [--repo PATH] [--task active|ID] [--json]
 volicord user judgments [--repo PATH] [--task active|ID] [--json]
@@ -101,8 +101,8 @@ volicord user judgment answer INDEX_OR_ID OPTION_INDEX_OR_ID [--repo PATH] [--no
   `--output text`는 같은 종료 동작으로 사람이 읽기 쉬운 짧은 한 줄을 씁니다.
 - `volicord guard --host-output codex|claude-code`는 Volicord wrapper JSON 대신
   host-native hook 출력을 씁니다. Policy decision은 해당 호스트의 stdout, stderr,
-  종료 코드 규칙을 사용합니다. 생성되는 Codex와 Claude Code hook은 이 모드를
-  사용하며, Claude Code policy block은 종료 코드 `1`로 표현하지 않습니다.
+  종료 코드 규칙을 사용합니다. 생성되는 Codex와 Claude Code hook wrapper script는
+  이 모드를 사용하며, Claude Code policy block은 종료 코드 `1`로 표현하지 않습니다.
 - 오류는 CLI 종료 코드 모델에 따라 stderr 진단으로 남습니다.
 - `volicord serve --transport streamable-http`는 명시적 장기 실행 MCP 전송 프로세스입니다.
   기본 리스너는 loopback으로 유지하고 bearer 인증을 요구하며, HTTP 와이어 동작과 전송
@@ -338,8 +338,10 @@ dry-run이 아닌 `volicord init`은 다음을 수행합니다.
   `.codex/config.toml` 또는 Claude Code `.mcp.json`을 씁니다.
 - `AGENTS.md` 안의 Volicord 관리 블록만 쓰거나 갱신합니다.
 - `volicord guard`를 호출하는 guard 명령을 담은 `.volicord/policy.json`을 씁니다.
+- 필수 guarded lifecycle phase를 위한 Volicord 관리 hook wrapper script를
+  `.codex/hooks/` 또는 `.claude/hooks/` 아래에 씁니다.
 - `.codex/hooks.json` 또는 `.claude/settings.json` 같은 지원 호스트 hook 파일을
-  씁니다.
+  쓰며, 이 파일은 해당 wrapper script를 호출합니다.
 - `.codex/rules/*.rules` 또는 `.claude/rules/volicord.md` 같은 지원 호스트 rule 파일을
   씁니다.
 - Runtime Home registry에 guard 설치 상태를 기록합니다.
@@ -364,7 +366,7 @@ init 재실행은 일치하는 Volicord 관리 내용에 대해 idempotent입니
 
 | 명령 | Runtime Home registry 효과 | 호스트 설정 효과 | 검증 효과 |
 |---|---|---|---|
-| `volicord init` | 필요하면 Runtime Home과 설치 프로필을 초기화하고, 선택된 저장소 프로젝트를 등록하거나 재사용하며, shared 프로젝트 범위 Agent Connection을 만들거나 갱신하고, Connection Projects 멤버십을 보장하며, guard 설치 상태를 기록합니다. | `codex` 또는 `claude-code`를 위한 관리 프로젝트 로컬 MCP 설정, `AGENTS.md` 안내, `.volicord/policy.json`, 지원 호스트 hook 파일과 rule 파일을 설치하거나 갱신합니다. | 관찰 가능한 곳에서 호스트 설정, MCP 시작, 초기화, `tools/list` 점검을 실행한 뒤 필요한 host reload, restart, trust, approval 동작을 보고합니다. |
+| `volicord init` | 필요하면 Runtime Home과 설치 프로필을 초기화하고, 선택된 저장소 프로젝트를 등록하거나 재사용하며, shared 프로젝트 범위 Agent Connection을 만들거나 갱신하고, Connection Projects 멤버십을 보장하며, guard 설치 상태를 기록합니다. | `codex` 또는 `claude-code`를 위한 관리 프로젝트 로컬 MCP 설정, `AGENTS.md` 안내, `.volicord/policy.json`, 지원 호스트 hook wrapper script, 호스트 hook 파일과 rule 파일을 설치하거나 갱신합니다. | 관찰 가능한 곳에서 호스트 설정, MCP 시작, 초기화, `tools/list` 점검을 실행한 뒤 필요한 host reload, restart, trust, approval 동작을 보고합니다. |
 | `volicord connect` | 선택된 저장소 프로젝트를 등록하거나 재사용하고, 일치하는 Agent Connection을 만들거나 갱신하며, 연결 의도와 모드를 기록하고, 프로젝트가 Connection Projects에 들어 있음을 보장합니다. | 선택된 의도에 따라 `codex` 또는 `claude-code`용 관리 호스트 설정을 설치하거나 갱신합니다. | 관찰 가능한 곳에서 호스트 설정, MCP 시작, 초기화, `tools/list` 점검을 실행합니다. |
 | `volicord connections` | 일치하는 Agent Connection과 연결 프로젝트를 읽습니다. | 호스트를 시작하지 않고 호스트 설정을 다시 쓰지 않습니다. | 저장된 검증 상태와 진단 검증 상태를 호스트 점검 없이 보고합니다. |
 | `volicord connection status` | 선택된 Agent Connection 하나를 읽습니다. | 호스트를 시작하지 않고 호스트 설정을 다시 쓰지 않습니다. | 저장된 전체 검증 상태와 필요한 사용자 동작을 보고합니다. |
@@ -461,6 +463,17 @@ Agent Connection 식별 정보를 제공합니다. `--session ID`, `--guard-inst
 `--host HOST`, `--guard-mode MODE`로 기록되는 세션, 설치, 호스트 종류, guard 모드를
 고정할 수 있습니다. 호스트 종류는 `codex`, `claude_code`, `generic` 같은 저장소 값을
 사용합니다. Guard 모드는 `mcp_only`, `guarded`, `managed`입니다.
+`--policy-hash HASH`는 생성된 hook wrapper script가 기대하는
+`.volicord/policy.json` hash를 고정합니다. hash가 맞지 않으면 그 hook event는 guard
+설치를 활성화할 수 없지만, 테스트나 디버깅에 쓰는 직접 guard 명령은 이 옵션을
+생략할 수 있습니다.
+
+생성된 Codex hook 설정은 `.codex/hooks/` 아래의 Volicord 관리 POSIX `sh` wrapper
+script를 호출합니다. 생성된 Claude Code hook 설정은 `.claude/hooks/` 아래의 Volicord
+관리 POSIX `sh` wrapper script를 호출합니다. Wrapper script는 stdin을 변경하지 않고
+`volicord guard`로 전달하며, stdout, stderr, guard 종료 코드를 보존하고, 기대하는
+호스트 종류, host-native 출력 방식, 저장소 selector, Agent Connection, guard 설치,
+policy hash를 전달합니다.
 
 `mcp_only`가 아닌 guard 명령이 기록된 프로젝트, Agent Connection, guard 설치,
 호스트 종류, guard 모드, policy hash, 알려진 hook 단계와 일치하는 유효한 event를

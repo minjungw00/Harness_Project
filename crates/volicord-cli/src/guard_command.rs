@@ -175,6 +175,7 @@ struct GuardOptions {
     guard_installation_id: Option<String>,
     host_kind: Option<String>,
     guard_mode: Option<String>,
+    policy_hash: Option<String>,
     output: OutputFormat,
 }
 
@@ -188,6 +189,7 @@ impl Default for GuardOptions {
             guard_installation_id: None,
             host_kind: None,
             guard_mode: None,
+            policy_hash: None,
             output: OutputFormat::VolicordJson,
         }
     }
@@ -339,11 +341,11 @@ enum ExpectedWriteMatchOutcome {
 
 pub fn guard_usage() -> String {
     concat!(
-        "volicord guard session-start [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--output volicord-json|text] [--host-output codex|claude-code]\n",
-        "volicord guard pre-tool [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--output volicord-json|text] [--host-output codex|claude-code]\n",
-        "volicord guard post-tool [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--output volicord-json|text] [--host-output codex|claude-code]\n",
-        "volicord guard prompt-capture [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--output volicord-json|text] [--host-output codex|claude-code]\n",
-        "volicord guard stop [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--output volicord-json|text] [--host-output codex|claude-code]\n",
+        "volicord guard session-start [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--policy-hash HASH] [--output volicord-json|text] [--host-output codex|claude-code]\n",
+        "volicord guard pre-tool [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--policy-hash HASH] [--output volicord-json|text] [--host-output codex|claude-code]\n",
+        "volicord guard post-tool [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--policy-hash HASH] [--output volicord-json|text] [--host-output codex|claude-code]\n",
+        "volicord guard prompt-capture [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--policy-hash HASH] [--output volicord-json|text] [--host-output codex|claude-code]\n",
+        "volicord guard stop [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--policy-hash HASH] [--output volicord-json|text] [--host-output codex|claude-code]\n",
     )
     .to_owned()
 }
@@ -398,7 +400,7 @@ where
     let envelope = guard_envelope(phase, &options, &input, &project)?;
     ensure_required_session(&runtime_home, &project, &envelope, phase)?;
     let _activation =
-        observe_guard_installation_activation(&runtime_home, &project, &envelope, phase)?;
+        observe_guard_installation_activation(&runtime_home, &project, &envelope, phase, &options)?;
 
     let (decision, result, expected_write) = match phase {
         GuardPhase::SessionStart => {
@@ -590,6 +592,14 @@ fn parse_guard_options(args: &[String]) -> Result<GuardOptions, GuardCommandErro
                 GuardCommandError::Usage("--guard-mode requires a value".to_owned())
             })?;
             set_string_option(&mut options.guard_mode, "--guard-mode", value)?;
+        } else if let Some(value) = token.strip_prefix("--policy-hash=") {
+            set_string_option(&mut options.policy_hash, "--policy-hash", value)?;
+        } else if token == "--policy-hash" {
+            index += 1;
+            let value = args.get(index).ok_or_else(|| {
+                GuardCommandError::Usage("--policy-hash requires a value".to_owned())
+            })?;
+            set_string_option(&mut options.policy_hash, "--policy-hash", value)?;
         } else if token == "--text" {
             options.output = OutputFormat::Text;
         } else if token == "--json" {
@@ -920,6 +930,7 @@ fn observe_guard_installation_activation(
     project: &ProjectRecord,
     envelope: &GuardEnvelope,
     phase: GuardPhase,
+    options: &GuardOptions,
 ) -> Result<Option<volicord_store::guards::GuardInstallationRecord>, GuardCommandError> {
     if envelope.guard_mode == "mcp_only" {
         return Ok(None);
@@ -930,6 +941,13 @@ fn observe_guard_installation_activation(
     let Some(observed_policy_hash) = current_policy_hash(project)? else {
         return Ok(None);
     };
+    if options
+        .policy_hash
+        .as_deref()
+        .is_some_and(|expected| expected != observed_policy_hash)
+    {
+        return Ok(None);
+    }
     observe_guard_installation(
         runtime_home,
         GuardInstallationObservation {

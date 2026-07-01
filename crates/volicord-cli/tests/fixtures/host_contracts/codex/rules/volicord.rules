@@ -1,10 +1,10 @@
 prefix_rule(
-    pattern = ["volicord", "guard"],
+    pattern = [".codex", "hooks"],
     decision = "prompt",
-    justification = "Volicord guard commands may observe local lifecycle state.",
+    justification = "Volicord hook wrappers may observe local lifecycle state.",
     match = [
-        "volicord guard session-start --json",
-        "volicord guard pre-tool --json",
+        ".codex/hooks/volicord-session-start.sh",
+        ".codex/hooks/volicord-pre-tool.sh",
     ],
     not_match = [
         "volicord status",

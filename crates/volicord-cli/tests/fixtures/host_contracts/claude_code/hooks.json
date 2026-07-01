@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "volicord guard session-start --host-output claude-code",
+            "command": ".claude/hooks/volicord-session-start.sh",
             "timeout": 30
           }
         ]
@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "volicord guard pre-tool --host-output claude-code",
+            "command": ".claude/hooks/volicord-pre-tool.sh",
             "timeout": 30
           }
         ]
@@ -30,7 +30,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "volicord guard post-tool --host-output claude-code",
+            "command": ".claude/hooks/volicord-post-tool.sh",
             "timeout": 30
           }
         ]
@@ -41,7 +41,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "volicord guard prompt-capture --host-output claude-code",
+            "command": ".claude/hooks/volicord-prompt-capture.sh",
             "timeout": 30
           }
         ]
@@ -52,7 +52,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "volicord guard stop --host-output claude-code",
+            "command": ".claude/hooks/volicord-stop.sh",
             "timeout": 30
           }
         ]

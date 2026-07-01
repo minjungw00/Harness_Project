@@ -211,6 +211,7 @@ pub enum HostIntegrationFileKind {
     VolicordPolicy,
     HostMcpConfig,
     HostHookConfig,
+    HostHookWrapper,
     HostRuleInstruction,
     AgentsManagedBlock,
 }
@@ -221,6 +222,7 @@ impl HostIntegrationFileKind {
             Self::VolicordPolicy => "volicord_policy",
             Self::HostMcpConfig => "host_mcp_config",
             Self::HostHookConfig => "host_hook_config",
+            Self::HostHookWrapper => "host_hook_wrapper",
             Self::HostRuleInstruction => "host_rule_instruction",
             Self::AgentsManagedBlock => "agents_managed_block",
         }

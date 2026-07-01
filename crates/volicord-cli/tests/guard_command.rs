@@ -151,6 +151,45 @@ fn guard_session_start_promotes_matching_installation_active() -> Result<(), Box
 }
 
 #[test]
+fn guard_session_start_with_stale_policy_hash_does_not_activate_installation(
+) -> Result<(), Box<dyn Error>> {
+    let fixture = GuardCliFixture::new("guard-session-stale-policy-hash")?;
+    let (guard_installation_id, _) = fixture.install_guard_policy()?;
+    let event = json!({
+        "event_id": "guard_session_stale_policy_hash_event",
+        "session_id": "guard_session_stale_policy_hash",
+        "connection_id": fixture.connection_id(),
+        "guard_installation_id": guard_installation_id,
+        "host_kind": PROMPT_CAPTURE_TEST_HOST_KIND,
+        "timestamp": "2026-06-30T04:00:00Z"
+    });
+
+    let output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        [
+            "guard",
+            "session-start",
+            "--repo",
+            fixture.repo_arg(),
+            "--policy-hash",
+            "sha256:stale",
+        ],
+        &event,
+    )?;
+    assert_success(&output);
+
+    let stored = guard_installation(fixture.runtime_home(), &guard_installation_id)?
+        .expect("guard installation should be stored");
+    assert_eq!(stored.installation_status, "configured");
+    assert_eq!(stored.first_seen_at, None);
+    assert_eq!(stored.last_seen_at, None);
+    assert_eq!(stored.last_seen_phase, None);
+    assert_eq!(stored.observed_policy_hash, None);
+    Ok(())
+}
+
+#[test]
 fn guard_pre_tool_denies_product_write_without_active_task() -> Result<(), Box<dyn Error>> {
     let fixture = GuardCliFixture::new("guard-pre-no-task")?;
     let event = json!({

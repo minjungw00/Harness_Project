@@ -87,6 +87,8 @@ The only baseline exceptions are explicitly requested integration files:
 - a repository-local Volicord guard policy file at `.volicord/policy.json`
 - host hook configuration, such as Codex `.codex/hooks.json` or Claude Code
   `.claude/settings.json`
+- Volicord-managed hook wrapper scripts under Codex `.codex/hooks/` or Claude
+  Code `.claude/hooks/`
 - Volicord-managed host rule files, such as Codex `.codex/rules/*.rules` or
   Claude Code files under `.claude/rules/`
 

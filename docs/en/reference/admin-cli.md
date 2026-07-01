@@ -77,11 +77,11 @@ volicord project rename NAME [--repo PATH] [--json]
 volicord project forget [PATH|NAME] [--json]
 volicord export mcp-config [--output PATH] [--repo PATH] [--read-only] [--json]
 volicord serve --transport streamable-http [--listen 127.0.0.1:8765] [--home PATH] [--connection <connection_id>] [--project PATH]... [--token TOKEN | --generate-token] [--allow-origin ORIGIN] [--allow-nonlocal-listen]
-volicord guard session-start [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--output volicord-json|text] [--host-output codex|claude-code]
-volicord guard pre-tool [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--output volicord-json|text] [--host-output codex|claude-code]
-volicord guard post-tool [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--output volicord-json|text] [--host-output codex|claude-code]
-volicord guard prompt-capture [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--output volicord-json|text] [--host-output codex|claude-code]
-volicord guard stop [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--output volicord-json|text] [--host-output codex|claude-code]
+volicord guard session-start [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--policy-hash HASH] [--output volicord-json|text] [--host-output codex|claude-code]
+volicord guard pre-tool [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--policy-hash HASH] [--output volicord-json|text] [--host-output codex|claude-code]
+volicord guard post-tool [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--policy-hash HASH] [--output volicord-json|text] [--host-output codex|claude-code]
+volicord guard prompt-capture [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--policy-hash HASH] [--output volicord-json|text] [--host-output codex|claude-code]
+volicord guard stop [--file PATH] [--repo PATH] [--connection ID] [--session ID] [--guard-installation ID] [--host HOST] [--guard-mode MODE] [--policy-hash HASH] [--output volicord-json|text] [--host-output codex|claude-code]
 volicord changes reconcile [--repo PATH] [--task active|ID] [--json]
 volicord user status [--repo PATH] [--task active|ID] [--json]
 volicord user judgments [--repo PATH] [--task active|ID] [--json]
@@ -111,8 +111,9 @@ Exit and stream behavior:
   same exit behavior with a concise human-readable line.
 - `volicord guard --host-output codex|claude-code` writes host-native hook
   output instead of the Volicord wrapper JSON. Policy decisions use the host's
-  stdout, stderr, and exit-code rules; generated Codex and Claude Code hooks use
-  this mode, and Claude Code policy blocks are not represented as exit code `1`.
+  stdout, stderr, and exit-code rules; generated Codex and Claude Code hook
+  wrapper scripts use this mode, and Claude Code policy blocks are not
+  represented as exit code `1`.
 - Errors remain stderr diagnostics under the CLI exit-code model.
 - `volicord serve --transport streamable-http` is an explicit long-running MCP
   transport process. It keeps loopback as the default listener, requires bearer
@@ -372,8 +373,10 @@ Non-dry-run `volicord init`:
 - writes or updates only the Volicord-managed block in `AGENTS.md`
 - writes `.volicord/policy.json` with guard commands that invoke
   `volicord guard`
+- writes Volicord-managed hook wrapper scripts under `.codex/hooks/` or
+  `.claude/hooks/` for required guarded lifecycle phases
 - writes supported host hook files such as `.codex/hooks.json` or
-  `.claude/settings.json`
+  `.claude/settings.json` that invoke those wrapper scripts
 - writes supported host rule files such as `.codex/rules/*.rules` or
   `.claude/rules/volicord.md`
 - records guard installation status in the Runtime Home registry
@@ -400,7 +403,7 @@ or looks up the stored `connection_internal_id`.
 
 | Command | Runtime Home registry effect | Host configuration effect | Verification effect |
 |---|---|---|---|
-| `volicord init` | Initializes Runtime Home and installation profile if needed, registers or reuses the selected repository project, creates or updates the shared project-scoped Agent Connection, ensures Connection Projects membership, and records guard installation status. | Installs or updates managed project-local MCP configuration, `AGENTS.md` guidance, `.volicord/policy.json`, and supported host hook and rule files for `codex` or `claude-code`. | Runs host-config, MCP startup, initialization, and `tools/list` checks where observable, then reports any host reload, restart, trust, or approval action. |
+| `volicord init` | Initializes Runtime Home and installation profile if needed, registers or reuses the selected repository project, creates or updates the shared project-scoped Agent Connection, ensures Connection Projects membership, and records guard installation status. | Installs or updates managed project-local MCP configuration, `AGENTS.md` guidance, `.volicord/policy.json`, supported host hook wrapper scripts, and host hook and rule files for `codex` or `claude-code`. | Runs host-config, MCP startup, initialization, and `tools/list` checks where observable, then reports any host reload, restart, trust, or approval action. |
 | `volicord connect` | Registers or reuses the selected repository project, creates or updates the matching Agent Connection, records the connection intent and mode, and ensures the project is in Connection Projects. | Installs or updates managed host configuration for `codex` or `claude-code` according to the selected intent. | Runs host-config, MCP startup, initialization, and `tools/list` checks where observable. |
 | `volicord connections` | Reads matching Agent Connections and connected projects. | Does not launch the host and does not rewrite host configuration. | Reports stored and diagnostic verification state without refreshing host checks. |
 | `volicord connection status` | Reads one selected Agent Connection. | Does not launch the host and does not rewrite host configuration. | Reports full stored verification status and required user actions. |
@@ -505,6 +508,17 @@ Agent Connection identity when the hook event does not contain `connection_id`.
 `--guard-mode MODE` can pin the recorded session, installation, host kind, and
 guard mode. Host kinds use storage values such as `codex`, `claude_code`, or
 `generic`. Guard modes are `mcp_only`, `guarded`, or `managed`.
+`--policy-hash HASH` pins the expected `.volicord/policy.json` hash for
+generated hook wrapper scripts; a mismatch prevents that hook event from
+activating the guard installation, while direct guard commands used for tests
+or debugging may omit the option.
+
+Generated Codex hook configuration invokes Volicord-managed POSIX `sh` wrapper
+scripts under `.codex/hooks/`. Generated Claude Code hook configuration invokes
+Volicord-managed POSIX `sh` wrapper scripts under `.claude/hooks/`. The wrapper
+scripts forward stdin unchanged to `volicord guard`, preserve stdout, stderr,
+and the guard exit code, and pass the expected host kind, host-native output
+mode, repository selector, Agent Connection, guard installation, and policy hash.
 
 When a non-`mcp_only` guard command receives a valid event for the recorded
 project, Agent Connection, guard installation, host kind, guard mode, policy
