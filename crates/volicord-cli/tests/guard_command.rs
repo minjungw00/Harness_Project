@@ -23,8 +23,9 @@ use volicord_store::guards::{
 };
 use volicord_test_support::core_fixtures::{CoreFixture, UpdateScopeFixture, UserJudgmentFixture};
 use volicord_types::{
-    ActorSource, ChangeUnitOperation, JudgmentKind, OperationCategory, ProjectId,
-    VERIFICATION_BASIS_TEST_FIXTURE_BINDING, VERIFICATION_BASIS_USER_PROMPT_SUBMIT_HOOK,
+    chat_judgment_verification_code, ActorSource, ChangeUnitOperation, JudgmentKind,
+    OperationCategory, ProjectId, VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
+    VERIFICATION_BASIS_USER_PROMPT_SUBMIT_HOOK,
 };
 
 #[test]
@@ -694,22 +695,87 @@ fn guard_session_start_shows_chat_judgment_instructions() -> Result<(), Box<dyn 
     let value = json_stdout(&output)?;
     let pending = &value["result"]["context"]["pending_user_judgments"][0];
     assert_eq!(pending["chat_id"], "J-1");
-    assert_eq!(pending["answer_instruction"], "Volicord: answer J-1 1");
-    assert_eq!(pending["note_instruction"], "Volicord: note J-1 \"text\"");
+    let verification_code = pending["verification_code"]
+        .as_str()
+        .expect("verification code should be present");
+    assert!(verification_code.starts_with('#'));
+    assert_eq!(
+        pending["answer_instruction"],
+        format!("Volicord: answer J-1 1 {verification_code}")
+    );
+    assert_eq!(
+        pending["note_instruction"],
+        format!("Volicord: note J-1 \"text\" {verification_code}")
+    );
     assert_eq!(
         pending["options"][1]["instruction"],
-        "Volicord: answer J-1 reject"
+        format!("Volicord: answer J-1 reject {verification_code}")
     );
     assert_eq!(
         pending["options"][2]["instruction"],
-        "Volicord: answer J-1 defer"
+        format!("Volicord: answer J-1 defer {verification_code}")
     );
-    assert!(
-        pending["verification_nonce"]
-            .as_str()
-            .expect("nonce should be present")
-            .len()
-            >= 10
+    Ok(())
+}
+
+#[test]
+fn guard_session_start_omits_stale_chat_judgment_instructions() -> Result<(), Box<dyn Error>> {
+    let fixture = GuardCliFixture::new("guard-chat-instructions-stale")?;
+    let judgment_id = fixture.create_pending_authority_judgment("instructions_stale")?;
+    fixture.set_judgment_basis_status(&judgment_id, "stale")?;
+    let event = json!({
+        "event_id": "guard_session_chat_instructions_stale",
+        "session_id": "guard_session_chat_instructions_stale",
+        "connection_id": fixture.connection_id(),
+        "host_kind": "codex"
+    });
+
+    let output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        ["guard", "session-start", "--repo", fixture.repo_arg()],
+        &event,
+    )?;
+    assert_success(&output);
+    let value = json_stdout(&output)?;
+    assert_eq!(value["result"]["context"]["pending_user_judgment_count"], 1);
+    assert_eq!(
+        value["result"]["context"]["pending_user_judgments"]
+            .as_array()
+            .expect("pending judgments should be an array")
+            .len(),
+        0
+    );
+    Ok(())
+}
+
+#[test]
+fn guard_session_start_omits_expired_chat_judgment_instructions() -> Result<(), Box<dyn Error>> {
+    let fixture = GuardCliFixture::new("guard-chat-instructions-expired")?;
+    let judgment_id = fixture.create_pending_authority_judgment("instructions_expired")?;
+    fixture.set_judgment_expires_at(&judgment_id, "2000-01-01T00:00:00Z")?;
+    let event = json!({
+        "event_id": "guard_session_chat_instructions_expired",
+        "session_id": "guard_session_chat_instructions_expired",
+        "connection_id": fixture.connection_id(),
+        "host_kind": "codex"
+    });
+
+    let output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        ["guard", "session-start", "--repo", fixture.repo_arg()],
+        &event,
+    )?;
+    assert_success(&output);
+    let value = json_stdout(&output)?;
+    assert_eq!(value["result"]["context"]["pending_user_judgment_count"], 1);
+    assert_eq!(
+        value["result"]["context"]["pending_user_judgments"]
+            .as_array()
+            .expect("pending judgments should be an array")
+            .len(),
+        0
     );
     Ok(())
 }
@@ -718,11 +784,13 @@ fn guard_session_start_shows_chat_judgment_instructions() -> Result<(), Box<dyn 
 fn guard_prompt_capture_records_answer_command() -> Result<(), Box<dyn Error>> {
     let fixture = GuardCliFixture::new("guard-chat-answer")?;
     let judgment_id = fixture.create_pending_authority_judgment("answer")?;
+    let verification_code = fixture.prompt_verification_code(&judgment_id)?;
+    let message = format!("Volicord: answer J-1 1 {verification_code}");
     let event = prompt_event(
         &fixture,
         "guard_prompt_answer",
         "guard_prompt_capture_answer",
-        "Volicord: answer J-1 1",
+        &message,
     );
 
     let output = run_guard(
@@ -737,6 +805,10 @@ fn guard_prompt_capture_records_answer_command() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         value["result"]["recognized_judgment_command"]["selected_option_id"],
         "accept"
+    );
+    assert_eq!(
+        value["result"]["recognized_judgment_command"]["verification_code"],
+        verification_code
     );
     assert_eq!(
         value["result"]["recognized_judgment_command"]["resolution_outcome"],
@@ -754,11 +826,13 @@ fn guard_prompt_capture_records_answer_command() -> Result<(), Box<dyn Error>> {
 fn guard_prompt_capture_records_reject_command() -> Result<(), Box<dyn Error>> {
     let fixture = GuardCliFixture::new("guard-chat-reject")?;
     let judgment_id = fixture.create_pending_authority_judgment("reject")?;
+    let verification_code = fixture.prompt_verification_code(&judgment_id)?;
+    let message = format!("Volicord: answer J-1 reject {verification_code}");
     let event = prompt_event(
         &fixture,
         "guard_prompt_reject",
         "guard_prompt_capture_reject",
-        "Volicord: answer J-1 reject",
+        &message,
     );
 
     let output = run_guard(
@@ -776,11 +850,13 @@ fn guard_prompt_capture_records_reject_command() -> Result<(), Box<dyn Error>> {
 fn guard_prompt_capture_records_defer_command() -> Result<(), Box<dyn Error>> {
     let fixture = GuardCliFixture::new("guard-chat-defer")?;
     let judgment_id = fixture.create_pending_authority_judgment("defer")?;
+    let verification_code = fixture.prompt_verification_code(&judgment_id)?;
+    let message = format!("Volicord: answer J-1 defer {verification_code}");
     let event = prompt_event(
         &fixture,
         "guard_prompt_defer",
         "guard_prompt_capture_defer",
-        "Volicord: answer J-1 defer",
+        &message,
     );
 
     let output = run_guard(
@@ -798,11 +874,13 @@ fn guard_prompt_capture_records_defer_command() -> Result<(), Box<dyn Error>> {
 fn guard_prompt_capture_records_note_as_deferred_judgment() -> Result<(), Box<dyn Error>> {
     let fixture = GuardCliFixture::new("guard-chat-note")?;
     let judgment_id = fixture.create_pending_authority_judgment("note")?;
+    let verification_code = fixture.prompt_verification_code(&judgment_id)?;
+    let message = format!("Volicord: note J-1 \"Need to review this later\" {verification_code}");
     let event = prompt_event(
         &fixture,
         "guard_prompt_note",
         "guard_prompt_capture_note",
-        "Volicord: note J-1 \"Need to review this later\"",
+        &message,
     );
 
     let output = run_guard(
@@ -822,11 +900,13 @@ fn guard_prompt_capture_records_note_as_deferred_judgment() -> Result<(), Box<dy
 fn guard_prompt_capture_rejects_malformed_command() -> Result<(), Box<dyn Error>> {
     let fixture = GuardCliFixture::new("guard-chat-malformed")?;
     let judgment_id = fixture.create_pending_authority_judgment("malformed")?;
+    let verification_code = fixture.prompt_verification_code(&judgment_id)?;
+    let message = format!("Volicord: note J-1 not-quoted {verification_code}");
     let event = prompt_event(
         &fixture,
         "guard_prompt_malformed",
         "guard_prompt_capture_malformed",
-        "Volicord: answer J-1",
+        &message,
     );
 
     let output = run_guard(
@@ -838,6 +918,61 @@ fn guard_prompt_capture_rejects_malformed_command() -> Result<(), Box<dyn Error>
     assert_eq!(output.status.code(), Some(1));
     let value = json_stdout(&output)?;
     assert_reason(&value, "malformed_judgment_command");
+    assert_eq!(fixture.judgment_status(&judgment_id)?, "pending");
+    Ok(())
+}
+
+#[test]
+fn guard_prompt_capture_rejects_missing_verification_code() -> Result<(), Box<dyn Error>> {
+    let fixture = GuardCliFixture::new("guard-chat-missing-code")?;
+    let judgment_id = fixture.create_pending_authority_judgment("missing_code")?;
+    let event = prompt_event(
+        &fixture,
+        "guard_prompt_missing_code",
+        "guard_prompt_capture_missing_code",
+        "Volicord: answer J-1 1",
+    );
+
+    let output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        ["guard", "prompt-capture", "--repo", fixture.repo_arg()],
+        &event,
+    )?;
+    assert_eq!(output.status.code(), Some(1));
+    let value = json_stdout(&output)?;
+    assert_reason(&value, "malformed_judgment_command");
+    assert_eq!(fixture.judgment_status(&judgment_id)?, "pending");
+    Ok(())
+}
+
+#[test]
+fn guard_prompt_capture_rejects_wrong_verification_code() -> Result<(), Box<dyn Error>> {
+    let fixture = GuardCliFixture::new("guard-chat-wrong-code")?;
+    let judgment_id = fixture.create_pending_authority_judgment("wrong_code")?;
+    let verification_code = fixture.prompt_verification_code(&judgment_id)?;
+    let wrong_code = if verification_code == "#AAAAAA" {
+        "#BBBBBB"
+    } else {
+        "#AAAAAA"
+    };
+    let message = format!("Volicord: answer J-1 1 {wrong_code}");
+    let event = prompt_event(
+        &fixture,
+        "guard_prompt_wrong_code",
+        "guard_prompt_capture_wrong_code",
+        &message,
+    );
+
+    let output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        ["guard", "prompt-capture", "--repo", fixture.repo_arg()],
+        &event,
+    )?;
+    assert_eq!(output.status.code(), Some(1));
+    let value = json_stdout(&output)?;
+    assert_reason(&value, "wrong_verification_code");
     assert_eq!(fixture.judgment_status(&judgment_id)?, "pending");
     Ok(())
 }
@@ -869,11 +1004,13 @@ fn guard_prompt_capture_ignores_non_command_prompt() -> Result<(), Box<dyn Error
 fn guard_prompt_capture_rejects_invalid_chat_id() -> Result<(), Box<dyn Error>> {
     let fixture = GuardCliFixture::new("guard-chat-invalid-id")?;
     let judgment_id = fixture.create_pending_authority_judgment("invalid_id")?;
+    let verification_code = fixture.prompt_verification_code(&judgment_id)?;
+    let message = format!("Volicord: answer J-99 1 {verification_code}");
     let event = prompt_event(
         &fixture,
         "guard_prompt_invalid_id",
         "guard_prompt_capture_invalid_id",
-        "Volicord: answer J-99 1",
+        &message,
     );
 
     let output = run_guard(
@@ -892,11 +1029,13 @@ fn guard_prompt_capture_rejects_invalid_chat_id() -> Result<(), Box<dyn Error>> 
 fn guard_prompt_capture_rejects_mismatched_project() -> Result<(), Box<dyn Error>> {
     let fixture = GuardCliFixture::new("guard-chat-project-mismatch")?;
     let judgment_id = fixture.create_pending_authority_judgment("project_mismatch")?;
+    let verification_code = fixture.prompt_verification_code(&judgment_id)?;
+    let message = format!("Volicord: answer J-1 1 {verification_code}");
     let mut event = prompt_event(
         &fixture,
         "guard_prompt_project_mismatch",
         "guard_prompt_capture_project_mismatch",
-        "Volicord: answer J-1 1",
+        &message,
     );
     event["project_id"] = json!("other_project");
 
@@ -917,11 +1056,13 @@ fn guard_prompt_capture_rejects_mismatched_connection() -> Result<(), Box<dyn Er
     let fixture = GuardCliFixture::new("guard-chat-connection-mismatch")?;
     let judgment_id = fixture.create_pending_authority_judgment("connection_mismatch")?;
     fixture.register_extra_connection("other_connection")?;
+    let verification_code = fixture.prompt_verification_code(&judgment_id)?;
+    let message = format!("Volicord: answer J-1 1 {verification_code}");
     let mut event = prompt_event(
         &fixture,
         "guard_prompt_connection_mismatch",
         "guard_prompt_capture_connection_mismatch",
-        "Volicord: answer J-1 1",
+        &message,
     );
     event["connection_id"] = json!("other_connection");
 
@@ -941,12 +1082,14 @@ fn guard_prompt_capture_rejects_mismatched_connection() -> Result<(), Box<dyn Er
 fn guard_prompt_capture_rejects_stale_judgment() -> Result<(), Box<dyn Error>> {
     let fixture = GuardCliFixture::new("guard-chat-stale")?;
     let judgment_id = fixture.create_pending_authority_judgment("stale")?;
+    let verification_code = fixture.prompt_verification_code(&judgment_id)?;
     fixture.set_judgment_basis_status(&judgment_id, "stale")?;
+    let message = format!("Volicord: answer J-1 1 {verification_code}");
     let event = prompt_event(
         &fixture,
         "guard_prompt_stale",
         "guard_prompt_capture_stale",
-        "Volicord: answer J-1 1",
+        &message,
     );
 
     let output = run_guard(
@@ -962,20 +1105,60 @@ fn guard_prompt_capture_rejects_stale_judgment() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn guard_prompt_capture_rejects_duplicate_answer() -> Result<(), Box<dyn Error>> {
+fn guard_prompt_capture_replays_duplicate_same_answer() -> Result<(), Box<dyn Error>> {
     let fixture = GuardCliFixture::new("guard-chat-duplicate")?;
     let judgment_id = fixture.create_pending_authority_judgment("duplicate")?;
+    let verification_code = fixture.prompt_verification_code(&judgment_id)?;
+    let message = format!("Volicord: answer J-1 1 {verification_code}");
     let first = prompt_event(
         &fixture,
         "guard_prompt_duplicate_first",
         "guard_prompt_capture_duplicate_first",
-        "Volicord: answer J-1 1",
+        &message,
     );
     let second = prompt_event(
         &fixture,
         "guard_prompt_duplicate_second",
         "guard_prompt_capture_duplicate_second",
-        "Volicord: answer J-1 1",
+        &message,
+    );
+
+    assert_success(&run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        ["guard", "prompt-capture", "--repo", fixture.repo_arg()],
+        &first,
+    )?);
+    let output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        ["guard", "prompt-capture", "--repo", fixture.repo_arg()],
+        &second,
+    )?;
+    assert_success(&output);
+    assert_eq!(json_stdout(&output)?["decision"], "inject_context");
+    assert_eq!(fixture.judgment_status(&judgment_id)?, "resolved");
+    Ok(())
+}
+
+#[test]
+fn guard_prompt_capture_rejects_conflicting_duplicate_answer() -> Result<(), Box<dyn Error>> {
+    let fixture = GuardCliFixture::new("guard-chat-conflicting-duplicate")?;
+    let judgment_id = fixture.create_pending_authority_judgment("conflicting_duplicate")?;
+    let verification_code = fixture.prompt_verification_code(&judgment_id)?;
+    let first_message = format!("Volicord: answer J-1 1 {verification_code}");
+    let second_message = format!("Volicord: answer J-1 reject {verification_code}");
+    let first = prompt_event(
+        &fixture,
+        "guard_prompt_conflicting_duplicate_first",
+        "guard_prompt_capture_conflicting_duplicate_first",
+        &first_message,
+    );
+    let second = prompt_event(
+        &fixture,
+        "guard_prompt_conflicting_duplicate_second",
+        "guard_prompt_capture_conflicting_duplicate_second",
+        &second_message,
     );
 
     assert_success(&run_guard(
@@ -991,20 +1174,50 @@ fn guard_prompt_capture_rejects_duplicate_answer() -> Result<(), Box<dyn Error>>
         &second,
     )?;
     assert_eq!(output.status.code(), Some(1));
-    assert_reason(&json_stdout(&output)?, "judgment_not_pending");
+    assert_reason(&json_stdout(&output)?, "conflicting_judgment_command");
     assert_eq!(fixture.judgment_status(&judgment_id)?, "resolved");
     Ok(())
 }
 
 #[test]
-fn guard_prompt_capture_rejects_ambiguous_commands() -> Result<(), Box<dyn Error>> {
+fn guard_prompt_capture_rejects_expired_verification_code() -> Result<(), Box<dyn Error>> {
+    let fixture = GuardCliFixture::new("guard-chat-expired-code")?;
+    let judgment_id = fixture.create_pending_authority_judgment("expired_code")?;
+    let verification_code = fixture.prompt_verification_code(&judgment_id)?;
+    fixture.set_judgment_expires_at(&judgment_id, "2000-01-01T00:00:00Z")?;
+    let message = format!("Volicord: answer J-1 1 {verification_code}");
+    let event = prompt_event(
+        &fixture,
+        "guard_prompt_expired_code",
+        "guard_prompt_capture_expired_code",
+        &message,
+    );
+
+    let output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        ["guard", "prompt-capture", "--repo", fixture.repo_arg()],
+        &event,
+    )?;
+    assert_eq!(output.status.code(), Some(1));
+    assert_reason(&json_stdout(&output)?, "expired_verification_code");
+    assert_eq!(fixture.judgment_status(&judgment_id)?, "pending");
+    Ok(())
+}
+
+#[test]
+fn guard_prompt_capture_rejects_multiple_commands() -> Result<(), Box<dyn Error>> {
     let fixture = GuardCliFixture::new("guard-chat-ambiguous")?;
     let judgment_id = fixture.create_pending_authority_judgment("ambiguous")?;
+    let verification_code = fixture.prompt_verification_code(&judgment_id)?;
+    let message = format!(
+        "Volicord: answer J-1 1 {verification_code}\nVolicord: answer J-1 reject {verification_code}"
+    );
     let event = prompt_event(
         &fixture,
         "guard_prompt_ambiguous",
         "guard_prompt_capture_ambiguous",
-        "Volicord: answer J-1 1\nVolicord: answer J-1 reject",
+        &message,
     );
 
     let output = run_guard(
@@ -1149,6 +1362,21 @@ impl GuardCliFixture {
         record_id(&response.response_value["user_judgment_ref"])
     }
 
+    fn prompt_verification_code(&self, judgment_id: &str) -> Result<String, Box<dyn Error>> {
+        let record = self
+            .inner
+            .store()?
+            .user_judgment_record(judgment_id)?
+            .expect("judgment should be stored");
+        Ok(chat_judgment_verification_code(
+            &record.project_id,
+            &record.task_id,
+            &record.judgment_id,
+            &record.requested_at,
+            self.connection_id(),
+        ))
+    }
+
     fn assert_recorded_prompt_judgment(
         &self,
         judgment_id: &str,
@@ -1200,6 +1428,30 @@ impl GuardCliFixture {
               WHERE project_id = ?1
                 AND judgment_id = ?2",
             rusqlite::params![self.project_id(), judgment_id, basis_status],
+        )?;
+        Ok(())
+    }
+
+    fn set_judgment_expires_at(
+        &self,
+        judgment_id: &str,
+        expires_at: &str,
+    ) -> Result<(), Box<dyn Error>> {
+        let mut request_json: Value = serde_json::from_str(
+            &self
+                .inner
+                .store()?
+                .user_judgment_record(judgment_id)?
+                .expect("judgment should be stored")
+                .request_json,
+        )?;
+        request_json["expires_at"] = json!(expires_at);
+        self.inner.conn()?.execute(
+            "UPDATE user_judgments
+                SET request_json = ?3
+              WHERE project_id = ?1
+                AND judgment_id = ?2",
+            rusqlite::params![self.project_id(), judgment_id, request_json.to_string()],
         )?;
         Ok(())
     }

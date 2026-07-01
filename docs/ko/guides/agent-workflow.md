@@ -267,7 +267,7 @@ volicord user judgment answer 1 1
 
 Agent Connection은 `volicord.record_user_judgment`를 호출하거나, User Channel
 출처를 제공하거나, 일반 채팅 답변을 권한을 지니는 수락으로 바꾸면 안 됩니다.
-`Volicord: answer J-3 1` 같은 엄격한 prompt-capture 명령은 설정된 로컬 hook이
+`Volicord: answer J-3 1 #AB7K` 같은 엄격한 prompt-capture 명령은 설정된 로컬 hook이
 검증하고 기록할 때만 권한을 지닙니다. 답변이 지원되는 User Channel을 통해 기록되지
 않았다면 필요한 사용자 행동을 이름 붙이고, 그 판단에 의존하지 않는 작업만 계속합니다.
 현재 디렉터리가 의도한 Product Repository가 아닐 때만 `--repo PATH`를 사용하고,

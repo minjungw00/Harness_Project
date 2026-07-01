@@ -378,8 +378,8 @@ fn volicord_mcp_subcommand_stdio_without_elicitation_returns_chat_capture_fallba
         .as_str()
         .expect("fallback text should be present");
     assert!(fallback.contains("MCP elicitation is unavailable"));
-    assert!(fallback.contains("Volicord: answer J-1 1"));
-    assert!(fallback.contains("Volicord: note J-1"));
+    assert!(fallback.contains("Volicord: answer J-1 1 #"));
+    assert!(fallback.contains("Volicord: note J-1 \"text\" #"));
     assert!(fallback.contains("Do not ask the user to include secrets"));
 
     let record = fixture.stored_judgment(&task_id, &response)?;

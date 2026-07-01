@@ -125,7 +125,7 @@ An agent may help route you to this path, show the pending question, and explain
 the options. An Agent Connection must not record your authority-bearing decision
 for you, call `volicord.record_user_judgment`, or convert a chat reply into
 authority-bearing Core state outside a supported User Channel path. A strict
-prompt-capture command such as `Volicord: answer J-3 1` is a User Channel path
+prompt-capture command such as `Volicord: answer J-3 1 #AB7K` is a User Channel path
 only when the configured local hook validates and records it. Generated
 Markdown, status summaries, ordinary chat text, Product Repository guidance,
 and rendered projections can help you read state, but they are not Core

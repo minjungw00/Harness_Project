@@ -484,13 +484,14 @@ Lifecycle behavior:
   commands to discover changes.
 - `prompt-capture` records prompt-capture metadata and recognizes strict
   chat judgment commands only when the prompt contains an explicit line such
-  as `Volicord: answer J-3 1`, `Volicord: answer J-3 reject`,
-  `Volicord: answer J-3 defer`, or `Volicord: note J-3 "text"`.
+  as `Volicord: answer J-3 1 #AB7K`, `Volicord: answer J-3 reject #AB7K`,
+  `Volicord: answer J-3 defer #AB7K`, or `Volicord: note J-3 "text" #AB7K`.
   Non-command prompts proceed normally. Malformed, ambiguous, unknown,
-  stale, duplicate, wrong-project, or wrong-connection judgment commands
-  return `deny` without recording a judgment. A valid command records the
-  addressed pending judgment through the local `User Channel` with
-  `actor_source=local_user` and `resolved_verification_basis=user_prompt_submit_hook`,
+  missing-code, wrong-code, stale, duplicate, wrong-project, or
+  wrong-connection judgment commands return `deny` without recording a judgment.
+  A valid command records the addressed pending judgment through the local
+  `User Channel` with `actor_source=local_user` and
+  `resolved_verification_basis=user_prompt_submit_hook`,
   omits the full prompt text from prompt-capture storage, and returns
   model-visible recorded-context output instead of treating the command as
   ordinary agent instruction.

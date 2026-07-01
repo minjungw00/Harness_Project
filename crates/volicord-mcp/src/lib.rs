@@ -40,13 +40,14 @@ use volicord_store::{
     StoreError,
 };
 use volicord_types::{
-    mcp_request_schema, ActorSource, AgentConnectionId, AgentConnectionMode, CloseIntent,
-    CloseTaskRequest, IdempotencyKey, IntakeRequest, JsonObject, JudgmentKind, JudgmentRationale,
-    JudgmentResolutionOutcome, McpCheckCloseArguments, McpCloseTaskArguments, McpIntakeArguments,
-    McpPrepareWriteArguments, McpReconcileChangesArguments, McpRecordRunArguments,
-    McpRequestUserJudgmentArguments, McpStageArtifactArguments, McpStatusArguments,
-    McpUpdateScopeArguments, MethodOperationCategory, OperationCategory, PrepareWriteRequest,
-    ProjectId, ReconcileChangesRequest, RecordRunRequest, RecordUserJudgmentPayload,
+    chat_judgment_verification_code, mcp_request_schema, ActorSource, AgentConnectionId,
+    AgentConnectionMode, CloseIntent, CloseTaskRequest, IdempotencyKey, IntakeRequest, JsonObject,
+    JudgmentKind, JudgmentRationale, JudgmentResolutionOutcome, McpCheckCloseArguments,
+    McpCloseTaskArguments, McpIntakeArguments, McpPrepareWriteArguments,
+    McpReconcileChangesArguments, McpRecordRunArguments, McpRequestUserJudgmentArguments,
+    McpStageArtifactArguments, McpStatusArguments, McpUpdateScopeArguments,
+    MethodOperationCategory, OperationCategory, PrepareWriteRequest, ProjectId,
+    ReconcileChangesRequest, RecordRunRequest, RecordUserJudgmentPayload,
     RecordUserJudgmentRequest, RequestId, RequestUserJudgmentRequest, RequiredNullable,
     StageArtifactRequest, StatusRequest, ToolEnvelope, UpdateScopeRequest, UserJudgment,
     UserJudgmentOption, UserJudgmentOptionAction, VERIFICATION_BASIS_MCP_ELICITATION_USER_CHANNEL,
@@ -3182,14 +3183,26 @@ fn chat_capture_fallback_instructions(
         .position(|record| record.judgment_id == judgment.judgment_id.as_str())
         .map(|index| index + 1)
         .unwrap_or(1);
+    let requested_at = records
+        .iter()
+        .find(|record| record.judgment_id == judgment.judgment_id.as_str())
+        .map(|record| record.requested_at.clone())
+        .unwrap_or_else(|| judgment.created_at.to_canonical_string());
     let chat_id = format!("J-{chat_index}");
+    let verification_code = chat_judgment_verification_code(
+        judgment.project_id.as_str(),
+        judgment.task_id.as_str(),
+        judgment.judgment_id.as_str(),
+        &requested_at,
+        adapter.context.connection_internal_id.as_str(),
+    );
     let options = judgment
         .options
         .iter()
         .enumerate()
         .map(|(index, option)| {
             format!(
-                "`Volicord: answer {chat_id} {}` for option `{}` ({})",
+                "`Volicord: answer {chat_id} {} {verification_code}` for option `{}` ({})",
                 chat_option_selector(index + 1, option),
                 option.option_id.as_str(),
                 option.label
@@ -3198,7 +3211,7 @@ fn chat_capture_fallback_instructions(
         .collect::<Vec<_>>()
         .join("; ");
     Ok(format!(
-        "MCP elicitation is unavailable. The pending judgment `{}` remains unresolved. To use chat prompt capture, ask the user to send one exact command in chat: {options}. To defer with a note, use `Volicord: note {chat_id} \"text\"`. Do not ask the user to include secrets, credentials, tokens, or private keys.",
+        "MCP elicitation is unavailable. The pending judgment `{}` remains unresolved. To use chat prompt capture, ask the user to send one exact command in chat: {options}. To defer with a note, use `Volicord: note {chat_id} \"text\" {verification_code}`. Do not ask the user to include secrets, credentials, tokens, or private keys.",
         judgment.judgment_id.as_str()
     ))
 }
@@ -3951,8 +3964,8 @@ mod tests {
             .as_str()
             .expect("fallback text");
         assert!(fallback.contains("MCP elicitation is unavailable"));
-        assert!(fallback.contains("Volicord: answer J-1 1"));
-        assert!(fallback.contains("Volicord: note J-1"));
+        assert!(fallback.contains("Volicord: answer J-1 1 #"));
+        assert!(fallback.contains("Volicord: note J-1 \"text\" #"));
         Ok(())
     }
 

@@ -108,11 +108,13 @@ struct SelectedJudgment {
 pub(crate) struct JudgmentRecordingInput<'a> {
     pub runtime_home: &'a Path,
     pub project_id: &'a str,
-    pub state_version: u64,
+    pub expected_state_version: Option<u64>,
     pub record: &'a UserJudgmentRecord,
     pub selected_option: &'a UserJudgmentOption,
     pub note: Option<String>,
     pub verification_basis: &'a str,
+    pub request_id: Option<String>,
+    pub idempotency_key: Option<String>,
 }
 
 pub fn user_usage() -> String {
@@ -287,11 +289,13 @@ where
     let response = record_user_judgment_from_record(JudgmentRecordingInput {
         runtime_home: &resolved.runtime_home,
         project_id: &resolved.project_id,
-        state_version,
+        expected_state_version: Some(state_version),
         record: &record,
         selected_option: &selected_option,
         note: parsed.note,
         verification_basis: VERIFICATION_BASIS_CLI_DIRECT_USER_CHANNEL,
+        request_id: None,
+        idempotency_key: None,
     })?;
     render_record_response(&response, parsed.output, &selected_option)
 }
@@ -623,7 +627,7 @@ pub(crate) fn decode_options(
 pub(crate) fn record_user_judgment_from_record(
     input: JudgmentRecordingInput<'_>,
 ) -> Result<PipelineResponse, UserCommandError> {
-    if input.record.status != "pending" {
+    if input.record.status != "pending" && input.idempotency_key.is_none() {
         return Err(UserCommandError::Runtime(format!(
             "selected judgment is not pending (status: {}); refresh `volicord user judgments`",
             input.record.status
@@ -631,8 +635,12 @@ pub(crate) fn record_user_judgment_from_record(
     }
     let judgment_kind = parse_judgment_kind(&input.record.judgment_kind)?;
     let context = decode_json::<UserJudgmentContext>("context_json", &input.record.context_json)?;
-    let request_id = generated_id("req_user_judgment_record");
-    let idempotency_key = generated_id("idem_user_judgment_record");
+    let request_id = input
+        .request_id
+        .unwrap_or_else(|| generated_id("req_user_judgment_record"));
+    let idempotency_key = input
+        .idempotency_key
+        .unwrap_or_else(|| generated_id("idem_user_judgment_record"));
     CoreService::new(input.runtime_home)
         .record_user_judgment(
             RecordUserJudgmentRequest {
@@ -641,7 +649,7 @@ pub(crate) fn record_user_judgment_from_record(
                     Some(&input.record.task_id),
                     request_id,
                     Some(idempotency_key),
-                    Some(input.state_version),
+                    input.expected_state_version,
                 ),
                 user_judgment_id: UserJudgmentId::new(&input.record.judgment_id),
                 judgment_kind,

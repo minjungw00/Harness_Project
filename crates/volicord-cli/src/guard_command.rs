@@ -28,7 +28,8 @@ use volicord_store::{
     StoreError,
 };
 use volicord_types::{
-    ActorSource, GuardDecision, HostKind, JudgmentResolutionOutcome, OperationCategory,
+    chat_judgment_verification_code, ActorSource, GuardDecision, HostKind,
+    JudgmentResolutionOutcome, OperationCategory, PersistedJudgmentBasis,
     PersistedUserJudgmentRequest, ProjectId, RequestId, StatusInclude, StatusRequest, TaskId,
     ToolEnvelope, UserJudgmentOption, UserJudgmentOptionAction, UtcTimestamp,
     VERIFICATION_BASIS_MCP_STDIO_CONNECTION_BINDING, VERIFICATION_BASIS_USER_PROMPT_SUBMIT_HOOK,
@@ -199,7 +200,7 @@ struct GuardStateSummary {
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct GuardPendingJudgmentSummary {
     chat_id: String,
-    verification_nonce: String,
+    verification_code: String,
     judgment_kind: String,
     question: Option<String>,
     answer_instruction: String,
@@ -1968,7 +1969,7 @@ fn handle_prompt_capture(
                         "recognized_judgment_command": {
                             "command_kind": recorded.command_kind,
                             "chat_id": recorded.chat_id,
-                            "verification_nonce": recorded.verification_nonce,
+                            "verification_code": recorded.verification_code,
                             "selected_option_id": recorded.selected_option_id,
                             "machine_action": recorded.machine_action,
                             "resolution_outcome": recorded.resolution_outcome,
@@ -1997,10 +1998,12 @@ enum PromptJudgmentCommand {
     Answer {
         chat_id: String,
         answer_selector: String,
+        verification_code: String,
     },
     Note {
         chat_id: String,
         note: String,
+        verification_code: String,
     },
 }
 
@@ -2008,6 +2011,17 @@ impl PromptJudgmentCommand {
     fn chat_id(&self) -> &str {
         match self {
             Self::Answer { chat_id, .. } | Self::Note { chat_id, .. } => chat_id,
+        }
+    }
+
+    fn verification_code(&self) -> &str {
+        match self {
+            Self::Answer {
+                verification_code, ..
+            }
+            | Self::Note {
+                verification_code, ..
+            } => verification_code,
         }
     }
 
@@ -2029,7 +2043,7 @@ struct PromptCommandBlock {
 struct RecordedPromptJudgment {
     command_kind: &'static str,
     chat_id: String,
-    verification_nonce: String,
+    verification_code: String,
     selected_option_id: String,
     machine_action: String,
     resolution_outcome: String,
@@ -2062,30 +2076,35 @@ fn parse_prompt_judgment_command(prompt: &str) -> PromptCommandDetection {
     let Some(first) = parsed.first().cloned() else {
         return PromptCommandDetection::NoCommand;
     };
-    if parsed.iter().all(|command| command == &first) {
-        PromptCommandDetection::Command(first)
-    } else {
-        PromptCommandDetection::Blocked(PromptCommandBlock {
+    if parsed.len() > 1 {
+        return PromptCommandDetection::Blocked(PromptCommandBlock {
             code: "ambiguous_judgment_command",
-            message: "Multiple distinct Volicord judgment commands were found; send exactly one command or repeat the same command only."
+            message: "Multiple Volicord judgment commands were found; send exactly one command."
                 .to_owned(),
-        })
+        });
     }
+    PromptCommandDetection::Command(first)
 }
 
 fn parse_prompt_judgment_command_line(line: &str) -> Result<PromptJudgmentCommand, String> {
     let Some((action, rest)) = split_once_whitespace(line) else {
         return Err(
-            "Volicord judgment commands must be `answer J-N OPTION` or `note J-N \"text\"`."
+            "Volicord judgment commands must be `answer J-N OPTION #CODE` or `note J-N \"text\" #CODE`."
                 .to_owned(),
         );
     };
     match action {
         "answer" => {
             let parts = rest.split_whitespace().collect::<Vec<_>>();
-            if parts.len() != 2 {
+            if parts.len() == 2 {
                 return Err(
-                    "Volicord answer commands must be exactly `Volicord: answer J-N OPTION`."
+                    "Volicord answer commands must include the displayed verification code."
+                        .to_owned(),
+                );
+            }
+            if parts.len() != 3 {
+                return Err(
+                    "Volicord answer commands must be exactly `Volicord: answer J-N OPTION #CODE`."
                         .to_owned(),
                 );
             }
@@ -2093,23 +2112,26 @@ fn parse_prompt_judgment_command_line(line: &str) -> Result<PromptJudgmentComman
             if parts[1].trim().is_empty() || parts[1].starts_with('"') {
                 return Err("Volicord answer option must be a number or option id.".to_owned());
             }
+            let verification_code = normalize_verification_code(parts[2])?;
             Ok(PromptJudgmentCommand::Answer {
                 chat_id: parts[0].to_owned(),
                 answer_selector: parts[1].to_owned(),
+                verification_code,
             })
         }
         "note" => {
             let Some((chat_id, note_text)) = split_once_whitespace(rest) else {
                 return Err(
-                    "Volicord note commands must be exactly `Volicord: note J-N \"text\"`."
+                    "Volicord note commands must be exactly `Volicord: note J-N \"text\" #CODE`."
                         .to_owned(),
                 );
             };
             validate_chat_id(chat_id)?;
-            let note = parse_quoted_note(note_text)?;
+            let (note, verification_code) = parse_quoted_note_and_code(note_text)?;
             Ok(PromptJudgmentCommand::Note {
                 chat_id: chat_id.to_owned(),
                 note,
+                verification_code,
             })
         }
         _ => Err(
@@ -2132,7 +2154,17 @@ fn validate_chat_id(value: &str) -> Result<(), String> {
         .map_err(|message| message.message)
 }
 
-fn parse_quoted_note(value: &str) -> Result<String, String> {
+fn normalize_verification_code(value: &str) -> Result<String, String> {
+    let Some(raw) = value.strip_prefix('#') else {
+        return Err("Volicord verification code must start with `#`.".to_owned());
+    };
+    if raw.len() < 4 || raw.len() > 16 || !raw.chars().all(|ch| ch.is_ascii_alphanumeric()) {
+        return Err("Volicord verification code must be the displayed `#CODE` token.".to_owned());
+    }
+    Ok(format!("#{}", raw.to_ascii_uppercase()))
+}
+
+fn parse_quoted_note_and_code(value: &str) -> Result<(String, String), String> {
     let trimmed = value.trim();
     if !trimmed.starts_with('"') {
         return Err("Volicord note text must be a double-quoted string.".to_owned());
@@ -2157,11 +2189,20 @@ fn parse_quoted_note(value: &str) -> Result<String, String> {
         match ch {
             '\\' => escaped = true,
             '"' => {
-                if chars.as_str().trim().is_empty() {
-                    return Ok(output);
+                let rest = chars.as_str().trim();
+                if rest.is_empty() {
+                    return Err(
+                        "Volicord note commands must include the displayed verification code."
+                            .to_owned(),
+                    );
+                }
+                if rest.split_whitespace().count() == 1 {
+                    let verification_code = normalize_verification_code(rest)?;
+                    return Ok((output, verification_code));
                 }
                 return Err(
-                    "Volicord note commands do not accept text after the closing quote.".to_owned(),
+                    "Volicord note commands accept only the verification code after the closing quote."
+                        .to_owned(),
                 );
             }
             other => output.push(other),
@@ -2213,6 +2254,25 @@ fn record_prompt_judgment_command(
     };
     let task_id = TaskId::new(active_task_id);
     let (record, chat_index) = select_chat_judgment(&store, &task_id, command.chat_id(), envelope)?;
+    let expected_code = judgment_verification_code(&record, envelope);
+    if command.verification_code() != expected_code {
+        return Err(PromptCommandBlock {
+            code: "wrong_verification_code",
+            message: format!(
+                "Volicord judgment `{}` requires the current displayed verification code.",
+                command.chat_id()
+            ),
+        });
+    }
+    if record.status == "pending" && judgment_code_is_expired(&record, envelope)? {
+        return Err(PromptCommandBlock {
+            code: "expired_verification_code",
+            message: format!(
+                "Volicord judgment `{}` has an expired verification code; refresh the pending judgment instructions.",
+                command.chat_id()
+            ),
+        });
+    }
     let options = decode_options(&record).map_err(prompt_block_from_user_error)?;
     let selected_option = match &command {
         PromptJudgmentCommand::Answer {
@@ -2224,28 +2284,29 @@ fn record_prompt_judgment_command(
         PromptJudgmentCommand::Answer { .. } => None,
         PromptJudgmentCommand::Note { note, .. } => Some(note.clone()),
     };
+    let replay_id = prompt_judgment_replay_id(&record, envelope);
+    let expected_state_version = judgment_expected_state_version(&record)?;
     let response = record_user_judgment_from_record(JudgmentRecordingInput {
         runtime_home,
         project_id: &project.project_id,
-        state_version: project_state.state_version,
+        expected_state_version: Some(expected_state_version),
         record: &record,
         selected_option: &selected_option,
         note,
         verification_basis: VERIFICATION_BASIS_USER_PROMPT_SUBMIT_HOOK,
+        request_id: Some(format!("req_{replay_id}")),
+        idempotency_key: Some(format!("idem_{replay_id}")),
     })
     .map_err(prompt_block_from_user_error)?;
     if response.response_value["base"]["response_kind"].as_str() != Some("result") {
-        return Err(PromptCommandBlock {
-            code: "judgment_record_rejected",
-            message: core_rejection_message(&response.response_value),
-        });
+        return Err(prompt_block_from_record_response(&response.response_value));
     }
     let chat_id = chat_id_for_index(chat_index);
     let resolution_outcome = outcome_value(selected_option.resolution_outcome).to_owned();
     Ok(RecordedPromptJudgment {
         command_kind: command.command_kind(),
         chat_id: chat_id.clone(),
-        verification_nonce: judgment_verification_nonce(&record, envelope),
+        verification_code: expected_code,
         selected_option_id: selected_option.option_id.as_str().to_owned(),
         machine_action: machine_action_value(selected_option.machine_action).to_owned(),
         resolution_outcome: resolution_outcome.clone(),
@@ -2285,6 +2346,9 @@ fn select_chat_judgment(
         });
     }
     if record.status != "pending" {
+        if record.status == "resolved" {
+            return Ok((record, chat_index));
+        }
         return Err(PromptCommandBlock {
             code: "judgment_not_pending",
             message: format!(
@@ -2303,6 +2367,59 @@ fn select_chat_judgment(
         });
     }
     Ok((record, chat_index))
+}
+
+fn judgment_code_is_expired(
+    record: &UserJudgmentRecord,
+    envelope: &GuardEnvelope,
+) -> Result<bool, PromptCommandBlock> {
+    let request = serde_json::from_str::<PersistedUserJudgmentRequest>(&record.request_json)
+        .map_err(|error| PromptCommandBlock {
+            code: "invalid_judgment_command",
+            message: format!("Failed to decode pending judgment request metadata: {error}"),
+        })?;
+    let Some(expires_at) = request.expires_at.as_ref() else {
+        return Ok(false);
+    };
+    let occurred_at =
+        UtcTimestamp::parse(&envelope.occurred_at).map_err(|error| PromptCommandBlock {
+            code: "invalid_judgment_command",
+            message: format!("Prompt capture timestamp is invalid: {error}"),
+        })?;
+    Ok(&occurred_at >= expires_at)
+}
+
+fn judgment_expected_state_version(record: &UserJudgmentRecord) -> Result<u64, PromptCommandBlock> {
+    let basis =
+        serde_json::from_str::<PersistedJudgmentBasis>(&record.basis_json).map_err(|error| {
+            PromptCommandBlock {
+                code: "invalid_judgment_command",
+                message: format!("Failed to decode pending judgment basis metadata: {error}"),
+            }
+        })?;
+    basis
+        .created_at_state_version
+        .checked_add(1)
+        .ok_or_else(|| PromptCommandBlock {
+            code: "invalid_judgment_command",
+            message: "Pending judgment state version is too large.".to_owned(),
+        })
+}
+
+fn prompt_block_from_record_response(response: &Value) -> PromptCommandBlock {
+    let message = core_rejection_message(response);
+    if message.contains("idempotency_key was reused with a different request hash") {
+        PromptCommandBlock {
+            code: "conflicting_judgment_command",
+            message: "Volicord already recorded a different answer for this verification code."
+                .to_owned(),
+        }
+    } else {
+        PromptCommandBlock {
+            code: "judgment_record_rejected",
+            message,
+        }
+    }
 }
 
 fn parse_chat_id(chat_id: &str) -> Result<usize, PromptCommandBlock> {
@@ -2374,12 +2491,17 @@ fn pending_chat_judgment_summaries(
     task_id: &TaskId,
     envelope: &GuardEnvelope,
 ) -> Result<Vec<GuardPendingJudgmentSummary>, GuardCommandError> {
+    let occurred_at = UtcTimestamp::parse(&envelope.occurred_at)
+        .map_err(|error| GuardCommandError::Runtime(format!("invalid guard timestamp: {error}")))?;
     let expected_actor =
         ActorSource::agent_connection(envelope.connection_id.clone()).to_canonical_string();
     let records = store.user_judgment_records_for_task(task_id)?;
     let mut summaries = Vec::new();
     for (index, record) in records.iter().enumerate() {
         if record.status != "pending" || record.requested_by_actor_source != expected_actor {
+            continue;
+        }
+        if record.basis_status != "current" {
             continue;
         }
         let chat_id = chat_id_for_index(index + 1);
@@ -2389,6 +2511,13 @@ fn pending_chat_judgment_summaries(
                     "failed to decode user_judgments.request_json: {error}"
                 ))
             })?;
+        if request
+            .expires_at
+            .as_ref()
+            .is_some_and(|expires_at| &occurred_at >= expires_at)
+        {
+            continue;
+        }
         let options = decode_options(record).map_err(guard_error_from_user_error)?;
         let option_summaries = options
             .iter()
@@ -2396,7 +2525,10 @@ fn pending_chat_judgment_summaries(
             .map(|(option_index, option)| {
                 let selector = chat_option_selector(option_index + 1, option);
                 GuardPendingJudgmentOptionSummary {
-                    instruction: format!("Volicord: answer {chat_id} {selector}"),
+                    instruction: format!(
+                        "Volicord: answer {chat_id} {selector} {}",
+                        judgment_verification_code(record, envelope)
+                    ),
                     selector,
                     option_id: option.option_id.as_str().to_owned(),
                     label: option.label.clone(),
@@ -2409,13 +2541,16 @@ fn pending_chat_judgment_summaries(
             .first()
             .map(|option| option.selector.clone())
             .unwrap_or_else(|| "1".to_owned());
+        let verification_code = judgment_verification_code(record, envelope);
         summaries.push(GuardPendingJudgmentSummary {
             chat_id: chat_id.clone(),
-            verification_nonce: judgment_verification_nonce(record, envelope),
+            verification_code: verification_code.clone(),
             judgment_kind: record.judgment_kind.clone(),
             question: Some(request.question),
-            answer_instruction: format!("Volicord: answer {chat_id} {default_selector}"),
-            note_instruction: format!("Volicord: note {chat_id} \"text\""),
+            answer_instruction: format!(
+                "Volicord: answer {chat_id} {default_selector} {verification_code}"
+            ),
+            note_instruction: format!("Volicord: note {chat_id} \"text\" {verification_code}"),
             options: option_summaries,
         });
     }
@@ -2441,16 +2576,26 @@ fn chat_id_for_index(index: usize) -> String {
     format!("J-{index}")
 }
 
-fn judgment_verification_nonce(record: &UserJudgmentRecord, envelope: &GuardEnvelope) -> String {
-    short_digest(&[
-        "judgment_nonce",
+fn judgment_verification_code(record: &UserJudgmentRecord, envelope: &GuardEnvelope) -> String {
+    chat_judgment_verification_code(
         &record.project_id,
         &record.task_id,
         &record.judgment_id,
         &record.requested_at,
         &envelope.connection_id,
-        envelope.session_id.as_deref().unwrap_or(""),
-    ])
+    )
+}
+
+fn prompt_judgment_replay_id(record: &UserJudgmentRecord, envelope: &GuardEnvelope) -> String {
+    let digest = short_digest(&[
+        "prompt_judgment_record",
+        &record.project_id,
+        &record.task_id,
+        &record.judgment_id,
+        &record.requested_at,
+        &envelope.connection_id,
+    ]);
+    format!("prompt_judgment_{digest}")
 }
 
 fn short_digest(parts: &[&str]) -> String {
@@ -2691,7 +2836,7 @@ fn context_json(summary: &GuardStateSummary) -> Value {
 fn pending_judgment_summary_json(summary: &GuardPendingJudgmentSummary) -> Value {
     json!({
         "chat_id": summary.chat_id,
-        "verification_nonce": summary.verification_nonce,
+        "verification_code": summary.verification_code,
         "judgment_kind": summary.judgment_kind,
         "question": summary.question,
         "answer_instruction": summary.answer_instruction,

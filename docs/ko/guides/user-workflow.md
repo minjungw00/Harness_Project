@@ -120,7 +120,7 @@ volicord user judgment answer 1 1
 에이전트는 사용자를 이 경로로 안내하고, 대기 중인 질문을 보여 주고, 선택지를
 설명할 수 있습니다. 하지만 Agent Connection은 사용자의 권한 판단을 대신
 기록하거나, `volicord.record_user_judgment`를 호출하거나, 채팅 답변을 권한을
-지니는 Core 상태로 바꾸면 안 됩니다. `Volicord: answer J-3 1` 같은 엄격한
+지니는 Core 상태로 바꾸면 안 됩니다. `Volicord: answer J-3 1 #AB7K` 같은 엄격한
 prompt-capture 명령은 설정된 로컬 hook이 검증하고 기록할 때만 `User Channel`
 경로입니다. 생성된 Markdown, 상태 요약, 일반 채팅 문장, Product Repository 지침,
 렌더링된 상태 보기는 상태를 읽는 데 도움을 줄 수 있지만 Core 권한은 아닙니다. 상태 보기 경계는

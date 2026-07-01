@@ -203,7 +203,7 @@ volicord user judgment answer 1 1
 
 An Agent Connection must not call `volicord.record_user_judgment`, supply User
 Channel provenance, or convert an ordinary chat reply into authority-bearing
-acceptance. A strict prompt-capture command such as `Volicord: answer J-3 1`
+acceptance. A strict prompt-capture command such as `Volicord: answer J-3 1 #AB7K`
 is authority-bearing only when the configured local hook validates and records
 it. If the answer has not been recorded through a supported User Channel, name
 the needed user action and continue only with work that does not depend on that

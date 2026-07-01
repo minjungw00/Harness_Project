@@ -441,13 +441,14 @@ Lifecycle 동작:
   guarded-operation 기록이지 제품 정확성 증명이 아닙니다. 변경을 찾기 위해 신뢰할 수
   없는 명령을 실행하지 않습니다.
 - `prompt-capture`는 prompt-capture 메타데이터를 기록하고, prompt에
-  `Volicord: answer J-3 1`, `Volicord: answer J-3 reject`,
-  `Volicord: answer J-3 defer`, `Volicord: note J-3 "text"` 같은 명시적
+  `Volicord: answer J-3 1 #AB7K`, `Volicord: answer J-3 reject #AB7K`,
+  `Volicord: answer J-3 defer #AB7K`, `Volicord: note J-3 "text" #AB7K` 같은 명시적
   줄이 있을 때만 엄격한 chat judgment 명령으로 인식합니다. 명령이 아닌 prompt는
-  정상적으로 진행됩니다. 형식이 잘못되었거나, 모호하거나, 알 수 없거나, 오래되었거나,
-  이미 답했거나, 프로젝트나 연결이 맞지 않는 판단 명령은 판단을 기록하지 않고
-  `deny`를 반환합니다. 유효한 명령은 로컬 `User Channel`을 통해 지정된 대기 판단을
-  `actor_source=local_user`와 `resolved_verification_basis=user_prompt_submit_hook`으로
+  정상적으로 진행됩니다. 형식이 잘못되었거나, 모호하거나, 알 수 없거나, 코드가
+  없거나, 코드가 틀렸거나, 오래되었거나, 이미 답했거나, 프로젝트나 연결이 맞지
+  않는 판단 명령은 판단을 기록하지 않고 `deny`를 반환합니다. 유효한 명령은 로컬
+  `User Channel`을 통해 지정된 대기 판단을 `actor_source=local_user`와
+  `resolved_verification_basis=user_prompt_submit_hook`으로
   기록하고, prompt-capture 저장소에는 전체 prompt text를 생략하며, 그 명령을 일반
   agent 지시로 다루지 않고 모델에 보이는 기록 완료 맥락을 반환합니다.
 - `stop`은 active task를 완료로 다뤄도 되는지 점검합니다. 닫기 준비 상태 blocker가

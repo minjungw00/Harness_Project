@@ -7,6 +7,7 @@ use schemars::{
     JsonSchema,
 };
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
+use sha2::{Digest, Sha256};
 
 use crate::ids::AgentConnectionId;
 
@@ -381,6 +382,43 @@ pub const VERIFICATION_BASIS_MCP_ELICITATION_USER_CHANNEL: &str = "mcp_elicitati
 
 /// Controlled binding basis value for repository tests and fixtures.
 pub const VERIFICATION_BASIS_TEST_FIXTURE_BINDING: &str = "test_fixture_binding";
+
+/// Builds the copy-paste chat verification code for one pending judgment and connection.
+pub fn chat_judgment_verification_code(
+    project_id: &str,
+    task_id: &str,
+    judgment_id: &str,
+    requested_at: &str,
+    connection_id: &str,
+) -> String {
+    const ALPHABET: &[u8; 32] = b"ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+    let mut hasher = Sha256::new();
+    for part in [
+        "chat_judgment_verification_code",
+        project_id,
+        task_id,
+        judgment_id,
+        requested_at,
+        connection_id,
+    ] {
+        hasher.update(part.as_bytes());
+        hasher.update([0]);
+    }
+    let digest = hasher.finalize();
+    let mut bits = 0_u64;
+    for byte in digest.iter().take(5) {
+        bits = (bits << 8) | u64::from(*byte);
+    }
+
+    let mut code = String::with_capacity(7);
+    code.push('#');
+    for shift in (2..=7).rev() {
+        let index = ((bits >> (shift * 5)) & 0b11111) as usize;
+        code.push(char::from(ALPHABET[index]));
+    }
+    code
+}
 
 /// Baseline actor assurance level for cooperative Agent Connection provenance.
 pub const ACTOR_ASSURANCE_AGENT_CONNECTION_COOPERATIVE: &str = "agent_connection_cooperative";
