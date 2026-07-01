@@ -57,9 +57,9 @@ applicability:
   mcp_protocol_2025_11_25:
     description: MCP protocol version 2025-11-25 supported by the local `volicord mcp --stdio`
       process.
-  storage_baseline_sqlite_v3_schema_v3:
-    description: '`baseline_sqlite_v3` storage profile with registry and project-state schema version
-      3.'
+  storage_baseline_sqlite_v3:
+    description: '`baseline_sqlite_v3` storage profile with the current registry and project-state
+      schemas.'
   doc_index_schema_v3:
     description: Documentation index metadata schema version 3 used by `docs/doc-index.yaml` and
       `docs-check`.
@@ -673,7 +673,7 @@ documents:
   applies_to:
   - volicord_workspace_0_1
   - rust_workspace_1_85
-  - storage_baseline_sqlite_v3_schema_v3
+  - storage_baseline_sqlite_v3
   primary_audience:
   - implementers
   - reviewers
@@ -1097,7 +1097,7 @@ documents:
   applies_to:
   - volicord_workspace_0_1
   - mcp_protocol_2025_11_25
-  - storage_baseline_sqlite_v3_schema_v3
+  - storage_baseline_sqlite_v3
   primary_audience:
   - implementers
   - agent integrators
@@ -1804,7 +1804,7 @@ documents:
   last_verified_on: '2026-06-24'
   applies_to:
   - volicord_workspace_0_1
-  - storage_baseline_sqlite_v3_schema_v3
+  - storage_baseline_sqlite_v3
   primary_audience:
   - implementers
   - maintainers
@@ -1828,7 +1828,7 @@ documents:
   last_verified_on: '2026-07-01'
   applies_to:
   - volicord_workspace_0_1
-  - storage_baseline_sqlite_v3_schema_v3
+  - storage_baseline_sqlite_v3
   primary_audience:
   - storage implementers
   - maintainers
@@ -1855,7 +1855,7 @@ documents:
   last_verified_on: '2026-07-01'
   applies_to:
   - volicord_workspace_0_1
-  - storage_baseline_sqlite_v3_schema_v3
+  - storage_baseline_sqlite_v3
   primary_audience:
   - storage implementers
   - API implementers
@@ -1884,7 +1884,7 @@ documents:
   last_verified_on: '2026-07-01'
   applies_to:
   - volicord_workspace_0_1
-  - storage_baseline_sqlite_v3_schema_v3
+  - storage_baseline_sqlite_v3
   primary_audience:
   - storage implementers
   - API implementers
@@ -1909,7 +1909,7 @@ documents:
   last_verified_on: '2026-06-29'
   applies_to:
   - volicord_workspace_0_1
-  - storage_baseline_sqlite_v3_schema_v3
+  - storage_baseline_sqlite_v3
   primary_audience:
   - storage implementers
   - API implementers
@@ -1935,7 +1935,7 @@ documents:
   last_verified_on: '2026-06-28'
   applies_to:
   - volicord_workspace_0_1
-  - storage_baseline_sqlite_v3_schema_v3
+  - storage_baseline_sqlite_v3
   primary_audience:
   - storage implementers
   - maintainers

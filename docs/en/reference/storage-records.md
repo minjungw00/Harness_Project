@@ -90,6 +90,8 @@ Baseline storage persists only the record families defined by this baseline stor
 | `state.sqlite` | `prompt_captures` | Prompt capture | Project-scoped prompt capture for a session, including connection, capture kind, prompt hash, optional prompt text, timestamp, and metadata. |
 | `state.sqlite` | `expected_writes` | Expected Product Repository write | Project-scoped expected-write correlation record created by an allowed guarded pre-tool write, with connection/session identity, optional host invocation identity, exact path policy, active task/change-unit/write-check basis, timestamps, and matched post-tool metadata. |
 | `state.sqlite` | `unrecorded_changes` | Unrecorded Product Repository change | Project-scoped unresolved or resolved record for observed Product Repository changes that are not yet matched to a Core run or other owner-defined record. |
+| `state.sqlite` | `session_watch_baselines` | Session watch baseline | Project-scoped session watch status and baseline snapshot for a registered Product Repository or watched path set, including effective exclusions, snapshot digest metadata, and compact snapshot entries. |
+| `state.sqlite` | `session_watch_observations` | Session watch observation | Project-scoped detective observation derived from comparing a later safe snapshot to a baseline, with observed changed paths, optional expected-write correlation, and optional link to an existing unrecorded-change row. |
 | `state.sqlite` | `tasks` | Work-unit state | User-value work unit, shaping summary, scope and close-basis revisions, nullable current close basis, lifecycle/result/terminal close summary, current `CompletionPolicy`, current Change Unit pointer, and creator actor source. |
 | `state.sqlite` | `change_units` | Scoped work boundary | Scope summaries, write basis, Change Unit lifecycle, and owning `Task` relation. |
 | `state.sqlite` | `user_judgments` | User-owned judgment state | Pending, resolved, stale, superseded, and expired user-owned judgments, including basis snapshot, request context, options, sensitive-action scope, resolution machine action and outcome, rationale metadata, User Channel actor source, verification basis, and assurance level. |
@@ -117,7 +119,7 @@ Baseline records use opaque stable ids as primary keys or equivalent unique keys
 - Connection Projects membership is unique by `connection_internal_id` and `project_internal_id`, and is the only registry membership that lets one connection address a registered project.
 - Guard installation identity is unique by `guard_installation_id`. Project-scoped guard installations must name a registered project and an Agent Connection that has Connection Projects membership for that project.
 - Project-scoped rows belong to a registered project.
-- Guard sessions, guard events, prompt captures, expected writes, and unrecorded changes belong to one project-local `state.sqlite` and name the Agent Connection that observed or produced the record.
+- Guard sessions, guard events, prompt captures, expected writes, unrecorded changes, session watch baselines, and session watch observations belong to one project-local `state.sqlite` and name the Agent Connection that observed or produced the record.
 - Task-scoped rows belong to the same project and `Task` as their owning `tasks` row.
 - Current pointers and owner references must point to same-project records.
 - A `Task` has at most one current Change Unit.
@@ -139,20 +141,22 @@ Storage must validate stored relationships before commit, including:
 - artifact staging consumption and promotion targets
 - artifact owner relations
 - Connection Projects membership and enabled-state consistency for Agent Connection routing
-- guard installation, Agent Session, guard event, prompt capture, expected-write, and unrecorded-change project and connection scope
+- guard installation, Agent Session, guard event, prompt capture, expected-write, unrecorded-change, session watch baseline, and session watch observation project and connection scope
 - JSON reference arrays that SQLite cannot express as direct foreign keys
 
 ### Authority Row Preservation
 
 Ordinary baseline Core operations preserve authority rows through lifecycle or status transitions. Completing, cancelling, or superseding a `Task` changes the relevant lifecycle/status meaning while keeping committed authority rows addressable for audit and recovery.
 
-This preservation applies to `tasks`, `change_units`, `user_judgments`, `project_continuity_records`, `write_checks`, `runs`, `artifacts`, `artifact_links`, `evidence_summaries`, `evidence_observations`, `blockers`, `task_events`, `tool_invocations`, `agent_sessions`, `guard_events`, `prompt_captures`, `expected_writes`, and `unrecorded_changes`. Artifact-specific transient and durable retention rules belong to [Artifact Storage](storage-artifacts.md).
+This preservation applies to `tasks`, `change_units`, `user_judgments`, `project_continuity_records`, `write_checks`, `runs`, `artifacts`, `artifact_links`, `evidence_summaries`, `evidence_observations`, `blockers`, `task_events`, `tool_invocations`, `agent_sessions`, `guard_events`, `prompt_captures`, `expected_writes`, `unrecorded_changes`, `session_watch_baselines`, and `session_watch_observations`. Artifact-specific transient and durable retention rules belong to [Artifact Storage](storage-artifacts.md).
 
 ### Guarded Operation Records
 
 Guarded-operation records preserve local authority facts about host integration state. They can help Core and Store code determine whether work can honestly proceed or close, but they are not OS-level sandboxing, filesystem ACLs, external policy enforcement, anti-forgery proof, or proof that a write was prevented.
 
-`guard_installations` records setup lifecycle state, observed hook metadata, and host capability by Runtime Home, Agent Connection, and optional project scope. `configured` and `reload_required` mean files or metadata are installed but no matching guard hook has yet been observed. `active` means Volicord observed a valid guard hook for the recorded project, Agent Connection, host kind, guard mode, and policy hash; it does not prove OS-level enforcement or sandboxing. `agent_sessions`, `guard_events`, `prompt_captures`, `expected_writes`, and `unrecorded_changes` are project-local rows and must not leak across project `state.sqlite` databases. A pending `expected_writes` row means guarded pre-tool allowed a concrete expected write for bounded project, connection, session, time, path, task, Change Unit, and Write Check coordinates. A matched row means post-tool observation was correlated to that expected write; it is not proof of product correctness. An unresolved `unrecorded_changes` row means an observed Product Repository change still needs owner-defined reconciliation. Resolving the row records the local resolution basis, actor source, capture basis, resolution timestamp, and optional linked user judgment while preserving the row.
+`guard_installations` records setup lifecycle state, observed hook metadata, and host capability by Runtime Home, Agent Connection, and optional project scope. `configured` and `reload_required` mean files or metadata are installed but no matching guard hook has yet been observed. `active` means Volicord observed a valid guard hook for the recorded project, Agent Connection, host kind, guard mode, and policy hash; it does not prove OS-level enforcement or sandboxing. `agent_sessions`, `guard_events`, `prompt_captures`, `expected_writes`, `unrecorded_changes`, `session_watch_baselines`, and `session_watch_observations` are project-local rows and must not leak across project `state.sqlite` databases. A pending `expected_writes` row means guarded pre-tool allowed a concrete expected write for bounded project, connection, session, time, path, task, Change Unit, and Write Check coordinates. A matched row means post-tool observation was correlated to that expected write; it is not proof of product correctness. An unresolved `unrecorded_changes` row means an observed Product Repository change still needs owner-defined reconciliation. Resolving the row records the local resolution basis, actor source, capture basis, resolution timestamp, and optional linked user judgment while preserving the row.
+
+`session_watch_baselines` and `session_watch_observations` support detective session-level Product Repository watching. They are not a sandbox, filesystem permission boundary, pre-write block, proof of who changed a file, or proof of why a file changed. A baseline stores watch availability, the registered repository root or watched path set, effective exclusions, and deterministic snapshot digest metadata. An observation stores changed product paths found by comparing a later safe snapshot with the baseline, plus optional expected-write and unrecorded-change correlation refs. Linking an observation to an unrecorded-change row records local reconciliation context; it does not create close blockers by itself.
 
 ### Current Close Basis
 
@@ -194,6 +198,9 @@ Closed storage-owned value sets are persistence constraints. Unknown values must
 | `expected_writes.path_policy` | `exact_paths` |
 | `expected_writes.status` | `pending`, `matched` |
 | `unrecorded_changes.status` | `unresolved`, `resolved` |
+| `session_watch_baselines.status` | `disabled`, `active`, `degraded`, `unavailable` |
+| `session_watch_baselines.scope_kind` | `repository`, `path_set` |
+| `session_watch_observations.observation_status` | `unresolved`, `linked` |
 | `change_units.status` | `proposed`, `active`, `replaced`, `closed` |
 | `write_checks.status` | `active`, `consumed`, `expired`, `stale`, `revoked` |
 | `user_judgments.status` | `pending`, `resolved`, `stale`, `superseded`, `expired` |
@@ -233,7 +240,10 @@ Rules:
 | `agent_sessions` | Non-authority metadata for a project-scoped Agent Session. |
 | `guard_events` | Guard subject JSON, result JSON, and metadata for a local guard decision event. |
 | `prompt_captures` | Non-authority metadata for a captured prompt record; prompt text is a direct nullable text column. |
+| `expected_writes` | Expected path arrays, Write Check id arrays, matched path arrays, and metadata for guarded expected-write correlation. |
 | `unrecorded_changes` | Observed path arrays, detection JSON, resolution JSON, and metadata for unrecorded Product Repository changes. Resolution JSON stores compact resolution basis, capture basis, resolved method, and optional linked user-judgment reference; it must not store full sensitive command or prompt content. |
+| `session_watch_baselines` | Watched path arrays, effective exclusion arrays, snapshot entry arrays, and metadata for a session watch baseline. Snapshot entries store path, kind, size, hash, or skip reason metadata only; they do not store file contents. |
+| `session_watch_observations` | Observed changed path arrays, compact change-summary JSON, snapshot entry arrays, and metadata for a session watch observation. Snapshot and change summaries do not prove actor identity, intent, product correctness, or close readiness. |
 | `tasks` | Shaping summary, bounded lists, autonomy boundary, current close basis, terminal close summary, lifecycle summary, and `CompletionPolicy`. |
 | `change_units` | Scope summaries, bounded lists, write basis summaries, optional effect contract data, and lifecycle support data. |
 | `user_judgments` | Judgment request, context, options, affected refs, artifact refs, basis snapshot, sensitive-action scope, machine-readable resolution, and descriptive rationale metadata. |

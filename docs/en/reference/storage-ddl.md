@@ -955,6 +955,88 @@ The version `3` project-state migration updates existing `project_state.schema_v
 
 Project-state schema version `4` rebuilds `tool_invocations` with `local_recovery` added to the `operation_category` constraint, preserves existing replay rows, and updates existing `project_state.schema_version` rows from `3` to `4`.
 
+Project-state schema version `5` adds session-level Product Repository watch records:
+
+```sql
+CREATE TABLE session_watch_baselines (
+  project_id TEXT NOT NULL,
+  watch_baseline_id TEXT NOT NULL,
+  session_id TEXT NOT NULL,
+  connection_internal_id TEXT NOT NULL,
+  guard_installation_id TEXT,
+  status TEXT NOT NULL CHECK (status IN ('disabled', 'active', 'degraded', 'unavailable')),
+  scope_kind TEXT NOT NULL CHECK (scope_kind IN ('repository', 'path_set')),
+  repo_root TEXT NOT NULL CHECK (length(trim(repo_root)) > 0),
+  watched_paths_json TEXT NOT NULL DEFAULT '[]',
+  exclusions_json TEXT NOT NULL DEFAULT '[]',
+  snapshot_algorithm TEXT NOT NULL CHECK (length(trim(snapshot_algorithm)) > 0),
+  snapshot_digest TEXT NOT NULL CHECK (length(trim(snapshot_digest)) > 0),
+  snapshot_entries_json TEXT NOT NULL DEFAULT '[]',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  metadata_json TEXT NOT NULL DEFAULT '{}',
+  PRIMARY KEY (project_id, watch_baseline_id),
+  FOREIGN KEY (project_id) REFERENCES project_state (project_id),
+  FOREIGN KEY (project_id, session_id) REFERENCES agent_sessions (project_id, session_id)
+);
+
+CREATE TABLE session_watch_observations (
+  project_id TEXT NOT NULL,
+  watch_observation_id TEXT NOT NULL,
+  watch_baseline_id TEXT NOT NULL,
+  session_id TEXT NOT NULL,
+  connection_internal_id TEXT NOT NULL,
+  expected_write_id TEXT,
+  unrecorded_change_id TEXT,
+  observation_status TEXT NOT NULL CHECK (observation_status IN ('unresolved', 'linked')),
+  observed_paths_json TEXT NOT NULL DEFAULT '[]',
+  change_summary_json TEXT NOT NULL DEFAULT '{}',
+  snapshot_algorithm TEXT NOT NULL CHECK (length(trim(snapshot_algorithm)) > 0),
+  snapshot_digest TEXT NOT NULL CHECK (length(trim(snapshot_digest)) > 0),
+  snapshot_entries_json TEXT NOT NULL DEFAULT '[]',
+  observed_at TEXT NOT NULL,
+  linked_at TEXT,
+  metadata_json TEXT NOT NULL DEFAULT '{}',
+  PRIMARY KEY (project_id, watch_observation_id),
+  CHECK (
+    (
+      observation_status = 'unresolved'
+      AND unrecorded_change_id IS NULL
+      AND linked_at IS NULL
+    )
+    OR (
+      observation_status = 'linked'
+      AND unrecorded_change_id IS NOT NULL
+      AND linked_at IS NOT NULL
+    )
+  ),
+  FOREIGN KEY (project_id, watch_baseline_id)
+    REFERENCES session_watch_baselines (project_id, watch_baseline_id),
+  FOREIGN KEY (project_id, session_id) REFERENCES agent_sessions (project_id, session_id),
+  FOREIGN KEY (project_id, expected_write_id)
+    REFERENCES expected_writes (project_id, expected_write_id),
+  FOREIGN KEY (project_id, unrecorded_change_id)
+    REFERENCES unrecorded_changes (project_id, unrecorded_change_id)
+);
+
+CREATE INDEX idx_session_watch_baselines_session
+  ON session_watch_baselines (project_id, session_id, status);
+CREATE INDEX idx_session_watch_baselines_status
+  ON session_watch_baselines (project_id, status, updated_at);
+CREATE INDEX idx_session_watch_observations_unresolved
+  ON session_watch_observations (project_id, session_id, observation_status, observed_at);
+CREATE INDEX idx_session_watch_observations_baseline
+  ON session_watch_observations (project_id, watch_baseline_id, observed_at);
+CREATE INDEX idx_session_watch_observations_expected_write
+  ON session_watch_observations (project_id, expected_write_id)
+  WHERE expected_write_id IS NOT NULL;
+CREATE INDEX idx_session_watch_observations_unrecorded_change
+  ON session_watch_observations (project_id, unrecorded_change_id)
+  WHERE unrecorded_change_id IS NOT NULL;
+```
+
+The version `5` project-state migration updates existing `project_state.schema_version` rows from `4` to `5`.
+
 Project-state constraints:
 
 - `project_state.state_version` is the only public baseline state clock and must be monotonic according to [Storage Versioning](storage-versioning.md).
@@ -965,10 +1047,12 @@ Project-state constraints:
 - `artifact_staging.created_by_actor_source` records staging provenance. Staged bytes and notices remain artifact-owned and are not evidence authority by themselves.
 - `evidence_observations.source_kind` and `assurance_level` distinguish cooperative agent reports, registered connection observations, external tool results, user observations, reused evidence, and unverified claims.
 - `tool_invocations` stores replay rows with actor provenance and operation category. Replay rows are not caller authority and do not bypass current connection context or User Channel requirements.
-- `agent_sessions`, `guard_events`, `prompt_captures`, `expected_writes`, and `unrecorded_changes` are project-local guarded-operation records. They repeat `connection_internal_id` for connection scoping and use project-local keys so records do not leak across projects.
+- `agent_sessions`, `guard_events`, `prompt_captures`, `expected_writes`, `unrecorded_changes`, `session_watch_baselines`, and `session_watch_observations` are project-local guarded-operation and session-watch records. They repeat `connection_internal_id` for connection scoping and use project-local keys so records do not leak across projects.
 - `guard_events.decision` is constrained to `allow`, `deny`, `warn`, or `inject_context`. These values record local guard decisions; they are not OS-level enforcement proof.
 - `expected_writes.status` is constrained to `pending` or `matched`, and `path_policy` is constrained to `exact_paths`. Matched rows must carry the matched post-tool guard event, matched paths JSON, and `matched_at`; pending rows must not carry those matched fields.
 - `unrecorded_changes.status` is constrained to `unresolved` or `resolved`. Resolved rows must carry resolution JSON, `resolved_at`, and `resolved_by_actor_source`; unresolved rows must not carry those resolution fields. Resolution JSON must include the compact resolution basis and capture basis required by [Storage Records](storage-records.md), without storing full sensitive command or prompt content.
+- `session_watch_baselines.status` is constrained to `disabled`, `active`, `degraded`, or `unavailable`, and `scope_kind` is constrained to `repository` or `path_set`.
+- `session_watch_observations.observation_status` is constrained to `unresolved` or `linked`. Linked rows must carry `unrecorded_change_id` and `linked_at`; unresolved rows must not carry those link fields.
 
 ## Related Owners
 

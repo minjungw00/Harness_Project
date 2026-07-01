@@ -11,7 +11,7 @@ pub(crate) const OLD_STORAGE_PROFILE: &str = "baseline_sqlite";
 pub const REGISTRY_SCHEMA_VERSION: i64 = 3;
 
 /// Latest schema version for project `state.sqlite`.
-pub const PROJECT_STATE_SCHEMA_VERSION: i64 = 4;
+pub const PROJECT_STATE_SCHEMA_VERSION: i64 = 5;
 
 /// `schema_migrations.database_kind` for `registry.sqlite`.
 pub const REGISTRY_DATABASE_KIND: &str = "registry";
@@ -61,9 +61,15 @@ const PROJECT_STATE_MIGRATIONS: &[Migration] = &[
     },
     Migration {
         database_kind: PROJECT_STATE_DATABASE_KIND,
-        version: PROJECT_STATE_SCHEMA_VERSION,
+        version: 4,
         name: "project_state_local_recovery_v4",
         sql: PROJECT_STATE_LOCAL_RECOVERY_SQL,
+    },
+    Migration {
+        database_kind: PROJECT_STATE_DATABASE_KIND,
+        version: PROJECT_STATE_SCHEMA_VERSION,
+        name: "project_state_session_watch_v5",
+        sql: PROJECT_STATE_SESSION_WATCH_SQL,
     },
 ];
 
@@ -1325,6 +1331,89 @@ UPDATE project_state
  WHERE schema_version = 3;
 "#;
 
+const PROJECT_STATE_SESSION_WATCH_SQL: &str = r#"
+CREATE TABLE session_watch_baselines (
+  project_id TEXT NOT NULL,
+  watch_baseline_id TEXT NOT NULL,
+  session_id TEXT NOT NULL,
+  connection_internal_id TEXT NOT NULL,
+  guard_installation_id TEXT,
+  status TEXT NOT NULL CHECK (status IN ('disabled', 'active', 'degraded', 'unavailable')),
+  scope_kind TEXT NOT NULL CHECK (scope_kind IN ('repository', 'path_set')),
+  repo_root TEXT NOT NULL CHECK (length(trim(repo_root)) > 0),
+  watched_paths_json TEXT NOT NULL DEFAULT '[]',
+  exclusions_json TEXT NOT NULL DEFAULT '[]',
+  snapshot_algorithm TEXT NOT NULL CHECK (length(trim(snapshot_algorithm)) > 0),
+  snapshot_digest TEXT NOT NULL CHECK (length(trim(snapshot_digest)) > 0),
+  snapshot_entries_json TEXT NOT NULL DEFAULT '[]',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  metadata_json TEXT NOT NULL DEFAULT '{}',
+  PRIMARY KEY (project_id, watch_baseline_id),
+  FOREIGN KEY (project_id) REFERENCES project_state (project_id),
+  FOREIGN KEY (project_id, session_id) REFERENCES agent_sessions (project_id, session_id)
+);
+
+CREATE TABLE session_watch_observations (
+  project_id TEXT NOT NULL,
+  watch_observation_id TEXT NOT NULL,
+  watch_baseline_id TEXT NOT NULL,
+  session_id TEXT NOT NULL,
+  connection_internal_id TEXT NOT NULL,
+  expected_write_id TEXT,
+  unrecorded_change_id TEXT,
+  observation_status TEXT NOT NULL CHECK (observation_status IN ('unresolved', 'linked')),
+  observed_paths_json TEXT NOT NULL DEFAULT '[]',
+  change_summary_json TEXT NOT NULL DEFAULT '{}',
+  snapshot_algorithm TEXT NOT NULL CHECK (length(trim(snapshot_algorithm)) > 0),
+  snapshot_digest TEXT NOT NULL CHECK (length(trim(snapshot_digest)) > 0),
+  snapshot_entries_json TEXT NOT NULL DEFAULT '[]',
+  observed_at TEXT NOT NULL,
+  linked_at TEXT,
+  metadata_json TEXT NOT NULL DEFAULT '{}',
+  PRIMARY KEY (project_id, watch_observation_id),
+  CHECK (
+    (
+      observation_status = 'unresolved'
+      AND unrecorded_change_id IS NULL
+      AND linked_at IS NULL
+    )
+    OR (
+      observation_status = 'linked'
+      AND unrecorded_change_id IS NOT NULL
+      AND linked_at IS NOT NULL
+    )
+  ),
+  FOREIGN KEY (project_id, watch_baseline_id)
+    REFERENCES session_watch_baselines (project_id, watch_baseline_id),
+  FOREIGN KEY (project_id, session_id) REFERENCES agent_sessions (project_id, session_id),
+  FOREIGN KEY (project_id, expected_write_id)
+    REFERENCES expected_writes (project_id, expected_write_id),
+  FOREIGN KEY (project_id, unrecorded_change_id)
+    REFERENCES unrecorded_changes (project_id, unrecorded_change_id)
+);
+
+CREATE INDEX idx_session_watch_baselines_session
+  ON session_watch_baselines (project_id, session_id, status);
+CREATE INDEX idx_session_watch_baselines_status
+  ON session_watch_baselines (project_id, status, updated_at);
+CREATE INDEX idx_session_watch_observations_unresolved
+  ON session_watch_observations (project_id, session_id, observation_status, observed_at);
+CREATE INDEX idx_session_watch_observations_baseline
+  ON session_watch_observations (project_id, watch_baseline_id, observed_at);
+CREATE INDEX idx_session_watch_observations_expected_write
+  ON session_watch_observations (project_id, expected_write_id)
+  WHERE expected_write_id IS NOT NULL;
+CREATE INDEX idx_session_watch_observations_unrecorded_change
+  ON session_watch_observations (project_id, unrecorded_change_id)
+  WHERE unrecorded_change_id IS NOT NULL;
+
+UPDATE project_state
+   SET schema_version = 5,
+       updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+ WHERE schema_version = 4;
+"#;
+
 #[cfg(test)]
 mod tests {
     use std::{error::Error, fs, path::Path};
@@ -1344,7 +1433,7 @@ mod tests {
     fn expected_migration_catalogs_contain_ordered_rows() {
         assert_eq!(STORAGE_PROFILE, "baseline_sqlite_v3");
         assert_eq!(REGISTRY_SCHEMA_VERSION, 3);
-        assert_eq!(PROJECT_STATE_SCHEMA_VERSION, 4);
+        assert_eq!(PROJECT_STATE_SCHEMA_VERSION, 5);
         assert_eq!(
             expected_registry_migrations(),
             vec![
@@ -1387,6 +1476,11 @@ mod tests {
                     database_kind: PROJECT_STATE_DATABASE_KIND,
                     version: 4,
                     name: "project_state_local_recovery_v4",
+                },
+                ExpectedMigration {
+                    database_kind: PROJECT_STATE_DATABASE_KIND,
+                    version: 5,
+                    name: "project_state_session_watch_v5",
                 }
             ]
         );
@@ -1442,6 +1536,7 @@ mod tests {
                 "project_state_guard_records_v2",
                 "project_state_expected_writes_v3",
                 "project_state_local_recovery_v4",
+                "project_state_session_watch_v5",
             ],
         )?;
         drop(conn);
@@ -1456,6 +1551,7 @@ mod tests {
                 "project_state_guard_records_v2",
                 "project_state_expected_writes_v3",
                 "project_state_local_recovery_v4",
+                "project_state_session_watch_v5",
             ],
         )?;
         assert!(table_exists(&conn, "tool_invocations")?);
@@ -1464,6 +1560,8 @@ mod tests {
         assert!(table_exists(&conn, "prompt_captures")?);
         assert!(table_exists(&conn, "expected_writes")?);
         assert!(table_exists(&conn, "unrecorded_changes")?);
+        assert!(table_exists(&conn, "session_watch_baselines")?);
+        assert!(table_exists(&conn, "session_watch_observations")?);
         assert!(column_exists(
             &conn,
             "project_state",
@@ -1570,7 +1668,7 @@ mod tests {
         ));
         assert!(error.to_string().contains("explicitly reinitialize"));
         assert_eq!(file_hash(&path)?, hash_before);
-        assert_eq!(migration_count(&path, PROJECT_STATE_DATABASE_KIND)?, 4);
+        assert_eq!(migration_count(&path, PROJECT_STATE_DATABASE_KIND)?, 5);
         assert_eq!(stored_profile(&path, "project_state")?, OLD_STORAGE_PROFILE);
         Ok(())
     }
@@ -1601,7 +1699,7 @@ mod tests {
         assert!(matches!(error, StoreError::SchemaInvariant { .. }));
         assert!(error.to_string().contains("newer than supported"));
         assert_eq!(file_hash(&path)?, hash_before);
-        assert_eq!(migration_count(&path, PROJECT_STATE_DATABASE_KIND)?, 5);
+        assert_eq!(migration_count(&path, PROJECT_STATE_DATABASE_KIND)?, 6);
         Ok(())
     }
 
@@ -1731,6 +1829,7 @@ mod tests {
                 "project_state_guard_records_v2",
                 "project_state_expected_writes_v3",
                 "project_state_local_recovery_v4",
+                "project_state_session_watch_v5",
             ],
         )?;
         Ok(())

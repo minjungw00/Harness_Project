@@ -207,6 +207,8 @@ fn initial_schemas_satisfy_connection_storage_contract() -> Result<(), Box<dyn E
             "prompt_captures",
             "expected_writes",
             "unrecorded_changes",
+            "session_watch_baselines",
+            "session_watch_observations",
         ],
     );
     assert_columns_include(
@@ -246,6 +248,32 @@ fn initial_schemas_satisfy_connection_storage_contract() -> Result<(), Box<dyn E
         &initial_project_schema,
         "unrecorded_changes",
         &["unrecorded_change_id", "status", "resolution_json"],
+    );
+    assert_columns_include(
+        &initial_project_schema,
+        "session_watch_baselines",
+        &[
+            "watch_baseline_id",
+            "session_id",
+            "connection_internal_id",
+            "status",
+            "scope_kind",
+            "repo_root",
+            "snapshot_digest",
+        ],
+    );
+    assert_columns_include(
+        &initial_project_schema,
+        "session_watch_observations",
+        &[
+            "watch_observation_id",
+            "watch_baseline_id",
+            "session_id",
+            "expected_write_id",
+            "unrecorded_change_id",
+            "observation_status",
+            "observed_paths_json",
+        ],
     );
 
     assert_project_contract_behavior("initial project state.sqlite", &initial_project)?;

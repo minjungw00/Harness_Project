@@ -403,6 +403,8 @@ pub fn validate_project_state_schema(conn: &Connection) -> StoreResult<()> {
             "prompt_captures",
             "expected_writes",
             "unrecorded_changes",
+            "session_watch_baselines",
+            "session_watch_observations",
         ],
     )?;
     require_indexes(
@@ -446,6 +448,12 @@ pub fn validate_project_state_schema(conn: &Connection) -> StoreResult<()> {
             "idx_unrecorded_changes_status",
             "idx_unrecorded_changes_connection",
             "idx_unrecorded_changes_task",
+            "idx_session_watch_baselines_session",
+            "idx_session_watch_baselines_status",
+            "idx_session_watch_observations_unresolved",
+            "idx_session_watch_observations_baseline",
+            "idx_session_watch_observations_expected_write",
+            "idx_session_watch_observations_unrecorded_change",
         ],
     )?;
     require_column(
@@ -1389,6 +1397,48 @@ fn validate_guard_project_record_tables(conn: &Connection) -> StoreResult<()> {
                 "metadata_json",
             ][..],
         ),
+        (
+            "session_watch_baselines",
+            &[
+                "project_id",
+                "watch_baseline_id",
+                "session_id",
+                "connection_internal_id",
+                "guard_installation_id",
+                "status",
+                "scope_kind",
+                "repo_root",
+                "watched_paths_json",
+                "exclusions_json",
+                "snapshot_algorithm",
+                "snapshot_digest",
+                "snapshot_entries_json",
+                "created_at",
+                "updated_at",
+                "metadata_json",
+            ][..],
+        ),
+        (
+            "session_watch_observations",
+            &[
+                "project_id",
+                "watch_observation_id",
+                "watch_baseline_id",
+                "session_id",
+                "connection_internal_id",
+                "expected_write_id",
+                "unrecorded_change_id",
+                "observation_status",
+                "observed_paths_json",
+                "change_summary_json",
+                "snapshot_algorithm",
+                "snapshot_digest",
+                "snapshot_entries_json",
+                "observed_at",
+                "linked_at",
+                "metadata_json",
+            ][..],
+        ),
     ] {
         for column in columns {
             require_column(conn, PROJECT_STATE_DATABASE_KIND, table, column)?;
@@ -1445,6 +1495,32 @@ fn validate_guard_project_record_tables(conn: &Connection) -> StoreResult<()> {
         return Err(StoreError::schema_invariant(
             PROJECT_STATE_DATABASE_KIND,
             "unrecorded_changes resolution constraints are missing or malformed",
+        ));
+    }
+
+    let baselines_sql = normalized_table_sql(conn, "session_watch_baselines")?;
+    if !baselines_sql.contains("status in ('disabled', 'active', 'degraded', 'unavailable')")
+        || !baselines_sql.contains("scope_kind in ('repository', 'path_set')")
+    {
+        return Err(StoreError::schema_invariant(
+            PROJECT_STATE_DATABASE_KIND,
+            "session_watch_baselines constraints are missing or malformed",
+        ));
+    }
+
+    let observations_sql = normalized_table_sql(conn, "session_watch_observations")?;
+    let has_status_values =
+        observations_sql.contains("observation_status in ('unresolved', 'linked')");
+    let has_unresolved_group = observations_sql.contains("observation_status = 'unresolved'")
+        && observations_sql.contains("unrecorded_change_id is null")
+        && observations_sql.contains("linked_at is null");
+    let has_linked_group = observations_sql.contains("observation_status = 'linked'")
+        && observations_sql.contains("unrecorded_change_id is not null")
+        && observations_sql.contains("linked_at is not null");
+    if !has_status_values || !has_unresolved_group || !has_linked_group {
+        return Err(StoreError::schema_invariant(
+            PROJECT_STATE_DATABASE_KIND,
+            "session_watch_observations link constraints are missing or malformed",
         ));
     }
 
@@ -1635,7 +1711,7 @@ mod tests {
             &conn,
             PROJECT_STATE_DATABASE_KIND,
             PROJECT_STATE_SCHEMA_VERSION,
-            "project_state_local_recovery_v4"
+            "project_state_session_watch_v5"
         )?);
         drop(conn);
 
@@ -1646,6 +1722,16 @@ mod tests {
         assert!(sqlite_object_exists(&conn, "table", "agent_sessions")?);
         assert!(sqlite_object_exists(&conn, "table", "expected_writes")?);
         assert!(sqlite_object_exists(&conn, "table", "unrecorded_changes")?);
+        assert!(sqlite_object_exists(
+            &conn,
+            "table",
+            "session_watch_baselines"
+        )?);
+        assert!(sqlite_object_exists(
+            &conn,
+            "table",
+            "session_watch_observations"
+        )?);
         validate_tool_invocations_columns(&conn)?;
         validate_tool_invocations_operation_category_constraint(&conn)?;
         Ok(())

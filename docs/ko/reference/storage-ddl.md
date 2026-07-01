@@ -955,6 +955,88 @@ CREATE INDEX idx_expected_writes_task
 
 프로젝트 상태 스키마 버전 `4`는 `tool_invocations`를 다시 만들어 `operation_category` 제약에 `local_recovery`를 추가하고, 기존 재실행 행을 보존하며, 기존 `project_state.schema_version` 행을 `3`에서 `4`로 갱신합니다.
 
+프로젝트 상태 스키마 버전 `5`는 세션 수준 Product Repository watch 기록을 추가합니다.
+
+```sql
+CREATE TABLE session_watch_baselines (
+  project_id TEXT NOT NULL,
+  watch_baseline_id TEXT NOT NULL,
+  session_id TEXT NOT NULL,
+  connection_internal_id TEXT NOT NULL,
+  guard_installation_id TEXT,
+  status TEXT NOT NULL CHECK (status IN ('disabled', 'active', 'degraded', 'unavailable')),
+  scope_kind TEXT NOT NULL CHECK (scope_kind IN ('repository', 'path_set')),
+  repo_root TEXT NOT NULL CHECK (length(trim(repo_root)) > 0),
+  watched_paths_json TEXT NOT NULL DEFAULT '[]',
+  exclusions_json TEXT NOT NULL DEFAULT '[]',
+  snapshot_algorithm TEXT NOT NULL CHECK (length(trim(snapshot_algorithm)) > 0),
+  snapshot_digest TEXT NOT NULL CHECK (length(trim(snapshot_digest)) > 0),
+  snapshot_entries_json TEXT NOT NULL DEFAULT '[]',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  metadata_json TEXT NOT NULL DEFAULT '{}',
+  PRIMARY KEY (project_id, watch_baseline_id),
+  FOREIGN KEY (project_id) REFERENCES project_state (project_id),
+  FOREIGN KEY (project_id, session_id) REFERENCES agent_sessions (project_id, session_id)
+);
+
+CREATE TABLE session_watch_observations (
+  project_id TEXT NOT NULL,
+  watch_observation_id TEXT NOT NULL,
+  watch_baseline_id TEXT NOT NULL,
+  session_id TEXT NOT NULL,
+  connection_internal_id TEXT NOT NULL,
+  expected_write_id TEXT,
+  unrecorded_change_id TEXT,
+  observation_status TEXT NOT NULL CHECK (observation_status IN ('unresolved', 'linked')),
+  observed_paths_json TEXT NOT NULL DEFAULT '[]',
+  change_summary_json TEXT NOT NULL DEFAULT '{}',
+  snapshot_algorithm TEXT NOT NULL CHECK (length(trim(snapshot_algorithm)) > 0),
+  snapshot_digest TEXT NOT NULL CHECK (length(trim(snapshot_digest)) > 0),
+  snapshot_entries_json TEXT NOT NULL DEFAULT '[]',
+  observed_at TEXT NOT NULL,
+  linked_at TEXT,
+  metadata_json TEXT NOT NULL DEFAULT '{}',
+  PRIMARY KEY (project_id, watch_observation_id),
+  CHECK (
+    (
+      observation_status = 'unresolved'
+      AND unrecorded_change_id IS NULL
+      AND linked_at IS NULL
+    )
+    OR (
+      observation_status = 'linked'
+      AND unrecorded_change_id IS NOT NULL
+      AND linked_at IS NOT NULL
+    )
+  ),
+  FOREIGN KEY (project_id, watch_baseline_id)
+    REFERENCES session_watch_baselines (project_id, watch_baseline_id),
+  FOREIGN KEY (project_id, session_id) REFERENCES agent_sessions (project_id, session_id),
+  FOREIGN KEY (project_id, expected_write_id)
+    REFERENCES expected_writes (project_id, expected_write_id),
+  FOREIGN KEY (project_id, unrecorded_change_id)
+    REFERENCES unrecorded_changes (project_id, unrecorded_change_id)
+);
+
+CREATE INDEX idx_session_watch_baselines_session
+  ON session_watch_baselines (project_id, session_id, status);
+CREATE INDEX idx_session_watch_baselines_status
+  ON session_watch_baselines (project_id, status, updated_at);
+CREATE INDEX idx_session_watch_observations_unresolved
+  ON session_watch_observations (project_id, session_id, observation_status, observed_at);
+CREATE INDEX idx_session_watch_observations_baseline
+  ON session_watch_observations (project_id, watch_baseline_id, observed_at);
+CREATE INDEX idx_session_watch_observations_expected_write
+  ON session_watch_observations (project_id, expected_write_id)
+  WHERE expected_write_id IS NOT NULL;
+CREATE INDEX idx_session_watch_observations_unrecorded_change
+  ON session_watch_observations (project_id, unrecorded_change_id)
+  WHERE unrecorded_change_id IS NOT NULL;
+```
+
+버전 `5` 프로젝트 상태 마이그레이션은 기존 `project_state.schema_version` 행을 `4`에서 `5`로 갱신합니다.
+
 프로젝트 상태 제약:
 
 - `project_state.state_version`은 기준 범위의 유일한 공개 상태 시계이며 [저장소 버전 관리](storage-versioning.md)에 따라 단조롭게 진행해야 합니다.
@@ -965,10 +1047,12 @@ CREATE INDEX idx_expected_writes_task
 - `artifact_staging.created_by_actor_source`는 스테이징 출처를 기록합니다. 스테이징된 바이트와 알림은 아티팩트 담당 상태이며 그 자체로 증거 권한이 아닙니다.
 - `evidence_observations.source_kind`와 `assurance_level`은 협력적 에이전트 보고, 등록된 연결 관찰, 외부 도구 결과, 사용자 관찰, 재사용 증거, 미확인 주장을 구분합니다.
 - `tool_invocations`는 행위자 출처와 작업 범주를 포함해 재실행 행을 저장합니다. 재실행 행은 호출자 권한이 아니며 현재 연결 맥락이나 User Channel 요구사항을 우회하지 않습니다.
-- `agent_sessions`, `guard_events`, `prompt_captures`, `expected_writes`, `unrecorded_changes`는 프로젝트별 guarded-operation 기록입니다. 연결 범위를 위해 `connection_internal_id`를 반복해 저장하고, 프로젝트별 키를 사용해 기록이 프로젝트 사이로 새지 않게 합니다.
+- `agent_sessions`, `guard_events`, `prompt_captures`, `expected_writes`, `unrecorded_changes`, `session_watch_baselines`, `session_watch_observations`는 프로젝트별 guarded-operation 및 session-watch 기록입니다. 연결 범위를 위해 `connection_internal_id`를 반복해 저장하고, 프로젝트별 키를 사용해 기록이 프로젝트 사이로 새지 않게 합니다.
 - `guard_events.decision`은 `allow`, `deny`, `warn`, `inject_context`로 제한됩니다. 이 값은 로컬 guard decision을 기록하며 OS 수준 집행 증명이 아닙니다.
 - `expected_writes.status`는 `pending` 또는 `matched`로 제한되고, `path_policy`는 `exact_paths`로 제한됩니다. 매칭된 행은 매칭된 post-tool guard event, matched paths JSON, `matched_at`을 가져야 하고, 대기 행은 이 매칭 필드를 가지면 안 됩니다.
 - `unrecorded_changes.status`는 `unresolved` 또는 `resolved`로 제한됩니다. 해결된 행은 resolution JSON, `resolved_at`, `resolved_by_actor_source`를 가져야 하고, 미해결 행은 이 해결 필드를 가지면 안 됩니다. Resolution JSON은 [저장소 기록](storage-records.md)이 요구하는 간결한 resolution basis와 capture basis를 포함해야 하며, 전체 민감 명령이나 prompt 내용을 저장하면 안 됩니다.
+- `session_watch_baselines.status`는 `disabled`, `active`, `degraded`, `unavailable`로 제한되고, `scope_kind`는 `repository` 또는 `path_set`으로 제한됩니다.
+- `session_watch_observations.observation_status`는 `unresolved` 또는 `linked`로 제한됩니다. 연결된 행은 `unrecorded_change_id`와 `linked_at`을 가져야 하고, 미해결 행은 이 연결 필드를 가지면 안 됩니다.
 
 ## 관련 담당 문서
 

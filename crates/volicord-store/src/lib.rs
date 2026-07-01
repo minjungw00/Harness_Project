@@ -16,6 +16,7 @@ pub mod guards;
 pub mod inspection;
 pub mod migrations;
 pub mod runtime_home;
+pub mod session_watch;
 pub mod sqlite;
 
 pub use error::{StoreError, StoreFailureRoute, StoreResult};
