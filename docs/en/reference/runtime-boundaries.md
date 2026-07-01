@@ -101,6 +101,10 @@ Rules:
 - Replacement may apply only to matching Volicord-managed content.
 - Safe removal may remove only matching Volicord-managed content and must leave unrelated project files intact.
 - These files are host configuration or guidance. They are not Volicord runtime state, Core authority, evidence, acceptance, close readiness, residual-risk acceptance, or a security guarantee.
+- Cwd-independent hook commands and managed wrapper path verification are host
+  configuration health checks. They do not make these files Volicord runtime
+  state and do not provide OS sandboxing, command blocking, network blocking,
+  secret blocking, or global filesystem interception.
 
 <a id="product-repository-api-path-normalization"></a>
 ### Product Repository API path normalization

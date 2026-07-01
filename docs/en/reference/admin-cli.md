@@ -350,6 +350,13 @@ configuration, guidance, policy, and supported hook or rule files, but it record
 degraded guard status and reports missing required hook phases in human and JSON
 output. `mcp-only` does not require hook installation.
 
+Full Codex guarded initialization additionally requires the selected Product
+Repository to be a Git work tree root that supports cwd-independent wrapper
+resolution from subdirectory host sessions. When that prerequisite is not met,
+init fails instead of generating a bare relative hook path. Claude Code guarded
+initialization uses the host project-directory placeholder described under
+[Guard hook commands](#guard-hook-commands).
+
 Managed initialization must satisfy the guarded hook requirements and the
 separate managed distribution requirement. For hosts without a verified managed
 contract, `--allow-degraded` is reported as not applied and does not silently
@@ -454,7 +461,8 @@ host reload requirement, prompt-capture availability, and last guard event when
 known as separate diagnostics. They must also report `guard_strength`,
 pre-tool blocking availability, post-tool correlation availability, bypass
 detection availability, prompt-capture availability, local web consent
-availability, managed-distribution verification, watcher status, watcher
+availability, hook path safety, hook command cwd independence, hook command
+subdirectory safety, managed-distribution verification, watcher status, watcher
 baseline creation time, watcher coverage start time, watcher coverage basis,
 and any watcher partial-coverage warning as separate fields. Files installed or
 configured must not be reported as an active observed guard hook or as
@@ -487,6 +495,7 @@ Rules:
   claim that an arbitrary external host loaded, trusted, approved, initialized,
   or exposed it.
 
+<a id="guard-hook-commands"></a>
 ## Guard hook commands
 
 `volicord guard` commands are local hook entry points for hosts that can run a
@@ -521,12 +530,44 @@ generated hook wrapper scripts; a mismatch prevents that hook event from
 activating the guard installation, while direct guard commands used for tests
 or debugging may omit the option.
 
-Generated Codex hook configuration invokes Volicord-managed POSIX `sh` wrapper
-scripts under `.codex/hooks/`. Generated Claude Code hook configuration invokes
-Volicord-managed POSIX `sh` wrapper scripts under `.claude/hooks/`. The wrapper
-scripts forward stdin unchanged to `volicord guard`, preserve stdout, stderr,
-and the guard exit code, and pass the expected host kind, host-native output
-mode, repository selector, Agent Connection, guard installation, and policy hash.
+Generated Codex hook configuration must be cwd-independent and
+subdirectory-safe. It does not invoke a bare `.codex/hooks/...` path. Each hook
+entry runs a POSIX `sh` command with the shape:
+
+```sh
+root=$(git rev-parse --show-toplevel) || exit $?
+exec "$root/.codex/hooks/volicord-dispatch.sh" PHASE
+```
+
+The generated `.codex/hooks/volicord-dispatch.sh` script is Volicord-managed. It
+resolves the Git work-tree root again at runtime, requires an absolute root,
+checks that the selected phase wrapper exists and is executable, and then execs
+the phase wrapper under that root. If the Git root cannot be resolved, the
+dispatch path fails instead of falling back to the host session cwd.
+
+Generated Claude Code hook configuration must also be cwd-independent and
+subdirectory-safe. It uses exec-form commands rooted at
+`${CLAUDE_PROJECT_DIR}`, such as
+`${CLAUDE_PROJECT_DIR}/.claude/hooks/volicord-pre-tool.sh`, with no args.
+
+Generated wrapper scripts under `.codex/hooks/` and `.claude/hooks/` forward
+stdin unchanged to `volicord guard`, preserve stdout, stderr, and the guard
+exit code, and pass the expected host kind, host-native output mode, repository
+selector, Agent Connection, guard installation, and policy hash. Users must not
+replace generated hook commands with bare `.codex/hooks/...` or
+`.claude/hooks/...` relative paths.
+
+Guard-aware status, verification, and doctor diagnostics report
+`hook_path_safety`, `hook_commands_cwd_independent`,
+`hook_commands_subdirectory_safe`, and `generated_config_verified`. Hook path
+safety can report values including `relative_path_unsafe`, `wrapper_missing`,
+`wrapper_not_executable`, `absolute_path_stale`, `placeholder_unsupported`,
+`host_output_mismatch`, and `policy_hash_mismatch`; the complete value set is
+owned by [API Value Sets](api/schema-value-sets.md#state-and-blocker-values).
+Any non-`ok` hook path safety value prevents full `host_hook_guarded` or
+`managed_guarded` strength for that view. The repair action is to regenerate
+the safe managed commands with `volicord init --host HOST --repo PATH`, then
+complete any host trust, approval, reload, or restart action still reported.
 
 When a non-`mcp_only` guard command receives a valid event for the recorded
 project, Agent Connection, guard installation, host kind, guard mode, policy

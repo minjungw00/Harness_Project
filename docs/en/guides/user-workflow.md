@@ -151,6 +151,11 @@ the actor. CLI recovery is `volicord changes reconcile`; if reconciliation
 creates a pending judgment, answer it through the normal User Channel path and
 rerun reconciliation.
 
+If guard health reports `hook_path_safety` as anything other than `ok`, treat
+hook-based pre-tool blocking, prompt capture, and unrecorded-change observation
+as unavailable or degraded until the setup is repaired. Exact repair guidance
+belongs to [Agent Host Troubleshooting](agent-host-troubleshooting.md#guard-hook-path-or-wrapper-is-unsafe).
+
 ## Approve writes and sensitive actions
 
 A user-facing write approval is bounded permission for a named write attempt. In this guide, write approval means ordinary user approval for a write flow; it is separate from the exact product label `Write Check`.

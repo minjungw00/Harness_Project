@@ -220,6 +220,61 @@ volicord connection verify codex --repo /path/to/your-product-repo
 않습니다. 실행 파일이 sibling 조회나 `PATH`로 찾을 수 없는 위치에 설치되어 있다면
 `--mcp-command PATH`로 setup을 다시 실행합니다.
 
+<a id="guard-hook-path-or-wrapper-is-unsafe"></a>
+## Guard hook 경로 또는 wrapper가 안전하지 않음
+
+관찰 증상: `volicord doctor`, 연결 status, 연결 verification이 `hook_path_safety`를
+`ok`가 아닌 값으로 보고합니다. 예를 들면 `relative_path_unsafe`,
+`wrapper_missing`, `wrapper_not_executable`, `absolute_path_stale`,
+`host_output_mismatch`, `policy_hash_mismatch`입니다.
+
+제한된 복구:
+
+```sh
+volicord doctor
+volicord connection status codex --repo /path/to/your-product-repo
+volicord init --host codex --repo /path/to/your-product-repo
+volicord connection verify codex --repo /path/to/your-product-repo
+```
+
+영향받은 연결과 같은 호스트와 의도 선택자를 사용합니다. Claude Code에서는 `codex`를
+`claude-code`로 바꾸고, 선택된 연결이 그렇다면 `--global` 또는 `--shared`를 함께
+넣습니다.
+
+진단 의미와 복구:
+
+- `relative_path_unsafe`: 호스트 hook 설정이 호스트 session cwd에 의존하는 bare
+  `.codex/hooks/...`, `./.codex/hooks/...`, `.claude/hooks/...`, 또는
+  `./.claude/hooks/...` 경로를 사용합니다. Hook 명령을 손으로 고치지 말고
+  `volicord init --host HOST --repo PATH`를 다시 실행합니다.
+- `wrapper_missing` 또는 `dispatch_missing`: 생성된 wrapper 또는 Codex dispatch wrapper가
+  없습니다. 선택된 Product Repository에 대해 init을 다시 실행합니다.
+- `wrapper_not_executable`: 생성된 wrapper는 있지만 지원되는 Unix 계열 플랫폼에서 실행
+  가능하지 않습니다. Init을 다시 실행해 관리 wrapper와 실행 비트를 복구합니다.
+- `absolute_path_stale`: 생성된 명령이 이전 프로젝트 root를 가리킵니다. Product
+  Repository를 옮긴 뒤 흔히 발생합니다. 현재 `--repo PATH`로 init을 다시 실행하고,
+  필요하면 호스트를 reload 또는 restart합니다.
+- `host_output_mismatch`, `policy_hash_mismatch`, `authority_mismatch`: 생성된 wrapper
+  메타데이터가 기대하는 host-output mode, policy hash, 연결, guard 설치와 맞지 않습니다.
+  관리 파일과 registry 상태가 일치하도록 init을 다시 실행합니다.
+- `metadata_missing` 또는 `placeholder_unsupported`: 생성된 설정이 현재 검증되는 형태가
+  아닙니다. Init을 다시 실행하고 생성 명령을 지원되지 않는 placeholder로 바꾸지
+  않습니다.
+
+Codex guarded hook 명령에는 선택된 Product Repository가 Git work tree여야 합니다. Wrapper
+stderr가 Git root를 해석할 수 없다고 말하거나, 호스트 session이 하위 디렉터리에서
+시작할 때만 hook이 실패한다면, session이 의도한 Git work tree 안에 있고 호스트
+프로세스가 `git`을 사용할 수 있는지 확인한 뒤 그 저장소에 대해 init을 다시 실행합니다.
+Claude Code guarded hook 명령은 `${CLAUDE_PROJECT_DIR}`를 기준으로 합니다. 호스트가 그
+프로젝트 디렉터리를 제공하지 않는다면 호스트 자체의 trust와 project-selection 흐름으로
+호스트 설정을 reload하거나 복구합니다.
+
+안전하지 않은 hook 경로는 완전한 `host_hook_guarded` 또는 `managed_guarded` guard
+strength를 막습니다. Watcher 사용 가능 여부에 따라 보기는 `authority_record_only` 또는
+`detective_watch`에 머물 수 있습니다. 경로 복구는 여전히 호스트 trust, approval,
+restart, reload와 별개입니다. 보고된 호스트 소유 동작을 완료하고 복구 뒤 verification을
+다시 실행합니다.
+
 ## Shared 연결에 호스트 승인이 필요함
 
 관찰 증상: shared 연결이 프로젝트 통합 파일을 쓰거나 갱신했지만 호스트가 여전히

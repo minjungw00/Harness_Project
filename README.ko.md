@@ -193,13 +193,20 @@ Volicord 관리 POSIX `sh` wrapper script, `.claude/settings.json`,
 `mcp__.*__(write|edit|create|update|delete|remove|move|patch).*` tool 이름을
 대상으로 합니다. 생성된 hook 설정은 wrapper script를 `--host-output codex` 또는
 `--host-output claude-code`로 호출하므로 hook stdout은 host-native JSON/context이거나
-빈 출력이며 Volicord wrapper JSON이 아닙니다. Codex에서는 호스트가 rule과 hook을
-실행하려면 프로젝트 trust, hook trust, restart 또는 reload가 필요할 수 있습니다.
-Claude Code에서는 Volicord가 관련 없는 settings를 소유하지 않고 관리 항목을 병합하며,
-호스트에 프로젝트 MCP approval, workspace trust, settings reload가 필요할 수 있습니다.
-처음으로 일치하는 guard hook 이벤트가 관찰되면 설치가 활성화됩니다. `volicord
-connection verify`와 `volicord doctor`는 파일 상태, 필요한 호스트 동작, 관찰된
-활성화를 분리해서 보고합니다. 파일, `AGENTS.md`, `.volicord/policy.json`이
+빈 출력이며 Volicord wrapper JSON이 아닙니다. 생성된 hook 명령은 하위 디렉터리에서
+시작한 호스트 session에도 cwd-independent입니다. Codex는 hook 실행 시점에 Git work-tree
+root를 해석하고 그 root 아래의 Volicord 관리 wrapper로 dispatch하며, Claude Code는
+`${CLAUDE_PROJECT_DIR}` 기준 wrapper 명령을 사용합니다. 생성된 명령을 bare
+`.codex/hooks/...` 또는 `.claude/hooks/...` 상대 경로로 바꾸면 안 됩니다. 검증은 그런
+경로를 `relative_path_unsafe`로 보고하며, 안전하지 않은 hook 경로는
+`volicord init --host HOST --repo PATH`로 안전한 hook 명령을 다시 생성하고 필요한 경우
+호스트가 reload하거나 trust하기 전까지 완전한 `host_hook_guarded` strength를 막습니다.
+Codex에서는 호스트가 rule과 hook을 실행하려면 프로젝트 trust, hook trust, restart 또는
+reload가 필요할 수 있습니다. Claude Code에서는 Volicord가 관련 없는 settings를 소유하지
+않고 관리 항목을 병합하며, 호스트에 프로젝트 MCP approval, workspace trust, settings
+reload가 필요할 수 있습니다. 처음으로 일치하는 guard hook 이벤트가 관찰되면 설치가
+활성화됩니다. `volicord connection verify`와 `volicord doctor`는 파일 상태, 필요한 호스트
+동작, 관찰된 활성화를 분리해서 보고합니다. 파일, `AGENTS.md`, `.volicord/policy.json`이
 설치되었다는 사실만으로 hook이 활성 상태임이 증명되지는 않습니다.
 
 ## 미기록 변경과 닫기 차단 사유
@@ -298,6 +305,7 @@ server-sent event 스트림, HTTP elicitation, 전체 MCP Streamable HTTP 호환
 |---|---|
 | `volicord`를 찾지 못함 | 설치 디렉터리를 `PATH`에 넣거나 이미 `PATH`에 있는 디렉터리에 설치한 뒤 `volicord --version`을 다시 실행합니다. 미래의 에이전트 호스트도 `volicord`를 시작할 수 있어야 합니다. |
 | `init`이 `action_required`를 보고함 | 호스트 restart 또는 reload, 프로젝트 trust, MCP approval, OAuth, 명령 링크 복구, 설치 프로필 복구처럼 이름 붙은 동작을 완료한 뒤 `volicord connection verify HOST --repo PATH`를 다시 실행합니다. |
+| Guarded 설정이 안전하지 않은 hook 경로를 보고함 | `volicord init --host HOST --repo PATH`를 다시 실행해 cwd-independent 관리 hook 명령을 재생성한 뒤, 필요한 host trust, restart, reload 동작을 완료하고 `volicord connection verify HOST --repo PATH`를 다시 실행합니다. |
 | 호스트가 MCP를 시작하지 못함 | 같은 명령 경로로 호스트가 `volicord mcp --help`를 실행할 수 있는지 확인합니다. 설치 프로필 상태는 `volicord doctor`로 확인합니다. |
 | Product Repository가 감지되지 않음 | `--repo /path/to/your-product-repo`를 넘기고, 그 경로가 Runtime Home과 분리된 기존 로컬 저장소인지 확인합니다. |
 | 판단이 대기 중임 | 가능하면 호스트의 MCP elicitation이나 정확한 채팅 prompt-capture 명령을 우선 사용합니다. CLI fallback으로 `volicord user judgments`와 `volicord user judgment answer`를 사용합니다. |

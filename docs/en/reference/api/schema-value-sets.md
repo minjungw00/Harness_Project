@@ -408,6 +408,12 @@ placeholders, missing dispatch or wrapper scripts, non-executable wrapper
 scripts on supported Unix-like platforms, generated wrapper metadata mismatch,
 or missing verification metadata.
 
+`relative_path_unsafe` includes bare `.codex/hooks/...`,
+`./.codex/hooks/...`, `.claude/hooks/...`, or `./.claude/hooks/...` commands
+that would resolve against the host session cwd. A non-`ok`
+`hook_path_safety` value prevents `host_hook_guarded` and `managed_guarded`
+from being the current `guard_strength`.
+
 `GuardHealthSummary.guard_installation_status` uses:
 
 ```text

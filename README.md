@@ -209,11 +209,19 @@ matchers cover `Bash`, `Edit`, `Write`, `MultiEdit`, and
 `mcp__.*__(write|edit|create|update|delete|remove|move|patch).*` tool names.
 Generated hook configs call the wrapper scripts with `--host-output codex` or
 `--host-output claude-code`, so hook stdout is host-native JSON/context or empty
-output, not Volicord wrapper JSON. Codex may still require project trust, hook
-trust, restart, or reload before rules and hooks run. For Claude Code,
-Volicord merges managed settings without owning unrelated settings, and the
-host may still require project MCP approval, workspace trust, or settings
-reload. The first matching observed guard hook event activates the
+output, not Volicord wrapper JSON. Generated hook commands are also
+cwd-independent for subdirectory host sessions: Codex resolves the Git
+work-tree root at hook runtime and dispatches to the Volicord-managed wrapper
+under that root, while Claude Code uses `${CLAUDE_PROJECT_DIR}`-rooted wrapper
+commands. Do not replace generated commands with bare `.codex/hooks/...` or
+`.claude/hooks/...` relative paths. Verification reports those as
+`relative_path_unsafe`, and unsafe hook paths prevent full `host_hook_guarded`
+strength until `volicord init --host HOST --repo PATH` regenerates safe hook
+commands and the host reloads or trusts them when required. Codex may still
+require project trust, hook trust, restart, or reload before rules and hooks
+run. For Claude Code, Volicord merges managed settings without owning unrelated
+settings, and the host may still require project MCP approval, workspace trust,
+or settings reload. The first matching observed guard hook event activates the
 installation. `volicord connection verify` and `volicord doctor` report file
 health, required host action, and observed activation separately; installed
 files, `AGENTS.md`, and `.volicord/policy.json` alone do not prove that hooks
@@ -322,6 +330,7 @@ HTTP boundaries.
 |---|---|
 | `volicord` is not found | Put the install directory on `PATH`, or install to a directory already on `PATH`, then rerun `volicord --version`. Future agent hosts must also be able to start `volicord`. |
 | `init` reports `action_required` | Complete the named action, such as host restart or reload, project trust, MCP approval, OAuth, command-link repair, or installation-profile repair, then rerun `volicord connection verify HOST --repo PATH`. |
+| Guarded setup reports unsafe hook paths | Rerun `volicord init --host HOST --repo PATH` to regenerate cwd-independent managed hook commands, then complete any host trust, restart, or reload action and rerun `volicord connection verify HOST --repo PATH`. |
 | Host cannot start MCP | Confirm the host can run `volicord mcp --help` through the same command path. Run `volicord doctor` for installation-profile health. |
 | Product Repository is not detected | Pass `--repo /path/to/your-product-repo` and make sure the path is an existing local repository separate from the Runtime Home. |
 | A judgment is pending | Prefer the host's MCP elicitation or exact chat prompt-capture command when available. Use `volicord user judgments` and `volicord user judgment answer` as the CLI fallback. |

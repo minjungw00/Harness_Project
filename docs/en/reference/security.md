@@ -185,11 +185,13 @@ Host trust and approval decisions belong to the external host and the user. Voli
 May claim:
 - managed host configuration state verification can distinguish `complete` from `action_required` and `failed` when the administrative CLI can observe the required checks.
 - `action_required` can name installation-profile repair, command-link repair, host trust, approval, restart, reload, or comparable user-controlled actions when those actions are the remaining observable blocker.
+- Hook path safety diagnostics can report whether generated host hook commands are cwd-independent, subdirectory-safe, and pointed at expected Volicord-managed wrappers.
 - MCP server instructions and optional repository guidance can describe how an agent should select projects and tools.
 
 Must not claim:
 - Installing Codex or Claude Code configuration bypasses project trust, project MCP approval, OAuth, restart, reload, or comparable host-controlled actions.
 - `action_required` is a failed installation when configuration was installed but the host still requires user-controlled trust or approval.
+- Cwd-independent hook paths, wrapper verification, or `hook_path_safety=ok` provide OS sandboxing, global filesystem interception, broad command blocking, network blocking, secret blocking, or proof that no write can occur outside implemented host hooks.
 - Agent instructions, `AGENTS.md` blocks, `CLAUDE.md`, `.claude/rules/` files, or MCP server instructions are access control, security enforcement, user judgment, `Write Check`, or proof that a model will follow them.
 
 ### Generated displays and text

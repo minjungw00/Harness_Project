@@ -79,6 +79,18 @@ Current verified guarded adapters are host-specific:
   entries; the host may require project MCP approval, workspace trust, and
   settings reload before the generated hook and rule files run.
 
+Generated hook commands are cwd-independent and subdirectory-safe when
+verification reports `hook_path_safety=ok`. Codex hook entries do not execute a
+bare `.codex/hooks/...` path; they run a POSIX `sh` command that resolves the
+Git work-tree root with `git rev-parse --show-toplevel` and then execs the
+Volicord-managed dispatch wrapper under that root. The dispatch wrapper checks
+that the phase wrapper exists and is executable before execing it. Claude Code
+hook entries use exec-form commands rooted at `${CLAUDE_PROJECT_DIR}`, such as
+`${CLAUDE_PROJECT_DIR}/.claude/hooks/volicord-pre-tool.sh`, with no args. Do
+not replace generated commands with bare `.codex/hooks/...` or
+`.claude/hooks/...` relative paths, because those paths depend on the host
+session cwd and are reported as `relative_path_unsafe`.
+
 Generated hook configs invoke the wrapper scripts with `--host-output codex` or
 `--host-output claude-code`, so hook stdout is host-native JSON/context or empty
 output, not Volicord wrapper JSON.
@@ -104,7 +116,8 @@ contract is added and implemented.
 `volicord connection verify` and `volicord doctor` keep file health, required
 host action, and observed activation separate. A guard installation becomes
 active only after Volicord observes a matching guard hook event for the recorded
-project, Agent Connection, host kind, guard mode, and policy hash. `AGENTS.md`
+project, Agent Connection, host kind, guard mode, and policy hash. Hook path
+safety does not replace host trust, reload, restart, or approval. `AGENTS.md`
 is instruction support, and host hooks or rules are cooperative and detective
 guardrails; they are not OS sandboxing, command isolation, or proof that writes
 cannot happen outside Volicord-aware paths.

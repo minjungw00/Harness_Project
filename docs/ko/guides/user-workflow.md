@@ -141,6 +141,11 @@ Product Repository 변경을 드러낼 수 있습니다. 이를 악의적 동작
 식별하지 않습니다. CLI 복구 경로는 `volicord changes reconcile`입니다. 조정이 대기
 판단을 만들면 일반 User Channel 경로로 답하고 조정을 다시 실행합니다.
 
+Guard health가 `hook_path_safety`를 `ok`가 아닌 값으로 보고하면, 설정을 복구하기 전까지
+hook 기반 pre-tool 차단, prompt capture, 미기록 변경 관찰을 사용할 수 없거나 degraded된
+상태로 봅니다. 정확한 복구 안내는 [에이전트 호스트 문제 해결](agent-host-troubleshooting.md#guard-hook-path-or-wrapper-is-unsafe)이
+담당합니다.
+
 ## 쓰기와 민감 동작 승인하기
 
 이 문서에서 쓰기 승인은 사용자에게 보이는 일반 승인 흐름을 말합니다. 참조 문서의 정확한 제품 라벨 `Write Check`은 제품 파일 쓰기 시도 하나에 대한 Core 상태 호환성을 가리키는 별도 용어입니다.

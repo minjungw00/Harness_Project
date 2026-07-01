@@ -39,6 +39,13 @@ project naming, guard-mode behavior, connection defaults, and internal identity
 behavior belong to
 [Administrative CLI Reference](../reference/admin-cli.md).
 
+If you choose guarded setup instead of this `mcp-only` fast path, generated
+hook commands are designed to work when the host session starts from a
+repository subdirectory. Status, verification, and doctor diagnostics report
+`hook_path_safety`; a value such as `relative_path_unsafe`, `wrapper_missing`,
+or `wrapper_not_executable` means full host-hook guarded strength is not active
+until the generated hook commands or wrappers are repaired.
+
 ## Confirm The Setup
 
 ```sh
@@ -52,6 +59,8 @@ Completion state: the connection is ready when status or verification reports
 `complete`. If it reports `action_required`, complete the named host-owned or
 local repair action, then rerun verification. Exact result-state meaning belongs
 to [Administrative CLI Reference](../reference/admin-cli.md#agent-connection-result-states).
+Guarded hook path repair guidance belongs to
+[Agent Host Troubleshooting](../guides/agent-host-troubleshooting.md#guard-hook-path-or-wrapper-is-unsafe).
 
 ## Choose A Host Intent
 

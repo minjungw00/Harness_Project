@@ -319,6 +319,13 @@ policy, 지원되는 hook 또는 rule 파일을 쓸 수 있지만, degraded guar
 사람용 출력과 JSON 출력에 누락된 필수 hook phase를 보고합니다. `mcp-only`는 hook 설치를
 요구하지 않습니다.
 
+완전한 Codex guarded 초기화에는 선택된 Product Repository가 하위 디렉터리 호스트
+session에서도 cwd-independent wrapper 해석을 지원하는 Git work tree root여야 한다는
+요구사항도 있습니다. 이 전제조건을 만족하지 않으면 init은 bare 상대 hook 경로를
+생성하지 않고 실패합니다. Claude Code guarded 초기화는
+[Guard hook 명령](#guard-hook-commands)에서 설명한 호스트 프로젝트 디렉터리 placeholder를
+사용합니다.
+
 Managed 초기화는 guarded hook 요구사항과 별도의 managed 배포 요구사항을 모두 만족해야
 합니다. 검증된 managed 계약이 없는 호스트에서 `--allow-degraded`는 적용되지 않았다고
 보고되며, `managed`를 조용히 `guarded`나 `mcp-only`로 바꾸지 않습니다.
@@ -411,11 +418,12 @@ JSON 출력은 진단 소비자를 위해 최상위 `status`, `checks`, `actions
 건강 상태, 효과적인 guard 건강 상태, 호스트 reload 필요, prompt-capture 가용성, 알
 수 있을 때의 최근 guard event를 별도 진단으로 유지해야 합니다. 또한 `guard_strength`,
 pre-tool 차단 가용성, post-tool 상관 가용성, 우회 감지 가용성, prompt-capture 가용성,
-local web consent 가용성, managed 배포 검증, watcher 상태, watcher baseline 생성 시각,
-watcher coverage 시작 시각, watcher coverage basis, watcher 부분 coverage 경고를 별도
-필드로 보고해야 합니다. 파일이 설치되었거나 설정되었다는 사실을 활성 관찰된 guard
-hook이나 일치하는 관찰 전의 host-hook guarded 강도로 보고하면 안 됩니다. 불완전한
-session-watch coverage를 전체 `detective_watch`로 보고하면 안 됩니다.
+local web consent 가용성, hook path safety, hook 명령 cwd independence, hook 명령
+subdirectory safety, managed 배포 검증, watcher 상태, watcher baseline 생성 시각, watcher
+coverage 시작 시각, watcher coverage basis, watcher 부분 coverage 경고를 별도 필드로
+보고해야 합니다. 파일이 설치되었거나 설정되었다는 사실을 활성 관찰된 guard hook이나
+일치하는 관찰 전의 host-hook guarded 강도로 보고하면 안 됩니다. 불완전한 session-watch
+coverage를 전체 `detective_watch`로 보고하면 안 됩니다.
 
 성공한 `volicord mcp --check` 시작 점검만으로는 Agent Connection을 `complete`로 설명하면
 안 됩니다. 이는 MCP 프로세스의 시작 검증일 뿐입니다.
@@ -441,6 +449,7 @@ session-watch coverage를 전체 `detective_watch`로 보고하면 안 됩니다
 - 내보낸 설정은 export 뒤에도 사용자 관리 설정으로 남습니다. Volicord는 임의 외부
   호스트가 이를 로드, 신뢰, 승인, 초기화, 노출했다고 주장하면 안 됩니다.
 
+<a id="guard-hook-commands"></a>
 ## Guard hook 명령
 
 `volicord guard` 명령은 agent lifecycle event 때 명령을 실행할 수 있는 호스트를
@@ -474,12 +483,41 @@ Agent Connection 식별 정보를 제공합니다. `--session ID`, `--guard-inst
 설치를 활성화할 수 없지만, 테스트나 디버깅에 쓰는 직접 guard 명령은 이 옵션을
 생략할 수 있습니다.
 
-생성된 Codex hook 설정은 `.codex/hooks/` 아래의 Volicord 관리 POSIX `sh` wrapper
-script를 호출합니다. 생성된 Claude Code hook 설정은 `.claude/hooks/` 아래의 Volicord
-관리 POSIX `sh` wrapper script를 호출합니다. Wrapper script는 stdin을 변경하지 않고
+생성된 Codex hook 설정은 cwd-independent 및 subdirectory-safe여야 합니다. Bare
+`.codex/hooks/...` 경로를 호출하지 않습니다. 각 hook 항목은 아래 형태의 POSIX `sh`
+명령을 실행합니다.
+
+```sh
+root=$(git rev-parse --show-toplevel) || exit $?
+exec "$root/.codex/hooks/volicord-dispatch.sh" PHASE
+```
+
+생성된 `.codex/hooks/volicord-dispatch.sh` script는 Volicord 관리 파일입니다. 이 script는
+런타임에 Git work-tree root를 다시 해석하고, 절대 root를 요구하며, 선택된 phase wrapper가
+존재하고 실행 가능한지 확인한 뒤 그 root 아래의 phase wrapper를 exec합니다. Git root를
+해석할 수 없으면 호스트 session cwd로 fallback하지 않고 dispatch 경로가 실패합니다.
+
+생성된 Claude Code hook 설정도 cwd-independent 및 subdirectory-safe여야 합니다.
+`${CLAUDE_PROJECT_DIR}/.claude/hooks/volicord-pre-tool.sh` 같은
+`${CLAUDE_PROJECT_DIR}` 기준 exec-form 명령과 빈 args를 사용합니다.
+
+`.codex/hooks/`와 `.claude/hooks/` 아래의 생성 wrapper script는 stdin을 변경하지 않고
 `volicord guard`로 전달하며, stdout, stderr, guard 종료 코드를 보존하고, 기대하는
 호스트 종류, host-native 출력 방식, 저장소 selector, Agent Connection, guard 설치,
-policy hash를 전달합니다.
+policy hash를 전달합니다. 사용자는 생성된 hook 명령을 bare `.codex/hooks/...` 또는
+`.claude/hooks/...` 상대 경로로 바꾸면 안 됩니다.
+
+Guard-aware status, verification, doctor 진단은 `hook_path_safety`,
+`hook_commands_cwd_independent`, `hook_commands_subdirectory_safe`,
+`generated_config_verified`를 보고합니다. Hook path safety는
+`relative_path_unsafe`, `wrapper_missing`, `wrapper_not_executable`,
+`absolute_path_stale`, `placeholder_unsupported`, `host_output_mismatch`,
+`policy_hash_mismatch` 같은 값을 보고할 수 있으며, 전체 값 집합은
+[API 값 집합](api/schema-value-sets.md#state-and-blocker-values)이 담당합니다. `ok`가 아닌
+hook path safety 값은 해당 보기에서 완전한 `host_hook_guarded` 또는 `managed_guarded`
+strength를 막습니다. 복구 동작은 `volicord init --host HOST --repo PATH`로 안전한 관리
+명령을 다시 생성한 뒤, 계속 보고되는 host trust, approval, reload, restart 동작을
+완료하는 것입니다.
 
 `mcp_only`가 아닌 guard 명령이 기록된 프로젝트, Agent Connection, guard 설치,
 호스트 종류, guard 모드, policy hash, 알려진 hook 단계와 일치하는 유효한 event를

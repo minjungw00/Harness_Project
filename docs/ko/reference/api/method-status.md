@@ -86,7 +86,7 @@ StatusRequest:
 - `include.write_check`는 `Write Check`(쓰기 확인)의 Core 상태 호환성 기록에서 활성, 만료, 오래됨, 소비됨 또는 그 밖의 관련 상태를 `write_check_summary`로 반환합니다.
 - `write_check_summary`는 호환성 요약일 뿐이며 파일시스템 접근, 셸 승인, 최종 수락, 일반 쓰기 승인이 아닙니다.
 - `include.evidence`는 사용할 수 있을 때 현재 `EvidenceSummary`와 범위를 반환합니다.
-- `include.close`는 `CurrentCloseBasis | null`, 닫기 상태, 계산된 차단 사유, 위험 수락 범위, 사용할 수 있을 때의 guard 상태, 관련 다음 행동을 반환합니다. 차단 사유는 `volicord.close_task intent=check`와 같은 닫기 준비 상태 계산을 사용합니다.
+- `include.close`는 `CurrentCloseBasis | null`, 닫기 상태, 계산된 차단 사유, 위험 수락 범위, 사용할 수 있을 때 hook 경로 안전성을 포함한 guard 상태, 관련 다음 행동을 반환합니다. 차단 사유는 `volicord.close_task intent=check`와 같은 닫기 준비 상태 계산을 사용합니다.
 - `include.guarantees`는 프로젝트 강제 프로필, 확인된 호출 맥락, 활성화된 강제 메커니즘, 지원되는 기준 범위에서 파생된 보장만 반환합니다.
 - `include.continuity`는 오래 유지하는 프로젝트 수준 맥락의 활성 `ProjectContinuitySummary[]` 항목을 반환합니다.
 - `include.evidence=false`는 증거 요약, 범위, 아티팩트 증거 참조, 증거 전용 다음 행동을 계산하지도 반환하지도 않는다는 뜻입니다.

@@ -231,6 +231,64 @@ to pass an MCP command path. If the executable is installed somewhere setup
 cannot discover by sibling lookup or `PATH`, rerun setup with
 `--mcp-command PATH`.
 
+<a id="guard-hook-path-or-wrapper-is-unsafe"></a>
+## Guard Hook Path Or Wrapper Is Unsafe
+
+Observable symptom: `volicord doctor`, connection status, or connection
+verification reports `hook_path_safety` as a value other than `ok`, such as
+`relative_path_unsafe`, `wrapper_missing`, `wrapper_not_executable`,
+`absolute_path_stale`, `host_output_mismatch`, or `policy_hash_mismatch`.
+
+Bounded recovery:
+
+```sh
+volicord doctor
+volicord connection status codex --repo /path/to/your-product-repo
+volicord init --host codex --repo /path/to/your-product-repo
+volicord connection verify codex --repo /path/to/your-product-repo
+```
+
+Use the same host and intent selector as the affected connection. For Claude
+Code, replace `codex` with `claude-code` and include `--global` or `--shared`
+when that is the selected connection.
+
+Diagnostic meanings and repairs:
+
+- `relative_path_unsafe`: the host hook config uses a bare `.codex/hooks/...`,
+  `./.codex/hooks/...`, `.claude/hooks/...`, or `./.claude/hooks/...` path that
+  depends on the host session cwd. Rerun `volicord init --host HOST --repo PATH`
+  instead of hand-editing the hook command.
+- `wrapper_missing` or `dispatch_missing`: a generated wrapper or Codex
+  dispatch wrapper is missing. Rerun init for the selected Product Repository.
+- `wrapper_not_executable`: a generated wrapper is present but is not
+  executable on a supported Unix-like platform. Rerun init to restore the
+  managed wrapper and executable bit.
+- `absolute_path_stale`: a generated command still points at an old project
+  root, often after moving the Product Repository. Rerun init with the current
+  `--repo PATH`, then reload or restart the host when required.
+- `host_output_mismatch`, `policy_hash_mismatch`, or `authority_mismatch`: the
+  generated wrapper metadata no longer matches the expected host-output mode,
+  policy hash, connection, or guard installation. Rerun init so the managed
+  files and registry state agree.
+- `metadata_missing` or `placeholder_unsupported`: the generated configuration
+  is not in the currently verified shape. Rerun init and avoid replacing the
+  generated command with unsupported placeholders.
+
+Codex guarded hook commands require the selected Product Repository to be a Git
+work tree. If the wrapper stderr says the Git root could not be resolved, or
+hooks fail only when the host session starts from a subdirectory, confirm that
+the session is inside the intended Git work tree and that `git` is available to
+the host process, then rerun init for that repository. Claude Code guarded hook
+commands are rooted at `${CLAUDE_PROJECT_DIR}`; if the host does not provide
+that project directory, reload or repair the host configuration through the
+host's own trust and project-selection flow.
+
+Unsafe hook paths prevent full `host_hook_guarded` or `managed_guarded` guard
+strength. They can leave the view at `authority_record_only` or
+`detective_watch` depending on watcher availability. Path repair is still
+separate from host trust, approval, restart, and reload; complete any reported
+host-owned action and rerun verification after repair.
+
 ## Shared Connection Needs Host Approval
 
 Observable symptom: a shared connection writes or updates a project integration

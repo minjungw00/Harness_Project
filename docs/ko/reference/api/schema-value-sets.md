@@ -406,6 +406,11 @@ wrapper_not_executable
 플랫폼의 실행 불가능한 wrapper 스크립트, 생성된 wrapper 메타데이터 불일치, 누락된 검증
 메타데이터가 포함됩니다.
 
+`relative_path_unsafe`에는 호스트 session cwd를 기준으로 해석되는 bare `.codex/hooks/...`,
+`./.codex/hooks/...`, `.claude/hooks/...`, 또는 `./.claude/hooks/...` 명령이 포함됩니다.
+`ok`가 아닌 `hook_path_safety` 값은 현재 `guard_strength`가 `host_hook_guarded` 또는
+`managed_guarded`가 되는 것을 막습니다.
+
 `GuardHealthSummary.guard_installation_status`는 아래 값을 사용합니다.
 
 ```text

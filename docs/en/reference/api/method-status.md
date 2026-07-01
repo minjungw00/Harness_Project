@@ -86,7 +86,7 @@ Include projection contract:
 - `include.write_check` returns active, expired, stale, consumed, or otherwise relevant `Write Check` Core-state compatibility record state through `write_check_summary`.
 - `write_check_summary` is a compatibility summary only; it is not filesystem access, shell approval, final acceptance, or ordinary write approval.
 - `include.evidence` returns current `EvidenceSummary` and coverage when available.
-- `include.close` returns `CurrentCloseBasis | null`, close state, computed blockers, risk acceptance coverage, guard health when available, and relevant next actions. The blockers use the same close-readiness calculation as `volicord.close_task intent=check`.
+- `include.close` returns `CurrentCloseBasis | null`, close state, computed blockers, risk acceptance coverage, guard health including hook path safety when available, and relevant next actions. The blockers use the same close-readiness calculation as `volicord.close_task intent=check`.
 - `include.guarantees` returns only guarantees derived from the project enforcement profile, verified invocation context, enabled enforcement mechanisms, and supported baseline scope.
 - `include.continuity` returns active `ProjectContinuitySummary[]` entries for durable project-level context.
 - `include.evidence=false` means evidence summaries, coverage, artifact evidence refs, and evidence-only next actions are not computed and not returned.
