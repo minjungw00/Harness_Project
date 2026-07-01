@@ -830,12 +830,107 @@ fn render_status_response(
     if let Some(summary) = response.response_value["status_summary"].as_str() {
         output.push_str(&format!("summary: {summary}\n"));
     }
+    output.push_str(&format!(
+        "close_readiness: {}\n",
+        response
+            .response_value
+            .get("close_state")
+            .and_then(Value::as_str)
+            .unwrap_or("not_available")
+    ));
+    let close_blockers = response.response_value["close_blockers"]
+        .as_array()
+        .map(Vec::as_slice)
+        .unwrap_or(&[]);
+    output.push_str(&format!("close_blockers: {}\n", close_blockers.len()));
+    if let Some(blocker) = close_blockers.first() {
+        if let Some(code) = blocker.get("code").and_then(Value::as_str) {
+            output.push_str(&format!("first_close_blocker: {code}\n"));
+        }
+        if let Some(action) = blocker
+            .get("next_actions")
+            .and_then(Value::as_array)
+            .and_then(|actions| actions.first())
+            .and_then(action_label)
+        {
+            output.push_str(&format!("next_action: {action}\n"));
+        }
+    } else {
+        output.push_str("next_action: none\n");
+    }
+    if let Some(guard_health) = response.response_value.get("guard_health") {
+        output.push_str(&format!(
+            "guard_mode: {}\nguard_effective_state: {}\nguard_observed: {}\nprompt_capture_state: {}\nprompt_capture_available: {}\nunresolved_unrecorded_changes: {}\n",
+            text_field(guard_health, "guard_mode", "not_configured"),
+            text_field(guard_health, "effective_guard_status", "not_checked"),
+            yes_no(
+                guard_health
+                    .get("guard_hook_observed")
+                    .and_then(Value::as_bool)
+                    .unwrap_or(false)
+            ),
+            text_field(guard_health, "prompt_capture_status", "not_checked"),
+            yes_no(
+                guard_health
+                    .get("prompt_capture_available")
+                    .and_then(Value::as_bool)
+                    .unwrap_or(false)
+            ),
+            guard_health
+                .get("unresolved_unrecorded_change_count")
+                .and_then(Value::as_u64)
+                .unwrap_or(0),
+        ));
+    }
     let pending = response.response_value["pending_user_judgments"]
         .as_array()
         .map(Vec::as_slice)
         .unwrap_or(&[]);
     output.push_str(&format!("pending judgments: {}\n", pending.len()));
+    if !pending.is_empty() {
+        output.push_str(&format!(
+            "judgment_path: {}\n",
+            judgment_path_text(response.response_value.get("guard_health"))
+        ));
+    }
     Ok(output)
+}
+
+fn action_label(action: &Value) -> Option<&str> {
+    action
+        .get("blocking_question")
+        .and_then(Value::as_str)
+        .or_else(|| action.get("label").and_then(Value::as_str))
+}
+
+fn text_field<'a>(value: &'a Value, field: &str, fallback: &'a str) -> &'a str {
+    value.get(field).and_then(Value::as_str).unwrap_or(fallback)
+}
+
+fn judgment_path_text(guard_health: Option<&Value>) -> &'static str {
+    if guard_health
+        .and_then(|value| value.get("mcp_connection_healthy"))
+        .and_then(Value::as_bool)
+        .unwrap_or(false)
+    {
+        "use MCP elicitation; terminal user commands are the local recovery path"
+    } else if guard_health
+        .and_then(|value| value.get("prompt_capture_available"))
+        .and_then(Value::as_bool)
+        .unwrap_or(false)
+    {
+        "use the prompt-capture chat command; terminal user commands are the local recovery path"
+    } else {
+        "use `volicord user judgments` and `volicord user judgment answer` as the local recovery path"
+    }
+}
+
+fn yes_no(value: bool) -> &'static str {
+    if value {
+        "yes"
+    } else {
+        "no"
+    }
 }
 
 fn render_judgment_records(

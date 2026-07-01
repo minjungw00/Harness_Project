@@ -410,6 +410,7 @@ fn doctor_without_setup_reports_action_required() -> Result<(), Box<dyn Error>> 
         .any(|action| action["id"] == "run_init"));
     assert_eq!(value["primary_next_action"]["id"], "run_init");
     assert_eq!(value["primary_next_action"]["requirement"], "required");
+    assert_eq!(value["states"]["prompt_capture_status"], "not_checked");
     let doctor_text = run_with_home_env(runtime_home.path(), ["doctor"], &[])?;
     assert_success(&doctor_text);
     let text = stdout(&doctor_text);
@@ -594,6 +595,15 @@ fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Resul
     assert_eq!(value["states"]["guard_installation"], "degraded");
     assert_eq!(value["states"]["guard_degraded_allowed"], true);
     assert_eq!(value["degraded"]["allowed"], true);
+    assert_eq!(value["states"]["agents_managed_block"], "updated");
+    assert_eq!(value["states"]["volicord_policy_file"], "created");
+    assert_eq!(
+        value["states"]["rule_instruction_config"],
+        "unsupported_by_host"
+    );
+    assert_eq!(value["states"]["hook_config"], "missing_required_hooks");
+    assert_eq!(value["states"]["required_guard_phases"], "missing");
+    assert_eq!(value["states"]["guard_observed"], false);
     assert_eq!(value["states"]["prompt_capture"], "unsupported_by_host");
     assert_eq!(value["states"]["host_reload_required"], true);
     assert_eq!(
@@ -642,9 +652,15 @@ fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Resul
     assert!(init_text.contains("mcp_config_state: match"));
     assert!(init_text.contains("guard_installation_state: degraded"));
     assert!(init_text.contains("guard_degraded_allowed: yes"));
+    assert!(init_text.contains("agents_block_state: unchanged"));
+    assert!(init_text.contains("volicord_policy_file_state: unchanged"));
+    assert!(init_text.contains("rule_instruction_config_state: unsupported_by_host"));
+    assert!(init_text.contains("hook_config_state: missing_required_hooks"));
+    assert!(init_text.contains("required_guard_phases_state: missing"));
+    assert!(init_text.contains("guard_observed: no"));
     assert!(init_text.contains("prompt_capture_state: unsupported_by_host"));
     assert!(init_text.contains("host_reload_required: yes"));
-    assert!(init_text.contains("next_action: Guarded mode is degraded"));
+    assert!(init_text.contains("next_action: Use a supported guarded host configuration"));
 
     let record = agent_connection_record(runtime_home.path(), &connection_id)?
         .expect("connection should be stored");
@@ -679,6 +695,14 @@ fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Resul
     assert_eq!(
         status_without_intent_json["primary_next_action"]["id"],
         "guard_capability_degraded"
+    );
+    assert_eq!(
+        status_without_intent_json["states"]["hook_config"],
+        "missing_required_hooks"
+    );
+    assert_eq!(
+        status_without_intent_json["states"]["guard_observed"],
+        false
     );
 
     let config = fs::read_to_string(repo_root.join(".codex/config.toml"))?;
@@ -765,6 +789,25 @@ fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Resul
         .find(|check| check["id"] == "registry_counts")
         .expect("doctor should report registry counts");
     assert_eq!(registry_counts["details"]["guard_installations"], 1);
+    assert_eq!(doctor_json["states"]["agents_managed_block"], "installed");
+    assert_eq!(doctor_json["states"]["volicord_policy_file"], "installed");
+    assert_eq!(
+        doctor_json["states"]["rule_instruction_config"],
+        "unsupported_by_host"
+    );
+    assert_eq!(
+        doctor_json["states"]["hook_config"],
+        "missing_required_hooks"
+    );
+    assert_eq!(doctor_json["states"]["required_guard_phases"], "missing");
+    assert_eq!(
+        doctor_json["states"]["prompt_capture"],
+        "action_recommended"
+    );
+    assert_eq!(
+        doctor_json["states"]["prompt_capture_status"],
+        "unsupported_by_host"
+    );
 
     let second = run_with_home_env(
         runtime_home.path(),
@@ -1454,6 +1497,16 @@ fn connection_status_reports_stale_guard_files_as_primary_action() -> Result<(),
         .expect("stale_files should be an array")
         .iter()
         .any(|path| path == &path_text(&policy_path)));
+
+    let doctor = run_with_home_env(runtime_home.path(), ["doctor", "--json"], &[])?;
+    assert_success(&doctor);
+    let doctor_json = json_stdout(&doctor)?;
+    assert_eq!(doctor_json["states"]["guard_files"], "action_recommended");
+    assert_eq!(doctor_json["states"]["volicord_policy_file"], "stale");
+    assert_eq!(
+        doctor_json["primary_next_action"]["id"],
+        "repair_guard_files"
+    );
     Ok(())
 }
 
@@ -1972,8 +2025,13 @@ fn user_channel_records_pending_judgment_with_local_user_provenance() -> Result<
     let status =
         run_with_home_env_in_dir(runtime_home.path(), ["user", "status"], &[], &repo_root)?;
     assert_success(&status);
-    assert!(stdout(&status).contains("User Channel status"));
-    assert!(stdout(&status).contains("pending judgments: 1"));
+    let status_text = stdout(&status);
+    assert!(status_text.contains("User Channel status"));
+    assert!(status_text.contains("close_readiness: blocked"));
+    assert!(status_text.contains("close_blockers:"));
+    assert!(status_text.contains("next_action:"));
+    assert!(status_text.contains("pending judgments: 1"));
+    assert!(status_text.contains("judgment_path:"));
 
     let list =
         run_with_home_env_in_dir(runtime_home.path(), ["user", "judgments"], &[], &repo_root)?;
@@ -2155,6 +2213,32 @@ fn changes_reconcile_runs_as_local_recovery() -> Result<(), Box<dyn Error>> {
         value["resolved_changes"][0]["resolved_by_actor_source"],
         "system"
     );
+
+    insert_unrecorded_change(
+        runtime_home.path(),
+        "project_user_channel",
+        UnrecordedChangeInsert {
+            unrecorded_change_id: "unrecorded_cli_changes_reconcile_text".to_owned(),
+            session_id: None,
+            connection_internal_id: "connection_cli_user_channel".to_owned(),
+            task_id: Some(task_id.clone()),
+            summary: "Second Product Repository change observed outside a recorded run.".to_owned(),
+            observed_paths_json: "[]".to_owned(),
+            detection_json: "{}".to_owned(),
+            detected_at: "2026-06-30T00:06:00Z".to_owned(),
+            metadata_json: "{}".to_owned(),
+        },
+    )?;
+    let text_output = run_with_home_env_in_dir(
+        runtime_home.path(),
+        ["changes", "reconcile"],
+        &[],
+        &repo_root,
+    )?;
+    assert_success(&text_output);
+    let text = stdout(&text_output);
+    assert!(text.contains("changes recovery:"));
+    assert!(!text.contains("reconciled changes:"));
 
     let conn =
         rusqlite::Connection::open(runtime_home.project_state_db_path("project_user_channel"))?;

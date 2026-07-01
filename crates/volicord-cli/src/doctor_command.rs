@@ -1,4 +1,5 @@
 use std::{
+    collections::BTreeMap,
     ffi::OsStr,
     fs,
     path::{Path, PathBuf},
@@ -6,6 +7,7 @@ use std::{
 
 use serde::Serialize;
 use serde_json::{json, Value};
+use sha2::{Digest, Sha256};
 use volicord_store::{
     agent_connections::{CONNECTION_MODE_READ_ONLY, CONNECTION_MODE_WORKFLOW},
     inspection::{
@@ -378,10 +380,17 @@ fn inspect_guard_installations(
             "guard_status_active",
             "no guard installation status is recorded",
         ));
-        checks.push(DiagnosticCheck::skipped(
-            "prompt_capture_available",
-            "no prompt capture availability is recorded",
-        ));
+        checks.push(
+            DiagnosticCheck::skipped(
+                "prompt_capture_available",
+                "no prompt capture availability is recorded",
+            )
+            .with_details(json!({
+                "state": "not_recorded",
+                "configured": 0,
+                "observed": 0,
+            })),
+        );
         return;
     }
 
@@ -390,35 +399,45 @@ fn inspect_guard_installations(
         .iter()
         .filter(|installation| installation.guard_mode != GuardMode::McpOnly.as_str())
         .collect::<Vec<_>>();
-    let missing_files = snapshot
-        .guard_installations
-        .iter()
-        .flat_map(|installation| guard_missing_files(&installation.host_capability_json))
-        .collect::<Vec<_>>();
-    if missing_files.is_empty() {
+    let mut file_findings = DoctorGuardFileFindings::default();
+    for installation in &snapshot.guard_installations {
+        file_findings.merge(doctor_guard_file_findings(
+            &installation.host_capability_json,
+        ));
+    }
+    file_findings.sort_dedup();
+    let guard_file_problem = !file_findings.missing_files.is_empty()
+        || !file_findings.stale_files.is_empty()
+        || !file_findings.broken_files.is_empty();
+    if !guard_file_problem {
         checks.push(
             DiagnosticCheck::passed("guard_files_installed", "guard files are installed")
-                .with_details(json!({ "guard_installations": snapshot.guard_installations.len() })),
+                .with_details(doctor_guard_file_details(&file_findings)),
         );
     } else {
         checks.push(
             DiagnosticCheck::warning(
                 "guard_files_installed",
-                "one or more guard files are missing",
+                "one or more guard files are missing, stale, or broken",
             )
-            .with_details(json!({ "missing_files": missing_files })),
+            .with_details(doctor_guard_file_details(&file_findings)),
         );
         push_unique_diagnostic_action(
             actions,
             DiagnosticAction {
                 id: "repair_guard_files".to_owned(),
                 instruction:
-                    "Run volicord init again for affected guarded projects to reinstall missing guard files."
+                    "Run volicord init again for affected guarded projects to reinstall or refresh guard files."
                         .to_owned(),
                 command: Some("volicord init --host HOST --repo PATH".to_owned()),
             },
         );
     }
+
+    let missing_required_hooks = guarded
+        .iter()
+        .flat_map(|installation| guard_missing_required_hooks(&installation.host_capability_json))
+        .collect::<Vec<_>>();
 
     let reload_required = guarded.iter().any(|installation| {
         installation.installation_status == GuardInstallationStatus::ReloadRequired.as_str()
@@ -448,10 +467,6 @@ fn inspect_guard_installations(
         ));
     }
 
-    let missing_required_hooks = guarded
-        .iter()
-        .flat_map(|installation| guard_missing_required_hooks(&installation.host_capability_json))
-        .collect::<Vec<_>>();
     if guarded.is_empty() {
         checks.push(DiagnosticCheck::skipped(
             "guard_required_hooks_supported",
@@ -572,19 +587,207 @@ fn inspect_guard_installations(
     inspect_prompt_capture_availability(&guarded, checks);
 }
 
-fn guard_missing_files(capability_json: &str) -> Vec<String> {
+#[derive(Debug, Default)]
+struct DoctorGuardFileFindings {
+    missing_files: Vec<String>,
+    stale_files: Vec<String>,
+    broken_files: Vec<String>,
+    file_states: BTreeMap<String, String>,
+}
+
+impl DoctorGuardFileFindings {
+    fn merge(&mut self, other: Self) {
+        self.missing_files.extend(other.missing_files);
+        self.stale_files.extend(other.stale_files);
+        self.broken_files.extend(other.broken_files);
+        for (kind, state) in other.file_states {
+            self.set_file_state(&kind, &state);
+        }
+    }
+
+    fn sort_dedup(&mut self) {
+        self.missing_files.sort();
+        self.missing_files.dedup();
+        self.stale_files.sort();
+        self.stale_files.dedup();
+        self.broken_files.sort();
+        self.broken_files.dedup();
+    }
+
+    fn set_file_state(&mut self, kind: &str, state: &str) {
+        let update = self
+            .file_states
+            .get(kind)
+            .is_none_or(|current| doctor_file_state_rank(state) > doctor_file_state_rank(current));
+        if update {
+            self.file_states.insert(kind.to_owned(), state.to_owned());
+        }
+    }
+}
+
+fn doctor_file_state_rank(value: &str) -> u8 {
+    match value {
+        "broken" => 5,
+        "missing" => 4,
+        "stale" => 3,
+        "installed" => 2,
+        "missing_required_hooks" | "unsupported_by_host" | "not_recorded" => 1,
+        _ => 0,
+    }
+}
+
+fn doctor_guard_file_details(findings: &DoctorGuardFileFindings) -> Value {
+    json!({
+        "missing_files": &findings.missing_files,
+        "stale_files": &findings.stale_files,
+        "broken_files": &findings.broken_files,
+        "file_states": &findings.file_states,
+    })
+}
+
+fn doctor_guard_file_findings(capability_json: &str) -> DoctorGuardFileFindings {
+    let mut findings = DoctorGuardFileFindings::default();
     let Ok(value) = serde_json::from_str::<Value>(capability_json) else {
-        return Vec::new();
+        findings
+            .broken_files
+            .push("guard_capability_json".to_owned());
+        return findings;
     };
+    if value
+        .get("host_capabilities")
+        .and_then(|capabilities| capabilities.get("rule_file_support"))
+        .and_then(Value::as_bool)
+        == Some(false)
+    {
+        findings.set_file_state("host_rule_instruction", "unsupported_by_host");
+    }
+    if guard_missing_required_hooks(capability_json).is_empty() {
+        findings.set_file_state("host_hook_config", "not_recorded");
+    } else {
+        findings.set_file_state("host_hook_config", "missing_required_hooks");
+    }
     value
         .get("files")
         .and_then(Value::as_array)
         .into_iter()
         .flatten()
-        .filter_map(|file| file.get("path").and_then(Value::as_str))
-        .filter(|path| !Path::new(path).exists())
-        .map(str::to_owned)
-        .collect()
+        .for_each(|file| doctor_verify_guard_file(file, &mut findings));
+    findings
+}
+
+fn doctor_verify_guard_file(file: &Value, findings: &mut DoctorGuardFileFindings) {
+    let kind = file
+        .get("kind")
+        .and_then(Value::as_str)
+        .unwrap_or("unknown");
+    let Some(path_text) = file.get("path").and_then(Value::as_str) else {
+        findings
+            .broken_files
+            .push("guard_capability_json:files.path".to_owned());
+        findings.set_file_state(kind, "broken");
+        return;
+    };
+    let text = match fs::read_to_string(path_text) {
+        Ok(text) => text,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+            findings.missing_files.push(path_text.to_owned());
+            findings.set_file_state(kind, "missing");
+            return;
+        }
+        Err(_) => {
+            findings.broken_files.push(path_text.to_owned());
+            findings.set_file_state(kind, "broken");
+            return;
+        }
+    };
+    let expected_hash = file
+        .get("content_hash")
+        .and_then(Value::as_str)
+        .unwrap_or_default();
+    match file.get("ownership").and_then(Value::as_str) {
+        Some("managed_block") => {
+            doctor_verify_managed_block(file, kind, path_text, &text, expected_hash, findings)
+        }
+        Some("managed_json") => {
+            if sha256_text(&text) == expected_hash {
+                findings.set_file_state(kind, "installed");
+            } else {
+                findings.stale_files.push(path_text.to_owned());
+                findings.set_file_state(kind, "stale");
+            }
+        }
+        _ => {
+            findings.broken_files.push(path_text.to_owned());
+            findings.set_file_state(kind, "broken");
+        }
+    }
+}
+
+fn doctor_verify_managed_block(
+    file: &Value,
+    kind: &str,
+    path_text: &str,
+    text: &str,
+    expected_hash: &str,
+    findings: &mut DoctorGuardFileFindings,
+) {
+    let Some(start_marker) = file.get("managed_marker_start").and_then(Value::as_str) else {
+        findings.broken_files.push(path_text.to_owned());
+        findings.set_file_state(kind, "broken");
+        return;
+    };
+    let Some(end_marker) = file.get("managed_marker_end").and_then(Value::as_str) else {
+        findings.broken_files.push(path_text.to_owned());
+        findings.set_file_state(kind, "broken");
+        return;
+    };
+    if marker_count(text, start_marker) != 1 || marker_count(text, end_marker) != 1 {
+        findings.broken_files.push(path_text.to_owned());
+        findings.set_file_state(kind, "broken");
+        return;
+    }
+    let Some(block) = managed_block_slice(text, start_marker, end_marker) else {
+        findings.broken_files.push(path_text.to_owned());
+        findings.set_file_state(kind, "broken");
+        return;
+    };
+    if sha256_text(block) == expected_hash {
+        findings.set_file_state(kind, "installed");
+    } else {
+        findings.stale_files.push(path_text.to_owned());
+        findings.set_file_state(kind, "stale");
+    }
+}
+
+fn marker_count(text: &str, marker: &str) -> usize {
+    text.match_indices(marker).count()
+}
+
+fn managed_block_slice<'a>(text: &'a str, start_marker: &str, end_marker: &str) -> Option<&'a str> {
+    let start = text.find(start_marker)?;
+    let end = start + text[start..].find(end_marker)? + end_marker.len();
+    let end = if text[end..].starts_with('\n') {
+        end + 1
+    } else {
+        end
+    };
+    text.get(start..end)
+}
+
+fn sha256_text(text: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(text.as_bytes());
+    format!("sha256:{}", hex_bytes(&hasher.finalize()))
+}
+
+fn hex_bytes(bytes: &[u8]) -> String {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    let mut output = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        output.push(HEX[(byte >> 4) as usize] as char);
+        output.push(HEX[(byte & 0x0f) as usize] as char);
+    }
+    output
 }
 
 fn guard_missing_required_hooks(capability_json: &str) -> Vec<String> {
@@ -668,15 +871,28 @@ fn inspect_prompt_capture_availability(
     checks: &mut Vec<DiagnosticCheck>,
 ) {
     if guarded.is_empty() {
-        checks.push(DiagnosticCheck::skipped(
-            "prompt_capture_available",
-            "prompt capture is not applicable to mcp-only installations",
-        ));
+        checks.push(
+            DiagnosticCheck::skipped(
+                "prompt_capture_available",
+                "prompt capture is not applicable to mcp-only installations",
+            )
+            .with_details(json!({
+                "state": "not_applicable",
+                "configured": 0,
+                "observed": 0,
+            })),
+        );
         return;
     }
     let configured = guarded
         .iter()
         .filter(|installation| guard_prompt_capture_configured(&installation.host_capability_json))
+        .count();
+    let host_supported = guarded
+        .iter()
+        .filter(|installation| {
+            guard_prompt_capture_host_supported(&installation.host_capability_json)
+        })
         .count();
     let observed = guarded
         .iter()
@@ -685,10 +901,28 @@ fn inspect_prompt_capture_availability(
                 && guard_prompt_capture_configured(&installation.host_capability_json)
         })
         .count();
-    if observed > 0 {
+    if host_supported == 0 {
+        checks.push(
+            DiagnosticCheck::warning(
+                "prompt_capture_available",
+                "host does not support prompt capture for recorded guarded installations",
+            )
+            .with_details(json!({
+                "state": "unsupported_by_host",
+                "configured": configured,
+                "observed": observed,
+                "host_supported": host_supported,
+            })),
+        );
+    } else if observed > 0 {
         checks.push(
             DiagnosticCheck::passed("prompt_capture_available", "prompt capture is available")
-                .with_details(json!({ "configured": configured, "observed": observed })),
+                .with_details(json!({
+                    "state": "available",
+                    "configured": configured,
+                    "observed": observed,
+                    "host_supported": host_supported,
+                })),
         );
     } else if configured > 0 {
         checks.push(
@@ -696,7 +930,12 @@ fn inspect_prompt_capture_availability(
                 "prompt_capture_available",
                 "prompt capture is configured but no guard hook observation is recorded",
             )
-            .with_details(json!({ "configured": configured, "observed": observed })),
+            .with_details(json!({
+                "state": "configured_unobserved",
+                "configured": configured,
+                "observed": observed,
+                "host_supported": host_supported,
+            })),
         );
     } else {
         checks.push(
@@ -704,7 +943,12 @@ fn inspect_prompt_capture_availability(
                 "prompt_capture_available",
                 "prompt capture is not configured for recorded guarded installations",
             )
-            .with_details(json!({ "configured": configured, "observed": observed })),
+            .with_details(json!({
+                "state": "not_configured",
+                "configured": configured,
+                "observed": observed,
+                "host_supported": host_supported,
+            })),
         );
     }
 }
@@ -713,6 +957,18 @@ fn guard_prompt_capture_configured(capability_json: &str) -> bool {
     serde_json::from_str::<Value>(capability_json)
         .ok()
         .and_then(|value| value.get("prompt_capture").and_then(Value::as_bool))
+        .unwrap_or(false)
+}
+
+fn guard_prompt_capture_host_supported(capability_json: &str) -> bool {
+    serde_json::from_str::<Value>(capability_json)
+        .ok()
+        .and_then(|value| {
+            value
+                .get("host_capabilities")
+                .and_then(|capabilities| capabilities.get("user_prompt_submit_hook"))
+                .and_then(Value::as_bool)
+        })
         .unwrap_or(false)
 }
 
@@ -1029,7 +1285,7 @@ fn render_doctor_output(
         }
         OutputFormat::Text => {
             let mut text = format!(
-                "Volicord doctor {}\nstatus_meaning: {}\nruntime_home_state: {}\nruntime_home: {}\ninstallation_profile_state: {}\ncommand_state: {}\nproject_registration_state: {}\nconnection_state: {}\nmcp_config_state: {}\nguard_installation_state: {}\nguard_configuration_state: {}\nguard_observation_state: {}\nguard_effective_state: {}\nguard_files_state: {}\nguard_hook_observed: {}\nguard_status_state: {}\nprompt_capture_state: {}\nhost_reload_required: {}\n",
+                "Volicord doctor {}\nstatus_meaning: {}\nruntime_home_state: {}\nruntime_home: {}\ninstallation_profile_state: {}\ncommand_state: {}\nproject_registration_state: {}\nconnection_state: {}\nmcp_config_state: {}\nguard_installation_state: {}\nguard_configuration_state: {}\nguard_observation_state: {}\nguard_effective_state: {}\nguard_files_state: {}\nagents_block_state: {}\nvolicord_policy_file_state: {}\nrule_instruction_config_state: {}\nhook_config_state: {}\nrequired_guard_phases_state: {}\nrequired_guard_phases_missing: {}\nguard_hook_observed: {}\nguard_status_state: {}\nprompt_capture_state: {}\nprompt_capture_health: {}\nhost_reload_required: {}\n",
                 status.as_str(),
                 doctor_status_meaning(status, checks),
                 doctor_runtime_home_state(runtime_home, checks),
@@ -1044,9 +1300,16 @@ fn render_doctor_output(
                 doctor_check_state(checks, "guard_hook_observed"),
                 doctor_check_state(checks, "guard_status_active"),
                 doctor_check_state(checks, "guard_files_installed"),
+                doctor_guard_file_kind_state(checks, "agents_managed_block"),
+                doctor_guard_file_kind_state(checks, "volicord_policy"),
+                doctor_guard_file_kind_state(checks, "host_rule_instruction"),
+                doctor_guard_file_kind_state(checks, "host_hook_config"),
+                doctor_required_guard_phases_state(checks),
+                doctor_missing_required_hooks_text(checks),
                 doctor_check_state(checks, "guard_hook_observed"),
                 doctor_check_state(checks, "guard_status_active"),
-                doctor_prompt_capture_state(checks),
+                doctor_prompt_capture_status(checks),
+                doctor_prompt_capture_health(checks),
                 yes_no(doctor_host_reload_required(checks, actions)),
             );
             append_doctor_next_action(&mut text, status, actions);
@@ -1072,9 +1335,16 @@ fn doctor_states_json(
         "guard_observation": doctor_check_state(checks, "guard_hook_observed"),
         "guard_effective": doctor_check_state(checks, "guard_status_active"),
         "guard_files": doctor_check_state(checks, "guard_files_installed"),
+        "agents_managed_block": doctor_guard_file_kind_state(checks, "agents_managed_block"),
+        "volicord_policy_file": doctor_guard_file_kind_state(checks, "volicord_policy"),
+        "rule_instruction_config": doctor_guard_file_kind_state(checks, "host_rule_instruction"),
+        "hook_config": doctor_guard_file_kind_state(checks, "host_hook_config"),
+        "required_guard_phases": doctor_required_guard_phases_state(checks),
+        "missing_required_hooks": doctor_missing_required_hooks_value(checks),
         "guard_hook_observed": doctor_check_state(checks, "guard_hook_observed"),
         "guard_status": doctor_check_state(checks, "guard_status_active"),
-        "prompt_capture": doctor_prompt_capture_state(checks),
+        "prompt_capture": doctor_prompt_capture_health(checks),
+        "prompt_capture_status": doctor_prompt_capture_status(checks),
         "host_reload_required": doctor_host_reload_required(checks, actions),
     })
 }
@@ -1136,12 +1406,70 @@ fn doctor_check_state(checks: &[DiagnosticCheck], id: &str) -> &'static str {
     }
 }
 
-fn doctor_prompt_capture_state(checks: &[DiagnosticCheck]) -> &'static str {
+fn doctor_guard_file_kind_state(checks: &[DiagnosticCheck], kind: &str) -> String {
+    checks
+        .iter()
+        .find(|check| check.id == "guard_files_installed")
+        .and_then(|check| check.details.as_ref())
+        .and_then(|details| details.get("file_states"))
+        .and_then(|states| states.get(kind))
+        .and_then(Value::as_str)
+        .map(str::to_owned)
+        .unwrap_or_else(|| match check_status(checks, "guard_files_installed") {
+            Some("skipped") | None => "not_checked".to_owned(),
+            _ => "not_configured".to_owned(),
+        })
+}
+
+fn doctor_required_guard_phases_state(checks: &[DiagnosticCheck]) -> &'static str {
+    match check_status(checks, "guard_required_hooks_supported") {
+        Some("passed") => "configured",
+        Some("warning") | Some("failed") => "missing",
+        Some("skipped") => "not_checked",
+        _ => "unknown",
+    }
+}
+
+fn doctor_missing_required_hooks_value(checks: &[DiagnosticCheck]) -> Vec<String> {
+    checks
+        .iter()
+        .find(|check| check.id == "guard_required_hooks_supported")
+        .and_then(|check| check.details.as_ref())
+        .and_then(|details| details.get("missing_required_hooks"))
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(Value::as_str)
+        .map(str::to_owned)
+        .collect()
+}
+
+fn doctor_missing_required_hooks_text(checks: &[DiagnosticCheck]) -> String {
+    let missing = doctor_missing_required_hooks_value(checks);
+    if missing.is_empty() {
+        "none".to_owned()
+    } else {
+        missing.join(",")
+    }
+}
+
+fn doctor_prompt_capture_health(checks: &[DiagnosticCheck]) -> &'static str {
     if check_status(checks, "prompt_capture_available").is_none() {
         "not_checked"
     } else {
         doctor_check_state(checks, "prompt_capture_available")
     }
+}
+
+fn doctor_prompt_capture_status(checks: &[DiagnosticCheck]) -> String {
+    checks
+        .iter()
+        .find(|check| check.id == "prompt_capture_available")
+        .and_then(|check| check.details.as_ref())
+        .and_then(|details| details.get("state"))
+        .and_then(Value::as_str)
+        .map(str::to_owned)
+        .unwrap_or_else(|| "not_checked".to_owned())
 }
 
 fn doctor_count_state(checks: &[DiagnosticCheck], key: &str, suffix: &str) -> String {

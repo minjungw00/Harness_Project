@@ -2827,7 +2827,7 @@ fn guarded_hooks_unsupported_message(
     missing_required_hooks: &[HostLifecyclePhase],
 ) -> String {
     format!(
-        "GUARDED_HOOKS_UNSUPPORTED: {} {} init requires host lifecycle hook configuration, but this adapter does not know verified project-local hook support for: {}. AGENTS.md and {VOLICORD_POLICY_FILE} are not host hook configuration. Re-run with --mode mcp-only for MCP-only setup or add --allow-degraded to explicitly install degraded guarded files.",
+        "GUARDED_HOOKS_UNSUPPORTED: {} {} init requires host lifecycle hook configuration, but this adapter does not know verified project-local hook support for: {}. AGENTS.md and {VOLICORD_POLICY_FILE} are not host hook configuration. Install a compatible guarded host configuration and re-run init, choose --mode mcp-only for MCP-only setup, or add --allow-degraded to explicitly install degraded guarded files.",
         public_host_label(host_kind),
         init_mode.cli_value(),
         lifecycle_phase_names(missing_required_hooks).join(", ")
@@ -3347,6 +3347,10 @@ struct GuardOperationalState {
     observation_state: String,
     effective_state: String,
     files_state: String,
+    agents_block_state: String,
+    policy_file_state: String,
+    rule_instruction_state: String,
+    hook_config_state: String,
     hook_observed_state: String,
     degraded_allowed: bool,
     last_observed_at: Option<String>,
@@ -3368,6 +3372,10 @@ impl GuardOperationalState {
             observation_state: "not_observed".to_owned(),
             effective_state: "inactive".to_owned(),
             files_state: "not_configured".to_owned(),
+            agents_block_state: "not_configured".to_owned(),
+            policy_file_state: "not_configured".to_owned(),
+            rule_instruction_state: "not_configured".to_owned(),
+            hook_config_state: "not_configured".to_owned(),
             hook_observed_state: "not_observed".to_owned(),
             degraded_allowed: false,
             last_observed_at: None,
@@ -3408,6 +3416,16 @@ impl GuardOperationalState {
             } else {
                 "planned".to_owned()
             },
+            agents_block_state: generated_file_kind_state(
+                &integration.generated_files,
+                HostIntegrationFileKind::AgentsManagedBlock,
+            ),
+            policy_file_state: generated_file_kind_state(
+                &integration.generated_files,
+                HostIntegrationFileKind::VolicordPolicy,
+            ),
+            rule_instruction_state: planned_rule_instruction_state(init_mode, integration),
+            hook_config_state: planned_hook_config_state(init_mode, integration),
             hook_observed_state: observation_state,
             degraded_allowed: integration.allow_degraded,
             last_observed_at: None,
@@ -3456,6 +3474,16 @@ impl GuardOperationalState {
             } else {
                 "installed".to_owned()
             },
+            agents_block_state: generated_file_kind_state(
+                &integration.generated_files,
+                HostIntegrationFileKind::AgentsManagedBlock,
+            ),
+            policy_file_state: generated_file_kind_state(
+                &integration.generated_files,
+                HostIntegrationFileKind::VolicordPolicy,
+            ),
+            rule_instruction_state: planned_rule_instruction_state(init_mode, integration),
+            hook_config_state: planned_hook_config_state(init_mode, integration),
             hook_observed_state: hook_observed_state.clone(),
             degraded_allowed: integration.allow_degraded,
             last_observed_at: None,
@@ -3488,7 +3516,13 @@ impl GuardOperationalState {
             "observation_health": &self.observation_state,
             "effective_health": &self.effective_state,
             "files": &self.files_state,
+            "agents_managed_block": &self.agents_block_state,
+            "volicord_policy_file": &self.policy_file_state,
+            "rule_instruction_config": &self.rule_instruction_state,
+            "hook_config": &self.hook_config_state,
+            "required_guard_phases": self.required_guard_phases_state(),
             "hook_observed": &self.hook_observed_state,
+            "guard_observed": self.guard_observed(),
             "degraded_allowed": self.degraded_allowed,
             "last_observed_at": &self.last_observed_at,
             "last_guard_event_at": &self.last_guard_event_at,
@@ -3499,6 +3533,89 @@ impl GuardOperationalState {
             "missing_required_hooks": &self.missing_required_hooks,
             "unresolved_blockers": &self.unresolved_blockers,
         })
+    }
+
+    fn guard_observed(&self) -> bool {
+        self.hook_observed_state == "observed"
+    }
+
+    fn required_guard_phases_state(&self) -> &'static str {
+        if self.mode_state == GuardMode::McpOnly.as_str() {
+            "disabled"
+        } else if self.missing_required_hooks.is_empty() {
+            "configured"
+        } else {
+            "missing"
+        }
+    }
+}
+
+fn generated_file_kind_state(files: &[GeneratedFilePlan], kind: HostIntegrationFileKind) -> String {
+    files
+        .iter()
+        .filter(|file| file.kind == kind)
+        .map(|file| file.status.as_str())
+        .reduce(combine_file_states)
+        .unwrap_or("not_configured")
+        .to_owned()
+}
+
+fn combine_file_states(left: &'static str, right: &'static str) -> &'static str {
+    if file_state_rank(right) > file_state_rank(left) {
+        right
+    } else {
+        left
+    }
+}
+
+fn file_state_rank(value: &str) -> u8 {
+    match value {
+        "broken" => 8,
+        "missing" => 7,
+        "stale" => 6,
+        "updated" | "created" => 5,
+        "planned_update" | "planned_create" => 4,
+        "unchanged" | "installed" => 3,
+        "disabled" => 2,
+        "unsupported_by_host" | "not_applicable" => 1,
+        _ => 0,
+    }
+}
+
+fn planned_rule_instruction_state(
+    init_mode: InitMode,
+    integration: &GuardIntegrationPlan,
+) -> String {
+    if init_mode == InitMode::McpOnly {
+        return "not_applicable".to_owned();
+    }
+    let state = generated_file_kind_state(
+        &integration.generated_files,
+        HostIntegrationFileKind::HostRuleInstruction,
+    );
+    if state != "not_configured" {
+        state
+    } else if integration.capabilities.rule_file_support {
+        "not_configured".to_owned()
+    } else {
+        "unsupported_by_host".to_owned()
+    }
+}
+
+fn planned_hook_config_state(init_mode: InitMode, integration: &GuardIntegrationPlan) -> String {
+    if init_mode == InitMode::McpOnly {
+        return "disabled".to_owned();
+    }
+    let state = generated_file_kind_state(
+        &integration.generated_files,
+        HostIntegrationFileKind::HostHookConfig,
+    );
+    if state != "not_configured" {
+        state
+    } else if integration.missing_required_hooks.is_empty() {
+        "not_recorded".to_owned()
+    } else {
+        "missing_required_hooks".to_owned()
     }
 }
 
@@ -3638,7 +3755,7 @@ fn render_simplified_connection_output(
     match data.format {
         OutputFormat::Text => {
             let mut output = format!(
-                "Agent Connection {}\nruntime_home_state: ready\nruntime_home: {}\nconnection_state: {}\nhost: {}\nintent: {}\nmode: {}\nenabled: {}\nproject_registration_state: {}\nconnected_repositories: {}\nmcp_config_state: {}\nmcp_config: {}\nguard_mode: {}\nguard_installation_state: {}\nguard_configuration_state: {}\nguard_observation_state: {}\nguard_effective_state: {}\nguard_files_state: {}\nguard_hook_observed: {}\nguard_degraded_allowed: {}\nlast_guard_event: {}\nprompt_capture_state: {}\nhost_reload_required: {}\nguard_blockers: {}\n",
+                "Agent Connection {}\nruntime_home_state: ready\nruntime_home: {}\nconnection_state: {}\nhost: {}\nintent: {}\nmode: {}\nenabled: {}\nproject_registration_state: {}\nconnected_repositories: {}\nmcp_config_state: {}\nmcp_config: {}\nguard_mode: {}\nguard_installation_state: {}\nguard_configuration_state: {}\nguard_observation_state: {}\nguard_effective_state: {}\nguard_files_state: {}\nagents_block_state: {}\nvolicord_policy_file_state: {}\nrule_instruction_config_state: {}\nhook_config_state: {}\nrequired_guard_phases_state: {}\nrequired_guard_phases_missing: {}\nguard_hook_observed: {}\nguard_observed: {}\nguard_degraded_allowed: {}\nlast_guard_event: {}\nprompt_capture_state: {}\nhost_reload_required: {}\nguard_blockers: {}\n",
                 data.action,
                 data.runtime_home.display(),
                 data.status.as_str(),
@@ -3657,7 +3774,14 @@ fn render_simplified_connection_output(
                 data.guard_state.observation_state,
                 data.guard_state.effective_state,
                 data.guard_state.files_state,
+                data.guard_state.agents_block_state,
+                data.guard_state.policy_file_state,
+                data.guard_state.rule_instruction_state,
+                data.guard_state.hook_config_state,
+                data.guard_state.required_guard_phases_state(),
+                comma_or_none(&data.guard_state.missing_required_hooks),
                 data.guard_state.hook_observed_state,
+                yes_no(data.guard_state.guard_observed()),
                 yes_no(data.guard_state.degraded_allowed),
                 optional_text(data.guard_state.last_guard_event_at.as_deref()),
                 data.guard_state.prompt_capture_state,
@@ -3718,7 +3842,7 @@ fn render_simplified_plan_output(
     match data.format {
         OutputFormat::Text => {
             let mut output = format!(
-                "Agent Connection {} {}\nruntime_home_state: ready\nruntime_home: {}\nconnection_state: {}\nhost: {}\nintent: {}\nmode: {}\nenabled: {}\nproject_registration_state: {}\nconnected_repositories: {}\nmcp_config_state: planned_{}\nmcp_config: {}\nguard_mode: {}\nguard_installation_state: {}\nguard_configuration_state: {}\nguard_observation_state: {}\nguard_effective_state: {}\nguard_files_state: {}\nguard_hook_observed: {}\nguard_degraded_allowed: {}\nlast_guard_event: {}\nprompt_capture_state: {}\nhost_reload_required: {}\nguard_blockers: {}\nplanned_change: {}\n",
+                "Agent Connection {} {}\nruntime_home_state: ready\nruntime_home: {}\nconnection_state: {}\nhost: {}\nintent: {}\nmode: {}\nenabled: {}\nproject_registration_state: {}\nconnected_repositories: {}\nmcp_config_state: planned_{}\nmcp_config: {}\nguard_mode: {}\nguard_installation_state: {}\nguard_configuration_state: {}\nguard_observation_state: {}\nguard_effective_state: {}\nguard_files_state: {}\nagents_block_state: {}\nvolicord_policy_file_state: {}\nrule_instruction_config_state: {}\nhook_config_state: {}\nrequired_guard_phases_state: {}\nrequired_guard_phases_missing: {}\nguard_hook_observed: {}\nguard_observed: {}\nguard_degraded_allowed: {}\nlast_guard_event: {}\nprompt_capture_state: {}\nhost_reload_required: {}\nguard_blockers: {}\nplanned_change: {}\n",
                 data.action,
                 data.status.as_str(),
                 data.runtime_home.display(),
@@ -3739,7 +3863,14 @@ fn render_simplified_plan_output(
                 guard_state.observation_state,
                 guard_state.effective_state,
                 guard_state.files_state,
+                guard_state.agents_block_state,
+                guard_state.policy_file_state,
+                guard_state.rule_instruction_state,
+                guard_state.hook_config_state,
+                guard_state.required_guard_phases_state(),
+                comma_or_none(&guard_state.missing_required_hooks),
                 guard_state.hook_observed_state,
+                yes_no(guard_state.guard_observed()),
                 yes_no(guard_state.degraded_allowed),
                 optional_text(guard_state.last_guard_event_at.as_deref()),
                 guard_state.prompt_capture_state,
@@ -3831,7 +3962,7 @@ fn render_init_output(data: InitOutput<'_>) -> Result<String, ConnectionCommandE
     match data.format {
         OutputFormat::Text => {
             let mut output = format!(
-                "Volicord init {}\nruntime_home_state: ready\nruntime_home: {}\nproject_registration_state: {}\nrepo: {}\nconnection_state: {}\nhost: {}\nmode: {}\nconnection_id: {}\nmcp_config_state: {}\nmcp_config: {}\nplanned_change: {}\nprofile: {}\nguard_mode: {}\nguard_installation_state: {}\nguard_configuration_state: {}\nguard_observation_state: {}\nguard_effective_state: {}\nguard_files_state: {}\nguard_hook_observed: {}\nguard_degraded_allowed: {}\nlast_guard_event: {}\nprompt_capture_state: {}\nhost_reload_required: {}\nguard_blockers: {}\n",
+                "Volicord init {}\nruntime_home_state: ready\nruntime_home: {}\nproject_registration_state: {}\nrepo: {}\nconnection_state: {}\nhost: {}\nmode: {}\nconnection_id: {}\nmcp_config_state: {}\nmcp_config: {}\nplanned_change: {}\nprofile: {}\nguard_mode: {}\nguard_installation_state: {}\nguard_configuration_state: {}\nguard_observation_state: {}\nguard_effective_state: {}\nguard_files_state: {}\nagents_block_state: {}\nvolicord_policy_file_state: {}\nrule_instruction_config_state: {}\nhook_config_state: {}\nrequired_guard_phases_state: {}\nrequired_guard_phases_missing: {}\nguard_hook_observed: {}\nguard_observed: {}\nguard_degraded_allowed: {}\nlast_guard_event: {}\nprompt_capture_state: {}\nhost_reload_required: {}\nguard_blockers: {}\n",
                 data.status.as_str(),
                 data.runtime_home.display(),
                 project_state,
@@ -3850,7 +3981,14 @@ fn render_init_output(data: InitOutput<'_>) -> Result<String, ConnectionCommandE
                 guard_state.observation_state,
                 guard_state.effective_state,
                 guard_state.files_state,
+                guard_state.agents_block_state,
+                guard_state.policy_file_state,
+                guard_state.rule_instruction_state,
+                guard_state.hook_config_state,
+                guard_state.required_guard_phases_state(),
+                comma_or_none(&guard_state.missing_required_hooks),
                 guard_state.hook_observed_state,
+                yes_no(guard_state.guard_observed()),
                 yes_no(guard_state.degraded_allowed),
                 optional_text(guard_state.last_guard_event_at.as_deref()),
                 guard_state.prompt_capture_state,
@@ -4094,12 +4232,45 @@ fn guard_checks_json_values(guard_state: &GuardOperationalState) -> Vec<Value> {
             },
         })
     };
+    let prompt_capture_check = match guard_state.prompt_capture_state.as_str() {
+        "active" | "observed" | "configured" => json!({
+            "id": "prompt_capture_available",
+            "status": "passed",
+            "summary": format!("prompt capture is {}", guard_state.prompt_capture_state),
+        }),
+        "reload_required" if guard_selected => json!({
+            "id": "prompt_capture_available",
+            "status": "failed",
+            "summary": "prompt capture needs host reload",
+        }),
+        "unsupported_by_host" if guard_selected => json!({
+            "id": "prompt_capture_available",
+            "status": "failed",
+            "summary": "host does not support prompt capture",
+        }),
+        "not_configured" if guard_selected => json!({
+            "id": "prompt_capture_available",
+            "status": "failed",
+            "summary": "prompt capture is not configured",
+        }),
+        "degraded" if guard_selected => json!({
+            "id": "prompt_capture_available",
+            "status": "failed",
+            "summary": "prompt capture is degraded",
+        }),
+        other => json!({
+            "id": "prompt_capture_available",
+            "status": "skipped",
+            "summary": format!("prompt capture is {other}"),
+        }),
+    };
     vec![
         files_check,
         reload_check,
         hook_check,
         capability_check,
         status_check,
+        prompt_capture_check,
     ]
 }
 
@@ -4298,7 +4469,14 @@ fn connection_states_json(
         "guard_observation": &guard_state.observation_state,
         "guard_effective": &guard_state.effective_state,
         "guard_files": &guard_state.files_state,
+        "agents_managed_block": &guard_state.agents_block_state,
+        "volicord_policy_file": &guard_state.policy_file_state,
+        "rule_instruction_config": &guard_state.rule_instruction_state,
+        "hook_config": &guard_state.hook_config_state,
+        "required_guard_phases": guard_state.required_guard_phases_state(),
+        "missing_required_hooks": &guard_state.missing_required_hooks,
         "guard_hook_observed": &guard_state.hook_observed_state,
+        "guard_observed": guard_state.guard_observed(),
         "guard_degraded_allowed": guard_state.degraded_allowed,
         "last_guard_observed_at": &guard_state.last_observed_at,
         "last_guard_event_at": &guard_state.last_guard_event_at,
@@ -4479,10 +4657,7 @@ fn primary_connection_action(
         ));
     }
     if guard_state.installation_state == "degraded" {
-        return Some(PrimaryNextAction::new(
-            "guard_capability_degraded",
-            "Guarded mode is degraded because this host adapter does not support every required lifecycle hook.",
-        ));
+        return Some(guard_degraded_action(connection, projects));
     }
     if let Some(action) = actions
         .iter()
@@ -4496,6 +4671,37 @@ fn primary_connection_action(
     actions
         .first()
         .map(|action| PrimaryNextAction::new(user_action_id(action.kind), action.message.clone()))
+}
+
+fn guard_degraded_action(
+    connection: Option<&AgentConnectionRecord>,
+    projects: &[ConnectionProjectRecord],
+) -> PrimaryNextAction {
+    let Some(connection) = connection else {
+        return PrimaryNextAction::new(
+            "guard_capability_degraded",
+            "Use a supported guarded host configuration, then rerun init without --allow-degraded; choose --mode mcp-only if guarded hooks are not needed.",
+        );
+    };
+    let Some(project) = projects.first() else {
+        return PrimaryNextAction::new(
+            "guard_capability_degraded",
+            "Use a supported guarded host configuration, then rerun init without --allow-degraded; choose --mode mcp-only if guarded hooks are not needed.",
+        );
+    };
+    let host = public_host_name_text(&connection.host_kind);
+    let command = format!(
+        "volicord init --host {} --repo {}",
+        host,
+        project.project.repo_root.display()
+    );
+    PrimaryNextAction::new(
+        "guard_capability_degraded",
+        format!(
+            "Use a supported guarded host configuration, then run {command} without --allow-degraded; choose --mode mcp-only if guarded hooks are not needed."
+        ),
+    )
+    .with_command(command)
 }
 
 fn connection_repair_action(
@@ -4665,6 +4871,14 @@ fn guard_state_for_connection(
             observation_state,
             effective_state,
             files_state: "broken".to_owned(),
+            agents_block_state: file_findings
+                .kind_state(HostIntegrationFileKind::AgentsManagedBlock)
+                .to_owned(),
+            policy_file_state: file_findings
+                .kind_state(HostIntegrationFileKind::VolicordPolicy)
+                .to_owned(),
+            rule_instruction_state: file_findings.rule_instruction_state(prompt_capture_disabled),
+            hook_config_state: file_findings.hook_config_state(prompt_capture_disabled),
             hook_observed_state: hook_observed_state.to_owned(),
             degraded_allowed: file_findings.allow_degraded,
             last_observed_at,
@@ -4711,6 +4925,14 @@ fn guard_state_for_connection(
             observation_state,
             effective_state,
             files_state: "missing".to_owned(),
+            agents_block_state: file_findings
+                .kind_state(HostIntegrationFileKind::AgentsManagedBlock)
+                .to_owned(),
+            policy_file_state: file_findings
+                .kind_state(HostIntegrationFileKind::VolicordPolicy)
+                .to_owned(),
+            rule_instruction_state: file_findings.rule_instruction_state(prompt_capture_disabled),
+            hook_config_state: file_findings.hook_config_state(prompt_capture_disabled),
             hook_observed_state: hook_observed_state.to_owned(),
             degraded_allowed: file_findings.allow_degraded,
             last_observed_at,
@@ -4753,6 +4975,14 @@ fn guard_state_for_connection(
             observation_state,
             effective_state,
             files_state: "stale".to_owned(),
+            agents_block_state: file_findings
+                .kind_state(HostIntegrationFileKind::AgentsManagedBlock)
+                .to_owned(),
+            policy_file_state: file_findings
+                .kind_state(HostIntegrationFileKind::VolicordPolicy)
+                .to_owned(),
+            rule_instruction_state: file_findings.rule_instruction_state(prompt_capture_disabled),
+            hook_config_state: file_findings.hook_config_state(prompt_capture_disabled),
             hook_observed_state: hook_observed_state.to_owned(),
             degraded_allowed: file_findings.allow_degraded,
             last_observed_at,
@@ -4854,6 +5084,14 @@ fn guard_state_for_connection(
         } else {
             "installed".to_owned()
         },
+        agents_block_state: file_findings
+            .kind_state(HostIntegrationFileKind::AgentsManagedBlock)
+            .to_owned(),
+        policy_file_state: file_findings
+            .kind_state(HostIntegrationFileKind::VolicordPolicy)
+            .to_owned(),
+        rule_instruction_state: file_findings.rule_instruction_state(prompt_capture_disabled),
+        hook_config_state: file_findings.hook_config_state(prompt_capture_disabled),
         hook_observed_state: hook_observed_state.to_owned(),
         degraded_allowed: file_findings.allow_degraded,
         last_observed_at,
@@ -4987,9 +5225,11 @@ struct GuardFileFindings {
     missing_files: Vec<String>,
     stale_files: Vec<String>,
     broken_files: Vec<String>,
+    file_kind_states: BTreeMap<String, String>,
     missing_required_hooks: Vec<String>,
     prompt_capture_configured: bool,
     prompt_capture_host_supported: bool,
+    rule_file_supported: bool,
     allow_degraded: bool,
 }
 
@@ -4998,10 +5238,14 @@ impl GuardFileFindings {
         self.missing_files.extend(other.missing_files);
         self.stale_files.extend(other.stale_files);
         self.broken_files.extend(other.broken_files);
+        for (kind, state) in other.file_kind_states {
+            self.set_kind_state_text(&kind, &state);
+        }
         self.missing_required_hooks
             .extend(other.missing_required_hooks);
         self.prompt_capture_configured |= other.prompt_capture_configured;
         self.prompt_capture_host_supported |= other.prompt_capture_host_supported;
+        self.rule_file_supported |= other.rule_file_supported;
         self.allow_degraded |= other.allow_degraded;
     }
 
@@ -5014,6 +5258,56 @@ impl GuardFileFindings {
         self.broken_files.dedup();
         self.missing_required_hooks.sort();
         self.missing_required_hooks.dedup();
+    }
+
+    fn set_kind_state(&mut self, kind: HostIntegrationFileKind, state: &str) {
+        self.set_kind_state_text(kind.as_str(), state);
+    }
+
+    fn set_kind_state_text(&mut self, kind: &str, state: &str) {
+        let update = self
+            .file_kind_states
+            .get(kind)
+            .is_none_or(|current| file_state_rank(state) > file_state_rank(current));
+        if update {
+            self.file_kind_states
+                .insert(kind.to_owned(), state.to_owned());
+        }
+    }
+
+    fn kind_state(&self, kind: HostIntegrationFileKind) -> &str {
+        self.file_kind_states
+            .get(kind.as_str())
+            .map(String::as_str)
+            .unwrap_or("not_configured")
+    }
+
+    fn rule_instruction_state(&self, guard_disabled: bool) -> String {
+        if guard_disabled {
+            return "not_applicable".to_owned();
+        }
+        let state = self.kind_state(HostIntegrationFileKind::HostRuleInstruction);
+        if state != "not_configured" {
+            state.to_owned()
+        } else if self.rule_file_supported {
+            "not_configured".to_owned()
+        } else {
+            "unsupported_by_host".to_owned()
+        }
+    }
+
+    fn hook_config_state(&self, guard_disabled: bool) -> String {
+        if guard_disabled {
+            return "disabled".to_owned();
+        }
+        let state = self.kind_state(HostIntegrationFileKind::HostHookConfig);
+        if state != "not_configured" {
+            state.to_owned()
+        } else if self.missing_required_hooks.is_empty() {
+            "not_recorded".to_owned()
+        } else {
+            "missing_required_hooks".to_owned()
+        }
     }
 }
 
@@ -5032,6 +5326,11 @@ fn guard_file_findings(capability_json: &str) -> GuardFileFindings {
     findings.prompt_capture_host_supported = value
         .get("host_capabilities")
         .and_then(|capabilities| capabilities.get("user_prompt_submit_hook"))
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
+    findings.rule_file_supported = value
+        .get("host_capabilities")
+        .and_then(|capabilities| capabilities.get("rule_file_support"))
         .and_then(Value::as_bool)
         .unwrap_or(false);
     findings.allow_degraded = value
@@ -5080,10 +5379,17 @@ fn missing_required_hooks_from_capability(capability: &Value) -> Vec<String> {
 }
 
 fn verify_guard_file(file: &Value, capability: &Value, findings: &mut GuardFileFindings) {
+    let kind = file
+        .get("kind")
+        .and_then(Value::as_str)
+        .and_then(host_integration_file_kind_from_str);
     let Some(path_text) = file.get("path").and_then(Value::as_str) else {
         findings
             .broken_files
             .push("guard_capability_json:files.path".to_owned());
+        if let Some(kind) = kind {
+            findings.set_kind_state(kind, "broken");
+        }
         return;
     };
     let path = Path::new(path_text);
@@ -5091,10 +5397,16 @@ fn verify_guard_file(file: &Value, capability: &Value, findings: &mut GuardFileF
         Ok(text) => text,
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
             findings.missing_files.push(path_text.to_owned());
+            if let Some(kind) = kind {
+                findings.set_kind_state(kind, "missing");
+            }
             return;
         }
         Err(_) => {
             findings.broken_files.push(path_text.to_owned());
+            if let Some(kind) = kind {
+                findings.set_kind_state(kind, "broken");
+            }
             return;
         }
     };
@@ -5103,34 +5415,58 @@ fn verify_guard_file(file: &Value, capability: &Value, findings: &mut GuardFileF
         .and_then(Value::as_str)
         .unwrap_or_default();
     match file.get("ownership").and_then(Value::as_str) {
-        Some("managed_block") => verify_managed_block_file(file, path_text, &text, findings),
-        Some("managed_json") => {
-            verify_managed_json_file(file, capability, path_text, &text, expected_hash, findings)
+        Some("managed_block") => verify_managed_block_file(file, kind, path_text, &text, findings),
+        Some("managed_json") => verify_managed_json_file(
+            file,
+            kind,
+            capability,
+            path_text,
+            &text,
+            expected_hash,
+            findings,
+        ),
+        _ => {
+            findings.broken_files.push(path_text.to_owned());
+            if let Some(kind) = kind {
+                findings.set_kind_state(kind, "broken");
+            }
         }
-        _ => findings.broken_files.push(path_text.to_owned()),
     }
 }
 
 fn verify_managed_block_file(
     file: &Value,
+    kind: Option<HostIntegrationFileKind>,
     path_text: &str,
     text: &str,
     findings: &mut GuardFileFindings,
 ) {
     let Some(start_marker) = file.get("managed_marker_start").and_then(Value::as_str) else {
         findings.broken_files.push(path_text.to_owned());
+        if let Some(kind) = kind {
+            findings.set_kind_state(kind, "broken");
+        }
         return;
     };
     let Some(end_marker) = file.get("managed_marker_end").and_then(Value::as_str) else {
         findings.broken_files.push(path_text.to_owned());
+        if let Some(kind) = kind {
+            findings.set_kind_state(kind, "broken");
+        }
         return;
     };
     if marker_count(text, start_marker) != 1 || marker_count(text, end_marker) != 1 {
         findings.broken_files.push(path_text.to_owned());
+        if let Some(kind) = kind {
+            findings.set_kind_state(kind, "broken");
+        }
         return;
     }
     let Some(block) = managed_block_slice(text, start_marker, end_marker) else {
         findings.broken_files.push(path_text.to_owned());
+        if let Some(kind) = kind {
+            findings.set_kind_state(kind, "broken");
+        }
         return;
     };
     let expected_hash = file
@@ -5139,27 +5475,41 @@ fn verify_managed_block_file(
         .unwrap_or_default();
     if sha256_text(block) != expected_hash {
         findings.stale_files.push(path_text.to_owned());
+        if let Some(kind) = kind {
+            findings.set_kind_state(kind, "stale");
+        }
+    } else if let Some(kind) = kind {
+        findings.set_kind_state(kind, "installed");
     }
 }
 
 fn verify_managed_json_file(
     file: &Value,
+    kind: Option<HostIntegrationFileKind>,
     capability: &Value,
     path_text: &str,
     text: &str,
     expected_hash: &str,
     findings: &mut GuardFileFindings,
 ) {
+    let mut state = "installed";
     if sha256_text(text) != expected_hash {
         findings.stale_files.push(path_text.to_owned());
+        state = "stale";
     }
     if file.get("kind").and_then(Value::as_str) != Some("volicord_policy") {
+        if let Some(kind) = kind {
+            findings.set_kind_state(kind, state);
+        }
         return;
     }
     let policy = match serde_json::from_str::<Value>(text) {
         Ok(policy) => policy,
         Err(_) => {
             findings.broken_files.push(path_text.to_owned());
+            if let Some(kind) = kind {
+                findings.set_kind_state(kind, "broken");
+            }
             return;
         }
     };
@@ -5169,11 +5519,35 @@ fn verify_managed_json_file(
         .unwrap_or_default();
     match policy_hash(&policy) {
         Ok(actual) if actual == expected_policy_hash => {}
-        Ok(_) => findings.stale_files.push(path_text.to_owned()),
-        Err(_) => findings.broken_files.push(path_text.to_owned()),
+        Ok(_) => {
+            findings.stale_files.push(path_text.to_owned());
+            state = "stale";
+        }
+        Err(_) => {
+            findings.broken_files.push(path_text.to_owned());
+            if let Some(kind) = kind {
+                findings.set_kind_state(kind, "broken");
+            }
+            return;
+        }
     }
     if policy.get("guard").and_then(|guard| guard.get("commands")) != capability.get("commands") {
         findings.stale_files.push(path_text.to_owned());
+        state = "stale";
+    }
+    if let Some(kind) = kind {
+        findings.set_kind_state(kind, state);
+    }
+}
+
+fn host_integration_file_kind_from_str(value: &str) -> Option<HostIntegrationFileKind> {
+    match value {
+        "volicord_policy" => Some(HostIntegrationFileKind::VolicordPolicy),
+        "host_mcp_config" => Some(HostIntegrationFileKind::HostMcpConfig),
+        "host_hook_config" => Some(HostIntegrationFileKind::HostHookConfig),
+        "host_rule_instruction" => Some(HostIntegrationFileKind::HostRuleInstruction),
+        "agents_managed_block" => Some(HostIntegrationFileKind::AgentsManagedBlock),
+        _ => None,
     }
 }
 

@@ -285,10 +285,19 @@ fn render_reconcile_response(
         .map(Vec::len)
         .unwrap_or(0);
     let mut output = format!(
-        "reconciled changes: {resolved} resolved, {pending} pending user judgment(s), {unresolved} unresolved\n"
+        "changes recovery: {resolved} resolved, {pending} pending user judgment(s), {unresolved} unresolved\n"
     );
     if pending > 0 {
-        output.push_str("next: run `volicord user judgments` and answer the pending judgment, then run `volicord changes reconcile` again\n");
+        if let Some(label) = response.response_value["next_actions"]
+            .as_array()
+            .and_then(|actions| actions.first())
+            .and_then(|action| action["label"].as_str())
+        {
+            output.push_str(&format!("next_action: {label}\n"));
+        }
+        output.push_str("recovery_path: use `volicord user judgments` and `volicord user judgment answer` when chat or MCP elicitation is unavailable or manual recovery is needed; then rerun `volicord changes reconcile`\n");
+    } else if unresolved > 0 {
+        output.push_str("next_action: rerun `volicord changes reconcile` after required recovery input is available\n");
     }
     Ok(output)
 }
