@@ -7,7 +7,7 @@
 This document owns baseline method behavior for `volicord.status`:
 
 - method-specific required inputs, access requirements, state version behavior, result branches, and `dry_run` behavior
-- read-only status behavior for current Core state
+- current Core-state status behavior and its no-state-version effect boundary
 - status examples
 
 ## What this document does not own
@@ -21,7 +21,7 @@ This document does not own:
 
 ## Purpose
 
-`volicord.status` returns a read-only current-position view over Core state. The view can include current Task summary, blockers, pending user judgments, `Write Check` summary, evidence summary, close state, close-readiness findings, guard health, project continuity summaries, guarantee display, and next safe actions.
+`volicord.status` returns a current-position view over Core state. The view can include current Task summary, blockers, pending user judgments, `Write Check` summary, evidence summary, close state, close-readiness findings, guard health, project continuity summaries, guarantee display, and next safe actions.
 
 ## Required inputs
 
@@ -100,7 +100,7 @@ Truthful projection rules:
 - Capability declarations alone do not create guarantees. A cooperative-only deployment must not claim `detective`.
 - `GuaranteeDisplay.capability_refs` should identify invocation binding, Agent Connection, or observation facts when those refs are available.
 
-`include.close=true` and [`volicord.close_task`](method-close-task.md) with `intent=check` use the same close-readiness calculation. `volicord.status` remains read-only and creates no replay row, event, state mutation, close mutation, or state-version increment.
+`include.close=true` and [`volicord.close_task`](method-close-task.md) with `intent=check` use the same close-readiness calculation. `volicord.status` creates no replay row, event, Core state mutation, close mutation, or state-version increment. When called through a session-bound Agent Connection, the runtime may initialize session-watch diagnostic records so later method-boundary checks can compare Product Repository snapshots.
 
 ## Method result fields
 
@@ -144,7 +144,7 @@ Public error code meaning, precedence, and rejected-response routing are owned b
 
 ## Dry-run behavior
 
-`dry_run=true` does not create a `ToolDryRunResponse` branch for this read-only method.
+`dry_run=true` does not create a `ToolDryRunResponse` branch for this read-style method.
 
 A valid request returns the same `StatusResult` shape with:
 
@@ -153,7 +153,7 @@ A valid request returns the same `StatusResult` shape with:
 
 ## Storage effect
 
-This is a read-only method. Exact no-effect persistence semantics are owned by the storage documents linked below.
+This method does not persist Core state changes, events, replay rows, close mutations, or state-version increments. When invoked through a session-bound Agent Connection, runtime session-watch diagnostic records may be initialized as described above. Exact persistence semantics are owned by the storage documents linked below.
 
 The examples are intentionally compact and method-local. The representative response is abbreviated to the fields needed to show the status branch, observed refs, state version, current scope, current Change Unit, close state, and next actions.
 

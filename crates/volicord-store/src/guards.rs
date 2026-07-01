@@ -956,6 +956,53 @@ pub fn list_pending_expected_writes(
     collect_rows(rows)
 }
 
+/// Lists all expected writes for one project and Agent Connection.
+pub fn list_expected_writes_for_connection(
+    runtime_home: impl AsRef<Path>,
+    project_id: &str,
+    connection_internal_id: &str,
+) -> StoreResult<Vec<ExpectedWriteRecord>> {
+    validate_identifier("project_id", project_id)?;
+    validate_identifier("connection_internal_id", connection_internal_id)?;
+    let Some(project) = open_project_for_read(runtime_home, project_id)? else {
+        return Ok(Vec::new());
+    };
+    let mut stmt = project.conn.prepare(
+        "SELECT
+            project_id,
+            expected_write_id,
+            session_id,
+            connection_internal_id,
+            guard_installation_id,
+            pre_tool_guard_event_id,
+            host_invocation_id,
+            tool_name,
+            command_kind,
+            path_policy,
+            expected_paths_json,
+            task_id,
+            change_unit_id,
+            write_check_ids_json,
+            basis_state_version,
+            status,
+            matched_post_tool_guard_event_id,
+            matched_paths_json,
+            created_at,
+            expires_at,
+            matched_at,
+            metadata_json
+         FROM expected_writes
+        WHERE project_id = ?1
+          AND connection_internal_id = ?2
+        ORDER BY created_at DESC, expected_write_id DESC",
+    )?;
+    let rows = stmt.query_map(
+        params![project.project.project_id, connection_internal_id],
+        expected_write_from_row,
+    )?;
+    collect_rows(rows)
+}
+
 /// Lists expected writes already matched by one post-tool guard event.
 pub fn list_expected_writes_matched_by_post_event(
     runtime_home: impl AsRef<Path>,

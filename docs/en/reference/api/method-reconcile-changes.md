@@ -23,9 +23,9 @@ This document does not own:
 
 ## Purpose
 
-`volicord.reconcile_changes` is the public recovery path for guarded unrecorded Product Repository change findings.
+`volicord.reconcile_changes` is the public recovery path for guarded and session-watch-created unrecorded Product Repository change findings.
 
-The method lists unresolved findings for the selected Task, resolves findings that Core can verify from stored Core or guard records, and creates ordinary pending `UserJudgment` rows when a remaining finding requires a user-owned acceptance decision. It must not silently dismiss a bypass finding. It must not let an Agent Connection mark an unrecorded Product Repository change accepted without a compatible resolved User Channel judgment.
+The method lists unresolved findings for the selected Task, resolves findings that Core can verify from stored Core, guard, expected-write, or session-watch records, and creates ordinary pending `UserJudgment` rows when a remaining finding requires a user-owned acceptance decision. It must not silently dismiss a bypass finding. It must not let an Agent Connection mark an unrecorded Product Repository change accepted without a compatible resolved User Channel judgment.
 
 Resolving an unrecorded-change finding removes that finding from the unresolved guard-health count and from the `unresolved_unrecorded_changes` close blocker calculation. It does not prove that the changed product files are correct, reviewed, tested, accepted for close, or acceptable residual risk.
 
@@ -87,6 +87,8 @@ A committed non-dry-run result that has planned storage effects:
 
 A valid call with no storage mutations returns a read-only result and does not create a replay row, event, or state-version increment.
 
+At a session-bound method boundary, the runtime may run a bounded session-watch check before reconciliation planning. That diagnostic check can create a new unresolved unrecorded-change finding when an unexpected Product Repository snapshot change is not covered by expected-write correlation.
+
 Dry run previews planned resolutions or pending judgments without creating refs, events, replay rows, user judgments, or resolution rows. Rejected attempts create no effects.
 
 ## Success result
@@ -127,14 +129,15 @@ Core-owned deterministic bases:
 
 - `invalid_observation`: stored observation data is invalid for interpretation as Product Repository paths.
 - `not_product_change`: stored observation data contains no Product Repository path to reconcile.
-- `recorded_as_expected_write`: a recorded Run for the same Task already covers the observed Product Repository paths.
+- `recorded_as_expected_write`: a recorded Run for the same Task already covers the observed Product Repository paths, or expected-write correlation for the same Task covers watcher-observed Product Repository paths.
 - `covered_by_write_readiness`: a consumed compatible `Write Check` for the same Task covers the observed Product Repository paths.
+- `reverted`: a watcher-created finding is linked to a session-watch observation and the current Product Repository snapshot matches the stored watch baseline again.
 
 User-owned basis:
 
 - `accepted_by_user`: a compatible resolved `product_decision` judgment linked to the finding records that the local user accepts the observed change as intentional for the Task.
 
-Reserved or future owner-defined bases such as `reverted`, `superseded_by_new_observation`, and any other listed basis may be stored only when their owner-defined verification is implemented. This method must not implement a filesystem-reverting or filesystem-probing basis unless that verification is safe and owner-defined.
+Reserved or future owner-defined bases such as `superseded_by_new_observation` and any other listed basis may be stored only when their owner-defined verification is implemented. This method must not implement a filesystem-reverting or filesystem-probing basis unless that verification is safe and owner-defined.
 
 For findings that still require acceptance, Core creates pending `UserJudgment` rows rather than accepting them. Existing User Channel paths can answer those judgments, including MCP elicitation flows where the initialized client supports them, guarded prompt-capture command handling when prompt-capture availability is `configured`, `observed`, or `active`, and local `volicord user` commands for CLI recovery. After the user-owned judgment is resolved, `volicord.reconcile_changes` can resolve the linked finding with `accepted_by_user`.
 

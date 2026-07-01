@@ -127,6 +127,9 @@ GuardHealthSummary:
   prompt_capture_available: boolean
   mcp_connection_healthy: boolean
   mcp_connection_status: string | null
+  session_watch_status: string
+  last_session_watch_checked_at: string | null
+  session_watch_detail: string | null
   unresolved_unrecorded_change_count: integer
   missing_or_stale_write_readiness: boolean
 ```
@@ -143,16 +146,20 @@ Meaning:
 - `prompt_capture_status` reports the machine-readable prompt-capture availability state for the selected connection. `prompt_capture_available=true` only when that state allows verification-code chat commands; it does not mean raw prompt text is included.
 - `prompt_capture_available` reports whether prompt-capture verification-code chat commands may be shown or recorded for the selected connection. It does not include prompt text.
 - `mcp_connection_healthy` and `mcp_connection_status` summarize the tracked Agent Connection verification state when that state is available.
+- `session_watch_status` reports whether the session-level Product Repository watcher is `disabled`, `active`, `degraded`, or `unavailable` for the selected connection or session.
+- `last_session_watch_checked_at` is the latest watcher baseline status update timestamp, or `null` when no session-watch baseline is available.
+- `session_watch_detail` is a short diagnostic detail for the selected watcher state, or `null` when no detail is available.
 - `unresolved_unrecorded_change_count` is a count of unresolved unrecorded Product Repository changes. It does not expose prompt text, command text, or path lists.
 - `missing_or_stale_write_readiness` reports whether guard events detected missing or stale write readiness.
 
 Does not imply:
 - `GuardHealthSummary` is not evidence of product correctness, test sufficiency, OS enforcement, sandboxing, security isolation, or final acceptance.
 - An active guard summary does not replace evidence, artifact integrity, user-owned judgment, `Write Check`, final acceptance, or residual-risk acceptance requirements.
-- `mcp_only` mode remains cooperative unless an owner-defined configuration selects guarded or managed behavior.
+- Session watch status does not mean Volicord prevented a write, identified the actor who changed a file, stored file contents, or provided OS-level enforcement.
+- `mcp_only` mode remains cooperative except that unresolved watcher-created unrecorded-change findings block close while an active session watch is selected.
 
 Owner links:
-- `guard_mode`, `guard_installation_status`, `guard_configuration_status`, `guard_observation_status`, `effective_guard_status`, and `prompt_capture_status` values: [state and blocker values](schema-value-sets.md#state-and-blocker-values)
+- `guard_mode`, `guard_installation_status`, `guard_configuration_status`, `guard_observation_status`, `effective_guard_status`, `prompt_capture_status`, and `session_watch_status` values: [state and blocker values](schema-value-sets.md#state-and-blocker-values)
 - Close-readiness guard blockers and method-local codes: [`volicord.close_task`](method-close-task.md)
 - Agent Connection meaning: [Agent Connection](../agent-connection.md)
 

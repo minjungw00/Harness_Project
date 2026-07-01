@@ -21,9 +21,10 @@ use crate::values::{
     JudgmentResolutionOutcome, MethodName, NextActionKind, PlannedBlockerSourceKind,
     ProjectContinuityKind, ProjectContinuityStatus, ProjectEnforcementProfileSource,
     ProjectEnforcementProfileStatus, PromptCaptureStatus, RedactionState, ResponseKind, RunKind,
-    StateRecordKind, TaskLifecyclePhase, TaskMode, TaskResult, UnrecordedChangeResolutionBasis,
-    UnrecordedChangeStatus, UserJudgmentOptionAction, UserJudgmentStatus, UtcTimestamp,
-    ValidatorSeverity, ValidatorStatus, WriteCheckStatus, WriteDecisionCategory,
+    SessionWatchStatus, StateRecordKind, TaskLifecyclePhase, TaskMode, TaskResult,
+    UnrecordedChangeResolutionBasis, UnrecordedChangeStatus, UserJudgmentOptionAction,
+    UserJudgmentStatus, UtcTimestamp, ValidatorSeverity, ValidatorStatus, WriteCheckStatus,
+    WriteDecisionCategory,
 };
 
 /// JSON object used where an owner document defines a field as `object`.
@@ -418,6 +419,9 @@ pub struct GuardHealthSummary {
     pub prompt_capture_available: bool,
     pub mcp_connection_healthy: bool,
     pub mcp_connection_status: RequiredNullable<String>,
+    pub session_watch_status: SessionWatchStatus,
+    pub last_session_watch_checked_at: RequiredNullable<UtcTimestamp>,
+    pub session_watch_detail: RequiredNullable<String>,
     pub unresolved_unrecorded_change_count: u64,
     pub missing_or_stale_write_readiness: bool,
 }

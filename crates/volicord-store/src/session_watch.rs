@@ -6,6 +6,7 @@ use std::{
 };
 
 use rusqlite::{params, Connection, OptionalExtension, Row};
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 
@@ -116,7 +117,7 @@ impl Default for WatchSnapshotOptions {
 }
 
 /// One file or skipped path entry in a snapshot.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct WatchSnapshotEntry {
     pub path: String,
     pub kind: String,
@@ -495,6 +496,92 @@ pub fn watch_baseline(
     )
 }
 
+/// Reads the most recent watch baseline for one project session.
+pub fn latest_watch_baseline_for_session(
+    runtime_home: impl AsRef<Path>,
+    project_id: &str,
+    session_id: &str,
+) -> StoreResult<Option<WatchBaselineRecord>> {
+    validate_identifier("project_id", project_id)?;
+    validate_identifier("session_id", session_id)?;
+    let Some(project) = open_project_for_read(runtime_home, project_id)? else {
+        return Ok(None);
+    };
+    project
+        .conn
+        .query_row(
+            "SELECT
+                project_id,
+                watch_baseline_id,
+                session_id,
+                connection_internal_id,
+                guard_installation_id,
+                status,
+                scope_kind,
+                repo_root,
+                watched_paths_json,
+                exclusions_json,
+                snapshot_algorithm,
+                snapshot_digest,
+                snapshot_entries_json,
+                created_at,
+                updated_at,
+                metadata_json
+             FROM session_watch_baselines
+            WHERE project_id = ?1
+              AND session_id = ?2
+            ORDER BY updated_at DESC, watch_baseline_id DESC
+            LIMIT 1",
+            params![project.project.project_id, session_id],
+            watch_baseline_from_row,
+        )
+        .optional()
+        .map_err(StoreError::from)
+}
+
+/// Reads the most recent watch baseline for one project Agent Connection.
+pub fn latest_watch_baseline_for_connection(
+    runtime_home: impl AsRef<Path>,
+    project_id: &str,
+    connection_internal_id: &str,
+) -> StoreResult<Option<WatchBaselineRecord>> {
+    validate_identifier("project_id", project_id)?;
+    validate_identifier("connection_internal_id", connection_internal_id)?;
+    let Some(project) = open_project_for_read(runtime_home, project_id)? else {
+        return Ok(None);
+    };
+    project
+        .conn
+        .query_row(
+            "SELECT
+                project_id,
+                watch_baseline_id,
+                session_id,
+                connection_internal_id,
+                guard_installation_id,
+                status,
+                scope_kind,
+                repo_root,
+                watched_paths_json,
+                exclusions_json,
+                snapshot_algorithm,
+                snapshot_digest,
+                snapshot_entries_json,
+                created_at,
+                updated_at,
+                metadata_json
+             FROM session_watch_baselines
+            WHERE project_id = ?1
+              AND connection_internal_id = ?2
+            ORDER BY updated_at DESC, watch_baseline_id DESC
+            LIMIT 1",
+            params![project.project.project_id, connection_internal_id],
+            watch_baseline_from_row,
+        )
+        .optional()
+        .map_err(StoreError::from)
+}
+
 /// Updates the availability status for one watch baseline.
 pub fn update_watch_status(
     runtime_home: impl AsRef<Path>,
@@ -641,6 +728,100 @@ pub fn watch_observation(
         &project.project.project_id,
         watch_observation_id,
     )
+}
+
+/// Reads one watch observation for a baseline and resulting snapshot digest.
+pub fn watch_observation_for_baseline_digest(
+    runtime_home: impl AsRef<Path>,
+    project_id: &str,
+    watch_baseline_id: &str,
+    snapshot_digest: &str,
+) -> StoreResult<Option<WatchObservationRecord>> {
+    validate_identifier("project_id", project_id)?;
+    validate_identifier("watch_baseline_id", watch_baseline_id)?;
+    validate_lowercase_sha256(
+        "session_watch_observations.snapshot_digest",
+        snapshot_digest,
+    )?;
+    let Some(project) = open_project_for_read(runtime_home, project_id)? else {
+        return Ok(None);
+    };
+    project
+        .conn
+        .query_row(
+            "SELECT
+                project_id,
+                watch_observation_id,
+                watch_baseline_id,
+                session_id,
+                connection_internal_id,
+                expected_write_id,
+                unrecorded_change_id,
+                observation_status,
+                observed_paths_json,
+                change_summary_json,
+                snapshot_algorithm,
+                snapshot_digest,
+                snapshot_entries_json,
+                observed_at,
+                linked_at,
+                metadata_json
+             FROM session_watch_observations
+            WHERE project_id = ?1
+              AND watch_baseline_id = ?2
+              AND snapshot_digest = ?3
+            ORDER BY observed_at DESC, watch_observation_id DESC
+            LIMIT 1",
+            params![
+                project.project.project_id,
+                watch_baseline_id,
+                snapshot_digest
+            ],
+            watch_observation_from_row,
+        )
+        .optional()
+        .map_err(StoreError::from)
+}
+
+/// Lists watch observations linked to one unrecorded-change row.
+pub fn watch_observations_for_unrecorded_change(
+    runtime_home: impl AsRef<Path>,
+    project_id: &str,
+    unrecorded_change_id: &str,
+) -> StoreResult<Vec<WatchObservationRecord>> {
+    validate_identifier("project_id", project_id)?;
+    validate_identifier("unrecorded_change_id", unrecorded_change_id)?;
+    let Some(project) = open_project_for_read(runtime_home, project_id)? else {
+        return Ok(Vec::new());
+    };
+    let mut stmt = project.conn.prepare(
+        "SELECT
+            project_id,
+            watch_observation_id,
+            watch_baseline_id,
+            session_id,
+            connection_internal_id,
+            expected_write_id,
+            unrecorded_change_id,
+            observation_status,
+            observed_paths_json,
+            change_summary_json,
+            snapshot_algorithm,
+            snapshot_digest,
+            snapshot_entries_json,
+            observed_at,
+            linked_at,
+            metadata_json
+         FROM session_watch_observations
+        WHERE project_id = ?1
+          AND unrecorded_change_id = ?2
+        ORDER BY observed_at DESC, watch_observation_id DESC",
+    )?;
+    let rows = stmt.query_map(
+        params![project.project.project_id, unrecorded_change_id],
+        watch_observation_from_row,
+    )?;
+    collect_rows(rows)
 }
 
 /// Lists unresolved watch observations for one project session.

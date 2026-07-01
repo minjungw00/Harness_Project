@@ -200,7 +200,10 @@ Valid dry-run previews may include `DryRunSummary.would_blockers: PlannedBlocker
 
 ## Read-only effects
 
-Read-only results are response-only and not replay rows.
+Read-only results are response-only and not replay rows. When a method section
+below explicitly permits session-watch diagnostic records for a session-bound
+Agent Connection, those records are not Core state mutations, replay rows,
+task events, close-state mutations, or `project_state.state_version` changes.
 
 For response computation, `volicord.status` and `volicord.close_task intent=check` may compute `CurrentCloseBasis`, close state, risk acceptance coverage, blockers, `CloseReadinessBlocker[]`, evidence summaries, artifact refs, project continuity summaries, diagnostics, and next actions for the response when the method owner selects those projections.
 
@@ -222,6 +225,11 @@ Read-time artifact checks may compute an effective missing, unavailable, or inte
 - `project_state.state_version` increment
 
 For `volicord.close_task intent=check`, the response branch is owned by [`volicord.close_task`](api/method-close-task.md). This storage page only asserts that the check remains read-only, including with `dry_run=true` and with `blockers: CloseReadinessBlocker[]`.
+
+Session-watch diagnostic records store only the bounded snapshot metadata
+described by [Storage Records](storage-records.md). They must not store raw file
+contents, sensitive prompt text, actor identity inferred from file changes, or a
+claim that Volicord prevented a filesystem write.
 
 ## Committed blocked effects
 
@@ -309,14 +317,14 @@ This table summarizes persistence effects. Method behavior and response unions r
 |---|---|---|
 | `volicord.intake` | creates task and shaping records | See [`volicord.intake`](#volicordintake) |
 | `volicord.update_scope` | updates current scope records | See [`volicord.update_scope`](#volicordupdate_scope) |
-| `volicord.status` | read-only response | See [`volicord.status`](#volicordstatus) |
+| `volicord.status` | read-style response with optional session-watch initialization | See [`volicord.status`](#volicordstatus) |
 | `volicord.prepare_write` | records write decision effects | See [`volicord.prepare_write`](#volicordprepare_write) |
 | `volicord.stage_artifact` | creates transient staging only | See [`volicord.stage_artifact`](#volicordstage_artifact) |
 | `volicord.record_run` | records run, current close-basis, evidence, and evidence-observation effects | See [`volicord.record_run`](#volicordrecord_run) |
 | `volicord.request_user_judgment` | creates pending judgment request | See [`volicord.request_user_judgment`](#volicordrequest_user_judgment) |
 | `volicord.record_user_judgment` | resolves user judgment | See [`volicord.record_user_judgment`](#volicordrecord_user_judgment) |
-| `volicord.reconcile_changes` | resolves unrecorded-change findings or creates pending user judgments | See [`volicord.reconcile_changes`](#volicordreconcile_changes) |
-| `volicord.close_task intent=check` | read-only close-readiness check | See [`volicord.close_task intent=check`](#volicordclose_task-intentcheck) |
+| `volicord.reconcile_changes` | resolves unrecorded-change findings, creates pending user judgments, and may record session-watch diagnostics | See [`volicord.reconcile_changes`](#volicordreconcile_changes) |
+| `volicord.close_task intent=check` | close-readiness check with optional session-watch diagnostics | See [`volicord.close_task intent=check`](#volicordclose_task-intentcheck) |
 | `volicord.close_task intent=complete` | persists method-selected `complete` terminal or blocked effect | See [`volicord.close_task intent=complete`](#volicordclose_task-intentcomplete) |
 | `volicord.close_task intent=cancel` | persists method-selected cancellation terminal or blocked effect | See [`volicord.close_task intent=cancel`](#volicordclose_task-intentcancel) |
 | `volicord.close_task intent=supersede` | persists method-selected supersession terminal or blocked effect | See [`volicord.close_task intent=supersede`](#volicordclose_task-intentsupersede) |
@@ -384,8 +392,15 @@ Read-only calls:
 - return response data only
 - do not create replay rows
 - do not create `project_continuity_records`
-- do not mutate storage
+- do not mutate Core state
 - do not increment `project_state.state_version`
+
+For a session-bound Agent Connection, `volicord.status` may initialize the
+session-watch diagnostic context by creating an `agent_sessions` row and, when a
+bounded baseline snapshot is available, a `session_watch_baselines` row. It does
+not run a watch comparison, create `session_watch_observations`, create
+`unrecorded_changes`, append task events, create replay rows, mutate close
+state, or increment `project_state.state_version`.
 
 `dry_run=true` remains `StatusResult` with `effect_kind=read_only`, not `ToolDryRunResponse`.
 
@@ -605,6 +620,10 @@ Owner links:
 
 Committed `dry_run=false` may:
 
+- first run a bounded session-watch check for a session-bound Agent Connection
+  and create or update `agent_sessions`, `session_watch_baselines`,
+  `session_watch_observations`, and watcher-created `unrecorded_changes` when
+  Product Repository changes are not covered by expected-write correlation
 - set unresolved `unrecorded_changes` rows to `status='resolved'`
 - store resolution JSON that names the resolution basis, capture basis, resolved method, and optional linked user-judgment ref
 - store `resolved_at` and `resolved_by_actor_source`
@@ -615,7 +634,9 @@ Committed `dry_run=false` may:
 
 Read-only branches:
 
-- A valid call with no planned resolution or pending judgment creation returns response data only.
+- After any permitted session-watch diagnostic effect above, a valid call with
+  no planned resolution or pending judgment creation returns response data only
+  and creates no reconciliation effect.
 
 No-effect branches:
 
@@ -645,6 +666,14 @@ Read-only calls:
 - do not touch artifacts or evidence
 - do not increment `project_state.state_version`
 
+For a session-bound Agent Connection and `dry_run=false`, the check may first
+run a bounded session-watch check and create or update `agent_sessions`,
+`session_watch_baselines`, `session_watch_observations`, and watcher-created
+`unrecorded_changes` when Product Repository changes are not covered by
+expected-write correlation. These diagnostic effects do not append task events,
+create blocker rows, mutate close state, or increment
+`project_state.state_version`.
+
 `dry_run=true` remains `CloseTaskResult` with `effect_kind=read_only`.
 
 No-effect branches:
@@ -660,6 +689,9 @@ Owner links:
 
 Committed `dry_run=false` may:
 
+- first run a bounded session-watch check for a session-bound Agent Connection
+  and create or update the same session-watch diagnostic records permitted for
+  `volicord.close_task intent=check`
 - persist the method-selected terminal completion effect
 - persist a terminal close summary distinct from `tasks.close_basis_json` when the method-selected completion effect succeeds
 - create `project_continuity_records` with `kind='known_limit'` for current close-basis residual risks that are visible and do not require residual-risk acceptance when the method-selected completion effect succeeds

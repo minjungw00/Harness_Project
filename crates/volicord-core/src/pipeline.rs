@@ -99,6 +99,7 @@ pub struct InvocationContext {
     pub actor_source: ActorSource,
     pub operation_category: OperationCategory,
     pub invocation_binding_basis: String,
+    pub session_id: Option<String>,
 }
 
 impl InvocationContext {
@@ -114,7 +115,15 @@ impl InvocationContext {
             actor_source,
             operation_category,
             invocation_binding_basis: invocation_binding_basis.into(),
+            session_id: None,
         }
+    }
+
+    /// Adds adapter-owned session identity when the transport has one.
+    pub fn with_session_id(mut self, session_id: impl Into<String>) -> Self {
+        let session_id = session_id.into();
+        self.session_id = (!session_id.trim().is_empty()).then_some(session_id);
+        self
     }
 }
 
@@ -126,6 +135,7 @@ pub struct VerifiedInvocationContext {
     pub operation_category: OperationCategory,
     pub verification_basis: String,
     pub assurance_level: String,
+    pub session_id: Option<String>,
 }
 
 /// Internal verified actor-provenance context derived for authority-bearing resolution.

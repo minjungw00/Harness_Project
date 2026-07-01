@@ -84,7 +84,8 @@ API 경계 블록:
 닫기 조건:
 
 - `intent=complete`는 사전 확인이 성공하고, 현재 `CurrentCloseBasis`에 대한 닫기 준비 상태 평가가 유효하며, 현재 닫기 근거 참조가 그 아티팩트 및 실행 기록 호환성 규칙을 만족하고, 닫기 차단 사유가 남아 있지 않을 때만 닫을 수 있습니다.
-- 확인된 연결이 `guarded` 또는 `managed` 모드이면 닫기 준비 상태는 guard 상태, prompt capture 사용 가능 사실, 해결되지 않은 미기록 Product Repository 변경, guard가 감지한 쓰기 준비 상태 문제도 확인합니다. 이 확인은 guarded 또는 managed 동작에서만 닫기 차단 사유가 됩니다. `mcp_only`는 담당 문서가 정의한 설정이 guarded 또는 managed 동작을 선택하지 않는 한 협력형으로 남습니다.
+- 확인된 연결이 `guarded` 또는 `managed` 모드이면 닫기 준비 상태는 guard 상태, prompt capture 사용 가능 사실, 해결되지 않은 미기록 Product Repository 변경, guard가 감지한 쓰기 준비 상태 문제, session watch 사용 가능성도 확인합니다. `mcp_only` 모드에서 활성 session watch는 탐지 전용으로 남지만, watcher가 만든 해결되지 않은 미기록 변경 찾기는 조정으로 해결될 때까지 닫기를 막습니다.
+- Session watch 관찰은 Product Repository 쓰기를 막지 않으며 파일을 바꾼 행위자를 식별하지 않습니다. Product Repository 스냅샷 변경이 expected-write 상관관계로 덮이지 않았는지만 감지합니다.
 - 필요한 닫기 증거는 현재 닫기 근거에 맞고 주장과 일치하는 증거 관찰 출처로 뒷받침되어야 합니다. 더 강한 출처가 필요한 닫기 요구사항에는 확인되지 않은 주장, 출처 없는 증거, 오래된 출처, 협력적 에이전트 보고만으로 된 증거가 충분하지 않습니다.
 - `intent=cancel`은 `machine_action=accept`, `resolution_outcome=accepted`, `resolved_by_actor_source=local_user`, 호환 User Channel 출처, `Task`, 현재 범위 리비전, 현재 적용 Change Unit에 묶인 근거를 가진 현재 수락된 취소 판단을 요구합니다. 완료 전용 증거, 최종 수락, 잔여 위험 수락은 필요하지 않습니다.
 - `intent=supersede`는 요청한 종료 경로를 평가합니다. 증거 충분성, 최종 수락, 잔여 위험 수락이 아닙니다.
@@ -157,7 +158,7 @@ CloseTaskRequest:
 1. 요청 래퍼, 메서드 필드, `intent` 필드 조합, 같은 프로젝트의 `Task` 식별자를 검증합니다. 형태 오류, 잘못된 프로젝트 식별자, 읽을 수 없는 `Task` 식별자는 `ToolRejectedResponse`를 반환합니다.
 2. 호출 맥락, 작업 범주, 행위자 출처, 요청한 종료 경로의 선행조건을 확인합니다.
 3. `dry_run=false`인 상태 변경 `intent`에서는 `idempotency_key`, 현재 `expected_state_version`, 멱등 요청 해시, 닫기 관련 `WriteCheck.basis_state_version`을 확인합니다. 오래되었거나 충돌하는 값은 `ToolRejectedResponse`를 반환합니다.
-4. `intent=check`는 선택된 guard 상태 사실을 포함해 [`volicord.status`](method-status.md)의 `include.close=true`와 같은 계산으로 현재 닫기 준비 상태를 계산하고 읽기 전용 `CloseTaskResult`를 반환합니다.
+4. `intent=check`는 선택된 결정적 session-watch 확인을 실행하고, 선택된 guard 상태 사실을 포함해 [`volicord.status`](method-status.md)의 `include.close=true`와 같은 계산으로 현재 닫기 준비 상태를 계산한 뒤 `CloseTaskResult`를 반환합니다.
 5. 상태 변경 `intent`와 `dry_run=true` 조합은 유효한 사전 확인 뒤 공통 미리보기 분기를 반환합니다.
 6. `intent=complete`는 현재 `CurrentCloseBasis`에 대한 닫기 준비 상태 평가를 실행합니다. 차단 사유가 남아 있으면 차단 분기를 반환하고, 없으면 `close_state=closed`, 종료 닫기 결과, 잔여 위험 수락이 필요하지 않은 닫기 근거의 알려진 한계에 대해 메서드가 선택한 프로젝트 연속성 기록을 커밋합니다.
 7. `intent=cancel`은 `machine_action=accept`, `resolution_outcome=accepted`, `resolved_by_actor_source=local_user`, 호환 User Channel 출처를 가지며 현재 `Task`, 범위 리비전, Change Unit과 호환되는 현재 수락된 `judgment_kind=cancellation`을 요구합니다. 취소 권한이 없거나 호환되지 않으면 차단 분기를 반환합니다.
@@ -167,7 +168,7 @@ CloseTaskRequest:
 
 | 경우 | 상태 버전 효과 |
 |---|---|
-| `intent=check` | `dry_run=true`여도 항상 읽기 전용이며 상태를 증가시키지 않습니다. |
+| `intent=check` | `dry_run=true`여도 `project_state.state_version`을 증가시키지 않습니다. Session에 묶인 watcher는 준비 상태 관찰을 반환하기 전에 한정된 진단용 session-watch 관찰이나 watcher가 만든 미기록 변경 찾기를 기록할 수 있습니다. |
 | 성공한 종료 상태 변경 | `project_state.state_version`을 정확히 한 번 증가시킵니다. |
 | 상태 변경 `intent`의 커밋된 차단 결과 | 이 메서드와 저장 효과 담당 문서가 그 커밋된 차단 결과를 허용할 때 `project_state.state_version`을 정확히 한 번 증가시킵니다. |
 | 사전 확인 거절 또는 유효한 `dry_run` 미리보기 | 아무것도 증가시키지 않습니다. |
@@ -229,7 +230,8 @@ CloseTaskRequest:
 | `guard_required_hooks_missing` | `connection_capability` | guarded 또는 managed 닫기 경로에 필요한 hook 단계가 누락된 guard 설치가 있습니다. 이 차단 사유는 누락 단계, 호스트 종류, `terminal_action_required`, `can_resolve_in_chat`, `next_actions`를 보고합니다. |
 | `guard_degraded` | `connection_capability` | guarded 또는 managed 닫기 경로에 더 구체적인 guard 차단 사유로 처리되지 않는 degraded guard 설정 또는 건강 상태가 있고 현재 guard policy가 degraded 상태에서 닫기를 차단합니다. |
 | `guard_connection_unhealthy` | `connection_capability` | guarded 또는 managed 닫기 경로에 건강하지 않은 Agent Connection 상태 사실이 있습니다. |
-| `unresolved_unrecorded_changes` | `connection_capability` | guard 기록에 닫기 전에 조정해야 하는 해결되지 않은 미기록 Product Repository 변경이 있습니다. 이 차단 사유는 `owner_method=volicord.reconcile_changes`인 `next_actions`를 포함하며, `can_resolve_in_chat`은 현재 guarded 경로가 채팅 매개 사용자 경로로 진행할 수 있는지를 나타냅니다. |
+| `session_watch_unavailable` | `connection_capability` | managed 닫기 경로에 활성 Product Repository session watch가 필요하지만 선택된 watcher 상태가 `disabled`, `degraded`, 또는 `unavailable`입니다. |
+| `unresolved_unrecorded_changes` | `connection_capability` | guard 기록 또는 활성 session-watch 기록에 닫기 전에 조정해야 하는 해결되지 않은 미기록 Product Repository 변경이 있습니다. 이 차단 사유는 `owner_method=volicord.reconcile_changes`인 `next_actions`를 포함하며, `can_resolve_in_chat`은 현재 경로가 채팅 매개 사용자 경로로 진행할 수 있는지를 나타냅니다. |
 | `guard_write_readiness_missing_or_stale` | `write_compatibility` | guard 이벤트가 닫기 경로에 누락되었거나 오래된 쓰기 준비 상태를 감지했습니다. |
 | `evidence_claim_unsupported` | `evidence_claim` | 필요한 닫기 주장이 지원되는 증거 범위를 갖지 못했습니다. |
 | `evidence_claim_missing` | `evidence_claim` | 필요한 닫기 주장에 대한 현재 증거 범위 기록이 없습니다. |
@@ -253,21 +255,23 @@ CloseTaskRequest:
 조건:
 
 - 사전 확인이 성공했습니다.
-- 메서드가 읽기 전용 닫기 준비 상태 관찰 또는 종료 경로 평가에 도달했습니다.
+- 메서드가 닫기 준비 상태 관찰 또는 종료 경로 평가에 도달했습니다.
 - 요청한 경로에 하나 이상의 닫기 차단 사유 또는 종료 차단 사유가 있습니다.
 
 결과:
 
 - `blockers: CloseReadinessBlocker[]`를 담은 `CloseTaskResult(close_state=blocked)`를 반환할 수 있습니다.
-- `intent=check`는 차단 사유를 읽기 전용 관찰 데이터로 반환하며 차단 사유 행을 만들지 않습니다.
+- `intent=check`는 차단 사유를 응답 관찰 데이터로 반환하며 차단 사유 행을 만들지
+  않습니다. 세션 watch 진단 저장 효과가 있는 경우, 그 효과는 차단 사유 행 지속과
+  별개이며 [저장 효과](../storage-effects.md)가 담당합니다.
 - `dry_run=false`인 상태 변경 `intent`는 이 메서드와 [저장 효과](../storage-effects.md)가 그 효과를 허용할 때만 차단 결과를 커밋할 수 있습니다.
 
 메서드별 차단 사유 분기:
 
 | 분기 | 생성 규칙 |
 |---|---|
-| `intent=check` | 현재 닫기 준비 상태 차단 사유를 읽기 전용 관찰 데이터로 반환합니다. |
-| `intent=complete` | 완료 경로가 닫기 준비 상태 평가에 도달했고 담당 문서가 정의한 닫기 요구사항이 해결되지 않았을 때 닫기 차단 사유를 만듭니다. `guarded` 또는 `managed` 모드에서는 guard 상태, 해결되지 않은 미기록 변경, guard가 감지한 쓰기 준비 상태 차단 사유도 포함합니다. |
+| `intent=check` | 현재 닫기 준비 상태 차단 사유를 응답 관찰 데이터로 반환합니다. |
+| `intent=complete` | 완료 경로가 닫기 준비 상태 평가에 도달했고 담당 문서가 정의한 닫기 요구사항이 해결되지 않았을 때 닫기 차단 사유를 만듭니다. `guarded` 또는 `managed` 모드에서는 guard 상태, 해결되지 않은 미기록 변경, session watch, guard가 감지한 쓰기 준비 상태 차단 사유도 포함합니다. `mcp_only` 모드에서는 watcher가 만든 해결되지 않은 미기록 변경 찾기도 watcher가 활성일 때 닫기를 막습니다. |
 | `intent=cancel` | 취소 권한 누락이나 비호환을 포함해 취소 전용 종료 제약에 대해서만 차단 사유를 만듭니다. 완료 전용 증거, 최종 수락, 잔여 위험 공백은 그 자체로 취소를 막지 않습니다. |
 | `intent=supersede` | 대체 전용 종료 제약에 대해서만 차단 사유를 만듭니다. 완료 전용 증거, 최종 수락, 잔여 위험 공백은 그 자체로 대체를 막지 않습니다. |
 

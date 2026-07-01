@@ -45,16 +45,16 @@ use volicord_types::{
     ReconcileChangesResult, RecordId, RecordRunRequest, RecordRunResult, RecordUserJudgmentPayload,
     RecordUserJudgmentRequest, RedactionState, RequestedMode, RequiredNullable, ResidualRisk,
     ResumePolicy, RiskAcceptanceCoverage, RiskId, RunId, RunSummary, SensitiveActionRequirement,
-    StageArtifactRequest, StageArtifactResult, StagedArtifactHandle, StagedArtifactHandleId,
-    StateRecordKind, StateRecordRef, StatusCloseState, StatusInclude, StatusRequest, StorageRef,
-    TaskId, TaskLifecyclePhase, TaskLifecycleState, TaskMode, TaskResult, ToolEnvelope,
-    ToolResultBase, UnrecordedChangeFinding, UnrecordedChangeId, UnrecordedChangeResolutionBasis,
-    UnrecordedChangeResolutionRequest, UnrecordedChangeResolutionSummary, UnrecordedChangeStatus,
-    UpdateScopeRequest, UserJudgment, UserJudgmentContext, UserJudgmentId, UserJudgmentOption,
-    UserJudgmentOptionAction, UserJudgmentOptionId, UserJudgmentOptionInput,
-    UserJudgmentResolution, UserJudgmentStatus, UtcTimestamp, WriteCheckAttemptScope,
-    WriteCheckEffect, WriteCheckId, WriteCheckStateSummary, WriteCheckStatus, WriteCheckSummary,
-    WriteDecisionCategory, WriteDecisionReason,
+    SessionWatchStatus, StageArtifactRequest, StageArtifactResult, StagedArtifactHandle,
+    StagedArtifactHandleId, StateRecordKind, StateRecordRef, StatusCloseState, StatusInclude,
+    StatusRequest, StorageRef, TaskId, TaskLifecyclePhase, TaskLifecycleState, TaskMode,
+    TaskResult, ToolEnvelope, ToolResultBase, UnrecordedChangeFinding, UnrecordedChangeId,
+    UnrecordedChangeResolutionBasis, UnrecordedChangeResolutionRequest,
+    UnrecordedChangeResolutionSummary, UnrecordedChangeStatus, UpdateScopeRequest, UserJudgment,
+    UserJudgmentContext, UserJudgmentId, UserJudgmentOption, UserJudgmentOptionAction,
+    UserJudgmentOptionId, UserJudgmentOptionInput, UserJudgmentResolution, UserJudgmentStatus,
+    UtcTimestamp, WriteCheckAttemptScope, WriteCheckEffect, WriteCheckId, WriteCheckStateSummary,
+    WriteCheckStatus, WriteCheckSummary, WriteDecisionCategory, WriteDecisionReason,
 };
 
 use crate::pipeline::{
@@ -110,6 +110,7 @@ mod judgment;
 mod prepare_write;
 mod reconcile_changes;
 mod record_run;
+mod session_watch;
 mod stage_artifact;
 mod status;
 #[cfg(test)]
@@ -445,7 +446,15 @@ fn prepare_or_response(
         invocation,
         policy,
     })? {
-        PipelinePreflightOutcome::Prepared(prepared) => Ok(Ok(*prepared)),
+        PipelinePreflightOutcome::Prepared(prepared) => {
+            let prepared = *prepared;
+            session_watch::initialize_session_watch_baseline(
+                &prepared.store,
+                &prepared.context.verified_invocation,
+                &utc_timestamp(service.now()),
+            )?;
+            Ok(Ok(prepared))
+        }
         PipelinePreflightOutcome::Response(response) => Ok(Err(*response)),
     }
 }

@@ -7,7 +7,7 @@
 이 문서는 기준 범위의 `volicord.status` 메서드 동작을 담당합니다.
 
 - 메서드별 필수 입력, 접근 요구사항, 상태 버전 동작, 결과 분기, `dry_run` 동작
-- 현재 Core 상태에 대한 읽기 전용 상태 조회 동작
+- 현재 Core 상태 조회 동작과 상태 버전 효과 없음 경계
 - 상태 조회 예시
 
 ## 담당하지 않는 것
@@ -21,7 +21,7 @@
 
 ## 목적
 
-`volicord.status`는 Core 상태의 읽기 전용 현재 위치 보기를 반환합니다. 현재 `Task` 요약, 차단 사유, 대기 중인 사용자 판단, `Write Check` 요약, 증거 요약, 닫기 상태, 닫기 준비 상태 발견 사항, guard 상태, 프로젝트 연속성 요약, 보장 표시, 다음 안전한 행동을 포함할 수 있습니다.
+`volicord.status`는 Core 상태의 현재 위치 보기를 반환합니다. 현재 `Task` 요약, 차단 사유, 대기 중인 사용자 판단, `Write Check` 요약, 증거 요약, 닫기 상태, 닫기 준비 상태 발견 사항, guard 상태, 프로젝트 연속성 요약, 보장 표시, 다음 안전한 행동을 포함할 수 있습니다.
 
 ## 필수 입력
 
@@ -100,7 +100,7 @@ StatusRequest:
 - 호스트 지침, 연결 모드, 생성된 텍스트만으로는 보장이 생기지 않습니다. 협력형 전용 배포는 `detective`를 주장하면 안 됩니다.
 - `GuaranteeDisplay.capability_refs`는 해당 참조를 사용할 수 있을 때 호출 바인딩, Agent Connection, 관찰 사실을 식별해야 합니다.
 
-`include.close=true`와 [`volicord.close_task`](method-close-task.md)의 `intent=check`는 같은 닫기 준비 상태 계산을 사용합니다. `volicord.status`는 읽기 전용으로 남으며 재실행 행, 이벤트, 상태 변경, 닫기 변경, 상태 버전 증가를 만들지 않습니다.
+`include.close=true`와 [`volicord.close_task`](method-close-task.md)의 `intent=check`는 같은 닫기 준비 상태 계산을 사용합니다. `volicord.status`는 replay 행, event, Core 상태 변경, 닫기 변경, 상태 버전 증가를 만들지 않습니다. Session에 묶인 Agent Connection으로 호출되면 런타임은 이후 메서드 경계 확인에서 Product Repository 스냅샷을 비교할 수 있도록 session-watch 진단 기록을 초기화할 수 있습니다.
 
 ## 메서드 결과 필드
 
@@ -144,7 +144,7 @@ StatusRequest:
 
 ## `dry_run` 동작
 
-이 읽기 전용 메서드에서는 `dry_run=true`가 `ToolDryRunResponse` 분기를 만들지 않습니다.
+이 읽기형 메서드에서는 `dry_run=true`가 `ToolDryRunResponse` 분기를 만들지 않습니다.
 
 유효한 요청은 같은 `StatusResult` 형태를 반환합니다.
 
@@ -153,7 +153,7 @@ StatusRequest:
 
 ## 저장 효과
 
-이 메서드는 읽기 전용입니다. 정확한 저장 효과 없음 의미는 아래 저장 담당 문서가 담당합니다.
+이 메서드는 Core 상태 변경, event, replay 행, 닫기 변경, 상태 버전 증가를 지속 저장하지 않습니다. Session에 묶인 Agent Connection으로 호출되면 위에서 설명한 것처럼 런타임 session-watch 진단 기록이 초기화될 수 있습니다. 정확한 지속 저장 의미는 아래 저장 담당 문서가 담당합니다.
 
 아래 예시는 메서드 안에서만 성립하도록 짧게 구성했습니다. 대표 응답은 상태 조회 결과 분기, 관찰된 참조, 상태 버전, 현재 적용 범위, 현재 적용 Change Unit, 닫기 상태, 다음 행동을 보여 주는 데 필요한 필드로 축약했습니다.
 

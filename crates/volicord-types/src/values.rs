@@ -657,6 +657,28 @@ impl GuardEffectiveStatus {
     }
 }
 
+/// Session-level Product Repository watch availability.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum SessionWatchStatus {
+    Disabled,
+    Active,
+    Degraded,
+    Unavailable,
+}
+
+impl SessionWatchStatus {
+    /// Returns the stable value name for this session-watch status.
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Disabled => "disabled",
+            Self::Active => "active",
+            Self::Degraded => "degraded",
+            Self::Unavailable => "unavailable",
+        }
+    }
+}
+
 /// Derived prompt-capture availability for guarded User Channel chat commands.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]

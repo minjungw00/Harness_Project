@@ -28,7 +28,7 @@ struct PlannedJudgment {
 }
 
 #[derive(Debug, Clone)]
-struct ResolutionCandidate {
+pub(super) struct ResolutionCandidate {
     basis: UnrecordedChangeResolutionBasis,
     actor_source: ActorSource,
     capture_basis: String,
@@ -82,6 +82,16 @@ impl CoreService {
         };
         let state_version = prepared.context.project_state.state_version;
         let now = utc_timestamp(self.now());
+        if !request.envelope.dry_run {
+            if let Err(error) = session_watch::run_session_watch_check(
+                &prepared.store,
+                &prepared.context.verified_invocation,
+                Some(&request.task_id),
+                &now,
+            ) {
+                return core_error_response(&request.envelope, Some(state_version), error);
+            }
+        }
         let plan = match plan_reconcile_changes(
             self,
             &prepared.store,
@@ -266,13 +276,14 @@ fn plan_reconcile_changes(
         }
 
         if let Some(candidate) =
-            deterministic_resolution(record, &runs, &write_checks)?.or_else(|| {
-                accepted_resolution_candidate(
-                    &unrecorded_ref,
-                    &resolved_authorities,
-                    &request.task_id,
-                )
-            })
+            deterministic_resolution(store, record, &request.task_id, &runs, &write_checks)?
+                .or_else(|| {
+                    accepted_resolution_candidate(
+                        &unrecorded_ref,
+                        &resolved_authorities,
+                        &request.task_id,
+                    )
+                })
         {
             planned_resolutions.push(PlannedResolution {
                 record: record.clone(),
@@ -545,7 +556,9 @@ fn validate_requested_resolution(
 }
 
 fn deterministic_resolution(
+    store: &CoreProjectStore,
     record: &UnrecordedChangeRecord,
+    task_id: &TaskId,
     runs: &[RunObservedChangesRecord],
     write_checks: &[WriteCheckRecord],
 ) -> CoreResult<Option<ResolutionCandidate>> {
@@ -558,6 +571,9 @@ fn deterministic_resolution(
             )))
         }
     };
+    if let Some(candidate) = session_watch::watcher_reverted_resolution(store, record)? {
+        return Ok(Some(candidate));
+    }
     if observed_paths.is_empty() {
         return Ok(Some(system_resolution(
             UnrecordedChangeResolutionBasis::NotProductChange,
@@ -573,6 +589,11 @@ fn deterministic_resolution(
             UnrecordedChangeResolutionBasis::RecordedAsExpectedWrite,
             "core_deterministic_recorded_run",
         )));
+    }
+    if let Some(candidate) =
+        session_watch::watcher_expected_write_resolution(store, record, task_id)?
+    {
+        return Ok(Some(candidate));
     }
     for write_check in write_checks {
         if write_check.status != "consumed" || write_check.consumed_by_run_id.is_none() {
@@ -596,7 +617,7 @@ fn deterministic_resolution(
     Ok(None)
 }
 
-fn system_resolution(
+pub(super) fn system_resolution(
     basis: UnrecordedChangeResolutionBasis,
     capture_basis: &str,
 ) -> ResolutionCandidate {
@@ -692,7 +713,7 @@ fn same_state_record(left: &StateRecordRef, right: &StateRecordRef) -> bool {
         && left.project_id == right.project_id
 }
 
-fn observed_paths(record: &UnrecordedChangeRecord) -> Result<Vec<String>, ()> {
+pub(super) fn observed_paths(record: &UnrecordedChangeRecord) -> Result<Vec<String>, ()> {
     let paths = serde_json::from_str::<Vec<String>>(&record.observed_paths_json).map_err(|_| ())?;
     if paths.iter().any(|path| path.trim().is_empty()) {
         return Err(());
@@ -910,6 +931,7 @@ fn adjusted_guard_health(
     .map_err(PlanError::Core)?;
     let mut guard_health = close_task::guard_health_summary_from_record(record)?;
     if let Some(summary) = guard_health.as_mut() {
+        session_watch::apply_session_watch_status(store, verified_invocation, summary)?;
         let resolved_for_connection = planned_resolutions
             .iter()
             .filter(|resolution| resolution.record.connection_internal_id == connection_id.as_str())

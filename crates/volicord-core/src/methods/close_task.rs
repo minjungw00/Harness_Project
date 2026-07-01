@@ -50,6 +50,22 @@ impl CoreService {
             }
         }
         let plan_now = utc_timestamp(self.now());
+        if matches!(request.intent, CloseIntent::Check | CloseIntent::Complete)
+            && !request.envelope.dry_run
+        {
+            if let Err(error) = session_watch::run_session_watch_check(
+                &prepared.store,
+                &prepared.context.verified_invocation,
+                Some(&request.task_id),
+                &plan_now,
+            ) {
+                return plan_error_response(
+                    &request.envelope,
+                    &prepared.context.project_state,
+                    PlanError::Core(error),
+                );
+            }
+        }
 
         if request.intent == CloseIntent::Check {
             let guarantee_profile = match prepared.store.project_enforcement_profile() {
@@ -792,7 +808,11 @@ fn projected_guard_health(
             error,
         )))
     })?;
-    guard_health_summary_from_record(record)
+    let mut summary = guard_health_summary_from_record(record)?;
+    if let Some(summary) = summary.as_mut() {
+        session_watch::apply_session_watch_status(store, invocation, summary)?;
+    }
+    Ok(summary)
 }
 
 const REQUIRED_GUARD_HOOK_PHASES: &[&str] = &[
@@ -962,6 +982,9 @@ pub(super) fn guard_health_summary_from_record(
         prompt_capture_available,
         mcp_connection_healthy,
         mcp_connection_status,
+        session_watch_status: SessionWatchStatus::Disabled,
+        last_session_watch_checked_at: RequiredNullable::null(),
+        session_watch_detail: RequiredNullable::null(),
         unresolved_unrecorded_change_count: record.unresolved_unrecorded_changes.len() as u64,
         missing_or_stale_write_readiness,
     }))
@@ -1218,14 +1241,62 @@ fn guard_close_blockers(
     let Some(summary) = context.guard_health.as_ref() else {
         return Vec::new();
     };
-    if !matches!(summary.guard_mode, GuardMode::Guarded | GuardMode::Managed) {
+    let mcp_only_watch_blocks = summary.guard_mode == GuardMode::McpOnly
+        && summary.session_watch_status == SessionWatchStatus::Active
+        && summary.unresolved_unrecorded_change_count > 0;
+    if !matches!(summary.guard_mode, GuardMode::Guarded | GuardMode::Managed)
+        && !mcp_only_watch_blocks
+    {
         return Vec::new();
     }
 
     let task_ref = task_ref_for_close(request, project_state.state_version);
     let mut blockers = Vec::new();
+    if summary.guard_mode == GuardMode::McpOnly {
+        if summary.unresolved_unrecorded_change_count > 0 {
+            let can_resolve_in_chat = user_channel_can_resolve_in_chat(Some(summary));
+            blockers.push(close_blocker_with_resolution(
+                CloseReadinessBlockerCategory::ConnectionCapability,
+                "unresolved_unrecorded_changes",
+                "Observed Product Repository changes still need reconciliation.",
+                can_resolve_in_chat,
+                !can_resolve_in_chat,
+                vec![task_ref.clone()],
+                vec![NextActionSummary {
+                    action_kind: NextActionKind::ReconcileChanges,
+                    owner_method: Some(MethodName::ReconcileChanges),
+                    label:
+                        "Run reconciliation for observed Product Repository changes before close."
+                            .to_owned(),
+                    blocking_question: Some(
+                        "Does the user accept any remaining observed Product Repository change as intentional?"
+                            .to_owned(),
+                    ),
+                    required_refs: vec![task_ref],
+                }],
+            ));
+        }
+        return blockers;
+    }
     if let Some(blocker) = guard_installation_close_blocker(summary, &task_ref) {
         blockers.push(blocker);
+    }
+    if summary.guard_mode == GuardMode::Managed
+        && summary.session_watch_status != SessionWatchStatus::Active
+    {
+        blockers.push(close_blocker(
+            CloseReadinessBlockerCategory::ConnectionCapability,
+            "session_watch_unavailable",
+            "Managed close requires an active Product Repository session watch.",
+            vec![task_ref.clone()],
+            vec![NextActionSummary {
+                action_kind: NextActionKind::CloseTask,
+                owner_method: None,
+                label: "Repair or retry session watch before completing the Task.".to_owned(),
+                blocking_question: None,
+                required_refs: vec![task_ref.clone()],
+            }],
+        ));
     }
     if !summary.mcp_connection_healthy {
         blockers.push(close_blocker_with_resolution(

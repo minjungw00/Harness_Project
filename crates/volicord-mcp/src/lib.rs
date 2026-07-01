@@ -285,16 +285,22 @@ pub struct McpDerivedInvocationContext {
     pub actor_source: ActorSource,
     pub operation_category: OperationCategory,
     pub invocation_binding_basis: String,
+    pub session_id: Option<String>,
 }
 
 impl McpDerivedInvocationContext {
     fn core_invocation(&self) -> InvocationContext {
-        InvocationContext::new(
+        let invocation = InvocationContext::new(
             self.project_id.clone(),
             self.actor_source.clone(),
             self.operation_category,
             self.invocation_binding_basis.clone(),
-        )
+        );
+        if let Some(session_id) = self.session_id.as_ref() {
+            invocation.with_session_id(session_id.clone())
+        } else {
+            invocation
+        }
     }
 }
 
@@ -338,6 +344,7 @@ impl McpAdapter {
         &self,
         envelope: &ToolEnvelope,
         operation_category: OperationCategory,
+        session_id: Option<&str>,
     ) -> McpDerivedInvocationContext {
         McpDerivedInvocationContext {
             project_id: envelope.project_id.clone(),
@@ -346,6 +353,7 @@ impl McpAdapter {
             ),
             operation_category,
             invocation_binding_basis: self.context.invocation_binding_basis.clone(),
+            session_id: session_id.map(str::to_owned),
         }
     }
 
@@ -355,17 +363,30 @@ impl McpAdapter {
         tool_name: &str,
         params: Value,
     ) -> Result<PipelineResponse, McpAdapterError> {
+        self.call_tool_for_session(tool_name, params, None)
+    }
+
+    fn call_tool_for_session(
+        &self,
+        tool_name: &str,
+        params: Value,
+        session_id: Option<&str>,
+    ) -> Result<PipelineResponse, McpAdapterError> {
         match tool_name {
-            "volicord.intake" => self.call_intake(tool_name, params),
-            "volicord.update_scope" => self.call_update_scope(tool_name, params),
-            "volicord.status" => self.call_status(tool_name, params),
-            "volicord.prepare_write" => self.call_prepare_write(tool_name, params),
-            "volicord.stage_artifact" => self.call_stage_artifact(tool_name, params),
-            "volicord.record_run" => self.call_record_run(tool_name, params),
-            "volicord.request_user_judgment" => self.call_request_user_judgment(tool_name, params),
-            "volicord.reconcile_changes" => self.call_reconcile_changes(tool_name, params),
-            CHECK_CLOSE_TOOL_NAME => self.call_check_close(tool_name, params),
-            "volicord.close_task" => self.call_close_task(tool_name, params),
+            "volicord.intake" => self.call_intake(tool_name, params, session_id),
+            "volicord.update_scope" => self.call_update_scope(tool_name, params, session_id),
+            "volicord.status" => self.call_status(tool_name, params, session_id),
+            "volicord.prepare_write" => self.call_prepare_write(tool_name, params, session_id),
+            "volicord.stage_artifact" => self.call_stage_artifact(tool_name, params, session_id),
+            "volicord.record_run" => self.call_record_run(tool_name, params, session_id),
+            "volicord.request_user_judgment" => {
+                self.call_request_user_judgment(tool_name, params, session_id)
+            }
+            "volicord.reconcile_changes" => {
+                self.call_reconcile_changes(tool_name, params, session_id)
+            }
+            CHECK_CLOSE_TOOL_NAME => self.call_check_close(tool_name, params, session_id),
+            "volicord.close_task" => self.call_close_task(tool_name, params, session_id),
             other => Err(McpAdapterError::UnknownTool(other.to_owned())),
         }
     }
@@ -374,6 +395,7 @@ impl McpAdapter {
         &self,
         tool_name: &str,
         params: Value,
+        session_id: Option<&str>,
     ) -> Result<PipelineResponse, McpAdapterError> {
         let prepared: PreparedMcpArguments<McpIntakeArguments> =
             self.prepare_mcp_arguments(tool_name, params)?;
@@ -395,6 +417,7 @@ impl McpAdapter {
                 initial_context_refs: args.initial_context_refs,
             },
             CoreService::intake,
+            session_id,
         )
     }
 
@@ -402,6 +425,7 @@ impl McpAdapter {
         &self,
         tool_name: &str,
         params: Value,
+        session_id: Option<&str>,
     ) -> Result<PipelineResponse, McpAdapterError> {
         let prepared: PreparedMcpArguments<McpUpdateScopeArguments> =
             self.prepare_mcp_arguments(tool_name, params)?;
@@ -429,6 +453,7 @@ impl McpAdapter {
                 related_scope_decision_refs: args.related_scope_decision_refs,
             },
             CoreService::update_scope,
+            session_id,
         )
     }
 
@@ -436,6 +461,7 @@ impl McpAdapter {
         &self,
         tool_name: &str,
         params: Value,
+        session_id: Option<&str>,
     ) -> Result<PipelineResponse, McpAdapterError> {
         let prepared: PreparedMcpArguments<McpStatusArguments> =
             self.prepare_mcp_arguments(tool_name, params)?;
@@ -454,6 +480,7 @@ impl McpAdapter {
                 include: args.detail.include(),
             },
             CoreService::status,
+            session_id,
         )
     }
 
@@ -461,6 +488,7 @@ impl McpAdapter {
         &self,
         tool_name: &str,
         params: Value,
+        session_id: Option<&str>,
     ) -> Result<PipelineResponse, McpAdapterError> {
         let prepared: PreparedMcpArguments<McpPrepareWriteArguments> =
             self.prepare_mcp_arguments(tool_name, params)?;
@@ -485,6 +513,7 @@ impl McpAdapter {
                 baseline_ref: args.baseline_ref,
             },
             CoreService::prepare_write,
+            session_id,
         )
     }
 
@@ -492,6 +521,7 @@ impl McpAdapter {
         &self,
         tool_name: &str,
         params: Value,
+        session_id: Option<&str>,
     ) -> Result<PipelineResponse, McpAdapterError> {
         let prepared: PreparedMcpArguments<McpStageArtifactArguments> =
             self.prepare_mcp_arguments(tool_name, params)?;
@@ -517,6 +547,7 @@ impl McpAdapter {
                 relation_hint: args.relation_hint,
             },
             CoreService::stage_artifact,
+            session_id,
         )
     }
 
@@ -524,6 +555,7 @@ impl McpAdapter {
         &self,
         tool_name: &str,
         params: Value,
+        session_id: Option<&str>,
     ) -> Result<PipelineResponse, McpAdapterError> {
         let prepared: PreparedMcpArguments<McpRecordRunArguments> =
             self.prepare_mcp_arguments(tool_name, params)?;
@@ -553,6 +585,7 @@ impl McpAdapter {
                 close_assessment: args.close_assessment,
             },
             CoreService::record_run,
+            session_id,
         )
     }
 
@@ -560,6 +593,7 @@ impl McpAdapter {
         &self,
         tool_name: &str,
         params: Value,
+        session_id: Option<&str>,
     ) -> Result<PipelineResponse, McpAdapterError> {
         let prepared: PreparedMcpArguments<McpRequestUserJudgmentArguments> =
             self.prepare_mcp_arguments(tool_name, params)?;
@@ -588,6 +622,7 @@ impl McpAdapter {
                 expires_at: args.expires_at,
             },
             CoreService::request_user_judgment,
+            session_id,
         )
     }
 
@@ -595,6 +630,7 @@ impl McpAdapter {
         &self,
         tool_name: &str,
         params: Value,
+        session_id: Option<&str>,
     ) -> Result<PipelineResponse, McpAdapterError> {
         let prepared: PreparedMcpArguments<McpReconcileChangesArguments> =
             self.prepare_mcp_arguments(tool_name, params)?;
@@ -614,6 +650,7 @@ impl McpAdapter {
                 resolution_requests: args.resolution_requests,
             },
             CoreService::reconcile_changes,
+            session_id,
         )
     }
 
@@ -621,6 +658,7 @@ impl McpAdapter {
         &self,
         tool_name: &str,
         params: Value,
+        session_id: Option<&str>,
     ) -> Result<PipelineResponse, McpAdapterError> {
         let prepared: PreparedMcpArguments<McpCheckCloseArguments> =
             self.prepare_mcp_arguments(tool_name, params)?;
@@ -642,6 +680,7 @@ impl McpAdapter {
                 user_note: RequiredNullable::null(),
             },
             CoreService::close_task,
+            session_id,
         )
     }
 
@@ -649,6 +688,7 @@ impl McpAdapter {
         &self,
         tool_name: &str,
         params: Value,
+        session_id: Option<&str>,
     ) -> Result<PipelineResponse, McpAdapterError> {
         let prepared: PreparedMcpArguments<McpCloseTaskArguments> =
             self.prepare_mcp_arguments(tool_name, params)?;
@@ -671,6 +711,7 @@ impl McpAdapter {
                 user_note: args.user_note,
             },
             CoreService::close_task,
+            session_id,
         )
     }
 
@@ -679,6 +720,7 @@ impl McpAdapter {
         tool_name: &str,
         request: T,
         call: F,
+        session_id: Option<&str>,
     ) -> Result<PipelineResponse, McpAdapterError>
     where
         T: MethodOperationCategory + HasEnvelope,
@@ -690,8 +732,11 @@ impl McpAdapter {
     {
         let operation_category = request.operation_category();
         self.ensure_mode_allows(tool_name, operation_category)?;
-        let invocation =
-            self.derive_invocation_context(request_envelope(&request), operation_category);
+        let invocation = self.derive_invocation_context(
+            request_envelope(&request),
+            operation_category,
+            session_id,
+        );
         call(&self.core, request, invocation.core_invocation()).map_err(McpAdapterError::Core)
     }
 
@@ -1466,6 +1511,7 @@ impl StreamableHttpServer {
                     if response.get("result").is_some() {
                         match generate_http_session_id() {
                             Ok(session_id) => {
+                                state.session_id = session_id.clone();
                                 self.sessions.insert(session_id.clone(), state);
                                 cors_headers.push(("Mcp-Session-Id".to_owned(), session_id));
                             }
@@ -2252,11 +2298,12 @@ enum ConnectionPhase {
     Ready,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct ConnectionState {
     phase: ConnectionPhase,
     client_supports_elicitation: bool,
     next_server_request_id: u64,
+    session_id: String,
 }
 
 impl Default for ConnectionState {
@@ -2265,6 +2312,7 @@ impl Default for ConnectionState {
             phase: ConnectionPhase::AwaitingInitialize,
             client_supports_elicitation: false,
             next_server_request_id: 1,
+            session_id: generated_metadata_id("session", "mcp", "stdio"),
         }
     }
 }
@@ -2438,18 +2486,19 @@ where
                 Err(error) => return Ok(json_rpc_error_for_adapter(response_id, error)),
             }
         }
-        "tools/call" => match call_tool_result_with_elicitation(
-            adapter,
-            &response_id,
-            request.params,
-            state.client_supports_elicitation,
-            &mut state.next_server_request_id,
-            lines,
-            writer,
-        )? {
-            Ok(result) => result,
-            Err(error) => return Ok(error),
-        },
+        "tools/call" => {
+            match call_tool_result_with_elicitation(
+                adapter,
+                &response_id,
+                request.params,
+                state,
+                lines,
+                writer,
+            )? {
+                Ok(result) => result,
+                Err(error) => return Ok(error),
+            }
+        }
         _ => {
             return Ok(json_rpc_error(
                 response_id,
@@ -2588,8 +2637,7 @@ fn call_tool_result_with_elicitation<R, W>(
     adapter: &McpAdapter,
     id: &Value,
     params: Option<Value>,
-    client_supports_elicitation: bool,
-    server_request_sequence: &mut u64,
+    state: &mut ConnectionState,
     lines: &mut io::Lines<R>,
     writer: &mut W,
 ) -> Result<Result<Value, Value>, McpAdapterError>
@@ -2640,14 +2688,15 @@ where
         }
     };
 
+    let session_id = state.session_id.clone();
     let output = if PUBLIC_METHOD_TOOL_NAMES.contains(&tool_name) {
-        match adapter.call_tool(tool_name, arguments) {
+        match adapter.call_tool_for_session(tool_name, arguments, Some(&session_id)) {
             Ok(response) if tool_name == "volicord.request_user_judgment" => {
                 user_judgment_tool_output(
                     adapter,
                     response,
-                    client_supports_elicitation,
-                    server_request_sequence,
+                    state.client_supports_elicitation,
+                    &mut state.next_server_request_id,
                     lines,
                     writer,
                 )?

@@ -18,10 +18,11 @@ use volicord_store::{
     },
     core_pipeline::{CoreProjectStore, StorageEffectCounts, TaskRevisionRecord},
     guards::{
-        insert_agent_session, insert_guard_event, insert_unrecorded_change,
-        observe_guard_installation, unrecorded_change, upsert_guard_installation,
-        AgentSessionInsert, GuardEventInsert, GuardInstallationObservation,
-        GuardInstallationUpsert, UnrecordedChangeInsert, UnrecordedChangeRecord,
+        insert_agent_session, insert_expected_write, insert_guard_event, insert_unrecorded_change,
+        list_unresolved_unrecorded_changes, observe_guard_installation, unrecorded_change,
+        upsert_guard_installation, AgentSessionInsert, ExpectedWriteInsert, GuardEventInsert,
+        GuardInstallationObservation, GuardInstallationUpsert, UnrecordedChangeInsert,
+        UnrecordedChangeRecord,
     },
     sqlite::open_project_state_database,
 };
@@ -14000,6 +14001,253 @@ fn mcp_only_close_does_not_receive_guarded_unrecorded_change_blocker() -> Result
 }
 
 #[test]
+fn mcp_only_watcher_detects_bypass_file_changes() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    record_guard_installation(&harness, "watch_mcp_only", "mcp_only", "configured", "{}")?;
+    let (task_id, _, _) = create_close_ready_task(&harness, "watch_mcp_only")?;
+    let session_id = "session_watch_mcp_only";
+    initialize_watch_baseline(&harness, &task_id, session_id, "mcp_only_seed")?;
+
+    write_product_file(&harness, "src/watch.txt", "changed outside guard\n")?;
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_watch_mcp_only_detect",
+            idempotency_key: None,
+            dry_run: false,
+            expected_state_version: None,
+            task_id: &task_id,
+            intent: CloseIntent::Check,
+            close_reason: None,
+            superseding_task_id: None,
+        }),
+        invocation_with_session(OperationCategory::Read, session_id),
+    )?;
+
+    assert_eq!(response.response_value["close_state"], "blocked");
+    assert_close_blocker(&response.response_value, "unresolved_unrecorded_changes");
+    assert_eq!(
+        response.response_value["guard_health"]["guard_mode"],
+        "mcp_only"
+    );
+    assert_eq!(
+        response.response_value["guard_health"]["session_watch_status"],
+        "active"
+    );
+    assert_eq!(
+        response.response_value["guard_health"]["unresolved_unrecorded_change_count"],
+        1
+    );
+    let changes = unresolved_changes_for_connection(&harness)?;
+    assert_eq!(changes.len(), 1);
+    let detection: Value = serde_json::from_str(&changes[0].detection_json)?;
+    assert_eq!(detection["source"], "volicord_session_watch");
+    assert_eq!(detection["does_not_prevent_writes"], true);
+    assert_eq!(detection["does_not_identify_actor"], true);
+    assert!(!changes[0].detection_json.contains("changed outside guard"));
+    Ok(())
+}
+
+#[test]
+fn guarded_expected_write_does_not_create_duplicate_watcher_blocker() -> Result<(), Box<dyn Error>>
+{
+    let harness = MethodHarness::new()?;
+    let guard_installation_id =
+        record_guard_installation(&harness, "watch_expected", "guarded", "active", "{}")?;
+    let (task_id, change_unit_id, _) = create_close_ready_task(&harness, "watch_expected")?;
+    let session_id = "session_watch_expected";
+    initialize_watch_baseline(&harness, &task_id, session_id, "expected_seed")?;
+    insert_expected_write_for_paths(
+        &harness,
+        &guard_installation_id,
+        session_id,
+        &task_id,
+        &change_unit_id,
+        "watch_expected",
+        &["src/watch.txt"],
+    )?;
+
+    write_product_file(&harness, "src/watch.txt", "covered guarded write\n")?;
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_watch_expected_check",
+            idempotency_key: None,
+            dry_run: false,
+            expected_state_version: None,
+            task_id: &task_id,
+            intent: CloseIntent::Check,
+            close_reason: None,
+            superseding_task_id: None,
+        }),
+        invocation_with_session(OperationCategory::Read, session_id),
+    )?;
+
+    assert_eq!(response.response_value["close_state"], "ready");
+    assert_no_close_blocker(&response.response_value, "unresolved_unrecorded_changes");
+    assert_eq!(
+        response.response_value["guard_health"]["session_watch_status"],
+        "active"
+    );
+    assert!(unresolved_changes_for_connection(&harness)?.is_empty());
+    Ok(())
+}
+
+#[test]
+fn guarded_hook_missing_write_is_detected_by_watcher() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    record_guard_installation(
+        &harness,
+        "watch_guarded_fallback",
+        "guarded",
+        "active",
+        "{}",
+    )?;
+    let (task_id, _, _) = create_close_ready_task(&harness, "watch_guarded_fallback")?;
+    let session_id = "session_watch_guarded_fallback";
+    initialize_watch_baseline(&harness, &task_id, session_id, "guarded_fallback_seed")?;
+
+    write_product_file(&harness, "src/watch.txt", "guard hook skipped this write\n")?;
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_watch_guarded_fallback",
+            idempotency_key: None,
+            dry_run: false,
+            expected_state_version: None,
+            task_id: &task_id,
+            intent: CloseIntent::Check,
+            close_reason: None,
+            superseding_task_id: None,
+        }),
+        invocation_with_session(OperationCategory::Read, session_id),
+    )?;
+
+    assert_eq!(response.response_value["close_state"], "blocked");
+    assert_close_blocker(&response.response_value, "unresolved_unrecorded_changes");
+    assert_eq!(
+        response.response_value["guard_health"]["guard_mode"],
+        "guarded"
+    );
+    assert_eq!(unresolved_changes_for_connection(&harness)?.len(), 1);
+    Ok(())
+}
+
+#[test]
+fn watcher_reverted_change_auto_resolves() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    record_guard_installation(&harness, "watch_revert", "mcp_only", "configured", "{}")?;
+    let (task_id, _, after_final) = create_close_ready_task(&harness, "watch_revert")?;
+    let session_id = "session_watch_revert";
+    write_product_file(&harness, "src/watch.txt", "original\n")?;
+    initialize_watch_baseline(&harness, &task_id, session_id, "revert_seed")?;
+    write_product_file(&harness, "src/watch.txt", "changed\n")?;
+    let blocked = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_watch_revert_detect",
+            idempotency_key: None,
+            dry_run: false,
+            expected_state_version: None,
+            task_id: &task_id,
+            intent: CloseIntent::Check,
+            close_reason: None,
+            superseding_task_id: None,
+        }),
+        invocation_with_session(OperationCategory::Read, session_id),
+    )?;
+    assert_close_blocker(&blocked.response_value, "unresolved_unrecorded_changes");
+
+    write_product_file(&harness, "src/watch.txt", "original\n")?;
+    let response = harness.service.reconcile_changes(
+        reconcile_changes_request(
+            "req_watch_revert_reconcile",
+            "idem_watch_revert_reconcile",
+            Some(after_final),
+            &task_id,
+            Vec::new(),
+        ),
+        invocation_with_session(OperationCategory::AgentWorkflow, session_id),
+    )?;
+
+    assert_eq!(
+        response.response_value["resolved_changes"][0]["resolution_basis"],
+        "reverted"
+    );
+    assert_no_close_blocker(&response.response_value, "unresolved_unrecorded_changes");
+    assert_eq!(
+        response.response_value["guard_health"]["unresolved_unrecorded_change_count"],
+        0
+    );
+    let changes = unresolved_changes_for_connection(&harness)?;
+    assert!(changes.is_empty());
+    Ok(())
+}
+
+#[test]
+fn close_blocks_while_watcher_findings_remain_unresolved_and_unblocks_after_reconciliation(
+) -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    record_guard_installation(
+        &harness,
+        "watch_close_block",
+        "mcp_only",
+        "configured",
+        "{}",
+    )?;
+    let (task_id, _, after_final) = create_close_ready_task(&harness, "watch_close_block")?;
+    let session_id = "session_watch_close_block";
+    write_product_file(&harness, "src/watch.txt", "original\n")?;
+    initialize_watch_baseline(&harness, &task_id, session_id, "close_block_seed")?;
+    write_product_file(&harness, "src/watch.txt", "changed\n")?;
+
+    let blocked = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_watch_close_block",
+            idempotency_key: Some("idem_watch_close_block"),
+            dry_run: false,
+            expected_state_version: Some(after_final),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation_with_session(OperationCategory::AgentWorkflow, session_id),
+    )?;
+    assert_eq!(blocked.response_value["close_state"], "blocked");
+    assert_close_blocker(&blocked.response_value, "unresolved_unrecorded_changes");
+
+    write_product_file(&harness, "src/watch.txt", "original\n")?;
+    let reconciled = harness.service.reconcile_changes(
+        reconcile_changes_request(
+            "req_watch_close_block_reconcile",
+            "idem_watch_close_block_reconcile",
+            Some(after_final),
+            &task_id,
+            Vec::new(),
+        ),
+        invocation_with_session(OperationCategory::AgentWorkflow, session_id),
+    )?;
+    let after_reconcile = reconciled.response_value["base"]["state_version"]
+        .as_u64()
+        .expect("reconcile should report state version");
+    assert_no_close_blocker(&reconciled.response_value, "unresolved_unrecorded_changes");
+
+    let closed = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_watch_close_unblocked",
+            idempotency_key: Some("idem_watch_close_unblocked"),
+            dry_run: false,
+            expected_state_version: Some(after_reconcile),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation_with_session(OperationCategory::AgentWorkflow, session_id),
+    )?;
+    assert_eq!(closed.response_value["close_state"], "closed");
+    assert_no_close_blocker(&closed.response_value, "unresolved_unrecorded_changes");
+    Ok(())
+}
+
+#[test]
 fn close_task_cancel_success_despite_missing_completion_evidence() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "close_cancel")?;
@@ -14315,6 +14563,13 @@ fn invocation(operation_category: OperationCategory) -> InvocationContext {
     )
 }
 
+fn invocation_with_session(
+    operation_category: OperationCategory,
+    session_id: &str,
+) -> InvocationContext {
+    invocation(operation_category).with_session_id(session_id.to_owned())
+}
+
 fn actor_source_for_operation_category(operation_category: OperationCategory) -> ActorSource {
     match operation_category {
         OperationCategory::Read | OperationCategory::AgentWorkflow => {
@@ -14336,6 +14591,115 @@ fn invocation_with_actor(
         operation_category,
         VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
     )
+}
+
+fn create_close_ready_task(
+    harness: &MethodHarness,
+    suffix: &str,
+) -> Result<(String, String, u64), Box<dyn Error>> {
+    let (task_id, change_unit_id) = create_task_with_change_unit(harness, suffix)?;
+    let after_evidence =
+        record_close_evidence(harness, &task_id, &change_unit_id, 2, suffix, true)?;
+    let after_final =
+        record_final_acceptance(harness, &task_id, &change_unit_id, after_evidence, suffix)?;
+    Ok((task_id, change_unit_id, after_final))
+}
+
+fn initialize_watch_baseline(
+    harness: &MethodHarness,
+    task_id: &str,
+    session_id: &str,
+    suffix: &str,
+) -> Result<(), Box<dyn Error>> {
+    let request_id = format!("req_watch_baseline_{suffix}");
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: &request_id,
+            idempotency_key: None,
+            dry_run: false,
+            expected_state_version: None,
+            task_id,
+            intent: CloseIntent::Check,
+            close_reason: None,
+            superseding_task_id: None,
+        }),
+        invocation_with_session(OperationCategory::Read, session_id),
+    )?;
+    assert_eq!(
+        response.response_value["guard_health"]["session_watch_status"],
+        "active"
+    );
+    Ok(())
+}
+
+fn product_repo_root(harness: &MethodHarness) -> Result<PathBuf, Box<dyn Error>> {
+    let store = CoreProjectStore::open(&harness.runtime_home_path, &ProjectId::new(PROJECT_ID))?;
+    Ok(store.project_record().repo_root.clone())
+}
+
+fn write_product_file(
+    harness: &MethodHarness,
+    path: &str,
+    contents: &str,
+) -> Result<(), Box<dyn Error>> {
+    let absolute = product_repo_root(harness)?.join(path);
+    if let Some(parent) = absolute.parent() {
+        fs::create_dir_all(parent)?;
+    }
+    fs::write(absolute, contents)?;
+    Ok(())
+}
+
+fn unresolved_changes_for_connection(
+    harness: &MethodHarness,
+) -> Result<Vec<UnrecordedChangeRecord>, Box<dyn Error>> {
+    Ok(list_unresolved_unrecorded_changes(
+        &harness.runtime_home_path,
+        PROJECT_ID,
+        Some(CONNECTION_ID),
+    )?)
+}
+
+fn insert_expected_write_for_paths(
+    harness: &MethodHarness,
+    guard_installation_id: &str,
+    session_id: &str,
+    task_id: &str,
+    change_unit_id: &str,
+    suffix: &str,
+    expected_paths: &[&str],
+) -> Result<String, Box<dyn Error>> {
+    let expected_write_id = format!("expected_write_{suffix}");
+    let expected_paths = expected_paths
+        .iter()
+        .map(|path| (*path).to_owned())
+        .collect::<Vec<_>>();
+    insert_expected_write(
+        &harness.runtime_home_path,
+        PROJECT_ID,
+        ExpectedWriteInsert {
+            expected_write_id: expected_write_id.clone(),
+            session_id: Some(session_id.to_owned()),
+            connection_internal_id: CONNECTION_ID.to_owned(),
+            guard_installation_id: Some(guard_installation_id.to_owned()),
+            pre_tool_guard_event_id: format!("guard_event_pre_tool_{suffix}"),
+            host_invocation_id: Some(format!("host_invocation_{suffix}")),
+            tool_name: Some("fixture_tool".to_owned()),
+            command_kind: "product_file_write".to_owned(),
+            path_policy: "exact_paths".to_owned(),
+            expected_paths_json: serde_json::to_string(&expected_paths)?,
+            task_id: task_id.to_owned(),
+            change_unit_id: Some(change_unit_id.to_owned()),
+            write_check_ids_json: "[]".to_owned(),
+            basis_state_version: 2,
+            created_at: "2026-06-30T00:07:00Z".to_owned(),
+            expires_at: "2026-06-30T01:07:00Z".to_owned(),
+            metadata_json: serde_json::to_string(&json!({
+                "source": "test_fixture"
+            }))?,
+        },
+    )?;
+    Ok(expected_write_id)
 }
 
 fn assert_verified_invocation(response: &PipelineResponse, operation_category: OperationCategory) {

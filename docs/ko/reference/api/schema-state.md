@@ -127,6 +127,9 @@ GuardHealthSummary:
   prompt_capture_available: boolean
   mcp_connection_healthy: boolean
   mcp_connection_status: string | null
+  session_watch_status: string
+  last_session_watch_checked_at: string | null
+  session_watch_detail: string | null
   unresolved_unrecorded_change_count: integer
   missing_or_stale_write_readiness: boolean
 ```
@@ -143,16 +146,20 @@ GuardHealthSummary:
 - `prompt_capture_status`는 선택된 연결의 기계 판독 prompt capture 사용 가능 상태를 보고합니다. `prompt_capture_available=true`는 그 상태가 검증 코드 채팅 명령을 허용할 때만 사용하며, 원문 프롬프트 텍스트가 포함된다는 뜻이 아닙니다.
 - `prompt_capture_available`은 선택된 연결에서 prompt capture 검증 코드 채팅 명령을 표시하거나 기록할 수 있는지 보고합니다. 프롬프트 텍스트는 포함하지 않습니다.
 - `mcp_connection_healthy`와 `mcp_connection_status`는 추적되는 Agent Connection 확인 상태가 있을 때 그 상태를 요약합니다.
+- `session_watch_status`는 선택된 연결 또는 session에 대해 session 수준 Product Repository watcher가 `disabled`, `active`, `degraded`, `unavailable` 중 어떤 상태인지 보고합니다.
+- `last_session_watch_checked_at`은 가장 최근 watcher baseline 상태 갱신 시각이며, 사용할 수 있는 session-watch baseline이 없으면 `null`입니다.
+- `session_watch_detail`은 선택된 watcher 상태에 대한 짧은 진단 세부정보이며, 사용할 수 있는 세부정보가 없으면 `null`입니다.
 - `unresolved_unrecorded_change_count`는 해결되지 않은 미기록 Product Repository 변경 수입니다. 프롬프트 텍스트, 명령 텍스트, 경로 목록은 노출하지 않습니다.
 - `missing_or_stale_write_readiness`는 guard 이벤트가 누락되었거나 오래된 쓰기 준비 상태를 감지했는지 보고합니다.
 
 의미하지 않는 것:
 - `GuardHealthSummary`는 제품 정확성, 테스트 충분성, OS 강제, 샌드박싱, 보안 격리, 최종 수락의 증거가 아닙니다.
 - `active` guard 요약은 증거, 아티팩트 무결성, 사용자 소유 판단, `Write Check`, 최종 수락, 잔여 위험 수락 요구사항을 대체하지 않습니다.
-- `mcp_only` 모드는 담당 문서가 정의한 설정이 guarded 또는 managed 동작을 선택하지 않는 한 협력형으로 남습니다.
+- Session watch 상태는 Volicord가 쓰기를 막았거나, 파일을 바꾼 행위자를 식별했거나, 파일 내용을 저장했거나, OS 수준 강제를 제공했다는 뜻이 아닙니다.
+- `mcp_only` 모드는 활성 session watch가 선택되어 있을 때 watcher가 만든 해결되지 않은 미기록 변경 찾기가 닫기를 막는 경우를 제외하고 협력형으로 남습니다.
 
 담당 문서 링크:
-- `guard_mode`, `guard_installation_status`, `guard_configuration_status`, `guard_observation_status`, `effective_guard_status`, `prompt_capture_status` 값: [상태와 차단 사유 값](schema-value-sets.md#state-and-blocker-values)
+- `guard_mode`, `guard_installation_status`, `guard_configuration_status`, `guard_observation_status`, `effective_guard_status`, `prompt_capture_status`, `session_watch_status` 값: [상태와 차단 사유 값](schema-value-sets.md#state-and-blocker-values)
 - 닫기 준비 상태 guard 차단 사유와 메서드 로컬 코드: [`volicord.close_task`](method-close-task.md)
 - Agent Connection 의미: [Agent Connection](../agent-connection.md)
 

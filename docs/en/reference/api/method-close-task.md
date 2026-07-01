@@ -84,7 +84,8 @@ Mutation conditions:
 Close condition:
 
 - `intent=complete` can close only after preflight succeeds, the close readiness evaluation over the current `CurrentCloseBasis` is valid, current close-basis refs satisfy their artifact and Run compatibility rules, and no close blocker remains.
-- When the verified connection is in `guarded` or `managed` mode, close readiness also checks guard health, prompt-capture availability facts, unresolved unrecorded Product Repository changes, and guard-detected write-readiness issues. These checks are close blockers only for guarded or managed behavior; `mcp_only` remains cooperative unless an owner-defined configuration selects guarded or managed behavior.
+- When the verified connection is in `guarded` or `managed` mode, close readiness also checks guard health, prompt-capture availability facts, unresolved unrecorded Product Repository changes, guard-detected write-readiness issues, and session-watch availability. In `mcp_only` mode, an active session watch remains detective-only but unresolved watcher-created unrecorded-change findings block close until reconciliation resolves them.
+- Session watch observations do not prevent Product Repository writes and do not identify the actor that made a file change. They only detect Product Repository snapshot changes that are not covered by expected-write correlation.
 - Required close evidence must be supported by current claim-matching evidence observation provenance. Unverified, provenance-free, stale, or cooperative-agent-only evidence does not satisfy a close requirement when stronger provenance is required.
 - `intent=cancel` requires a current accepted cancellation judgment with `machine_action=accept`, `resolution_outcome=accepted`, `resolved_by_actor_source=local_user`, compatible User Channel provenance, and a basis bound to the Task, current scope revision, and current Change Unit. It does not require completion-only evidence, final acceptance, or residual-risk acceptance.
 - `intent=supersede` evaluates the requested terminal path. It is not evidence sufficiency, final acceptance, or residual-risk acceptance.
@@ -157,7 +158,7 @@ Implementations evaluate `volicord.close_task` in this order:
 1. Validate the envelope, method fields, intent-field combination, and same-project `Task` identity. Shape failures, wrong-project identity, and unreadable `Task` identity return `ToolRejectedResponse`.
 2. Verify the invocation context, operation category, actor source, and requested terminal-path preconditions.
 3. For `dry_run=false` mutating intents, check `idempotency_key`, current `expected_state_version`, idempotency request hash, and close-relevant `WriteCheck.basis_state_version`. Stale or conflicting values return `ToolRejectedResponse`.
-4. For `intent=check`, compute current close readiness, including selected guard-health facts, with the same calculation used by [`volicord.status`](method-status.md) when `include.close=true`, and return read-only `CloseTaskResult`.
+4. For `intent=check`, run any selected deterministic session-watch check, compute current close readiness, including selected guard-health facts, with the same calculation used by [`volicord.status`](method-status.md) when `include.close=true`, and return `CloseTaskResult`.
 5. For mutating intents with `dry_run=true`, return the common preview branch after valid preflight.
 6. For `intent=complete`, run the close readiness evaluation over the current `CurrentCloseBasis`. If blockers remain, return the blocked branch; otherwise commit `close_state=closed`, the terminal close result, and any method-selected project continuity records for close-basis known limits that do not require residual-risk acceptance.
 7. For `intent=cancel`, require a current accepted `judgment_kind=cancellation` with `machine_action=accept`, `resolution_outcome=accepted`, `resolved_by_actor_source=local_user`, compatible User Channel provenance, and compatibility with the current Task, scope revision, and Change Unit. Missing or incompatible cancellation authority returns the blocked branch.
@@ -167,7 +168,7 @@ Implementations evaluate `volicord.close_task` in this order:
 
 | Case | State-version effect |
 |---|---|
-| `intent=check` | Always read-only and never increments state, including when `dry_run=true`. |
+| `intent=check` | Never increments `project_state.state_version`, including when `dry_run=true`. A session-bound watcher may record bounded diagnostic session-watch observations or watcher-created unrecorded-change findings before returning the readiness observation. |
 | Successful terminal mutation | Increments `project_state.state_version` exactly once. |
 | Committed blocked result for a mutating intent | Increments `project_state.state_version` exactly once when this method and the storage-effect owner allow the committed blocked result. |
 | Preflight rejection or valid `dry_run` preview | Increments nothing. |
@@ -229,7 +230,8 @@ The production meanings below apply only after the method reaches close-readines
 | `guard_required_hooks_missing` | `connection_capability` | A guarded or managed close path has a guard installation with missing required hook phases. The blocker reports the missing phases, host kind, `terminal_action_required`, `can_resolve_in_chat`, and `next_actions`. |
 | `guard_degraded` | `connection_capability` | A guarded or managed close path has degraded guard configuration or health not covered by a more specific guard blocker, and the current guard policy blocks close on degraded health. |
 | `guard_connection_unhealthy` | `connection_capability` | A guarded or managed close path has an Agent Connection health fact that is not healthy. |
-| `unresolved_unrecorded_changes` | `connection_capability` | Guard records show unresolved unrecorded Product Repository changes that must be reconciled before close. The blocker includes `next_actions` with `owner_method=volicord.reconcile_changes`, and `can_resolve_in_chat` reports whether the current guarded path can proceed through a chat-mediated user path. |
+| `session_watch_unavailable` | `connection_capability` | A managed close path requires an active Product Repository session watch, but the selected watcher state is `disabled`, `degraded`, or `unavailable`. |
+| `unresolved_unrecorded_changes` | `connection_capability` | Guard records or active session-watch records show unresolved unrecorded Product Repository changes that must be reconciled before close. The blocker includes `next_actions` with `owner_method=volicord.reconcile_changes`, and `can_resolve_in_chat` reports whether the current path can proceed through a chat-mediated user path. |
 | `guard_write_readiness_missing_or_stale` | `write_compatibility` | Guard events detected missing or stale write readiness for the close path. |
 | `evidence_claim_unsupported` | `evidence_claim` | A required close claim lacks supported evidence coverage. |
 | `evidence_claim_missing` | `evidence_claim` | A required close claim has no current evidence coverage record. |
@@ -253,21 +255,23 @@ For `pending_user_judgment`, blocker next actions may point to available User Ch
 Conditions:
 
 - preflight succeeds
-- the method reaches read-only close readiness observation or terminal-path evaluation
+- the method reaches close readiness observation or terminal-path evaluation
 - the requested path has one or more close or terminal blockers
 
 Result:
 
 - The method may return `CloseTaskResult(close_state=blocked)` with `blockers: CloseReadinessBlocker[]`.
-- `intent=check` returns blockers as read-only observation data and never creates blocker rows.
+- `intent=check` returns blockers as response observation data and never creates blocker rows.
+  Session-watch diagnostic storage effects, when present, are separate from
+  blocker-row persistence and are owned by [Storage Effects](../storage-effects.md).
 - `dry_run=false` mutating intents may commit a blocked result only when this method and [Storage Effects](../storage-effects.md) allow that effect.
 
 Method-specific blocker branches:
 
 | Branch | Production rule |
 |---|---|
-| `intent=check` | Returns current close readiness blockers as read-only observation data. |
-| `intent=complete` | Produces close readiness blockers when the completion path reaches close readiness evaluation and owner-defined close requirements remain unresolved. In `guarded` or `managed` mode this includes guard-health, unresolved unrecorded-change, and guard-detected write-readiness blockers. |
+| `intent=check` | Returns current close readiness blockers as response observation data. |
+| `intent=complete` | Produces close readiness blockers when the completion path reaches close readiness evaluation and owner-defined close requirements remain unresolved. In `guarded` or `managed` mode this includes guard-health, unresolved unrecorded-change, session-watch, and guard-detected write-readiness blockers. In `mcp_only` mode, unresolved watcher-created unrecorded-change findings also block close while the watcher is active. |
 | `intent=cancel` | Produces blockers only for cancellation-specific terminal constraints, including missing or incompatible cancellation authority. Completion-only evidence, final acceptance, or residual-risk gaps do not block cancellation by themselves. |
 | `intent=supersede` | Produces blockers only for supersession-specific terminal constraints. Completion-only evidence, final acceptance, or residual-risk gaps do not block supersession by themselves. |
 
