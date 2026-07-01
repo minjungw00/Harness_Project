@@ -2813,6 +2813,10 @@ struct GuardIntegrationPlan {
     managed_source: String,
     managed_bundle_hash: Option<String>,
     managed_verification_status: String,
+    native_host_output_adapter: String,
+    native_host_output_adapter_verified: bool,
+    bash_shell_mutation_coverage: bool,
+    direct_file_write_matcher_coverage: bool,
     capabilities: HostCapabilities,
     missing_required_hooks: Vec<HostLifecyclePhase>,
     allow_degraded: bool,
@@ -3014,6 +3018,14 @@ fn plan_guard_integration(
         managed_source: managed_source_for_init_mode(init_mode).to_owned(),
         managed_bundle_hash: None,
         managed_verification_status: managed_status.to_owned(),
+        native_host_output_adapter: native_host_output_adapter(host_kind, init_mode).to_owned(),
+        native_host_output_adapter_verified: native_host_output_adapter_verified(
+            host_kind, init_mode,
+        ),
+        bash_shell_mutation_coverage: bash_shell_mutation_coverage(host_kind, init_mode),
+        direct_file_write_matcher_coverage: direct_file_write_matcher_coverage(
+            host_kind, init_mode,
+        ),
         capabilities,
         missing_required_hooks,
         allow_degraded,
@@ -3041,6 +3053,28 @@ fn managed_status_for_init_mode(init_mode: InitMode) -> &'static str {
         InitMode::McpOnly | InitMode::Guarded => "not_applicable",
         InitMode::Managed => "verified",
     }
+}
+
+fn native_host_output_adapter(host_kind: HostKind, init_mode: InitMode) -> &'static str {
+    match (host_kind, init_mode) {
+        (HostKind::Codex, InitMode::Guarded | InitMode::Managed) => "codex",
+        (HostKind::ClaudeCode, InitMode::Guarded | InitMode::Managed) => "claude-code",
+        _ => "none",
+    }
+}
+
+fn native_host_output_adapter_verified(host_kind: HostKind, init_mode: InitMode) -> bool {
+    native_host_output_adapter(host_kind, init_mode) != "none"
+}
+
+fn bash_shell_mutation_coverage(host_kind: HostKind, init_mode: InitMode) -> bool {
+    matches!(init_mode, InitMode::Guarded | InitMode::Managed)
+        && matches!(host_kind, HostKind::Codex | HostKind::ClaudeCode)
+}
+
+fn direct_file_write_matcher_coverage(host_kind: HostKind, init_mode: InitMode) -> bool {
+    matches!(init_mode, InitMode::Guarded | InitMode::Managed)
+        && matches!(host_kind, HostKind::Codex | HostKind::ClaudeCode)
 }
 
 fn guarded_hooks_unsupported_message(
@@ -4555,6 +4589,10 @@ fn guard_capability_json(plan: &GuardIntegrationPlan) -> Result<String, Connecti
         "managed_source": plan.managed_source,
         "managed_bundle_hash": plan.managed_bundle_hash,
         "managed_verification_status": plan.managed_verification_status,
+        "native_host_output_adapter": plan.native_host_output_adapter,
+        "native_host_output_adapter_verified": plan.native_host_output_adapter_verified,
+        "bash_shell_mutation_coverage": plan.bash_shell_mutation_coverage,
+        "direct_file_write_matcher_coverage": plan.direct_file_write_matcher_coverage,
         "host_capabilities": capabilities,
         "required_guard_phases": required_guard_phase_names(),
         "missing_required_hooks": lifecycle_phase_names(&plan.missing_required_hooks),
@@ -4780,6 +4818,10 @@ struct GuardOperationalState {
     configuration_state: String,
     observation_state: String,
     effective_state: String,
+    generated_config_verified: bool,
+    native_host_output_adapter_verified: bool,
+    bash_shell_mutation_coverage: bool,
+    direct_file_write_matcher_coverage: bool,
     files_state: String,
     managed_source_state: String,
     managed_bundle_hash: Option<String>,
@@ -4809,6 +4851,10 @@ impl GuardOperationalState {
             configuration_state: "absent".to_owned(),
             observation_state: "not_observed".to_owned(),
             effective_state: "inactive".to_owned(),
+            generated_config_verified: false,
+            native_host_output_adapter_verified: false,
+            bash_shell_mutation_coverage: false,
+            direct_file_write_matcher_coverage: false,
             files_state: "not_configured".to_owned(),
             managed_source_state: "not_configured".to_owned(),
             managed_bundle_hash: None,
@@ -4853,6 +4899,10 @@ impl GuardOperationalState {
             configuration_state,
             observation_state: observation_state.clone(),
             effective_state,
+            generated_config_verified: false,
+            native_host_output_adapter_verified: integration.native_host_output_adapter_verified,
+            bash_shell_mutation_coverage: integration.bash_shell_mutation_coverage,
+            direct_file_write_matcher_coverage: integration.direct_file_write_matcher_coverage,
             files_state: if init_mode == InitMode::McpOnly {
                 "disabled".to_owned()
             } else {
@@ -4915,6 +4965,14 @@ impl GuardOperationalState {
             configuration_state,
             observation_state,
             effective_state,
+            generated_config_verified: init_mode != InitMode::McpOnly
+                && integration
+                    .generated_files
+                    .iter()
+                    .all(|file| file.status == FilePlanStatus::Unchanged),
+            native_host_output_adapter_verified: integration.native_host_output_adapter_verified,
+            bash_shell_mutation_coverage: integration.bash_shell_mutation_coverage,
+            direct_file_write_matcher_coverage: integration.direct_file_write_matcher_coverage,
             files_state: if init_mode == InitMode::McpOnly {
                 "disabled".to_owned()
             } else {
@@ -4966,8 +5024,12 @@ impl GuardOperationalState {
             "configuration_health": &self.configuration_state,
             "observation_health": &self.observation_state,
             "effective_health": &self.effective_state,
+            "generated_config_verified": self.generated_config_verified,
+            "native_host_output_adapter_verified": self.native_host_output_adapter_verified,
             "pre_tool_blocking_available": self.pre_tool_blocking_available(),
             "post_tool_correlation_available": self.post_tool_correlation_available(),
+            "bash_shell_mutation_coverage": self.bash_shell_mutation_coverage,
+            "direct_file_write_matcher_coverage": self.direct_file_write_matcher_coverage,
             "bypass_detection_active": self.bypass_detection_active(),
             "files": &self.files_state,
             "managed_source": &self.managed_source_state,
@@ -5013,6 +5075,10 @@ impl GuardOperationalState {
         matches!(self.mode_state.as_str(), "guarded" | "managed")
             && self.effective_state == "active"
             && self.missing_required_hooks.is_empty()
+            && self.generated_config_verified
+            && self.native_host_output_adapter_verified
+            && self.bash_shell_mutation_coverage
+            && self.direct_file_write_matcher_coverage
     }
 
     fn pre_tool_blocking_available(&self) -> bool {
@@ -6013,8 +6079,12 @@ fn connection_states_json(
         "managed_source": &guard_state.managed_source_state,
         "managed_bundle_hash": &guard_state.managed_bundle_hash,
         "managed_verification_status": &guard_state.managed_verification_state,
+        "generated_config_verified": guard_state.generated_config_verified,
+        "native_host_output_adapter_verified": guard_state.native_host_output_adapter_verified,
         "pre_tool_blocking_available": guard_state.pre_tool_blocking_available(),
         "post_tool_correlation_available": guard_state.post_tool_correlation_available(),
+        "bash_shell_mutation_coverage": guard_state.bash_shell_mutation_coverage,
+        "direct_file_write_matcher_coverage": guard_state.direct_file_write_matcher_coverage,
         "bypass_detection_active": guard_state.bypass_detection_active(),
         "prompt_capture_available": guard_state.prompt_capture_available(),
         "local_web_consent_available": false,
@@ -6344,9 +6414,10 @@ fn optional_text(value: Option<&str>) -> &str {
 
 fn guard_capabilities_text(guard_state: &GuardOperationalState) -> String {
     format!(
-        "pre_tool_blocking={}, post_tool_correlation={}, bypass_detection={}, prompt_capture={}, local_web_consent={}, managed_distribution_verified={}",
+        "pre_tool_blocking={}, post_tool_correlation={}, bash_shell_mutation_coverage={}, bypass_detection={}, prompt_capture={}, local_web_consent={}, managed_distribution_verified={}",
         yes_no(guard_state.pre_tool_blocking_available()),
         yes_no(guard_state.post_tool_correlation_available()),
+        yes_no(guard_state.bash_shell_mutation_coverage),
         yes_no(guard_state.bypass_detection_active()),
         yes_no(guard_state.prompt_capture_available()),
         yes_no(false),
@@ -6444,6 +6515,11 @@ fn guard_state_for_connection(
             configuration_state,
             observation_state,
             effective_state,
+            generated_config_verified: false,
+            native_host_output_adapter_verified: file_findings
+                .native_host_output_adapter_verified(),
+            bash_shell_mutation_coverage: file_findings.bash_shell_mutation_coverage(),
+            direct_file_write_matcher_coverage: file_findings.direct_file_write_matcher_coverage(),
             files_state: "broken".to_owned(),
             managed_source_state,
             managed_bundle_hash,
@@ -6502,6 +6578,11 @@ fn guard_state_for_connection(
             configuration_state,
             observation_state,
             effective_state,
+            generated_config_verified: false,
+            native_host_output_adapter_verified: file_findings
+                .native_host_output_adapter_verified(),
+            bash_shell_mutation_coverage: file_findings.bash_shell_mutation_coverage(),
+            direct_file_write_matcher_coverage: file_findings.direct_file_write_matcher_coverage(),
             files_state: "missing".to_owned(),
             managed_source_state,
             managed_bundle_hash,
@@ -6556,6 +6637,11 @@ fn guard_state_for_connection(
             configuration_state,
             observation_state,
             effective_state,
+            generated_config_verified: false,
+            native_host_output_adapter_verified: file_findings
+                .native_host_output_adapter_verified(),
+            bash_shell_mutation_coverage: file_findings.bash_shell_mutation_coverage(),
+            direct_file_write_matcher_coverage: file_findings.direct_file_write_matcher_coverage(),
             files_state: "stale".to_owned(),
             managed_source_state,
             managed_bundle_hash,
@@ -6665,6 +6751,10 @@ fn guard_state_for_connection(
         configuration_state,
         observation_state,
         effective_state,
+        generated_config_verified: file_findings.generated_config_verified(),
+        native_host_output_adapter_verified: file_findings.native_host_output_adapter_verified(),
+        bash_shell_mutation_coverage: file_findings.bash_shell_mutation_coverage(),
+        direct_file_write_matcher_coverage: file_findings.direct_file_write_matcher_coverage(),
         files_state: if prompt_capture_disabled {
             "not_configured".to_owned()
         } else {
@@ -6880,6 +6970,9 @@ struct GuardFileFindings {
     managed_sources: Vec<String>,
     managed_bundle_hashes: Vec<String>,
     managed_verification_statuses: Vec<String>,
+    native_host_output_adapter_verified_values: Vec<bool>,
+    bash_shell_mutation_coverage_values: Vec<bool>,
+    direct_file_write_matcher_coverage_values: Vec<bool>,
     missing_required_hooks: Vec<String>,
     prompt_capture_configured: bool,
     prompt_capture_host_supported: bool,
@@ -6901,6 +6994,12 @@ impl GuardFileFindings {
             .extend(other.managed_bundle_hashes);
         self.managed_verification_statuses
             .extend(other.managed_verification_statuses);
+        self.native_host_output_adapter_verified_values
+            .extend(other.native_host_output_adapter_verified_values);
+        self.bash_shell_mutation_coverage_values
+            .extend(other.bash_shell_mutation_coverage_values);
+        self.direct_file_write_matcher_coverage_values
+            .extend(other.direct_file_write_matcher_coverage_values);
         self.missing_required_hooks
             .extend(other.missing_required_hooks);
         self.prompt_capture_configured |= other.prompt_capture_configured;
@@ -6980,6 +7079,34 @@ impl GuardFileFindings {
             "missing_required_hooks".to_owned()
         }
     }
+
+    fn generated_config_verified(&self) -> bool {
+        self.missing_files.is_empty()
+            && self.stale_files.is_empty()
+            && self.broken_files.is_empty()
+            && self.kind_state(HostIntegrationFileKind::VolicordPolicy) == "installed"
+            && self.kind_state(HostIntegrationFileKind::HostHookConfig) == "installed"
+            && self.kind_state(HostIntegrationFileKind::HostHookWrapper) == "installed"
+    }
+
+    fn native_host_output_adapter_verified(&self) -> bool {
+        self.generated_config_verified()
+            && all_recorded_values_true(&self.native_host_output_adapter_verified_values)
+    }
+
+    fn bash_shell_mutation_coverage(&self) -> bool {
+        self.generated_config_verified()
+            && all_recorded_values_true(&self.bash_shell_mutation_coverage_values)
+    }
+
+    fn direct_file_write_matcher_coverage(&self) -> bool {
+        self.generated_config_verified()
+            && all_recorded_values_true(&self.direct_file_write_matcher_coverage_values)
+    }
+}
+
+fn all_recorded_values_true(values: &[bool]) -> bool {
+    !values.is_empty() && values.iter().all(|value| *value)
 }
 
 fn guard_file_findings(capability_json: &str) -> GuardFileFindings {
@@ -7020,6 +7147,21 @@ fn guard_file_findings(capability_json: &str) -> GuardFileFindings {
     if let Some(value) = nonempty_json_string(&value, "managed_verification_status") {
         findings.managed_verification_statuses.push(value);
     }
+    findings
+        .native_host_output_adapter_verified_values
+        .push(bool_json_field(
+            &value,
+            "native_host_output_adapter_verified",
+        ));
+    findings
+        .bash_shell_mutation_coverage_values
+        .push(bool_json_field(&value, "bash_shell_mutation_coverage"));
+    findings
+        .direct_file_write_matcher_coverage_values
+        .push(bool_json_field(
+            &value,
+            "direct_file_write_matcher_coverage",
+        ));
     findings.missing_required_hooks = missing_required_hooks_from_capability(&value);
 
     let files = value
@@ -7039,6 +7181,10 @@ fn nonempty_json_string(value: &Value, key: &str) -> Option<String> {
         .and_then(Value::as_str)
         .filter(|value| !value.trim().is_empty())
         .map(str::to_owned)
+}
+
+fn bool_json_field(value: &Value, key: &str) -> bool {
+    value.get(key).and_then(Value::as_bool).unwrap_or(false)
 }
 
 fn missing_required_hooks_from_capability(capability: &Value) -> Vec<String> {
@@ -8054,6 +8200,10 @@ mod tests {
         assert_eq!(capability["managed_source"], "project_local_host_hooks");
         assert_eq!(capability["managed_bundle_hash"], Value::Null);
         assert_eq!(capability["managed_verification_status"], "not_applicable");
+        assert_eq!(capability["native_host_output_adapter"], "codex");
+        assert_eq!(capability["native_host_output_adapter_verified"], true);
+        assert_eq!(capability["bash_shell_mutation_coverage"], true);
+        assert_eq!(capability["direct_file_write_matcher_coverage"], true);
         assert_eq!(
             capability["missing_required_hooks"]
                 .as_array()
@@ -8699,6 +8849,10 @@ mod tests {
         );
         assert!(guard_state.pre_tool_blocking_available());
         assert!(guard_state.post_tool_correlation_available());
+        assert!(guard_state.generated_config_verified);
+        assert!(guard_state.native_host_output_adapter_verified);
+        assert!(guard_state.bash_shell_mutation_coverage);
+        assert!(guard_state.direct_file_write_matcher_coverage);
         assert!(!guard_state.bypass_detection_active());
         assert!(!guard_state.managed_distribution_verified());
         assert_eq!(guard_state.managed_source_state, "project_local_host_hooks");
@@ -8829,6 +8983,8 @@ mod tests {
         );
         assert!(!guard_state.pre_tool_blocking_available());
         assert!(!guard_state.post_tool_correlation_available());
+        assert!(!guard_state.generated_config_verified);
+        assert!(!guard_state.bash_shell_mutation_coverage);
         Ok(())
     }
 
@@ -8951,10 +9107,11 @@ mod tests {
             guard_state_for_connection(&runtime_home, "conn_managed", &projects)?;
         assert_eq!(
             active_guard_state.guard_strength(),
-            GuardStrength::ManagedGuarded.as_str()
+            GuardStrength::AuthorityRecordOnly.as_str()
         );
-        assert!(active_guard_state.pre_tool_blocking_available());
-        assert!(active_guard_state.post_tool_correlation_available());
+        assert!(!active_guard_state.pre_tool_blocking_available());
+        assert!(!active_guard_state.post_tool_correlation_available());
+        assert!(!active_guard_state.generated_config_verified);
         assert!(active_guard_state.managed_distribution_verified());
         Ok(())
     }

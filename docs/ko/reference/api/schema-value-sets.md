@@ -371,13 +371,14 @@ managed_guarded
 ```
 
 `authority_record_only`는 Volicord가 권한 상태는 기록할 수 있지만 선택된 보기에 대해
-전체 coverage를 가진 활성 session watcher나 활성 전체 host hook guard를 사용할 수
-없다는 뜻입니다. `detective_watch`는 session watcher가 부분 coverage 경고 없이 활성
-상태이고 coverage 시작 뒤의 우회 Product Repository 변경을 감지할 수 있지만 쓰기를
-사전에 차단할 수 없다는 뜻입니다. `host_hook_guarded`는 선택된
-프로젝트 로컬 guarded host hook이 필요한 lifecycle phase에 대해 설정되고 관찰되었다는
-뜻입니다. `managed_guarded`는 host-hook guarded 조건을 만족하고 선택된 managed 배포
-메타데이터가 검증되었다는 뜻입니다. 이 라벨은 제품 정확성, review 완료, 테스트 충분성,
+활성 session watcher나 효과적인 host hook guard를 사용할 수 없다는 뜻입니다.
+`detective_watch`는 session watcher가 활성 상태이고 coverage 시작 뒤의 우회 Product
+Repository 변경을 감지할 수 있지만 쓰기를 사전에 차단하거나 행위자를 식별할 수 없다는
+뜻입니다. `host_hook_guarded`는 선택된 프로젝트 로컬 guarded host hook에 검증된 생성
+설정, native host output, 필요한 lifecycle phase, Bash/shell 및 직접 파일 쓰기 matcher
+coverage, 일치하는 policy hash, 현재 런타임 guard 관찰이 있다는 뜻입니다.
+`managed_guarded`는 host-hook guarded 조건을 만족하고 선택된 managed 배포 메타데이터가
+검증되었다는 뜻입니다. 이 라벨은 제품 정확성, review 완료, 테스트 충분성,
 OS 강제, 샌드박싱, 보안 격리, 최종 수락, 잔여 위험 수락을 증명하지 않습니다.
 
 `GuardHealthSummary.guard_installation_status`는 아래 값을 사용합니다.

@@ -626,6 +626,9 @@ struct DoctorGuardFileFindings {
     managed_sources: Vec<String>,
     managed_bundle_hashes: Vec<String>,
     managed_verification_statuses: Vec<String>,
+    native_host_output_adapter_verified_values: Vec<bool>,
+    bash_shell_mutation_coverage_values: Vec<bool>,
+    direct_file_write_matcher_coverage_values: Vec<bool>,
 }
 
 impl DoctorGuardFileFindings {
@@ -642,6 +645,12 @@ impl DoctorGuardFileFindings {
             .extend(other.managed_bundle_hashes);
         self.managed_verification_statuses
             .extend(other.managed_verification_statuses);
+        self.native_host_output_adapter_verified_values
+            .extend(other.native_host_output_adapter_verified_values);
+        self.bash_shell_mutation_coverage_values
+            .extend(other.bash_shell_mutation_coverage_values);
+        self.direct_file_write_matcher_coverage_values
+            .extend(other.direct_file_write_matcher_coverage_values);
     }
 
     fn sort_dedup(&mut self) {
@@ -693,6 +702,13 @@ fn doctor_guard_file_details(findings: &DoctorGuardFileFindings) -> Value {
         "managed_sources": &findings.managed_sources,
         "managed_bundle_hashes": &findings.managed_bundle_hashes,
         "managed_verification_statuses": &findings.managed_verification_statuses,
+        "generated_config_verified": doctor_generated_config_verified(findings),
+        "native_host_output_adapter_verified": doctor_generated_config_verified(findings)
+            && all_recorded_values_true(&findings.native_host_output_adapter_verified_values),
+        "bash_shell_mutation_coverage": doctor_generated_config_verified(findings)
+            && all_recorded_values_true(&findings.bash_shell_mutation_coverage_values),
+        "direct_file_write_matcher_coverage": doctor_generated_config_verified(findings)
+            && all_recorded_values_true(&findings.direct_file_write_matcher_coverage_values),
     })
 }
 
@@ -724,6 +740,21 @@ fn doctor_guard_file_findings(capability_json: &str) -> DoctorGuardFileFindings 
     if let Some(value) = nonempty_json_string(&value, "managed_verification_status") {
         findings.managed_verification_statuses.push(value);
     }
+    findings
+        .native_host_output_adapter_verified_values
+        .push(bool_json_field(
+            &value,
+            "native_host_output_adapter_verified",
+        ));
+    findings
+        .bash_shell_mutation_coverage_values
+        .push(bool_json_field(&value, "bash_shell_mutation_coverage"));
+    findings
+        .direct_file_write_matcher_coverage_values
+        .push(bool_json_field(
+            &value,
+            "direct_file_write_matcher_coverage",
+        ));
     if guard_missing_required_hooks(capability_json).is_empty() {
         findings.set_file_state("host_hook_config", "not_recorded");
     } else {
@@ -823,6 +854,32 @@ fn nonempty_json_string(value: &Value, key: &str) -> Option<String> {
         .map(str::to_owned)
 }
 
+fn bool_json_field(value: &Value, key: &str) -> bool {
+    value.get(key).and_then(Value::as_bool).unwrap_or(false)
+}
+
+fn all_recorded_values_true(values: &[bool]) -> bool {
+    !values.is_empty() && values.iter().all(|value| *value)
+}
+
+fn doctor_generated_config_verified(findings: &DoctorGuardFileFindings) -> bool {
+    findings.missing_files.is_empty()
+        && findings.stale_files.is_empty()
+        && findings.broken_files.is_empty()
+        && findings
+            .file_states
+            .get("volicord_policy")
+            .is_some_and(|state| state == "installed")
+        && findings
+            .file_states
+            .get("host_hook_config")
+            .is_some_and(|state| state == "installed")
+        && findings
+            .file_states
+            .get("host_hook_wrapper")
+            .is_some_and(|state| state == "installed")
+}
+
 fn doctor_verify_guard_file(file: &Value, findings: &mut DoctorGuardFileFindings) {
     let kind = file
         .get("kind")
@@ -872,11 +929,80 @@ fn doctor_verify_guard_file(file: &Value, findings: &mut DoctorGuardFileFindings
             expected_hash,
             findings,
         ),
+        Some("managed_script") => {
+            doctor_verify_managed_script(file, kind, path_text, &text, expected_hash, findings)
+        }
         _ => {
             findings.broken_files.push(path_text.to_owned());
             findings.set_file_state(kind, "broken");
         }
     }
+}
+
+fn doctor_verify_managed_script(
+    file: &Value,
+    kind: &str,
+    path_text: &str,
+    text: &str,
+    expected_hash: &str,
+    findings: &mut DoctorGuardFileFindings,
+) {
+    let Some(managed_marker) = file.get("managed_marker").and_then(Value::as_str) else {
+        findings.broken_files.push(path_text.to_owned());
+        findings.set_file_state(kind, "broken");
+        return;
+    };
+    if !text.contains(managed_marker) {
+        findings.broken_files.push(path_text.to_owned());
+        findings.set_file_state(kind, "broken");
+        return;
+    }
+    let Some(expected_command) = file
+        .get("managed_script_command")
+        .and_then(Value::as_str)
+        .filter(|value| !value.trim().is_empty())
+    else {
+        findings.broken_files.push(path_text.to_owned());
+        findings.set_file_state(kind, "broken");
+        return;
+    };
+    let mut state = "installed";
+    if hook_wrapper_exec_command(text) != Some(expected_command) {
+        findings.stale_files.push(path_text.to_owned());
+        state = "stale";
+    }
+    for key in [
+        "host_kind",
+        "phase",
+        "connection_id",
+        "guard_installation_id",
+        "policy_hash",
+        "host_output",
+    ] {
+        let Some(expected) = file.get(key).and_then(Value::as_str) else {
+            findings.broken_files.push(path_text.to_owned());
+            findings.set_file_state(kind, "broken");
+            return;
+        };
+        if hook_wrapper_comment_value(text, key) != Some(expected) {
+            findings.stale_files.push(path_text.to_owned());
+            state = "stale";
+        }
+    }
+    if sha256_text(text) != expected_hash {
+        findings.stale_files.push(path_text.to_owned());
+        state = "stale";
+    }
+    if file
+        .get("executable_required")
+        .and_then(Value::as_bool)
+        .unwrap_or(false)
+        && !script_is_executable(Path::new(path_text))
+    {
+        findings.stale_files.push(path_text.to_owned());
+        state = "stale";
+    }
+    findings.set_file_state(kind, state);
 }
 
 fn doctor_verify_managed_json_projection(
@@ -1002,6 +1128,34 @@ fn doctor_verify_managed_block(
 
 fn marker_count(text: &str, marker: &str) -> usize {
     text.match_indices(marker).count()
+}
+
+fn hook_wrapper_exec_command(text: &str) -> Option<&str> {
+    text.lines()
+        .map(str::trim)
+        .find_map(|line| line.strip_prefix("exec "))
+}
+
+fn hook_wrapper_comment_value<'a>(text: &'a str, key: &str) -> Option<&'a str> {
+    let prefix = format!("# {key}=");
+    text.lines()
+        .map(str::trim)
+        .find_map(|line| line.strip_prefix(&prefix))
+        .map(str::trim)
+}
+
+#[cfg(unix)]
+fn script_is_executable(path: &Path) -> bool {
+    use std::os::unix::fs::PermissionsExt;
+
+    fs::metadata(path)
+        .map(|metadata| metadata.permissions().mode() & 0o111 != 0)
+        .unwrap_or(false)
+}
+
+#[cfg(not(unix))]
+fn script_is_executable(_path: &Path) -> bool {
+    true
 }
 
 fn managed_block_slice<'a>(text: &'a str, start_marker: &str, end_marker: &str) -> Option<&'a str> {
@@ -1570,7 +1724,7 @@ fn doctor_states_json(
     checks: &[DiagnosticCheck],
     actions: &[DiagnosticAction],
 ) -> Value {
-    json!({
+    let mut states = json!({
         "runtime_home": doctor_runtime_home_state(runtime_home, checks),
         "installation_profile": doctor_installation_profile_state(checks),
         "command_availability": doctor_command_state(checks),
@@ -1609,7 +1763,26 @@ fn doctor_states_json(
         "watcher_coverage_basis": Value::Null,
         "watcher_partial_coverage_warning": "doctor does not initialize an MCP session watch",
         "host_reload_required": doctor_host_reload_required(checks, actions),
-    })
+    });
+    if let Some(object) = states.as_object_mut() {
+        object.insert(
+            "generated_config_verified".to_owned(),
+            Value::Bool(doctor_generated_config_verified_state(checks)),
+        );
+        object.insert(
+            "native_host_output_adapter_verified".to_owned(),
+            Value::Bool(doctor_native_host_output_adapter_verified(checks)),
+        );
+        object.insert(
+            "bash_shell_mutation_coverage".to_owned(),
+            Value::Bool(doctor_bash_shell_mutation_coverage(checks)),
+        );
+        object.insert(
+            "direct_file_write_matcher_coverage".to_owned(),
+            Value::Bool(doctor_direct_file_write_matcher_coverage(checks)),
+        );
+    }
+    states
 }
 
 fn doctor_runtime_home_state(runtime_home: &Path, checks: &[DiagnosticCheck]) -> String {
@@ -1682,6 +1855,32 @@ fn doctor_guard_file_kind_state(checks: &[DiagnosticCheck], kind: &str) -> Strin
             Some("skipped") | None => "not_checked".to_owned(),
             _ => "not_configured".to_owned(),
         })
+}
+
+fn doctor_guard_file_bool_detail(checks: &[DiagnosticCheck], key: &str) -> bool {
+    checks
+        .iter()
+        .find(|check| check.id == "guard_files_installed")
+        .and_then(|check| check.details.as_ref())
+        .and_then(|details| details.get(key))
+        .and_then(Value::as_bool)
+        .unwrap_or(false)
+}
+
+fn doctor_generated_config_verified_state(checks: &[DiagnosticCheck]) -> bool {
+    doctor_guard_file_bool_detail(checks, "generated_config_verified")
+}
+
+fn doctor_native_host_output_adapter_verified(checks: &[DiagnosticCheck]) -> bool {
+    doctor_guard_file_bool_detail(checks, "native_host_output_adapter_verified")
+}
+
+fn doctor_bash_shell_mutation_coverage(checks: &[DiagnosticCheck]) -> bool {
+    doctor_guard_file_bool_detail(checks, "bash_shell_mutation_coverage")
+}
+
+fn doctor_direct_file_write_matcher_coverage(checks: &[DiagnosticCheck]) -> bool {
+    doctor_guard_file_bool_detail(checks, "direct_file_write_matcher_coverage")
 }
 
 fn doctor_guard_metadata_state(checks: &[DiagnosticCheck], key: &str) -> String {
@@ -1783,6 +1982,11 @@ fn doctor_host_hook_guard_available(checks: &[DiagnosticCheck]) -> bool {
         "host_hook_guarded" | "managed_guarded"
     ) && doctor_check_state(checks, "guard_status_active") == "ready"
         && doctor_required_guard_phases_state(checks) == "configured"
+        && doctor_check_state(checks, "guard_files_installed") == "ready"
+        && doctor_generated_config_verified_state(checks)
+        && doctor_native_host_output_adapter_verified(checks)
+        && doctor_bash_shell_mutation_coverage(checks)
+        && doctor_direct_file_write_matcher_coverage(checks)
 }
 
 fn doctor_managed_distribution_verified(checks: &[DiagnosticCheck]) -> bool {
@@ -1803,9 +2007,10 @@ fn doctor_prompt_capture_available(checks: &[DiagnosticCheck]) -> bool {
 fn doctor_guard_capabilities_text(checks: &[DiagnosticCheck]) -> String {
     let host_hook_available = doctor_host_hook_guard_available(checks);
     format!(
-        "pre_tool_blocking={}, post_tool_correlation={}, bypass_detection={}, prompt_capture={}, local_web_consent={}, managed_distribution_verified={}",
+        "pre_tool_blocking={}, post_tool_correlation={}, bash_shell_mutation_coverage={}, bypass_detection={}, prompt_capture={}, local_web_consent={}, managed_distribution_verified={}",
         yes_no(host_hook_available),
         yes_no(host_hook_available),
+        yes_no(doctor_bash_shell_mutation_coverage(checks)),
         yes_no(false),
         yes_no(doctor_prompt_capture_available(checks)),
         yes_no(false),

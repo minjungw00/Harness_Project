@@ -370,14 +370,15 @@ managed_guarded
 ```
 
 `authority_record_only` means Volicord can record authority state but no active
-full-coverage session watcher or active full host hook guard is available for
-the selected view. `detective_watch` means a session watcher is active without
-a partial-coverage warning and can detect bypass Product Repository changes
-after its coverage start, but it cannot pre-block writes.
-`host_hook_guarded` means the selected project-local guarded host hooks are
-configured and observed for the required lifecycle phases. `managed_guarded`
-means the host-hook guarded condition is met and the selected managed
-distribution metadata is verified. These labels do not prove product
+session watcher or effective host hook guard is available for the selected
+view. `detective_watch` means a session watcher is active and can detect bypass
+Product Repository changes after its coverage start, but it cannot pre-block
+writes or identify the actor. `host_hook_guarded` means the selected
+project-local guarded host hooks have verified generated config, native host
+output, required lifecycle phases, Bash/shell and direct file-write matcher
+coverage, matching policy hash, and current runtime guard observation.
+`managed_guarded` means the host-hook guarded condition is met and the selected
+managed distribution metadata is verified. These labels do not prove product
 correctness, review completion, test sufficiency, OS enforcement, sandboxing,
 security isolation, final acceptance, or residual-risk acceptance.
 

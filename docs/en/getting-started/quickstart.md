@@ -26,8 +26,8 @@ project-bound `volicord mcp --stdio`.
 
 This fast path uses `--mode mcp-only`, which does not require host lifecycle
 hook installation and has no pre-tool blocking hook. If a session watcher
-becomes active for the selected session without a partial-coverage warning,
-guard health may report `detective_watch` and create unrecorded-change findings
+becomes active for the selected session, guard health may report
+`detective_watch` and create unrecorded-change findings
 from Product Repository metadata changes after watcher coverage starts, but the
 watcher does not prevent writes or identify who made the change. Default
 `guarded` init requires verified support for all

@@ -334,9 +334,9 @@ Guard-aware setup, status, verification, and doctor output report
 
 | `guard_strength` | Meaning |
 |---|---|
-| `authority_record_only` | Volicord can record authority state, but no active full-coverage session watcher or observed full host hook guard is available for the selected view. |
-| `detective_watch` | A session watcher is active without a partial-coverage warning and can create unrecorded-change findings from Product Repository changes after coverage starts; it cannot pre-block writes or identify the actor. |
-| `host_hook_guarded` | The selected project-local guarded host hooks are configured and observed for all required lifecycle phases. |
+| `authority_record_only` | Volicord can record authority state, but no active session watcher or effective host hook guard is available for the selected view. |
+| `detective_watch` | A session watcher is active and can create unrecorded-change findings from Product Repository changes after coverage starts; it cannot pre-block writes or identify the actor. Partial coverage remains reported separately. |
+| `host_hook_guarded` | The selected project-local guarded host hooks have verified generated config, native host output, required lifecycle phases, Bash/shell and direct file-write matcher coverage, matching policy hash, and current runtime guard observation. |
 | `managed_guarded` | The host-hook guarded condition is met and the selected managed distribution metadata is verified. Current Codex and Claude Code setup does not reach this label without a future verified managed distribution contract. |
 
 Full `guarded` initialization requires the selected host adapter to declare and
@@ -697,10 +697,14 @@ Required diagnostic JSON values:
   and human-readable command or instruction when one is available
 - Guard-aware setup, doctor, connection status, and connection verification
   JSON must expose `guard_strength` plus `pre_tool_blocking_available`,
-  `post_tool_correlation_available`, `bypass_detection_active`,
-  `prompt_capture_available`, `local_web_consent_available`, and
-  `managed_distribution_verified` where guard diagnostics are reported. When
-  watcher diagnostics are reported, JSON must also expose `watcher_status`,
+  `post_tool_correlation_available`, `bash_shell_mutation_coverage`,
+  `bypass_detection_active`, `prompt_capture_available`,
+  `local_web_consent_available`, and `managed_distribution_verified` where
+  guard diagnostics are reported. Guard-health JSON may also expose
+  `generated_config_verified`, `native_host_output_adapter_verified`, and
+  `direct_file_write_matcher_coverage` to show the stricter host-hook
+  prerequisites. When watcher diagnostics are reported, JSON must also expose
+  `watcher_status`,
   `watcher_baseline_created_at`, `watcher_coverage_start_at`,
   `watcher_coverage_basis`, and `watcher_partial_coverage_warning`.
 

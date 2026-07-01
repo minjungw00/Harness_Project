@@ -841,6 +841,10 @@ struct GuardCapabilityFacts {
     guard_profile: Option<String>,
     managed_bundle_hash: Option<String>,
     managed_verification_status: Option<String>,
+    native_host_output_adapter_verified: bool,
+    bash_shell_mutation_coverage_configured: bool,
+    direct_file_write_matcher_coverage_configured: bool,
+    generated_config_verified: bool,
 }
 
 pub(super) fn guard_health_summary_from_record(
@@ -966,8 +970,13 @@ pub(super) fn guard_health_summary_from_record(
         guard_configuration_status,
         guard_observation_status,
         effective_guard_status,
+        generated_config_verified: capability.generated_config_verified,
+        native_host_output_adapter_verified: capability.native_host_output_adapter_verified,
         pre_tool_blocking_available: false,
         post_tool_correlation_available: false,
+        bash_shell_mutation_coverage: capability.bash_shell_mutation_coverage_configured,
+        direct_file_write_matcher_coverage: capability
+            .direct_file_write_matcher_coverage_configured,
         bypass_detection_active: false,
         guard_hook_observed,
         last_guard_observed_at,
@@ -1016,6 +1025,10 @@ fn default_guard_capability_facts() -> GuardCapabilityFacts {
         guard_profile: None,
         managed_bundle_hash: None,
         managed_verification_status: None,
+        native_host_output_adapter_verified: false,
+        bash_shell_mutation_coverage_configured: false,
+        direct_file_write_matcher_coverage_configured: false,
+        generated_config_verified: false,
     }
 }
 
@@ -1049,7 +1062,256 @@ fn guard_capability_facts(
             &capability,
             "managed_verification_status",
         ),
+        native_host_output_adapter_verified: capability_bool_field(
+            &capability,
+            "native_host_output_adapter_verified",
+        ),
+        bash_shell_mutation_coverage_configured: capability_bool_field(
+            &capability,
+            "bash_shell_mutation_coverage",
+        ),
+        direct_file_write_matcher_coverage_configured: capability_bool_field(
+            &capability,
+            "direct_file_write_matcher_coverage",
+        ),
+        generated_config_verified: generated_guard_config_verified(&capability),
     })
+}
+
+fn capability_bool_field(object: &JsonObject, field: &str) -> bool {
+    object.get(field).and_then(Value::as_bool).unwrap_or(false)
+}
+
+fn generated_guard_config_verified(capability: &JsonObject) -> bool {
+    let Some(files) = capability.get("files").and_then(Value::as_array) else {
+        return false;
+    };
+    if files.is_empty() {
+        return false;
+    }
+    let mut has_policy_file = false;
+    let mut has_hook_config = false;
+    let mut has_hook_wrapper = false;
+    for file in files {
+        let Some(kind) = file.get("kind").and_then(Value::as_str) else {
+            return false;
+        };
+        match kind {
+            "volicord_policy" => has_policy_file = true,
+            "host_hook_config" => has_hook_config = true,
+            "host_hook_wrapper" => has_hook_wrapper = true,
+            _ => {}
+        }
+        if !generated_guard_file_verified(file) {
+            return false;
+        }
+    }
+    has_policy_file && has_hook_config && has_hook_wrapper
+}
+
+fn generated_guard_file_verified(file: &Value) -> bool {
+    let Some(path_text) = file.get("path").and_then(Value::as_str) else {
+        return false;
+    };
+    let Ok(text) = std::fs::read_to_string(Path::new(path_text)) else {
+        return false;
+    };
+    let expected_hash = file
+        .get("content_hash")
+        .and_then(Value::as_str)
+        .unwrap_or_default();
+    match file.get("ownership").and_then(Value::as_str) {
+        Some("managed_block") => generated_managed_block_verified(file, &text, expected_hash),
+        Some("managed_json") => sha256_text(&text) == expected_hash,
+        Some("managed_json_projection") => {
+            generated_json_projection_verified(file, &text, expected_hash)
+        }
+        Some("managed_script") => generated_script_verified(file, &text, expected_hash),
+        _ => false,
+    }
+}
+
+fn generated_managed_block_verified(file: &Value, text: &str, expected_hash: &str) -> bool {
+    let Some(start_marker) = file.get("managed_marker_start").and_then(Value::as_str) else {
+        return false;
+    };
+    let Some(end_marker) = file.get("managed_marker_end").and_then(Value::as_str) else {
+        return false;
+    };
+    if marker_count(text, start_marker) != 1 || marker_count(text, end_marker) != 1 {
+        return false;
+    }
+    let Some(block) = managed_block_slice(text, start_marker, end_marker) else {
+        return false;
+    };
+    sha256_text(block) == expected_hash
+}
+
+fn generated_json_projection_verified(file: &Value, text: &str, expected_hash: &str) -> bool {
+    let Some(expected_projection_json) =
+        file.get("managed_projection_json").and_then(Value::as_str)
+    else {
+        return false;
+    };
+    if sha256_text(expected_projection_json) != expected_hash {
+        return false;
+    }
+    let Ok(actual) = serde_json::from_str::<Value>(text) else {
+        return false;
+    };
+    let Ok(desired) = serde_json::from_str::<Value>(expected_projection_json) else {
+        return false;
+    };
+    managed_projection_present(&actual, &desired)
+}
+
+fn generated_script_verified(file: &Value, text: &str, expected_hash: &str) -> bool {
+    let Some(managed_marker) = file.get("managed_marker").and_then(Value::as_str) else {
+        return false;
+    };
+    if !text.contains(managed_marker) {
+        return false;
+    }
+    if sha256_text(text) != expected_hash {
+        return false;
+    }
+    let Some(expected_command) = file
+        .get("managed_script_command")
+        .and_then(Value::as_str)
+        .filter(|value| !value.trim().is_empty())
+    else {
+        return false;
+    };
+    if hook_wrapper_exec_command(text) != Some(expected_command) {
+        return false;
+    }
+    for key in [
+        "host_kind",
+        "phase",
+        "connection_id",
+        "guard_installation_id",
+        "policy_hash",
+        "host_output",
+    ] {
+        let Some(expected) = file.get(key).and_then(Value::as_str) else {
+            return false;
+        };
+        if hook_wrapper_comment_value(text, key) != Some(expected) {
+            return false;
+        }
+    }
+    if file
+        .get("executable_required")
+        .and_then(Value::as_bool)
+        .unwrap_or(false)
+        && !script_is_executable(file)
+    {
+        return false;
+    }
+    true
+}
+
+fn marker_count(text: &str, marker: &str) -> usize {
+    text.match_indices(marker).count()
+}
+
+fn managed_block_slice<'a>(text: &'a str, start_marker: &str, end_marker: &str) -> Option<&'a str> {
+    let start = text.find(start_marker)?;
+    let end = start + text[start..].find(end_marker)? + end_marker.len();
+    let end = if text[end..].starts_with('\n') {
+        end + 1
+    } else {
+        end
+    };
+    text.get(start..end)
+}
+
+fn managed_projection_present(actual: &Value, desired: &Value) -> bool {
+    let Some(desired_object) = desired.as_object() else {
+        return actual == desired;
+    };
+    desired_object.iter().all(|(key, desired_value)| {
+        let Some(actual_value) = actual.get(key) else {
+            return false;
+        };
+        if key == "hooks" || key == "mcpServers" {
+            return managed_projection_object_present(actual_value, desired_value);
+        }
+        managed_projection_present(actual_value, desired_value)
+    })
+}
+
+fn managed_projection_object_present(actual: &Value, desired: &Value) -> bool {
+    let (Some(actual_object), Some(desired_object)) = (actual.as_object(), desired.as_object())
+    else {
+        return false;
+    };
+    desired_object.iter().all(|(key, desired_value)| {
+        let Some(actual_value) = actual_object.get(key) else {
+            return false;
+        };
+        match (actual_value.as_array(), desired_value.as_array()) {
+            (Some(actual_array), Some(desired_array)) => desired_array.iter().all(|desired_item| {
+                let desired_count = desired_array
+                    .iter()
+                    .filter(|item| *item == desired_item)
+                    .count();
+                let actual_count = actual_array
+                    .iter()
+                    .filter(|item| *item == desired_item)
+                    .count();
+                actual_count == desired_count
+            }),
+            _ => actual_value == desired_value,
+        }
+    })
+}
+
+fn hook_wrapper_exec_command(text: &str) -> Option<&str> {
+    text.lines()
+        .map(str::trim)
+        .find_map(|line| line.strip_prefix("exec "))
+}
+
+fn hook_wrapper_comment_value<'a>(text: &'a str, key: &str) -> Option<&'a str> {
+    let prefix = format!("# {key}=");
+    text.lines()
+        .map(str::trim)
+        .find_map(|line| line.strip_prefix(&prefix))
+        .map(str::trim)
+}
+
+#[cfg(unix)]
+fn script_is_executable(file: &Value) -> bool {
+    use std::os::unix::fs::PermissionsExt;
+
+    let Some(path_text) = file.get("path").and_then(Value::as_str) else {
+        return false;
+    };
+    std::fs::metadata(Path::new(path_text))
+        .map(|metadata| metadata.permissions().mode() & 0o111 != 0)
+        .unwrap_or(false)
+}
+
+#[cfg(not(unix))]
+fn script_is_executable(_file: &Value) -> bool {
+    true
+}
+
+fn sha256_text(text: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(text.as_bytes());
+    format!("sha256:{}", hex_bytes(&hasher.finalize()))
+}
+
+fn hex_bytes(bytes: &[u8]) -> String {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    let mut output = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        output.push(HEX[(byte >> 4) as usize] as char);
+        output.push(HEX[(byte & 0x0f) as usize] as char);
+    }
+    output
 }
 
 fn nonempty_string_field(object: &JsonObject, field: &str) -> Option<String> {
@@ -1081,14 +1343,16 @@ fn managed_distribution_verified(guard_mode: GuardMode, capability: &GuardCapabi
 }
 
 pub(super) fn refresh_guard_strength(summary: &mut GuardHealthSummary) {
-    summary.pre_tool_blocking_available = required_hook_available(summary, "pre_tool_hook");
-    summary.post_tool_correlation_available = required_hook_available(summary, "post_tool_hook");
-    summary.bypass_detection_active = summary.session_watch_status == SessionWatchStatus::Active
-        && summary.session_watch_partial_coverage_warning.is_none();
+    let host_hook_strength_available = host_hook_strength_available(summary);
+    summary.pre_tool_blocking_available =
+        host_hook_strength_available && required_hook_available(summary, "pre_tool_hook");
+    summary.post_tool_correlation_available =
+        host_hook_strength_available && required_hook_available(summary, "post_tool_hook");
+    summary.bypass_detection_active = summary.session_watch_status == SessionWatchStatus::Active;
     summary.guard_strength =
-        if summary.managed_distribution_verified && host_hook_strength_available(summary) {
+        if summary.managed_distribution_verified && host_hook_strength_available {
             GuardStrength::ManagedGuarded
-        } else if host_hook_strength_available(summary) {
+        } else if host_hook_strength_available {
             GuardStrength::HostHookGuarded
         } else if summary.bypass_detection_active {
             GuardStrength::DetectiveWatch
@@ -1100,9 +1364,43 @@ pub(super) fn refresh_guard_strength(summary: &mut GuardHealthSummary) {
 fn host_hook_strength_available(summary: &GuardHealthSummary) -> bool {
     matches!(summary.guard_mode, GuardMode::Guarded | GuardMode::Managed)
         && summary.effective_guard_status == GuardEffectiveStatus::Active
+        && summary.guard_configuration_status == GuardConfigurationStatus::Configured
+        && summary.guard_observation_status == GuardObservationStatus::Observed
+        && summary.guard_hook_observed
+        && summary.generated_config_verified
+        && summary.native_host_output_adapter_verified
+        && summary
+            .expected_policy_hash
+            .as_ref()
+            .is_some_and(|expected| {
+                summary
+                    .observed_policy_hash
+                    .as_ref()
+                    .is_some_and(|observed| observed == expected)
+            })
+        && summary.observed_host_kind.as_ref() == summary.host_kind.as_ref()
         && REQUIRED_GUARD_HOOK_PHASES
             .iter()
             .all(|phase| required_hook_available(summary, phase))
+        && summary
+            .required_hook_phases
+            .iter()
+            .any(|phase| phase == "pre_tool_hook")
+        && summary
+            .required_hook_phases
+            .iter()
+            .any(|phase| phase == "post_tool_hook")
+        && summary
+            .required_hook_phases
+            .iter()
+            .any(|phase| phase == "stop_hook")
+        && (!summary.prompt_capture_available
+            || summary
+                .required_hook_phases
+                .iter()
+                .any(|phase| phase == "user_prompt_submit_hook"))
+        && summary.bash_shell_mutation_coverage
+        && summary.direct_file_write_matcher_coverage
 }
 
 fn required_hook_available(summary: &GuardHealthSummary, phase: &str) -> bool {

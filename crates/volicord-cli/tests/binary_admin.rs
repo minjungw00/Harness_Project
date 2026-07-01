@@ -1042,6 +1042,10 @@ fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Resul
     assert_eq!(capability["managed_source"], "project_local_host_hooks");
     assert_eq!(capability["managed_bundle_hash"], Value::Null);
     assert_eq!(capability["managed_verification_status"], "not_applicable");
+    assert_eq!(capability["native_host_output_adapter"], "codex");
+    assert_eq!(capability["native_host_output_adapter_verified"], true);
+    assert_eq!(capability["bash_shell_mutation_coverage"], true);
+    assert_eq!(capability["direct_file_write_matcher_coverage"], true);
     assert_eq!(capability["missing_required_hooks"], serde_json::json!([]));
     assert_eq!(capability["host_capabilities"]["pre_tool_hook"], true);
     assert_eq!(
@@ -1096,6 +1100,7 @@ fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Resul
         doctor_json["states"]["post_tool_correlation_available"],
         false
     );
+    assert_eq!(doctor_json["states"]["bash_shell_mutation_coverage"], true);
     assert_eq!(doctor_json["states"]["bypass_detection_active"], false);
     assert_eq!(
         doctor_json["states"]["managed_distribution_verified"],

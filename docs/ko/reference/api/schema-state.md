@@ -113,8 +113,12 @@ GuardHealthSummary:
   guard_configuration_status: string
   guard_observation_status: string
   effective_guard_status: string
+  generated_config_verified: boolean
+  native_host_output_adapter_verified: boolean
   pre_tool_blocking_available: boolean
   post_tool_correlation_available: boolean
+  bash_shell_mutation_coverage: boolean
+  direct_file_write_matcher_coverage: boolean
   bypass_detection_active: boolean
   guard_hook_observed: boolean
   last_guard_observed_at: string | null
@@ -149,7 +153,7 @@ GuardHealthSummary:
 - `guard_strength`는 선택된 연결 또는 session에 대해 도출된 guard 강도 라벨입니다. 기록된 모드, hook 건강 상태, 런타임 관찰 건강 상태, session watcher 상태, prompt-capture 가용성, local web consent 가용성, managed 배포 검증을 바탕으로 현재 지원되는 가장 강한 guard 경로를 보고합니다.
 - `guard_installation_id`가 `null`이 아니면 불투명 guard 설치 식별자입니다.
 - `guard_configuration_status`, `guard_observation_status`, `effective_guard_status`는 파일/설정 건강 상태, 런타임 hook 관찰, 닫기 준비 상태에서 쓰는 효과적인 guarded 상태를 분리합니다.
-- `pre_tool_blocking_available`, `post_tool_correlation_available`, `bypass_detection_active`, `prompt_capture_available`, `local_web_consent_available`, `managed_distribution_verified`는 라벨의 근거가 되는 기능 사실을 노출합니다. `bypass_detection_active=true`에는 부분 coverage 경고가 없는 활성 session watch가 필요합니다. 런타임 전용 기능을 관찰할 수 없는 setup 진단은 그 기능을 false로 보고합니다.
+- `generated_config_verified`, `native_host_output_adapter_verified`, `pre_tool_blocking_available`, `post_tool_correlation_available`, `bash_shell_mutation_coverage`, `direct_file_write_matcher_coverage`, `bypass_detection_active`, `prompt_capture_available`, `local_web_consent_available`, `managed_distribution_verified`는 라벨의 근거가 되는 기능 사실을 노출합니다. `host_hook_guarded`에는 검증된 생성 설정, native host output, 필요한 lifecycle phase, Bash/shell 및 직접 파일 쓰기 matcher coverage, 일치하는 policy hash, 현재 런타임 guard 관찰이 필요합니다. `bypass_detection_active=true`에는 활성 session watch가 필요하며, 부분 coverage 경고는 `session_watch_partial_coverage_warning`에 계속 표시됩니다. 런타임 전용 기능을 관찰할 수 없는 setup 진단은 그 기능을 false로 보고합니다.
 - `guard_hook_observed`는 선택된 guard 설치에 대해 현재 일치하는 호스트 guard hook 관찰이 기록되어 있는지를 보고합니다.
 - `last_guard_observed_at`은 가장 최근 저장된 guard 설치 관찰 시각이며, 관찰이 기록되어 있지 않으면 `null`입니다.
 - `last_guard_event_at`은 상태 보기에 사용할 수 있는 최신 guard 이벤트 타임스탬프입니다. 사용할 수 있는 guard 이벤트가 없으면 `null`입니다.

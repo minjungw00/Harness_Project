@@ -924,9 +924,10 @@ fn bool_field(value: &Value, field: &str) -> bool {
 
 fn guard_capabilities_text(guard_health: &Value) -> String {
     format!(
-        "pre_tool_blocking={}, post_tool_correlation={}, bypass_detection={}, prompt_capture={}, local_web_consent={}, managed_distribution_verified={}",
+        "pre_tool_blocking={}, post_tool_correlation={}, bash_shell_mutation_coverage={}, bypass_detection={}, prompt_capture={}, local_web_consent={}, managed_distribution_verified={}",
         yes_no(bool_field(guard_health, "pre_tool_blocking_available")),
         yes_no(bool_field(guard_health, "post_tool_correlation_available")),
+        yes_no(bool_field(guard_health, "bash_shell_mutation_coverage")),
         yes_no(bool_field(guard_health, "bypass_detection_active")),
         yes_no(bool_field(guard_health, "prompt_capture_available")),
         yes_no(bool_field(guard_health, "local_web_consent_available")),

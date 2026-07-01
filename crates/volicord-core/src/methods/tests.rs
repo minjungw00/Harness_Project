@@ -7,6 +7,7 @@ use std::{
 
 use chrono::{DateTime, Duration, Utc};
 use serde_json::{json, Map, Value};
+use sha2::{Digest, Sha256};
 use volicord_store::{
     agent_connections::{
         add_connection_project, ensure_agent_connection, AgentConnectionRegistration,
@@ -12350,11 +12351,27 @@ fn guarded_close_complete_success_reports_guard_health() -> Result<(), Box<dyn E
         "host_hook_guarded"
     );
     assert_eq!(
+        status.response_value["guard_health"]["generated_config_verified"],
+        true
+    );
+    assert_eq!(
+        status.response_value["guard_health"]["native_host_output_adapter_verified"],
+        true
+    );
+    assert_eq!(
         status.response_value["guard_health"]["pre_tool_blocking_available"],
         true
     );
     assert_eq!(
         status.response_value["guard_health"]["post_tool_correlation_available"],
+        true
+    );
+    assert_eq!(
+        status.response_value["guard_health"]["bash_shell_mutation_coverage"],
+        true
+    );
+    assert_eq!(
+        status.response_value["guard_health"]["direct_file_write_matcher_coverage"],
         true
     );
     assert_eq!(
@@ -12457,33 +12474,17 @@ fn guarded_close_complete_success_reports_guard_health() -> Result<(), Box<dyn E
 #[test]
 fn managed_guarded_strength_requires_verified_distribution() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
-    let managed_capability = json!({
-        "schema": "volicord-guard-capability-v1",
-        "policy_hash": "sha256:guardedfixture",
-        "guard_profile": "managed_guarded",
-        "managed_source": "org_policy_bundle",
-        "managed_bundle_hash": "sha256:managedfixture",
-        "managed_verification_status": "verified",
-        "host_capabilities": {
-            "user_prompt_submit_hook": true
-        },
-        "required_guard_phases": [
-            "session_start_hook",
-            "pre_tool_hook",
-            "post_tool_hook",
-            "user_prompt_submit_hook",
-            "stop_hook"
-        ],
-        "missing_required_hooks": [],
-        "prompt_capture": true
-    })
-    .to_string();
+    let mut managed_capability = complete_guard_capability_value(&harness)?;
+    managed_capability["guard_profile"] = json!("managed_guarded");
+    managed_capability["managed_source"] = json!("org_policy_bundle");
+    managed_capability["managed_bundle_hash"] = json!("sha256:managedfixture");
+    managed_capability["managed_verification_status"] = json!("verified");
     record_guard_installation(
         &harness,
         "managed_verified",
         "managed",
         "active",
-        &managed_capability,
+        &managed_capability.to_string(),
     )?;
     let (task_id, _, _) = create_close_ready_task(&harness, "managed_verified")?;
 
@@ -12518,6 +12519,14 @@ fn managed_guarded_strength_requires_verified_distribution() -> Result<(), Box<d
         true
     );
     assert_eq!(
+        response.response_value["guard_health"]["bash_shell_mutation_coverage"],
+        true
+    );
+    assert_eq!(
+        response.response_value["guard_health"]["direct_file_write_matcher_coverage"],
+        true
+    );
+    assert_eq!(
         response.response_value["guard_health"]["managed_distribution_verified"],
         true
     );
@@ -12531,32 +12540,16 @@ fn managed_guarded_strength_requires_verified_distribution() -> Result<(), Box<d
 #[test]
 fn managed_mode_without_verified_bundle_reports_host_hook_strength() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
-    let unverified_capability = json!({
-        "schema": "volicord-guard-capability-v1",
-        "policy_hash": "sha256:guardedfixture",
-        "guard_profile": "managed_guarded",
-        "managed_source": "org_policy_bundle",
-        "managed_verification_status": "unverified",
-        "host_capabilities": {
-            "user_prompt_submit_hook": true
-        },
-        "required_guard_phases": [
-            "session_start_hook",
-            "pre_tool_hook",
-            "post_tool_hook",
-            "user_prompt_submit_hook",
-            "stop_hook"
-        ],
-        "missing_required_hooks": [],
-        "prompt_capture": true
-    })
-    .to_string();
+    let mut unverified_capability = complete_guard_capability_value(&harness)?;
+    unverified_capability["guard_profile"] = json!("managed_guarded");
+    unverified_capability["managed_source"] = json!("org_policy_bundle");
+    unverified_capability["managed_verification_status"] = json!("unverified");
     record_guard_installation(
         &harness,
         "managed_unverified",
         "managed",
         "active",
-        &unverified_capability,
+        &unverified_capability.to_string(),
     )?;
     let (task_id, _, _) = create_close_ready_task(&harness, "managed_unverified")?;
 
@@ -12586,6 +12579,159 @@ fn managed_mode_without_verified_bundle_reports_host_hook_strength() -> Result<(
         response.response_value["guard_health"]["managed_distribution_verified"],
         false
     );
+    assert_eq!(
+        response.response_value["guard_health"]["native_host_output_adapter_verified"],
+        true
+    );
+    assert_eq!(
+        response.response_value["guard_health"]["generated_config_verified"],
+        true
+    );
+    Ok(())
+}
+
+#[test]
+fn host_hook_strength_requires_native_output_adapter() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let mut capability = complete_guard_capability_value(&harness)?;
+    capability["native_host_output_adapter_verified"] = json!(false);
+    record_guard_installation(
+        &harness,
+        "native_output_unverified",
+        "guarded",
+        "active",
+        &capability.to_string(),
+    )?;
+    let (task_id, _, _) = create_close_ready_task(&harness, "native_output_unverified")?;
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_check_native_output_unverified",
+            idempotency_key: None,
+            dry_run: false,
+            expected_state_version: None,
+            task_id: &task_id,
+            intent: CloseIntent::Check,
+            close_reason: None,
+            superseding_task_id: None,
+        }),
+        invocation(OperationCategory::Read),
+    )?;
+
+    assert_eq!(
+        response.response_value["guard_health"]["guard_strength"],
+        "authority_record_only"
+    );
+    assert_eq!(
+        response.response_value["guard_health"]["native_host_output_adapter_verified"],
+        false
+    );
+    assert_eq!(
+        response.response_value["guard_health"]["pre_tool_blocking_available"],
+        false
+    );
+    Ok(())
+}
+
+#[test]
+fn host_hook_strength_requires_generated_config_verification() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let capability = complete_guard_capability_value(&harness)?;
+    let wrapper_path = capability["files"]
+        .as_array()
+        .and_then(|files| {
+            files
+                .iter()
+                .find(|file| file["kind"] == "host_hook_wrapper")
+        })
+        .and_then(|file| file["path"].as_str())
+        .map(PathBuf::from)
+        .expect("complete capability should include a wrapper path");
+    fs::remove_file(wrapper_path)?;
+    record_guard_installation(
+        &harness,
+        "generated_config_missing",
+        "guarded",
+        "active",
+        &capability.to_string(),
+    )?;
+    let (task_id, _, _) = create_close_ready_task(&harness, "generated_config_missing")?;
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_check_generated_config_missing",
+            idempotency_key: None,
+            dry_run: false,
+            expected_state_version: None,
+            task_id: &task_id,
+            intent: CloseIntent::Check,
+            close_reason: None,
+            superseding_task_id: None,
+        }),
+        invocation(OperationCategory::Read),
+    )?;
+
+    assert_eq!(
+        response.response_value["guard_health"]["guard_strength"],
+        "authority_record_only"
+    );
+    assert_eq!(
+        response.response_value["guard_health"]["generated_config_verified"],
+        false
+    );
+    assert_eq!(
+        response.response_value["guard_health"]["pre_tool_blocking_available"],
+        false
+    );
+    Ok(())
+}
+
+#[test]
+fn host_hook_strength_requires_shell_and_direct_write_matcher_coverage(
+) -> Result<(), Box<dyn Error>> {
+    for (suffix, field) in [
+        ("shell_matcher_unavailable", "bash_shell_mutation_coverage"),
+        (
+            "direct_write_matcher_unavailable",
+            "direct_file_write_matcher_coverage",
+        ),
+    ] {
+        let harness = MethodHarness::new()?;
+        let mut capability = complete_guard_capability_value(&harness)?;
+        capability[field] = json!(false);
+        record_guard_installation(
+            &harness,
+            suffix,
+            "guarded",
+            "active",
+            &capability.to_string(),
+        )?;
+        let (task_id, _, _) = create_close_ready_task(&harness, suffix)?;
+
+        let response = harness.service.close_task(
+            close_task_request(CloseTaskFixture {
+                request_id: &format!("req_check_{suffix}"),
+                idempotency_key: None,
+                dry_run: false,
+                expected_state_version: None,
+                task_id: &task_id,
+                intent: CloseIntent::Check,
+                close_reason: None,
+                superseding_task_id: None,
+            }),
+            invocation(OperationCategory::Read),
+        )?;
+
+        assert_eq!(
+            response.response_value["guard_health"]["guard_strength"],
+            "authority_record_only"
+        );
+        assert_eq!(response.response_value["guard_health"][field], false);
+        assert_eq!(
+            response.response_value["guard_health"]["pre_tool_blocking_available"],
+            false
+        );
+    }
     Ok(())
 }
 
@@ -14271,7 +14417,7 @@ fn mcp_only_watcher_detects_bypass_file_changes() -> Result<(), Box<dyn Error>> 
     );
     assert_eq!(
         response.response_value["guard_health"]["guard_strength"],
-        "authority_record_only"
+        "detective_watch"
     );
     assert_eq!(
         response.response_value["guard_health"]["pre_tool_blocking_available"],
@@ -14283,7 +14429,7 @@ fn mcp_only_watcher_detects_bypass_file_changes() -> Result<(), Box<dyn Error>> 
     );
     assert_eq!(
         response.response_value["guard_health"]["bypass_detection_active"],
-        false
+        true
     );
     assert_eq!(
         response.response_value["guard_health"]["session_watch_coverage_basis"],
@@ -14300,7 +14446,7 @@ fn mcp_only_watcher_detects_bypass_file_changes() -> Result<(), Box<dyn Error>> 
         1
     );
     let blocker = close_blocker_by_code(&response.response_value, "unresolved_unrecorded_changes");
-    assert_eq!(blocker["guard_strength"], "authority_record_only");
+    assert_eq!(blocker["guard_strength"], "detective_watch");
     let changes = unresolved_changes_for_connection(&harness)?;
     assert_eq!(changes.len(), 1);
     let detection: Value = serde_json::from_str(&changes[0].detection_json)?;
@@ -15368,8 +15514,8 @@ fn record_guard_installation(
     host_capability_json: &str,
 ) -> Result<String, Box<dyn Error>> {
     let guard_installation_id = format!("guard_installation_{suffix}");
-    let host_capability_json = if host_capability_json == "{}" {
-        complete_guard_capability_json()
+    let host_capability_json = if host_capability_json == "{}" && guard_mode != "mcp_only" {
+        complete_guard_capability_json(harness)?
     } else {
         host_capability_json.to_owned()
     };
@@ -15402,10 +15548,41 @@ fn record_guard_installation(
     Ok(guard_installation_id)
 }
 
-fn complete_guard_capability_json() -> String {
-    json!({
+fn complete_guard_capability_json(harness: &MethodHarness) -> Result<String, Box<dyn Error>> {
+    Ok(complete_guard_capability_value(harness)?.to_string())
+}
+
+fn complete_guard_capability_value(harness: &MethodHarness) -> Result<Value, Box<dyn Error>> {
+    let repo_root = product_repo_root(harness)?;
+    let policy_path = repo_root.join(".volicord").join("policy.json");
+    let hook_config_path = repo_root.join(".codex").join("hooks.json");
+    let wrapper_path = repo_root
+        .join(".codex")
+        .join("hooks")
+        .join("volicord-pre-tool.sh");
+    fs::create_dir_all(policy_path.parent().expect("policy path has parent"))?;
+    fs::create_dir_all(
+        hook_config_path
+            .parent()
+            .expect("hook config path has parent"),
+    )?;
+    fs::create_dir_all(wrapper_path.parent().expect("wrapper path has parent"))?;
+    let policy_text = r#"{"managed_by":"volicord","guard":{"commands":{}}}"#;
+    let hook_config_text = r#"{"hooks":{"PreToolUse":[{"matcher":"Bash|apply_patch|Edit|Write|mcp__.*__(write|edit|create|update|delete|remove|move|patch).*","hooks":[{"type":"command","command":".codex/hooks/volicord-pre-tool.sh"}]}],"PostToolUse":[{"matcher":"Bash|apply_patch|Edit|Write|mcp__.*__(write|edit|create|update|delete|remove|move|patch).*","hooks":[{"type":"command","command":".codex/hooks/volicord-post-tool.sh"}]}],"UserPromptSubmit":[{"hooks":[{"type":"command","command":".codex/hooks/volicord-prompt-capture.sh"}]}],"Stop":[{"hooks":[{"type":"command","command":".codex/hooks/volicord-stop.sh"}]}]}}"#;
+    let wrapper_command = "volicord guard pre-tool --repo /tmp/repo --connection conn_methods --guard-installation guard_installation --host codex --guard-mode guarded --policy-hash sha256:guardedfixture --host-output codex";
+    let wrapper_text = format!(
+        "#!/bin/sh\n# VOLICORD_MANAGED_HOOK_WRAPPER v1\n# host_kind=codex\n# phase=pre_tool\n# connection_id={CONNECTION_ID}\n# guard_installation_id=guard_installation\n# policy_hash=sha256:guardedfixture\n# host_output=codex\nexec {wrapper_command}\n"
+    );
+    fs::write(&policy_path, policy_text)?;
+    fs::write(&hook_config_path, hook_config_text)?;
+    fs::write(&wrapper_path, &wrapper_text)?;
+    Ok(json!({
         "schema": "volicord-guard-capability-v1",
         "policy_hash": "sha256:guardedfixture",
+        "native_host_output_adapter": "codex",
+        "native_host_output_adapter_verified": true,
+        "bash_shell_mutation_coverage": true,
+        "direct_file_write_matcher_coverage": true,
         "host_capabilities": {
             "user_prompt_submit_hook": true
         },
@@ -15417,9 +15594,57 @@ fn complete_guard_capability_json() -> String {
             "stop_hook"
         ],
         "missing_required_hooks": [],
-        "prompt_capture": true
-    })
-    .to_string()
+        "prompt_capture": true,
+        "files": [
+            {
+                "kind": "volicord_policy",
+                "path": path_text(&policy_path),
+                "content_hash": sha256_text(policy_text),
+                "ownership": "managed_json"
+            },
+            {
+                "kind": "host_hook_config",
+                "path": path_text(&hook_config_path),
+                "content_hash": sha256_text(hook_config_text),
+                "ownership": "managed_json"
+            },
+            {
+                "kind": "host_hook_wrapper",
+                "path": path_text(&wrapper_path),
+                "content_hash": sha256_text(&wrapper_text),
+                "ownership": "managed_script",
+                "managed_marker": "VOLICORD_MANAGED_HOOK_WRAPPER v1",
+                "executable_required": false,
+                "managed_script_command": wrapper_command,
+                "host_kind": "codex",
+                "phase": "pre_tool",
+                "connection_id": CONNECTION_ID,
+                "guard_installation_id": "guard_installation",
+                "policy_hash": "sha256:guardedfixture",
+                "host_output": "codex"
+            }
+        ]
+    }))
+}
+
+fn sha256_text(text: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(text.as_bytes());
+    format!("sha256:{}", hex_bytes(&hasher.finalize()))
+}
+
+fn hex_bytes(bytes: &[u8]) -> String {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    let mut output = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        output.push(HEX[(byte >> 4) as usize] as char);
+        output.push(HEX[(byte & 0x0f) as usize] as char);
+    }
+    output
+}
+
+fn path_text(path: &Path) -> String {
+    path.to_string_lossy().into_owned()
 }
 
 fn insert_guarded_agent_session(

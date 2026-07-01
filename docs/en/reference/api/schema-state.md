@@ -113,8 +113,12 @@ GuardHealthSummary:
   guard_configuration_status: string
   guard_observation_status: string
   effective_guard_status: string
+  generated_config_verified: boolean
+  native_host_output_adapter_verified: boolean
   pre_tool_blocking_available: boolean
   post_tool_correlation_available: boolean
+  bash_shell_mutation_coverage: boolean
+  direct_file_write_matcher_coverage: boolean
   bypass_detection_active: boolean
   guard_hook_observed: boolean
   last_guard_observed_at: string | null
@@ -149,7 +153,7 @@ Meaning:
 - `guard_strength` is the derived guard-strength label for the selected connection or session. It reports the strongest currently supported guard path from recorded mode, hook health, runtime observation health, session watcher status, prompt-capture availability, local web consent availability, and managed-distribution verification.
 - `guard_installation_id`, when non-null, is an opaque guard-installation identifier.
 - `guard_configuration_status`, `guard_observation_status`, and `effective_guard_status` separate file/config health, runtime hook observation, and the effective guarded close-readiness status.
-- `pre_tool_blocking_available`, `post_tool_correlation_available`, `bypass_detection_active`, `prompt_capture_available`, `local_web_consent_available`, and `managed_distribution_verified` expose the capability facts behind the label. `bypass_detection_active=true` requires an active session watch without a partial-coverage warning. A setup diagnostic that cannot observe a runtime-only capability reports that capability as false.
+- `generated_config_verified`, `native_host_output_adapter_verified`, `pre_tool_blocking_available`, `post_tool_correlation_available`, `bash_shell_mutation_coverage`, `direct_file_write_matcher_coverage`, `bypass_detection_active`, `prompt_capture_available`, `local_web_consent_available`, and `managed_distribution_verified` expose the capability facts behind the label. `host_hook_guarded` requires verified generated config, native host output, required lifecycle phases, Bash/shell and direct file-write matcher coverage, a matching policy hash, and a current runtime guard observation. `bypass_detection_active=true` requires an active session watch; a partial coverage warning remains visible in `session_watch_partial_coverage_warning`. A setup diagnostic that cannot observe a runtime-only capability reports that capability as false.
 - `guard_hook_observed` reports whether a current matching host guard hook observation is recorded for the selected guard installation.
 - `last_guard_observed_at` is the latest stored guard-installation observation timestamp, or `null` when no observation is recorded.
 - `last_guard_event_at` is the latest guard-event timestamp available to the projection, or `null` when no guard event is available.
