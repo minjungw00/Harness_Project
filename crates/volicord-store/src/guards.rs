@@ -162,6 +162,63 @@ pub struct PromptCaptureRecord {
     pub metadata_json: String,
 }
 
+/// Expected Product Repository write insert input.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExpectedWriteInsert {
+    pub expected_write_id: String,
+    pub session_id: Option<String>,
+    pub connection_internal_id: String,
+    pub guard_installation_id: Option<String>,
+    pub pre_tool_guard_event_id: String,
+    pub host_invocation_id: Option<String>,
+    pub tool_name: Option<String>,
+    pub command_kind: String,
+    pub path_policy: String,
+    pub expected_paths_json: String,
+    pub task_id: String,
+    pub change_unit_id: Option<String>,
+    pub write_check_ids_json: String,
+    pub basis_state_version: u64,
+    pub created_at: String,
+    pub expires_at: String,
+    pub metadata_json: String,
+}
+
+/// Expected Product Repository write match input.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExpectedWriteMatch {
+    pub matched_post_tool_guard_event_id: String,
+    pub matched_paths_json: String,
+    pub matched_at: String,
+}
+
+/// Expected Product Repository write row stored in project `state.sqlite`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExpectedWriteRecord {
+    pub project_id: String,
+    pub expected_write_id: String,
+    pub session_id: Option<String>,
+    pub connection_internal_id: String,
+    pub guard_installation_id: Option<String>,
+    pub pre_tool_guard_event_id: String,
+    pub host_invocation_id: Option<String>,
+    pub tool_name: Option<String>,
+    pub command_kind: String,
+    pub path_policy: String,
+    pub expected_paths_json: String,
+    pub task_id: String,
+    pub change_unit_id: Option<String>,
+    pub write_check_ids_json: String,
+    pub basis_state_version: u64,
+    pub status: String,
+    pub matched_post_tool_guard_event_id: Option<String>,
+    pub matched_paths_json: Option<String>,
+    pub created_at: String,
+    pub expires_at: String,
+    pub matched_at: Option<String>,
+    pub metadata_json: String,
+}
+
 /// Unrecorded Product Repository change insert input.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UnrecordedChangeInsert {
@@ -729,6 +786,254 @@ pub fn prompt_capture(
         .map(Option::flatten)
 }
 
+/// Inserts one project-scoped expected-write row or returns the existing row.
+pub fn insert_expected_write(
+    runtime_home: impl AsRef<Path>,
+    project_id: &str,
+    input: ExpectedWriteInsert,
+) -> StoreResult<ExpectedWriteRecord> {
+    validate_expected_write_insert(&input)?;
+    let mut project = open_guard_project(runtime_home, project_id, &input.connection_internal_id)?;
+    validate_optional_session_scope(
+        &project.conn,
+        &project.project.project_id,
+        input.session_id.as_deref(),
+        &input.connection_internal_id,
+    )?;
+    let tx = begin_immediate_transaction(&mut project.conn)?;
+    tx.execute(
+        "INSERT OR IGNORE INTO expected_writes (
+            project_id,
+            expected_write_id,
+            session_id,
+            connection_internal_id,
+            guard_installation_id,
+            pre_tool_guard_event_id,
+            host_invocation_id,
+            tool_name,
+            command_kind,
+            path_policy,
+            expected_paths_json,
+            task_id,
+            change_unit_id,
+            write_check_ids_json,
+            basis_state_version,
+            status,
+            created_at,
+            expires_at,
+            metadata_json
+        )
+        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, 'pending', ?16, ?17, ?18)",
+        params![
+            project.project.project_id,
+            input.expected_write_id,
+            input.session_id,
+            input.connection_internal_id,
+            input.guard_installation_id,
+            input.pre_tool_guard_event_id,
+            input.host_invocation_id,
+            input.tool_name,
+            input.command_kind,
+            input.path_policy,
+            input.expected_paths_json,
+            input.task_id,
+            input.change_unit_id,
+            input.write_check_ids_json,
+            input.basis_state_version,
+            input.created_at,
+            input.expires_at,
+            input.metadata_json,
+        ],
+    )?;
+    tx.commit()?;
+
+    expected_write_by_conn(
+        &project.conn,
+        &project.project.project_id,
+        &input.expected_write_id,
+    )
+}
+
+/// Reads one project-scoped expected-write row.
+pub fn expected_write(
+    runtime_home: impl AsRef<Path>,
+    project_id: &str,
+    expected_write_id: &str,
+) -> StoreResult<Option<ExpectedWriteRecord>> {
+    validate_identifier("project_id", project_id)?;
+    validate_identifier("expected_write_id", expected_write_id)?;
+    let project = open_project_for_read(runtime_home, project_id)?;
+    project
+        .map(|project| {
+            expected_write_from_conn(
+                &project.conn,
+                &project.project.project_id,
+                expected_write_id,
+            )
+        })
+        .transpose()
+        .map(Option::flatten)
+}
+
+/// Lists pending expected writes for one project and Agent Connection.
+pub fn list_pending_expected_writes(
+    runtime_home: impl AsRef<Path>,
+    project_id: &str,
+    connection_internal_id: &str,
+) -> StoreResult<Vec<ExpectedWriteRecord>> {
+    validate_identifier("project_id", project_id)?;
+    validate_identifier("connection_internal_id", connection_internal_id)?;
+    let Some(project) = open_project_for_read(runtime_home, project_id)? else {
+        return Ok(Vec::new());
+    };
+    let mut stmt = project.conn.prepare(
+        "SELECT
+            project_id,
+            expected_write_id,
+            session_id,
+            connection_internal_id,
+            guard_installation_id,
+            pre_tool_guard_event_id,
+            host_invocation_id,
+            tool_name,
+            command_kind,
+            path_policy,
+            expected_paths_json,
+            task_id,
+            change_unit_id,
+            write_check_ids_json,
+            basis_state_version,
+            status,
+            matched_post_tool_guard_event_id,
+            matched_paths_json,
+            created_at,
+            expires_at,
+            matched_at,
+            metadata_json
+         FROM expected_writes
+        WHERE project_id = ?1
+          AND connection_internal_id = ?2
+          AND status = 'pending'
+        ORDER BY created_at DESC, expected_write_id DESC",
+    )?;
+    let rows = stmt.query_map(
+        params![project.project.project_id, connection_internal_id],
+        expected_write_from_row,
+    )?;
+    collect_rows(rows)
+}
+
+/// Lists expected writes already matched by one post-tool guard event.
+pub fn list_expected_writes_matched_by_post_event(
+    runtime_home: impl AsRef<Path>,
+    project_id: &str,
+    connection_internal_id: &str,
+    post_tool_guard_event_id: &str,
+) -> StoreResult<Vec<ExpectedWriteRecord>> {
+    validate_identifier("project_id", project_id)?;
+    validate_identifier("connection_internal_id", connection_internal_id)?;
+    validate_identifier("post_tool_guard_event_id", post_tool_guard_event_id)?;
+    let Some(project) = open_project_for_read(runtime_home, project_id)? else {
+        return Ok(Vec::new());
+    };
+    let mut stmt = project.conn.prepare(
+        "SELECT
+            project_id,
+            expected_write_id,
+            session_id,
+            connection_internal_id,
+            guard_installation_id,
+            pre_tool_guard_event_id,
+            host_invocation_id,
+            tool_name,
+            command_kind,
+            path_policy,
+            expected_paths_json,
+            task_id,
+            change_unit_id,
+            write_check_ids_json,
+            basis_state_version,
+            status,
+            matched_post_tool_guard_event_id,
+            matched_paths_json,
+            created_at,
+            expires_at,
+            matched_at,
+            metadata_json
+         FROM expected_writes
+        WHERE project_id = ?1
+          AND connection_internal_id = ?2
+          AND status = 'matched'
+          AND matched_post_tool_guard_event_id = ?3
+        ORDER BY matched_at DESC, expected_write_id DESC",
+    )?;
+    let rows = stmt.query_map(
+        params![
+            project.project.project_id,
+            connection_internal_id,
+            post_tool_guard_event_id
+        ],
+        expected_write_from_row,
+    )?;
+    collect_rows(rows)
+}
+
+/// Marks one pending expected-write row matched by a post-tool observation.
+pub fn mark_expected_write_matched(
+    runtime_home: impl AsRef<Path>,
+    project_id: &str,
+    expected_write_id: &str,
+    input: ExpectedWriteMatch,
+) -> StoreResult<ExpectedWriteRecord> {
+    validate_identifier("project_id", project_id)?;
+    validate_identifier("expected_write_id", expected_write_id)?;
+    validate_expected_write_match(&input)?;
+    let mut project = open_project_for_required_read(runtime_home, project_id)?;
+    let tx = begin_immediate_transaction(&mut project.conn)?;
+    let changed = tx.execute(
+        "UPDATE expected_writes
+            SET status = 'matched',
+                matched_post_tool_guard_event_id = ?3,
+                matched_paths_json = ?4,
+                matched_at = ?5
+          WHERE project_id = ?1
+            AND expected_write_id = ?2
+            AND status = 'pending'",
+        params![
+            project.project.project_id,
+            expected_write_id,
+            input.matched_post_tool_guard_event_id,
+            input.matched_paths_json,
+            input.matched_at,
+        ],
+    )?;
+    tx.commit()?;
+    if changed == 0 {
+        let Some(existing) = expected_write_from_conn(
+            &project.conn,
+            &project.project.project_id,
+            expected_write_id,
+        )?
+        else {
+            return Err(StoreError::NotFound {
+                entity: "expected_write",
+                id: expected_write_id.to_owned(),
+            });
+        };
+        return Err(StoreError::Conflict {
+            entity: "expected_write",
+            id: existing.expected_write_id,
+            detail: "expected write is already matched".to_owned(),
+        });
+    }
+
+    expected_write_by_conn(
+        &project.conn,
+        &project.project.project_id,
+        expected_write_id,
+    )
+}
+
 /// Inserts one unresolved unrecorded-change row.
 pub fn insert_unrecorded_change(
     runtime_home: impl AsRef<Path>,
@@ -1234,6 +1539,63 @@ fn validate_prompt_capture_insert(input: &PromptCaptureInsert) -> StoreResult<()
     validate_json_object("prompt_captures.metadata_json", &input.metadata_json)
 }
 
+fn validate_expected_write_insert(input: &ExpectedWriteInsert) -> StoreResult<()> {
+    validate_identifier("expected_write_id", &input.expected_write_id)?;
+    if let Some(session_id) = &input.session_id {
+        validate_identifier("session_id", session_id)?;
+    }
+    validate_identifier("connection_internal_id", &input.connection_internal_id)?;
+    if let Some(guard_installation_id) = &input.guard_installation_id {
+        validate_identifier("guard_installation_id", guard_installation_id)?;
+    }
+    validate_identifier("pre_tool_guard_event_id", &input.pre_tool_guard_event_id)?;
+    if let Some(host_invocation_id) = &input.host_invocation_id {
+        validate_identifier("host_invocation_id", host_invocation_id)?;
+    }
+    if let Some(tool_name) = &input.tool_name {
+        validate_identifier("tool_name", tool_name)?;
+    }
+    validate_identifier("command_kind", &input.command_kind)?;
+    validate_expected_write_path_policy(&input.path_policy)?;
+    validate_json_array(
+        "expected_writes.expected_paths_json",
+        &input.expected_paths_json,
+    )?;
+    validate_identifier("task_id", &input.task_id)?;
+    if let Some(change_unit_id) = &input.change_unit_id {
+        validate_identifier("change_unit_id", change_unit_id)?;
+    }
+    validate_json_array(
+        "expected_writes.write_check_ids_json",
+        &input.write_check_ids_json,
+    )?;
+    validate_timestamp_text("created_at", &input.created_at)?;
+    validate_timestamp_text("expires_at", &input.expires_at)?;
+    validate_json_object("expected_writes.metadata_json", &input.metadata_json)
+}
+
+fn validate_expected_write_match(input: &ExpectedWriteMatch) -> StoreResult<()> {
+    validate_identifier(
+        "matched_post_tool_guard_event_id",
+        &input.matched_post_tool_guard_event_id,
+    )?;
+    validate_json_array(
+        "expected_writes.matched_paths_json",
+        &input.matched_paths_json,
+    )?;
+    validate_timestamp_text("matched_at", &input.matched_at)
+}
+
+fn validate_expected_write_path_policy(value: &str) -> StoreResult<()> {
+    if value == "exact_paths" {
+        Ok(())
+    } else {
+        Err(StoreError::InvalidInput {
+            detail: "path_policy must be exact_paths".to_owned(),
+        })
+    }
+}
+
 fn validate_unrecorded_change_insert(input: &UnrecordedChangeInsert) -> StoreResult<()> {
     validate_identifier("unrecorded_change_id", &input.unrecorded_change_id)?;
     if let Some(session_id) = &input.session_id {
@@ -1666,6 +2028,85 @@ fn prompt_capture_from_row(row: &Row<'_>) -> rusqlite::Result<PromptCaptureRecor
     })
 }
 
+fn expected_write_from_conn(
+    conn: &Connection,
+    project_id: &str,
+    expected_write_id: &str,
+) -> StoreResult<Option<ExpectedWriteRecord>> {
+    conn.query_row(
+        "SELECT
+            project_id,
+            expected_write_id,
+            session_id,
+            connection_internal_id,
+            guard_installation_id,
+            pre_tool_guard_event_id,
+            host_invocation_id,
+            tool_name,
+            command_kind,
+            path_policy,
+            expected_paths_json,
+            task_id,
+            change_unit_id,
+            write_check_ids_json,
+            basis_state_version,
+            status,
+            matched_post_tool_guard_event_id,
+            matched_paths_json,
+            created_at,
+            expires_at,
+            matched_at,
+            metadata_json
+         FROM expected_writes
+        WHERE project_id = ?1
+          AND expected_write_id = ?2",
+        params![project_id, expected_write_id],
+        expected_write_from_row,
+    )
+    .optional()
+    .map_err(StoreError::from)
+}
+
+fn expected_write_by_conn(
+    conn: &Connection,
+    project_id: &str,
+    expected_write_id: &str,
+) -> StoreResult<ExpectedWriteRecord> {
+    expected_write_from_conn(conn, project_id, expected_write_id)?.ok_or_else(|| {
+        StoreError::NotFound {
+            entity: "expected_write",
+            id: expected_write_id.to_owned(),
+        }
+    })
+}
+
+fn expected_write_from_row(row: &Row<'_>) -> rusqlite::Result<ExpectedWriteRecord> {
+    Ok(ExpectedWriteRecord {
+        project_id: row.get(0)?,
+        expected_write_id: row.get(1)?,
+        session_id: row.get(2)?,
+        connection_internal_id: row.get(3)?,
+        guard_installation_id: row.get(4)?,
+        pre_tool_guard_event_id: row.get(5)?,
+        host_invocation_id: row.get(6)?,
+        tool_name: row.get(7)?,
+        command_kind: row.get(8)?,
+        path_policy: row.get(9)?,
+        expected_paths_json: row.get(10)?,
+        task_id: row.get(11)?,
+        change_unit_id: row.get(12)?,
+        write_check_ids_json: row.get(13)?,
+        basis_state_version: row.get(14)?,
+        status: row.get(15)?,
+        matched_post_tool_guard_event_id: row.get(16)?,
+        matched_paths_json: row.get(17)?,
+        created_at: row.get(18)?,
+        expires_at: row.get(19)?,
+        matched_at: row.get(20)?,
+        metadata_json: row.get(21)?,
+    })
+}
+
 fn unrecorded_change_from_conn(
     conn: &Connection,
     project_id: &str,
@@ -1841,6 +2282,58 @@ mod tests {
             capture.prompt_text.as_deref(),
             Some("Please update the guard model.")
         );
+
+        fixture.insert_task("project_guard_a", "task_guard_a")?;
+        let expected = insert_expected_write(
+            fixture.runtime_home.path(),
+            "project_guard_a",
+            ExpectedWriteInsert {
+                expected_write_id: "expected_write_a".to_owned(),
+                session_id: Some("session_guard_a".to_owned()),
+                connection_internal_id: "conn_guard_a".to_owned(),
+                guard_installation_id: Some("guard_installation_a".to_owned()),
+                pre_tool_guard_event_id: "guard_event_a".to_owned(),
+                host_invocation_id: Some("tool_call_a".to_owned()),
+                tool_name: Some("shell".to_owned()),
+                command_kind: "mutating".to_owned(),
+                path_policy: "exact_paths".to_owned(),
+                expected_paths_json: r#"["src/lib.rs"]"#.to_owned(),
+                task_id: "task_guard_a".to_owned(),
+                change_unit_id: Some("change_unit_guard_a".to_owned()),
+                write_check_ids_json: r#"["write_check_a"]"#.to_owned(),
+                basis_state_version: 1,
+                created_at: "2026-06-30T00:04:30Z".to_owned(),
+                expires_at: "2026-06-30T00:19:30Z".to_owned(),
+                metadata_json: "{}".to_owned(),
+            },
+        )?;
+        assert_eq!(expected.status, "pending");
+        assert_eq!(
+            list_pending_expected_writes(
+                fixture.runtime_home.path(),
+                "project_guard_a",
+                "conn_guard_a",
+            )?
+            .len(),
+            1
+        );
+        let matched = mark_expected_write_matched(
+            fixture.runtime_home.path(),
+            "project_guard_a",
+            "expected_write_a",
+            ExpectedWriteMatch {
+                matched_post_tool_guard_event_id: "guard_event_post_a".to_owned(),
+                matched_paths_json: r#"["src/lib.rs"]"#.to_owned(),
+                matched_at: "2026-06-30T00:05:00Z".to_owned(),
+            },
+        )?;
+        assert_eq!(matched.status, "matched");
+        assert!(list_pending_expected_writes(
+            fixture.runtime_home.path(),
+            "project_guard_a",
+            "conn_guard_a",
+        )?
+        .is_empty());
 
         let change = insert_unrecorded_change(
             fixture.runtime_home.path(),
@@ -2231,6 +2724,26 @@ mod tests {
                     connection_internal_id: connection_id.to_owned(),
                     project_id: project_id.to_owned(),
                 },
+            )?;
+            Ok(())
+        }
+
+        fn insert_task(&self, project_id: &str, task_id: &str) -> Result<(), Box<dyn Error>> {
+            let project = project_record_for_execution(self.runtime_home.path(), project_id)?
+                .expect("project should be registered");
+            let conn = open_project_state_database(&project.state_db_path)?;
+            conn.execute(
+                "INSERT INTO tasks (
+                    project_id,
+                    task_id,
+                    created_by_actor_source,
+                    mode,
+                    lifecycle_phase,
+                    created_at,
+                    updated_at
+                )
+                VALUES (?1, ?2, 'agent_connection:conn_guard_a', 'work', 'shaping', 't0', 't0')",
+                params![project_id, task_id],
             )?;
             Ok(())
         }

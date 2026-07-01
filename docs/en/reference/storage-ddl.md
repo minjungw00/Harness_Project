@@ -43,7 +43,7 @@ Write Check rows record Core-state compatibility for a product-file write attemp
 
 `registry.sqlite` stores Runtime Home identity, installation profile records, project registration, project aliases, Agent Connection records, Connection Projects membership, guard installation records, and host configuration inventory. It does not store project-local Core state.
 
-Applying the current migrations produces registry schema version `2` for storage profile `baseline_sqlite_v3`. The first DDL block is the initial physical registry schema version `1`; the guard-record additions after it are schema version `2`. Storage profile and migration boundary behavior are owned by [Storage Versioning](storage-versioning.md).
+Applying the current migrations produces registry schema version `3` for storage profile `baseline_sqlite_v3`. The first DDL block is the initial physical registry schema version `1`; the guard-record additions after it are schema version `2`, and the guard-installation lifecycle replacement is schema version `3`. Storage profile and migration boundary behavior are owned by [Storage Versioning](storage-versioning.md).
 
 ```sql
 CREATE TABLE schema_migrations (
@@ -254,7 +254,7 @@ Registry constraints:
 
 Each registered project has one project-local `state.sqlite`. It stores Core state for that project and repeats `project_id` in project-scoped rows so foreign keys and indexes can enforce same-project relationships.
 
-Applying the current migrations produces project-state schema version `2` for storage profile `baseline_sqlite_v3`. The first DDL block is the initial physical project-state schema version `1`; the guard-record additions after it are schema version `2`. Storage profile and migration boundary behavior are owned by [Storage Versioning](storage-versioning.md).
+Applying the current migrations produces project-state schema version `3` for storage profile `baseline_sqlite_v3`. The first DDL block is the initial physical project-state schema version `1`; guarded-operation records are schema version `2`, and expected-write correlation records are schema version `3`. Storage profile and migration boundary behavior are owned by [Storage Versioning](storage-versioning.md).
 
 ```sql
 CREATE TABLE schema_migrations (
@@ -894,6 +894,65 @@ CREATE INDEX idx_unrecorded_changes_task
 
 The version `2` project-state migration updates existing `project_state.schema_version` rows from `1` to `2`.
 
+Project-state schema version `3` adds expected-write correlation records:
+
+```sql
+CREATE TABLE expected_writes (
+  project_id TEXT NOT NULL,
+  expected_write_id TEXT NOT NULL,
+  session_id TEXT,
+  connection_internal_id TEXT NOT NULL,
+  guard_installation_id TEXT,
+  pre_tool_guard_event_id TEXT NOT NULL,
+  host_invocation_id TEXT,
+  tool_name TEXT,
+  command_kind TEXT NOT NULL CHECK (length(trim(command_kind)) > 0),
+  path_policy TEXT NOT NULL CHECK (path_policy IN ('exact_paths')),
+  expected_paths_json TEXT NOT NULL DEFAULT '[]',
+  task_id TEXT NOT NULL,
+  change_unit_id TEXT,
+  write_check_ids_json TEXT NOT NULL DEFAULT '[]',
+  basis_state_version INTEGER NOT NULL CHECK (basis_state_version >= 0),
+  status TEXT NOT NULL CHECK (status IN ('pending', 'matched')),
+  matched_post_tool_guard_event_id TEXT,
+  matched_paths_json TEXT,
+  created_at TEXT NOT NULL,
+  expires_at TEXT NOT NULL,
+  matched_at TEXT,
+  metadata_json TEXT NOT NULL DEFAULT '{}',
+  PRIMARY KEY (project_id, expected_write_id),
+  CHECK (
+    (
+      status = 'pending'
+      AND matched_post_tool_guard_event_id IS NULL
+      AND matched_paths_json IS NULL
+      AND matched_at IS NULL
+    )
+    OR (
+      status = 'matched'
+      AND matched_post_tool_guard_event_id IS NOT NULL
+      AND matched_paths_json IS NOT NULL
+      AND matched_at IS NOT NULL
+    )
+  ),
+  FOREIGN KEY (project_id) REFERENCES project_state (project_id),
+  FOREIGN KEY (project_id, session_id) REFERENCES agent_sessions (project_id, session_id),
+  FOREIGN KEY (project_id, task_id) REFERENCES tasks (project_id, task_id)
+);
+
+CREATE INDEX idx_expected_writes_pending_connection
+  ON expected_writes (project_id, connection_internal_id, status, created_at);
+CREATE INDEX idx_expected_writes_session
+  ON expected_writes (project_id, session_id, status, created_at);
+CREATE INDEX idx_expected_writes_host_invocation
+  ON expected_writes (project_id, connection_internal_id, host_invocation_id, status)
+  WHERE host_invocation_id IS NOT NULL;
+CREATE INDEX idx_expected_writes_task
+  ON expected_writes (project_id, task_id, status);
+```
+
+The version `3` project-state migration updates existing `project_state.schema_version` rows from `2` to `3`.
+
 Project-state constraints:
 
 - `project_state.state_version` is the only public baseline state clock and must be monotonic according to [Storage Versioning](storage-versioning.md).
@@ -904,8 +963,9 @@ Project-state constraints:
 - `artifact_staging.created_by_actor_source` records staging provenance. Staged bytes and notices remain artifact-owned and are not evidence authority by themselves.
 - `evidence_observations.source_kind` and `assurance_level` distinguish cooperative agent reports, registered connection observations, external tool results, user observations, reused evidence, and unverified claims.
 - `tool_invocations` stores replay rows with actor provenance and operation category. Replay rows are not caller authority and do not bypass current connection context or User Channel requirements.
-- `agent_sessions`, `guard_events`, `prompt_captures`, and `unrecorded_changes` are project-local guarded-operation records. They repeat `connection_internal_id` for connection scoping and use project-local keys so records do not leak across projects.
+- `agent_sessions`, `guard_events`, `prompt_captures`, `expected_writes`, and `unrecorded_changes` are project-local guarded-operation records. They repeat `connection_internal_id` for connection scoping and use project-local keys so records do not leak across projects.
 - `guard_events.decision` is constrained to `allow`, `deny`, `warn`, or `inject_context`. These values record local guard decisions; they are not OS-level enforcement proof.
+- `expected_writes.status` is constrained to `pending` or `matched`, and `path_policy` is constrained to `exact_paths`. Matched rows must carry the matched post-tool guard event, matched paths JSON, and `matched_at`; pending rows must not carry those matched fields.
 - `unrecorded_changes.status` is constrained to `unresolved` or `resolved`. Resolved rows must carry resolution JSON, `resolved_at`, and `resolved_by_actor_source`; unresolved rows must not carry those resolution fields.
 
 ## Related Owners

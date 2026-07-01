@@ -205,6 +205,7 @@ fn initial_schemas_satisfy_connection_storage_contract() -> Result<(), Box<dyn E
             "agent_sessions",
             "guard_events",
             "prompt_captures",
+            "expected_writes",
             "unrecorded_changes",
         ],
     );
@@ -227,6 +228,19 @@ fn initial_schemas_satisfy_connection_storage_contract() -> Result<(), Box<dyn E
         &initial_project_schema,
         "prompt_captures",
         &["prompt_capture_id", "session_id", "prompt_sha256"],
+    );
+    assert_columns_include(
+        &initial_project_schema,
+        "expected_writes",
+        &[
+            "expected_write_id",
+            "pre_tool_guard_event_id",
+            "host_invocation_id",
+            "path_policy",
+            "expected_paths_json",
+            "write_check_ids_json",
+            "matched_post_tool_guard_event_id",
+        ],
     );
     assert_columns_include(
         &initial_project_schema,

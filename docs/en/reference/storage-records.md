@@ -88,6 +88,7 @@ Baseline storage persists only the record families defined by this baseline stor
 | `state.sqlite` | `agent_sessions` | Guarded Agent Session | Project-scoped session for one Agent Connection, optional guard installation, host kind, guard mode, start/end timestamps, and metadata. |
 | `state.sqlite` | `guard_events` | Guard decision event | Project-scoped guard event tied to a connection and optional session or installation, with decision, subject JSON, result JSON, timestamp, and metadata. |
 | `state.sqlite` | `prompt_captures` | Prompt capture | Project-scoped prompt capture for a session, including connection, capture kind, prompt hash, optional prompt text, timestamp, and metadata. |
+| `state.sqlite` | `expected_writes` | Expected Product Repository write | Project-scoped expected-write correlation record created by an allowed guarded pre-tool write, with connection/session identity, optional host invocation identity, exact path policy, active task/change-unit/write-check basis, timestamps, and matched post-tool metadata. |
 | `state.sqlite` | `unrecorded_changes` | Unrecorded Product Repository change | Project-scoped unresolved or resolved record for observed Product Repository changes that are not yet matched to a Core run or other owner-defined record. |
 | `state.sqlite` | `tasks` | Work-unit state | User-value work unit, shaping summary, scope and close-basis revisions, nullable current close basis, lifecycle/result/terminal close summary, current `CompletionPolicy`, current Change Unit pointer, and creator actor source. |
 | `state.sqlite` | `change_units` | Scoped work boundary | Scope summaries, write basis, Change Unit lifecycle, and owning `Task` relation. |
@@ -116,7 +117,7 @@ Baseline records use opaque stable ids as primary keys or equivalent unique keys
 - Connection Projects membership is unique by `connection_internal_id` and `project_internal_id`, and is the only registry membership that lets one connection address a registered project.
 - Guard installation identity is unique by `guard_installation_id`. Project-scoped guard installations must name a registered project and an Agent Connection that has Connection Projects membership for that project.
 - Project-scoped rows belong to a registered project.
-- Guard sessions, guard events, prompt captures, and unrecorded changes belong to one project-local `state.sqlite` and name the Agent Connection that observed or produced the record.
+- Guard sessions, guard events, prompt captures, expected writes, and unrecorded changes belong to one project-local `state.sqlite` and name the Agent Connection that observed or produced the record.
 - Task-scoped rows belong to the same project and `Task` as their owning `tasks` row.
 - Current pointers and owner references must point to same-project records.
 - A `Task` has at most one current Change Unit.
@@ -138,20 +139,20 @@ Storage must validate stored relationships before commit, including:
 - artifact staging consumption and promotion targets
 - artifact owner relations
 - Connection Projects membership and enabled-state consistency for Agent Connection routing
-- guard installation, Agent Session, guard event, prompt capture, and unrecorded-change project and connection scope
+- guard installation, Agent Session, guard event, prompt capture, expected-write, and unrecorded-change project and connection scope
 - JSON reference arrays that SQLite cannot express as direct foreign keys
 
 ### Authority Row Preservation
 
 Ordinary baseline Core operations preserve authority rows through lifecycle or status transitions. Completing, cancelling, or superseding a `Task` changes the relevant lifecycle/status meaning while keeping committed authority rows addressable for audit and recovery.
 
-This preservation applies to `tasks`, `change_units`, `user_judgments`, `project_continuity_records`, `write_checks`, `runs`, `artifacts`, `artifact_links`, `evidence_summaries`, `evidence_observations`, `blockers`, `task_events`, `tool_invocations`, `agent_sessions`, `guard_events`, `prompt_captures`, and `unrecorded_changes`. Artifact-specific transient and durable retention rules belong to [Artifact Storage](storage-artifacts.md).
+This preservation applies to `tasks`, `change_units`, `user_judgments`, `project_continuity_records`, `write_checks`, `runs`, `artifacts`, `artifact_links`, `evidence_summaries`, `evidence_observations`, `blockers`, `task_events`, `tool_invocations`, `agent_sessions`, `guard_events`, `prompt_captures`, `expected_writes`, and `unrecorded_changes`. Artifact-specific transient and durable retention rules belong to [Artifact Storage](storage-artifacts.md).
 
 ### Guarded Operation Records
 
 Guarded-operation records preserve local authority facts about host integration state. They can help Core and Store code determine whether work can honestly proceed or close, but they are not OS-level sandboxing, filesystem ACLs, external policy enforcement, anti-forgery proof, or proof that a write was prevented.
 
-`guard_installations` records setup lifecycle state, observed hook metadata, and host capability by Runtime Home, Agent Connection, and optional project scope. `configured` and `reload_required` mean files or metadata are installed but no matching guard hook has yet been observed. `active` means Volicord observed a valid guard hook for the recorded project, Agent Connection, host kind, guard mode, and policy hash; it does not prove OS-level enforcement or sandboxing. `agent_sessions`, `guard_events`, `prompt_captures`, and `unrecorded_changes` are project-local rows and must not leak across project `state.sqlite` databases. An unresolved `unrecorded_changes` row means an observed Product Repository change still needs owner-defined reconciliation; resolving the row records the local resolution facts and preserves the row.
+`guard_installations` records setup lifecycle state, observed hook metadata, and host capability by Runtime Home, Agent Connection, and optional project scope. `configured` and `reload_required` mean files or metadata are installed but no matching guard hook has yet been observed. `active` means Volicord observed a valid guard hook for the recorded project, Agent Connection, host kind, guard mode, and policy hash; it does not prove OS-level enforcement or sandboxing. `agent_sessions`, `guard_events`, `prompt_captures`, `expected_writes`, and `unrecorded_changes` are project-local rows and must not leak across project `state.sqlite` databases. A pending `expected_writes` row means guarded pre-tool allowed a concrete expected write for bounded project, connection, session, time, path, task, Change Unit, and Write Check coordinates. A matched row means post-tool observation was correlated to that expected write; it is not proof of product correctness. An unresolved `unrecorded_changes` row means an observed Product Repository change still needs owner-defined reconciliation; resolving the row records the local resolution facts and preserves the row.
 
 ### Current Close Basis
 
@@ -190,6 +191,8 @@ Closed storage-owned value sets are persistence constraints. Unknown values must
 | Guard installation `installation_status` | `absent`, `configured`, `reload_required`, `active`, `degraded`, `stale`, `broken` |
 | `agent_sessions.guard_mode` | `mcp_only`, `guarded`, `managed` |
 | `guard_events.decision` | `allow`, `deny`, `warn`, `inject_context` |
+| `expected_writes.path_policy` | `exact_paths` |
+| `expected_writes.status` | `pending`, `matched` |
 | `unrecorded_changes.status` | `unresolved`, `resolved` |
 | `change_units.status` | `proposed`, `active`, `replaced`, `closed` |
 | `write_checks.status` | `active`, `consumed`, `expired`, `stale`, `revoked` |

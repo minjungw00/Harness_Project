@@ -401,6 +401,7 @@ pub fn validate_project_state_schema(conn: &Connection) -> StoreResult<()> {
             "agent_sessions",
             "guard_events",
             "prompt_captures",
+            "expected_writes",
             "unrecorded_changes",
         ],
     )?;
@@ -438,6 +439,10 @@ pub fn validate_project_state_schema(conn: &Connection) -> StoreResult<()> {
             "idx_guard_events_decision",
             "idx_prompt_captures_session",
             "idx_prompt_captures_connection",
+            "idx_expected_writes_pending_connection",
+            "idx_expected_writes_session",
+            "idx_expected_writes_host_invocation",
+            "idx_expected_writes_task",
             "idx_unrecorded_changes_status",
             "idx_unrecorded_changes_connection",
             "idx_unrecorded_changes_task",
@@ -1337,6 +1342,33 @@ fn validate_guard_project_record_tables(conn: &Connection) -> StoreResult<()> {
             ][..],
         ),
         (
+            "expected_writes",
+            &[
+                "project_id",
+                "expected_write_id",
+                "session_id",
+                "connection_internal_id",
+                "guard_installation_id",
+                "pre_tool_guard_event_id",
+                "host_invocation_id",
+                "tool_name",
+                "command_kind",
+                "path_policy",
+                "expected_paths_json",
+                "task_id",
+                "change_unit_id",
+                "write_check_ids_json",
+                "basis_state_version",
+                "status",
+                "matched_post_tool_guard_event_id",
+                "matched_paths_json",
+                "created_at",
+                "expires_at",
+                "matched_at",
+                "metadata_json",
+            ][..],
+        ),
+        (
             "unrecorded_changes",
             &[
                 "project_id",
@@ -1359,6 +1391,24 @@ fn validate_guard_project_record_tables(conn: &Connection) -> StoreResult<()> {
         for column in columns {
             require_column(conn, PROJECT_STATE_DATABASE_KIND, table, column)?;
         }
+    }
+
+    let expected_writes_sql = normalized_table_sql(conn, "expected_writes")?;
+    let has_status_values = expected_writes_sql.contains("status in ('pending', 'matched')");
+    let has_path_policy = expected_writes_sql.contains("path_policy in ('exact_paths')");
+    let has_pending_group = expected_writes_sql.contains("status = 'pending'")
+        && expected_writes_sql.contains("matched_post_tool_guard_event_id is null")
+        && expected_writes_sql.contains("matched_paths_json is null")
+        && expected_writes_sql.contains("matched_at is null");
+    let has_matched_group = expected_writes_sql.contains("status = 'matched'")
+        && expected_writes_sql.contains("matched_post_tool_guard_event_id is not null")
+        && expected_writes_sql.contains("matched_paths_json is not null")
+        && expected_writes_sql.contains("matched_at is not null");
+    if !has_status_values || !has_path_policy || !has_pending_group || !has_matched_group {
+        return Err(StoreError::schema_invariant(
+            PROJECT_STATE_DATABASE_KIND,
+            "expected_writes constraints are missing or malformed",
+        ));
     }
 
     let sessions_sql = normalized_table_sql(conn, "agent_sessions")?;
@@ -1583,7 +1633,7 @@ mod tests {
             &conn,
             PROJECT_STATE_DATABASE_KIND,
             PROJECT_STATE_SCHEMA_VERSION,
-            "project_state_guard_records_v2"
+            "project_state_expected_writes_v3"
         )?);
         drop(conn);
 
@@ -1592,6 +1642,7 @@ mod tests {
         assert!(foreign_keys_enabled(&conn)?);
         assert!(sqlite_object_exists(&conn, "table", "tool_invocations")?);
         assert!(sqlite_object_exists(&conn, "table", "agent_sessions")?);
+        assert!(sqlite_object_exists(&conn, "table", "expected_writes")?);
         assert!(sqlite_object_exists(&conn, "table", "unrecorded_changes")?);
         validate_tool_invocations_columns(&conn)?;
         validate_tool_invocations_operation_category_constraint(&conn)?;

@@ -11,7 +11,7 @@ pub(crate) const OLD_STORAGE_PROFILE: &str = "baseline_sqlite";
 pub const REGISTRY_SCHEMA_VERSION: i64 = 3;
 
 /// Latest schema version for project `state.sqlite`.
-pub const PROJECT_STATE_SCHEMA_VERSION: i64 = 2;
+pub const PROJECT_STATE_SCHEMA_VERSION: i64 = 3;
 
 /// `schema_migrations.database_kind` for `registry.sqlite`.
 pub const REGISTRY_DATABASE_KIND: &str = "registry";
@@ -49,9 +49,15 @@ const PROJECT_STATE_MIGRATIONS: &[Migration] = &[
     },
     Migration {
         database_kind: PROJECT_STATE_DATABASE_KIND,
-        version: PROJECT_STATE_SCHEMA_VERSION,
+        version: 2,
         name: "project_state_guard_records_v2",
         sql: PROJECT_STATE_GUARD_RECORDS_SQL,
+    },
+    Migration {
+        database_kind: PROJECT_STATE_DATABASE_KIND,
+        version: PROJECT_STATE_SCHEMA_VERSION,
+        name: "project_state_expected_writes_v3",
+        sql: PROJECT_STATE_EXPECTED_WRITES_SQL,
     },
 ];
 
@@ -1196,6 +1202,66 @@ UPDATE project_state
  WHERE schema_version = 1;
 "#;
 
+const PROJECT_STATE_EXPECTED_WRITES_SQL: &str = r#"
+CREATE TABLE expected_writes (
+  project_id TEXT NOT NULL,
+  expected_write_id TEXT NOT NULL,
+  session_id TEXT,
+  connection_internal_id TEXT NOT NULL,
+  guard_installation_id TEXT,
+  pre_tool_guard_event_id TEXT NOT NULL,
+  host_invocation_id TEXT,
+  tool_name TEXT,
+  command_kind TEXT NOT NULL CHECK (length(trim(command_kind)) > 0),
+  path_policy TEXT NOT NULL CHECK (path_policy IN ('exact_paths')),
+  expected_paths_json TEXT NOT NULL DEFAULT '[]',
+  task_id TEXT NOT NULL,
+  change_unit_id TEXT,
+  write_check_ids_json TEXT NOT NULL DEFAULT '[]',
+  basis_state_version INTEGER NOT NULL CHECK (basis_state_version >= 0),
+  status TEXT NOT NULL CHECK (status IN ('pending', 'matched')),
+  matched_post_tool_guard_event_id TEXT,
+  matched_paths_json TEXT,
+  created_at TEXT NOT NULL,
+  expires_at TEXT NOT NULL,
+  matched_at TEXT,
+  metadata_json TEXT NOT NULL DEFAULT '{}',
+  PRIMARY KEY (project_id, expected_write_id),
+  CHECK (
+    (
+      status = 'pending'
+      AND matched_post_tool_guard_event_id IS NULL
+      AND matched_paths_json IS NULL
+      AND matched_at IS NULL
+    )
+    OR (
+      status = 'matched'
+      AND matched_post_tool_guard_event_id IS NOT NULL
+      AND matched_paths_json IS NOT NULL
+      AND matched_at IS NOT NULL
+    )
+  ),
+  FOREIGN KEY (project_id) REFERENCES project_state (project_id),
+  FOREIGN KEY (project_id, session_id) REFERENCES agent_sessions (project_id, session_id),
+  FOREIGN KEY (project_id, task_id) REFERENCES tasks (project_id, task_id)
+);
+
+CREATE INDEX idx_expected_writes_pending_connection
+  ON expected_writes (project_id, connection_internal_id, status, created_at);
+CREATE INDEX idx_expected_writes_session
+  ON expected_writes (project_id, session_id, status, created_at);
+CREATE INDEX idx_expected_writes_host_invocation
+  ON expected_writes (project_id, connection_internal_id, host_invocation_id, status)
+  WHERE host_invocation_id IS NOT NULL;
+CREATE INDEX idx_expected_writes_task
+  ON expected_writes (project_id, task_id, status);
+
+UPDATE project_state
+   SET schema_version = 3,
+       updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+ WHERE schema_version = 2;
+"#;
+
 #[cfg(test)]
 mod tests {
     use std::{error::Error, fs, path::Path};
@@ -1215,7 +1281,7 @@ mod tests {
     fn expected_migration_catalogs_contain_ordered_rows() {
         assert_eq!(STORAGE_PROFILE, "baseline_sqlite_v3");
         assert_eq!(REGISTRY_SCHEMA_VERSION, 3);
-        assert_eq!(PROJECT_STATE_SCHEMA_VERSION, 2);
+        assert_eq!(PROJECT_STATE_SCHEMA_VERSION, 3);
         assert_eq!(
             expected_registry_migrations(),
             vec![
@@ -1248,6 +1314,11 @@ mod tests {
                     database_kind: PROJECT_STATE_DATABASE_KIND,
                     version: 2,
                     name: "project_state_guard_records_v2",
+                },
+                ExpectedMigration {
+                    database_kind: PROJECT_STATE_DATABASE_KIND,
+                    version: 3,
+                    name: "project_state_expected_writes_v3",
                 }
             ]
         );
@@ -1298,7 +1369,11 @@ mod tests {
         assert_migrations(
             &conn,
             PROJECT_STATE_DATABASE_KIND,
-            &["project_state_initial_v1", "project_state_guard_records_v2"],
+            &[
+                "project_state_initial_v1",
+                "project_state_guard_records_v2",
+                "project_state_expected_writes_v3",
+            ],
         )?;
         drop(conn);
 
@@ -1307,12 +1382,17 @@ mod tests {
         assert_migrations(
             &conn,
             PROJECT_STATE_DATABASE_KIND,
-            &["project_state_initial_v1", "project_state_guard_records_v2"],
+            &[
+                "project_state_initial_v1",
+                "project_state_guard_records_v2",
+                "project_state_expected_writes_v3",
+            ],
         )?;
         assert!(table_exists(&conn, "tool_invocations")?);
         assert!(table_exists(&conn, "agent_sessions")?);
         assert!(table_exists(&conn, "guard_events")?);
         assert!(table_exists(&conn, "prompt_captures")?);
+        assert!(table_exists(&conn, "expected_writes")?);
         assert!(table_exists(&conn, "unrecorded_changes")?);
         assert!(column_exists(
             &conn,
@@ -1420,7 +1500,7 @@ mod tests {
         ));
         assert!(error.to_string().contains("explicitly reinitialize"));
         assert_eq!(file_hash(&path)?, hash_before);
-        assert_eq!(migration_count(&path, PROJECT_STATE_DATABASE_KIND)?, 2);
+        assert_eq!(migration_count(&path, PROJECT_STATE_DATABASE_KIND)?, 3);
         assert_eq!(stored_profile(&path, "project_state")?, OLD_STORAGE_PROFILE);
         Ok(())
     }
@@ -1451,7 +1531,7 @@ mod tests {
         assert!(matches!(error, StoreError::SchemaInvariant { .. }));
         assert!(error.to_string().contains("newer than supported"));
         assert_eq!(file_hash(&path)?, hash_before);
-        assert_eq!(migration_count(&path, PROJECT_STATE_DATABASE_KIND)?, 3);
+        assert_eq!(migration_count(&path, PROJECT_STATE_DATABASE_KIND)?, 4);
         Ok(())
     }
 
@@ -1576,7 +1656,11 @@ mod tests {
         assert_migrations(
             &conn,
             PROJECT_STATE_DATABASE_KIND,
-            &["project_state_initial_v1", "project_state_guard_records_v2"],
+            &[
+                "project_state_initial_v1",
+                "project_state_guard_records_v2",
+                "project_state_expected_writes_v3",
+            ],
         )?;
         Ok(())
     }

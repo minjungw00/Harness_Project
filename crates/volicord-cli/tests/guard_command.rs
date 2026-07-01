@@ -17,8 +17,9 @@ use volicord_store::agent_connections::{
     HOST_KIND_CODEX, HOST_SCOPE_PROJECT, VERIFIED_STATUS_COMPLETE,
 };
 use volicord_store::guards::{
-    guard_event, guard_installation, list_unresolved_unrecorded_changes, prompt_capture,
-    upsert_guard_installation, GuardInstallationUpsert,
+    expected_write, guard_event, guard_installation, list_pending_expected_writes,
+    list_unresolved_unrecorded_changes, prompt_capture, upsert_guard_installation,
+    GuardInstallationUpsert,
 };
 use volicord_test_support::core_fixtures::{CoreFixture, UpdateScopeFixture, UserJudgmentFixture};
 use volicord_types::{
@@ -164,6 +165,13 @@ fn guard_pre_tool_allows_read_status_without_active_task() -> Result<(), Box<dyn
         .as_array()
         .expect("reasons should be an array")
         .is_empty());
+    assert!(value["result"]["expected_write"].is_null());
+    assert!(list_pending_expected_writes(
+        fixture.runtime_home(),
+        fixture.project_id(),
+        fixture.connection_id(),
+    )?
+    .is_empty());
     Ok(())
 }
 
@@ -290,6 +298,326 @@ fn guard_post_tool_records_unrecorded_product_file_changes() -> Result<(), Box<d
     .expect("post-tool guard event should be stored");
     assert_eq!(stored.decision, "warn");
     assert_eq!(stored.event_kind, "post_tool");
+    Ok(())
+}
+
+#[test]
+fn guard_post_tool_matches_expected_allowed_write() -> Result<(), Box<dyn Error>> {
+    let fixture = GuardCliFixture::new("guard-post-expected")?;
+    let task_id = fixture.create_active_task()?;
+    fixture.prepare_write(&task_id)?;
+    let pre = json!({
+        "event_id": "guard_pre_expected",
+        "session_id": "guard_session_expected",
+        "connection_id": fixture.connection_id(),
+        "host_kind": "codex",
+        "tool_name": "shell",
+        "tool_call_id": "tool_call_expected",
+        "command": "touch src/export.rs",
+        "paths": ["src/export.rs"],
+        "timestamp": "2026-06-30T05:00:00Z"
+    });
+
+    let pre_output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        ["guard", "pre-tool", "--repo", fixture.repo_arg()],
+        &pre,
+    )?;
+    assert_success(&pre_output);
+    let pre_value = json_stdout(&pre_output)?;
+    assert_eq!(pre_value["decision"], "allow");
+    let expected_id = pre_value["result"]["expected_write"]["expected_write_id"]
+        .as_str()
+        .expect("expected write id should be present")
+        .to_owned();
+    assert_eq!(
+        list_pending_expected_writes(
+            fixture.runtime_home(),
+            fixture.project_id(),
+            fixture.connection_id(),
+        )?
+        .len(),
+        1
+    );
+
+    let post = json!({
+        "event_id": "guard_post_expected",
+        "session_id": "guard_session_expected",
+        "connection_id": fixture.connection_id(),
+        "host_kind": "codex",
+        "tool_name": "shell",
+        "tool_call_id": "tool_call_expected",
+        "command": "touch src/export.rs",
+        "success": true,
+        "changed_paths": ["src/export.rs"],
+        "timestamp": "2026-06-30T05:01:00Z"
+    });
+    let post_output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        ["guard", "post-tool", "--repo", fixture.repo_arg()],
+        &post,
+    )?;
+    assert_success(&post_output);
+    let post_value = json_stdout(&post_output)?;
+    assert_eq!(post_value["decision"], "allow");
+    assert_eq!(
+        post_value["result"]["matched_expected_writes"][0]["expected_write_id"],
+        expected_id
+    );
+    assert!(post_value["result"]["unrecorded_changes"]
+        .as_array()
+        .expect("unrecorded changes should be an array")
+        .is_empty());
+    assert!(list_unresolved_unrecorded_changes(
+        fixture.runtime_home(),
+        fixture.project_id(),
+        Some(fixture.connection_id()),
+    )?
+    .is_empty());
+    let stored_expected =
+        expected_write(fixture.runtime_home(), fixture.project_id(), &expected_id)?
+            .expect("expected write should be stored");
+    assert_eq!(stored_expected.status, "matched");
+    assert_eq!(
+        stored_expected.matched_post_tool_guard_event_id.as_deref(),
+        Some("guard_post_expected")
+    );
+    Ok(())
+}
+
+#[test]
+fn guard_post_tool_records_out_of_scope_expected_write() -> Result<(), Box<dyn Error>> {
+    let fixture = GuardCliFixture::new("guard-post-out-of-scope")?;
+    let task_id = fixture.create_active_task()?;
+    fixture.prepare_write(&task_id)?;
+    let pre = json!({
+        "event_id": "guard_pre_scope_expected",
+        "session_id": "guard_session_scope_expected",
+        "connection_id": fixture.connection_id(),
+        "host_kind": "codex",
+        "tool_name": "shell",
+        "tool_call_id": "tool_call_scope_expected",
+        "command": "touch src/export.rs",
+        "paths": ["src/export.rs"],
+        "timestamp": "2026-06-30T05:10:00Z"
+    });
+    assert_success(&run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        ["guard", "pre-tool", "--repo", fixture.repo_arg()],
+        &pre,
+    )?);
+
+    let post = json!({
+        "event_id": "guard_post_scope_changed",
+        "session_id": "guard_session_scope_expected",
+        "connection_id": fixture.connection_id(),
+        "host_kind": "codex",
+        "tool_name": "shell",
+        "tool_call_id": "tool_call_scope_expected",
+        "command": "touch src/other.rs",
+        "success": true,
+        "changed_paths": ["src/other.rs"],
+        "timestamp": "2026-06-30T05:11:00Z"
+    });
+    let output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        ["guard", "post-tool", "--repo", fixture.repo_arg()],
+        &post,
+    )?;
+    assert_success(&output);
+    let value = json_stdout(&output)?;
+    assert_eq!(value["decision"], "warn");
+    assert_eq!(
+        value["result"]["unrecorded_changes"][0]["observed_paths"][0],
+        "src/other.rs"
+    );
+    assert_eq!(
+        list_pending_expected_writes(
+            fixture.runtime_home(),
+            fixture.project_id(),
+            fixture.connection_id(),
+        )?
+        .len(),
+        1
+    );
+    Ok(())
+}
+
+#[test]
+fn guard_pre_tool_ambiguous_shell_does_not_create_expected_write() -> Result<(), Box<dyn Error>> {
+    let fixture = GuardCliFixture::new("guard-pre-ambiguous-shell")?;
+    let task_id = fixture.create_active_task()?;
+    fixture.prepare_write(&task_id)?;
+    let pre = json!({
+        "event_id": "guard_pre_ambiguous_shell",
+        "session_id": "guard_session_ambiguous_shell",
+        "connection_id": fixture.connection_id(),
+        "host_kind": "codex",
+        "tool_name": "shell",
+        "command": "python scripts/rewrite.py src/export.rs",
+        "paths": ["src/export.rs"],
+        "timestamp": "2026-06-30T05:20:00Z"
+    });
+    let pre_output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        ["guard", "pre-tool", "--repo", fixture.repo_arg()],
+        &pre,
+    )?;
+    assert_success(&pre_output);
+    let pre_value = json_stdout(&pre_output)?;
+    assert_eq!(pre_value["decision"], "warn");
+    assert_reason(&pre_value, "unknown_mutation_risk");
+    assert!(pre_value["result"]["expected_write"].is_null());
+    assert!(list_pending_expected_writes(
+        fixture.runtime_home(),
+        fixture.project_id(),
+        fixture.connection_id(),
+    )?
+    .is_empty());
+
+    let post = json!({
+        "event_id": "guard_post_ambiguous_shell",
+        "session_id": "guard_session_ambiguous_shell",
+        "connection_id": fixture.connection_id(),
+        "host_kind": "codex",
+        "tool_name": "shell",
+        "command": "python scripts/rewrite.py src/export.rs",
+        "success": true,
+        "changed_paths": ["src/export.rs"],
+        "timestamp": "2026-06-30T05:21:00Z"
+    });
+    let post_output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        ["guard", "post-tool", "--repo", fixture.repo_arg()],
+        &post,
+    )?;
+    assert_success(&post_output);
+    assert_eq!(json_stdout(&post_output)?["decision"], "warn");
+    assert_eq!(
+        list_unresolved_unrecorded_changes(
+            fixture.runtime_home(),
+            fixture.project_id(),
+            Some(fixture.connection_id()),
+        )?
+        .len(),
+        1
+    );
+    Ok(())
+}
+
+#[test]
+fn guard_expected_write_does_not_leak_between_sessions() -> Result<(), Box<dyn Error>> {
+    let fixture = GuardCliFixture::new("guard-session-isolation")?;
+    let task_id = fixture.create_active_task()?;
+    fixture.prepare_write(&task_id)?;
+    let pre = json!({
+        "event_id": "guard_pre_session_a",
+        "session_id": "guard_session_a",
+        "connection_id": fixture.connection_id(),
+        "host_kind": "codex",
+        "tool_name": "shell",
+        "tool_call_id": "shared_tool_call",
+        "command": "touch src/export.rs",
+        "paths": ["src/export.rs"],
+        "timestamp": "2026-06-30T05:30:00Z"
+    });
+    assert_success(&run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        ["guard", "pre-tool", "--repo", fixture.repo_arg()],
+        &pre,
+    )?);
+
+    let post_other_session = json!({
+        "event_id": "guard_post_session_b",
+        "session_id": "guard_session_b",
+        "connection_id": fixture.connection_id(),
+        "host_kind": "codex",
+        "tool_name": "shell",
+        "tool_call_id": "shared_tool_call",
+        "command": "touch src/export.rs",
+        "success": true,
+        "changed_paths": ["src/export.rs"],
+        "timestamp": "2026-06-30T05:31:00Z"
+    });
+    let output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        ["guard", "post-tool", "--repo", fixture.repo_arg()],
+        &post_other_session,
+    )?;
+    assert_success(&output);
+    assert_eq!(json_stdout(&output)?["decision"], "warn");
+    assert_eq!(
+        list_pending_expected_writes(
+            fixture.runtime_home(),
+            fixture.project_id(),
+            fixture.connection_id(),
+        )?
+        .len(),
+        1
+    );
+    Ok(())
+}
+
+#[test]
+fn guard_expected_write_does_not_leak_between_projects() -> Result<(), Box<dyn Error>> {
+    let first = GuardCliFixture::new("guard-project-isolation-a")?;
+    let task_id = first.create_active_task()?;
+    first.prepare_write(&task_id)?;
+    let pre = json!({
+        "event_id": "guard_pre_project_a",
+        "session_id": "guard_session_project",
+        "connection_id": first.connection_id(),
+        "host_kind": "codex",
+        "tool_name": "shell",
+        "tool_call_id": "tool_call_project",
+        "command": "touch src/export.rs",
+        "paths": ["src/export.rs"],
+        "timestamp": "2026-06-30T05:40:00Z"
+    });
+    assert_success(&run_guard(
+        first.runtime_home(),
+        first.repo_root(),
+        ["guard", "pre-tool", "--repo", first.repo_arg()],
+        &pre,
+    )?);
+
+    let second = GuardCliFixture::new("guard-project-isolation-b")?;
+    let task_id = second.create_active_task()?;
+    let post = json!({
+        "event_id": "guard_post_project_b",
+        "session_id": "guard_session_project",
+        "connection_id": second.connection_id(),
+        "host_kind": "codex",
+        "tool_name": "shell",
+        "tool_call_id": "tool_call_project",
+        "command": "touch src/export.rs",
+        "success": true,
+        "changed_paths": ["src/export.rs"],
+        "timestamp": "2026-06-30T05:41:00Z"
+    });
+    let output = run_guard(
+        second.runtime_home(),
+        second.repo_root(),
+        ["guard", "post-tool", "--repo", second.repo_arg()],
+        &post,
+    )?;
+    assert_success(&output);
+    assert_eq!(json_stdout(&output)?["decision"], "warn");
+    let unresolved = list_unresolved_unrecorded_changes(
+        second.runtime_home(),
+        second.project_id(),
+        Some(second.connection_id()),
+    )?;
+    assert_eq!(unresolved.len(), 1);
+    assert_eq!(unresolved[0].task_id.as_deref(), Some(task_id.as_str()));
     Ok(())
 }
 

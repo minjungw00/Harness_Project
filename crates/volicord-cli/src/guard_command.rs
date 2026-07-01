@@ -8,7 +8,7 @@ use std::{
     time::SystemTime,
 };
 
-use chrono::{DateTime, SecondsFormat, Utc};
+use chrono::{DateTime, Duration as ChronoDuration, SecondsFormat, Utc};
 use serde_json::{json, Map, Value};
 use sha2::{Digest, Sha256};
 use volicord_core::{CorePipelineError, CoreService, InvocationContext};
@@ -16,11 +16,13 @@ use volicord_store::{
     bootstrap::{project_record_for_execution, ProjectRecord},
     core_pipeline::{CoreProjectStore, UserJudgmentRecord},
     guards::{
-        agent_session, guard_event, insert_agent_session, insert_guard_event,
-        insert_prompt_capture, insert_unrecorded_change, list_unresolved_unrecorded_changes,
+        agent_session, guard_event, insert_agent_session, insert_expected_write,
+        insert_guard_event, insert_prompt_capture, insert_unrecorded_change,
+        list_expected_writes_matched_by_post_event, list_pending_expected_writes,
+        list_unresolved_unrecorded_changes, mark_expected_write_matched,
         observe_guard_installation, prompt_capture, unrecorded_change, AgentSessionInsert,
-        GuardEventInsert, GuardInstallationObservation, PromptCaptureInsert,
-        UnrecordedChangeInsert,
+        ExpectedWriteInsert, ExpectedWriteMatch, ExpectedWriteRecord, GuardEventInsert,
+        GuardInstallationObservation, PromptCaptureInsert, UnrecordedChangeInsert,
     },
     runtime_home::{resolve_runtime_home, RuntimeHomeResolutionError},
     StoreError,
@@ -43,6 +45,7 @@ use crate::user_command::{
 const GUARD_SCHEMA_VERSION: u64 = 1;
 const DEFAULT_GUARD_MODE: &str = "guarded";
 const VOLICORD_POLICY_FILE: &str = ".volicord/policy.json";
+const EXPECTED_WRITE_TTL_MINUTES: i64 = 15;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct GuardCommandOutcome {
@@ -183,6 +186,7 @@ struct GuardStateSummary {
     repo_root: String,
     state_version: u64,
     active_task_id: Option<String>,
+    active_change_unit_id: Option<String>,
     prompt_capture_enabled: bool,
     current_write_check_ids: Vec<String>,
     stale_write_check_ids: Vec<String>,
@@ -216,6 +220,7 @@ struct GuardPendingJudgmentOptionSummary {
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct ToolObservation {
     tool_name: Option<String>,
+    host_invocation_id: Option<String>,
     command: Option<String>,
     classification: ToolClassification,
     paths: Vec<PathAssessment>,
@@ -257,6 +262,38 @@ struct GuardReason {
     code: &'static str,
     message: String,
     severity: &'static str,
+}
+
+#[derive(Debug, Clone)]
+struct ExpectedWriteCandidate {
+    insert: ExpectedWriteInsert,
+    expected_paths: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct PostToolCorrelation {
+    matched_expected_writes: Vec<Value>,
+    unrecorded_changes: Vec<Value>,
+}
+
+struct UnrecordedChangeContext<'a> {
+    runtime_home: &'a Path,
+    project: &'a ProjectRecord,
+    envelope: &'a GuardEnvelope,
+    summary: &'a GuardStateSummary,
+    observation: &'a ToolObservation,
+    changed: Vec<String>,
+    correlation_status: &'static str,
+    candidate_expected_write_ids: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum ExpectedWriteMatchOutcome {
+    Matched(ExpectedWriteRecord),
+    AlreadyMatched(ExpectedWriteRecord),
+    NoCandidates,
+    OutOfScope(Vec<String>),
+    Ambiguous(Vec<String>),
 }
 
 pub fn guard_usage() -> String {
@@ -320,7 +357,7 @@ where
     let _activation =
         observe_guard_installation_activation(&runtime_home, &project, &envelope, phase)?;
 
-    let (decision, result, exits_failure) = match phase {
+    let (decision, result, exits_failure, expected_write) = match phase {
         GuardPhase::SessionStart => {
             let summary = guard_state_summary(&runtime_home, &project, &envelope, &input)?;
             (
@@ -332,6 +369,7 @@ where
                     "enforcement_level": "cooperative_detective"
                 }),
                 false,
+                None,
             )
         }
         GuardPhase::PreTool => {
@@ -339,6 +377,18 @@ where
             let observation = tool_observation(&input.raw_value, &project.repo_root);
             let (decision, reasons) = pre_tool_decision(&summary, &observation, &input.raw_value);
             let exits_failure = decision == GuardDecision::Deny;
+            let expected_write = expected_write_candidate(
+                &project,
+                &envelope,
+                &summary,
+                &observation,
+                &input,
+                decision,
+            )?;
+            let expected_write_json = expected_write
+                .as_ref()
+                .map(expected_write_candidate_json)
+                .unwrap_or(Value::Null);
             (
                 decision,
                 json!({
@@ -346,23 +396,25 @@ where
                     "allowed": decision != GuardDecision::Deny,
                     "reasons": reasons_json(&reasons),
                     "tool": tool_observation_json(&observation),
+                    "expected_write": expected_write_json,
                     "context": context_json(&summary),
                     "enforcement_level": "cooperative_detective"
                 }),
                 exits_failure,
+                expected_write,
             )
         }
         GuardPhase::PostTool => {
             let summary = guard_state_summary(&runtime_home, &project, &envelope, &input)?;
             let observation = tool_observation(&input.raw_value, &project.repo_root);
-            let inserted_changes = record_unrecorded_changes(
+            let correlation = record_post_tool_correlation(
                 &runtime_home,
                 &project,
                 &envelope,
                 &summary,
                 &observation,
             )?;
-            let decision = if inserted_changes.is_empty() {
+            let decision = if correlation.unrecorded_changes.is_empty() {
                 GuardDecision::Allow
             } else {
                 GuardDecision::Warn
@@ -373,15 +425,19 @@ where
                     "decision": decision.as_str(),
                     "allowed": true,
                     "tool": tool_observation_json(&observation),
-                    "unrecorded_changes": inserted_changes,
+                    "matched_expected_writes": correlation.matched_expected_writes,
+                    "unrecorded_changes": correlation.unrecorded_changes,
                     "context": context_json(&summary),
                     "enforcement_level": "cooperative_detective"
                 }),
                 false,
+                None,
             )
         }
         GuardPhase::PromptCapture => {
-            handle_prompt_capture(&runtime_home, &project, &envelope, &input)?
+            let (decision, result, exits_failure) =
+                handle_prompt_capture(&runtime_home, &project, &envelope, &input)?;
+            (decision, result, exits_failure, None)
         }
         GuardPhase::Stop => {
             let summary = guard_state_summary(&runtime_home, &project, &envelope, &input)?;
@@ -399,6 +455,7 @@ where
                     "enforcement_level": "cooperative_detective"
                 }),
                 exits_failure,
+                None,
             )
         }
     };
@@ -413,6 +470,9 @@ where
         subject,
         result.clone(),
     )?;
+    if let Some(expected_write) = expected_write {
+        persist_expected_write(&runtime_home, &project, expected_write)?;
+    }
     Ok(GuardCommandOutcome {
         output: render_guard_output(phase, decision, &envelope, result, options.output)?,
         exits_failure,
@@ -856,12 +916,16 @@ fn guard_state_summary(
     let now_timestamp = UtcTimestamp::from_datetime(now);
     let mut current_write_check_ids = Vec::new();
     let mut stale_write_check_ids = Vec::new();
+    let mut active_change_unit_id = None;
     let mut pending_user_judgment_count = 0;
     let mut pending_user_judgments = Vec::new();
     let mut active_blocker_count = 0;
     let prompt_capture_enabled = prompt_capture_enabled(envelope);
     if let Some(active_task_id) = project_state.active_task_id.as_deref() {
         let task_id = TaskId::new(active_task_id);
+        active_change_unit_id = store
+            .task_record(&task_id)?
+            .and_then(|task| task.current_change_unit_id);
         for record in store.active_write_checks(&task_id)? {
             let current_basis = record.basis_state_version == project_state.state_version;
             let not_expired = UtcTimestamp::parse(&record.expires_at)
@@ -894,6 +958,7 @@ fn guard_state_summary(
         repo_root: project.repo_root.display().to_string(),
         state_version: project_state.state_version,
         active_task_id: project_state.active_task_id,
+        active_change_unit_id,
         prompt_capture_enabled,
         current_write_check_ids,
         stale_write_check_ids,
@@ -943,6 +1008,7 @@ fn tool_observation(event: &Value, repo_root: &Path) -> ToolObservation {
     .unwrap_or(false);
     ToolObservation {
         tool_name,
+        host_invocation_id: host_invocation_id(event),
         command,
         classification,
         paths,
@@ -1243,9 +1309,7 @@ fn pre_tool_decision(
     event: &Value,
 ) -> (GuardDecision, Vec<GuardReason>) {
     let mut reasons = Vec::new();
-    let product_file_write_attempt = observation.explicit_write_attempt
-        || observation.classification == ToolClassification::Mutating
-        || tool_name_implies_write(observation.tool_name.as_deref());
+    let product_file_write_attempt = tool_attempts_product_write(observation);
     if observation
         .paths
         .iter()
@@ -1316,6 +1380,17 @@ fn pre_tool_decision(
     (decision, reasons)
 }
 
+fn tool_attempts_product_write(observation: &ToolObservation) -> bool {
+    observation.explicit_write_attempt
+        || observation.classification == ToolClassification::Mutating
+        || tool_name_implies_write(observation.tool_name.as_deref())
+}
+
+fn confidently_expects_product_write(observation: &ToolObservation) -> bool {
+    observation.classification == ToolClassification::Mutating
+        || tool_name_implies_write(observation.tool_name.as_deref())
+}
+
 fn tool_name_implies_write(tool_name: Option<&str>) -> bool {
     tool_name
         .map(|name| {
@@ -1327,59 +1402,274 @@ fn tool_name_implies_write(tool_name: Option<&str>) -> bool {
         .unwrap_or(false)
 }
 
-fn record_unrecorded_changes(
+fn expected_write_candidate(
+    project: &ProjectRecord,
+    envelope: &GuardEnvelope,
+    summary: &GuardStateSummary,
+    observation: &ToolObservation,
+    input: &GuardInput,
+    decision: GuardDecision,
+) -> Result<Option<ExpectedWriteCandidate>, GuardCommandError> {
+    if decision == GuardDecision::Deny || !confidently_expects_product_write(observation) {
+        return Ok(None);
+    }
+    let Some(task_id) = summary.active_task_id.clone() else {
+        return Ok(None);
+    };
+    if summary.current_write_check_ids.is_empty() {
+        return Ok(None);
+    }
+    if observation
+        .paths
+        .iter()
+        .chain(observation.changed_paths.iter())
+        .any(|path| !path.inside_repo)
+    {
+        return Ok(None);
+    }
+    let expected_paths = normalized_observed_paths(
+        observation
+            .paths
+            .iter()
+            .chain(observation.changed_paths.iter()),
+    );
+    if expected_paths.is_empty() {
+        return Ok(None);
+    }
+    let created_at = event_time_or_now(&envelope.occurred_at);
+    let expires_at = created_at + ChronoDuration::minutes(EXPECTED_WRITE_TTL_MINUTES);
+    let host_invocation_id = host_invocation_id(&input.raw_value);
+    let expected_write_id = stable_id(
+        "expected_write",
+        &[
+            &project.project_id,
+            &envelope.connection_id,
+            envelope.session_id.as_deref().unwrap_or(""),
+            &envelope.event_id,
+            host_invocation_id.as_deref().unwrap_or(""),
+            &expected_paths.join("|"),
+            &summary.current_write_check_ids.join("|"),
+        ],
+    );
+    Ok(Some(ExpectedWriteCandidate {
+        insert: ExpectedWriteInsert {
+            expected_write_id,
+            session_id: envelope.session_id.clone(),
+            connection_internal_id: envelope.connection_id.clone(),
+            guard_installation_id: envelope.guard_installation_id.clone(),
+            pre_tool_guard_event_id: envelope.event_id.clone(),
+            host_invocation_id,
+            tool_name: observation.tool_name.clone(),
+            command_kind: observation.classification.as_str().to_owned(),
+            path_policy: "exact_paths".to_owned(),
+            expected_paths_json: serde_json::to_string(&expected_paths).map_err(json_error)?,
+            task_id,
+            change_unit_id: summary.active_change_unit_id.clone(),
+            write_check_ids_json: serde_json::to_string(&summary.current_write_check_ids)
+                .map_err(json_error)?,
+            basis_state_version: summary.state_version,
+            created_at: format_timestamp(created_at),
+            expires_at: format_timestamp(expires_at),
+            metadata_json: json!({
+                "source": "volicord_guard_pre_tool",
+                "schema_version": GUARD_SCHEMA_VERSION,
+                "raw_event_sha256": input.raw_sha256
+            })
+            .to_string(),
+        },
+        expected_paths,
+    }))
+}
+
+fn persist_expected_write(
+    runtime_home: &Path,
+    project: &ProjectRecord,
+    candidate: ExpectedWriteCandidate,
+) -> Result<(), GuardCommandError> {
+    insert_expected_write(runtime_home, &project.project_id, candidate.insert)?;
+    Ok(())
+}
+
+fn expected_write_candidate_json(candidate: &ExpectedWriteCandidate) -> Value {
+    json!({
+        "expected_write_id": candidate.insert.expected_write_id,
+        "host_invocation_id": candidate.insert.host_invocation_id,
+        "tool_name": candidate.insert.tool_name,
+        "command_kind": candidate.insert.command_kind,
+        "path_policy": candidate.insert.path_policy,
+        "expected_paths": candidate.expected_paths,
+        "task_id": candidate.insert.task_id,
+        "change_unit_id": candidate.insert.change_unit_id,
+        "write_check_ids": candidate.insert.write_check_ids_json
+            .parse::<Value>()
+            .unwrap_or_else(|_| json!([])),
+        "basis_state_version": candidate.insert.basis_state_version,
+        "expires_at": candidate.insert.expires_at
+    })
+}
+
+fn normalized_observed_paths<'a>(paths: impl Iterator<Item = &'a PathAssessment>) -> Vec<String> {
+    paths
+        .filter(|path| path.inside_repo)
+        .filter_map(|path| path.normalized.clone())
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .collect()
+}
+
+fn host_invocation_id(event: &Value) -> Option<String> {
+    event_string(
+        event,
+        &[
+            &["tool_call_id"],
+            &["tool_use_id"],
+            &["tool_invocation_id"],
+            &["invocation_id"],
+            &["call_id"],
+            &["tool", "call_id"],
+            &["tool", "id"],
+            &["tool_use", "id"],
+            &["tool_result", "tool_call_id"],
+            &["result", "tool_call_id"],
+        ],
+    )
+}
+
+fn record_post_tool_correlation(
     runtime_home: &Path,
     project: &ProjectRecord,
     envelope: &GuardEnvelope,
     summary: &GuardStateSummary,
     observation: &ToolObservation,
-) -> Result<Vec<Value>, GuardCommandError> {
+) -> Result<PostToolCorrelation, GuardCommandError> {
     if observation.tool_name.as_deref() == Some("volicord.record_run") {
-        return Ok(Vec::new());
+        return Ok(PostToolCorrelation {
+            matched_expected_writes: Vec::new(),
+            unrecorded_changes: Vec::new(),
+        });
     }
-    let changed = observation
-        .changed_paths
-        .iter()
-        .filter(|path| path.inside_repo)
-        .filter_map(|path| path.normalized.clone())
-        .collect::<BTreeSet<_>>()
-        .into_iter()
-        .collect::<Vec<_>>();
+    let changed = normalized_observed_paths(observation.changed_paths.iter());
     if changed.is_empty() {
+        return Ok(PostToolCorrelation {
+            matched_expected_writes: Vec::new(),
+            unrecorded_changes: Vec::new(),
+        });
+    }
+    let match_outcome =
+        match_expected_write(runtime_home, project, envelope, observation, &changed)?;
+    match match_outcome {
+        ExpectedWriteMatchOutcome::Matched(record) => {
+            mark_expected_write_matched(
+                runtime_home,
+                &project.project_id,
+                &record.expected_write_id,
+                ExpectedWriteMatch {
+                    matched_post_tool_guard_event_id: envelope.event_id.clone(),
+                    matched_paths_json: serde_json::to_string(&changed).map_err(json_error)?,
+                    matched_at: envelope.occurred_at.clone(),
+                },
+            )?;
+            Ok(PostToolCorrelation {
+                matched_expected_writes: vec![matched_expected_write_json(&record, &changed)],
+                unrecorded_changes: Vec::new(),
+            })
+        }
+        ExpectedWriteMatchOutcome::AlreadyMatched(record) => Ok(PostToolCorrelation {
+            matched_expected_writes: vec![matched_expected_write_json(&record, &changed)],
+            unrecorded_changes: Vec::new(),
+        }),
+        ExpectedWriteMatchOutcome::NoCandidates => Ok(PostToolCorrelation {
+            matched_expected_writes: Vec::new(),
+            unrecorded_changes: record_unrecorded_changes(UnrecordedChangeContext {
+                runtime_home,
+                project,
+                envelope,
+                summary,
+                observation,
+                changed,
+                correlation_status: "unmatched_expected_write",
+                candidate_expected_write_ids: Vec::new(),
+            })?,
+        }),
+        ExpectedWriteMatchOutcome::OutOfScope(candidate_ids) => Ok(PostToolCorrelation {
+            matched_expected_writes: Vec::new(),
+            unrecorded_changes: record_unrecorded_changes(UnrecordedChangeContext {
+                runtime_home,
+                project,
+                envelope,
+                summary,
+                observation,
+                changed,
+                correlation_status: "out_of_scope_expected_write",
+                candidate_expected_write_ids: candidate_ids,
+            })?,
+        }),
+        ExpectedWriteMatchOutcome::Ambiguous(candidate_ids) => Ok(PostToolCorrelation {
+            matched_expected_writes: Vec::new(),
+            unrecorded_changes: record_unrecorded_changes(UnrecordedChangeContext {
+                runtime_home,
+                project,
+                envelope,
+                summary,
+                observation,
+                changed,
+                correlation_status: "ambiguous_expected_write",
+                candidate_expected_write_ids: candidate_ids,
+            })?,
+        }),
+    }
+}
+
+fn record_unrecorded_changes(
+    context: UnrecordedChangeContext<'_>,
+) -> Result<Vec<Value>, GuardCommandError> {
+    if context.changed.is_empty() {
         return Ok(Vec::new());
     }
     let change_id = stable_id(
         "unrecorded_change",
-        &[&envelope.event_id, &project.project_id, &changed.join("|")],
+        &[
+            &context.envelope.event_id,
+            &context.project.project_id,
+            &context.changed.join("|"),
+        ],
     );
-    if unrecorded_change(runtime_home, &project.project_id, &change_id)?.is_some() {
+    if unrecorded_change(
+        context.runtime_home,
+        &context.project.project_id,
+        &change_id,
+    )?
+    .is_some()
+    {
         return Ok(vec![json!({
             "unrecorded_change_id": change_id,
             "status": "already_recorded",
-            "observed_paths": changed
+            "observed_paths": context.changed
         })]);
     }
     insert_unrecorded_change(
-        runtime_home,
-        &project.project_id,
+        context.runtime_home,
+        &context.project.project_id,
         UnrecordedChangeInsert {
             unrecorded_change_id: change_id.clone(),
-            session_id: envelope.session_id.clone(),
-            connection_internal_id: envelope.connection_id.clone(),
-            task_id: summary.active_task_id.clone(),
+            session_id: context.envelope.session_id.clone(),
+            connection_internal_id: context.envelope.connection_id.clone(),
+            task_id: context.summary.active_task_id.clone(),
             summary: "Product file changes were observed after a host tool without a matching Volicord run record".to_owned(),
-            observed_paths_json: serde_json::to_string(&changed).map_err(json_error)?,
+            observed_paths_json: serde_json::to_string(&context.changed).map_err(json_error)?,
             detection_json: json!({
                 "source": "volicord_guard_post_tool",
-                "tool_name": observation.tool_name,
-                "exit_code": observation.exit_code,
-                "success": observation.success,
-                "status": observation.status
+                "tool_name": context.observation.tool_name,
+                "exit_code": context.observation.exit_code,
+                "success": context.observation.success,
+                "status": context.observation.status,
+                "correlation_status": context.correlation_status,
+                "candidate_expected_write_ids": context.candidate_expected_write_ids
             })
             .to_string(),
-            detected_at: envelope.occurred_at.clone(),
+            detected_at: context.envelope.occurred_at.clone(),
             metadata_json: json!({
-                "guard_event_id": envelope.event_id,
+                "guard_event_id": context.envelope.event_id,
                 "schema_version": GUARD_SCHEMA_VERSION
             })
             .to_string(),
@@ -1388,8 +1678,180 @@ fn record_unrecorded_changes(
     Ok(vec![json!({
         "unrecorded_change_id": change_id,
         "status": "unresolved",
-        "observed_paths": changed
+        "observed_paths": context.changed
     })])
+}
+
+fn match_expected_write(
+    runtime_home: &Path,
+    project: &ProjectRecord,
+    envelope: &GuardEnvelope,
+    observation: &ToolObservation,
+    changed: &[String],
+) -> Result<ExpectedWriteMatchOutcome, GuardCommandError> {
+    let already_matched = list_expected_writes_matched_by_post_event(
+        runtime_home,
+        &project.project_id,
+        &envelope.connection_id,
+        &envelope.event_id,
+    )?;
+    let changed_set = changed.iter().cloned().collect::<BTreeSet<_>>();
+    let already_matched = already_matched
+        .into_iter()
+        .filter(|record| expected_write_session_matches(record, envelope))
+        .filter(|record| matched_paths_cover_observed(record, &changed_set))
+        .collect::<Vec<_>>();
+    if already_matched.len() == 1 {
+        return Ok(ExpectedWriteMatchOutcome::AlreadyMatched(
+            already_matched.into_iter().next().expect("length checked"),
+        ));
+    }
+    if already_matched.len() > 1 {
+        return Ok(ExpectedWriteMatchOutcome::Ambiguous(
+            already_matched
+                .into_iter()
+                .map(|record| record.expected_write_id)
+                .collect(),
+        ));
+    }
+
+    let host_invocation_id = host_invocation_id_from_observation(observation);
+    let observed_at = event_time_or_now(&envelope.occurred_at);
+    let pending =
+        list_pending_expected_writes(runtime_home, &project.project_id, &envelope.connection_id)?;
+    let time_scoped = pending
+        .into_iter()
+        .filter(|record| expected_write_time_contains(record, observed_at))
+        .collect::<Vec<_>>();
+
+    let candidates = if let Some(host_id) = host_invocation_id.as_deref() {
+        let exact = time_scoped
+            .iter()
+            .filter(|record| record.host_invocation_id.as_deref() == Some(host_id))
+            .filter(|record| expected_write_session_matches(record, envelope))
+            .cloned()
+            .collect::<Vec<_>>();
+        if exact.is_empty() {
+            fallback_expected_write_candidates(&time_scoped, envelope, true)
+        } else {
+            exact
+        }
+    } else {
+        fallback_expected_write_candidates(&time_scoped, envelope, false)
+    };
+    if candidates.is_empty() {
+        return Ok(ExpectedWriteMatchOutcome::NoCandidates);
+    }
+
+    let path_matched = candidates
+        .iter()
+        .filter(|record| expected_paths_cover_observed(record, &changed_set))
+        .cloned()
+        .collect::<Vec<_>>();
+    if path_matched.len() == 1 {
+        return Ok(ExpectedWriteMatchOutcome::Matched(
+            path_matched.into_iter().next().expect("length checked"),
+        ));
+    }
+    if path_matched.len() > 1 {
+        return Ok(ExpectedWriteMatchOutcome::Ambiguous(
+            path_matched
+                .into_iter()
+                .map(|record| record.expected_write_id)
+                .collect(),
+        ));
+    }
+    let candidate_ids = candidates
+        .into_iter()
+        .map(|record| record.expected_write_id)
+        .collect::<Vec<_>>();
+    if candidate_ids.len() == 1 {
+        Ok(ExpectedWriteMatchOutcome::OutOfScope(candidate_ids))
+    } else {
+        Ok(ExpectedWriteMatchOutcome::Ambiguous(candidate_ids))
+    }
+}
+
+fn fallback_expected_write_candidates(
+    records: &[ExpectedWriteRecord],
+    envelope: &GuardEnvelope,
+    require_missing_host_invocation_id: bool,
+) -> Vec<ExpectedWriteRecord> {
+    let Some(session_id) = envelope.session_id.as_deref() else {
+        return Vec::new();
+    };
+    records
+        .iter()
+        .filter(|record| record.session_id.as_deref() == Some(session_id))
+        .filter(|record| !require_missing_host_invocation_id || record.host_invocation_id.is_none())
+        .cloned()
+        .collect()
+}
+
+fn expected_write_session_matches(record: &ExpectedWriteRecord, envelope: &GuardEnvelope) -> bool {
+    envelope
+        .session_id
+        .as_deref()
+        .is_none_or(|session_id| record.session_id.as_deref() == Some(session_id))
+}
+
+fn host_invocation_id_from_observation(observation: &ToolObservation) -> Option<String> {
+    observation.host_invocation_id.clone()
+}
+
+fn expected_write_time_contains(record: &ExpectedWriteRecord, observed_at: DateTime<Utc>) -> bool {
+    let Ok(created_at) = DateTime::parse_from_rfc3339(&record.created_at) else {
+        return false;
+    };
+    let Ok(expires_at) = DateTime::parse_from_rfc3339(&record.expires_at) else {
+        return false;
+    };
+    created_at.with_timezone(&Utc) <= observed_at && observed_at <= expires_at.with_timezone(&Utc)
+}
+
+fn expected_paths_cover_observed(
+    record: &ExpectedWriteRecord,
+    changed_set: &BTreeSet<String>,
+) -> bool {
+    if record.path_policy != "exact_paths" {
+        return false;
+    }
+    let expected = json_string_set(&record.expected_paths_json);
+    !changed_set.is_empty() && changed_set.is_subset(&expected)
+}
+
+fn matched_paths_cover_observed(
+    record: &ExpectedWriteRecord,
+    changed_set: &BTreeSet<String>,
+) -> bool {
+    let expected = record
+        .matched_paths_json
+        .as_deref()
+        .map(json_string_set)
+        .unwrap_or_default();
+    !changed_set.is_empty() && changed_set.is_subset(&expected)
+}
+
+fn json_string_set(text: &str) -> BTreeSet<String> {
+    serde_json::from_str::<Vec<String>>(text)
+        .unwrap_or_default()
+        .into_iter()
+        .collect()
+}
+
+fn matched_expected_write_json(record: &ExpectedWriteRecord, changed: &[String]) -> Value {
+    json!({
+        "expected_write_id": record.expected_write_id,
+        "status": "matched",
+        "pre_tool_guard_event_id": record.pre_tool_guard_event_id,
+        "host_invocation_id": record.host_invocation_id,
+        "path_policy": record.path_policy,
+        "observed_paths": changed,
+        "task_id": record.task_id,
+        "change_unit_id": record.change_unit_id,
+        "write_check_ids": serde_json::from_str::<Value>(&record.write_check_ids_json)
+            .unwrap_or_else(|_| json!([]))
+    })
 }
 
 fn record_prompt_capture(
@@ -2212,6 +2674,7 @@ fn context_json(summary: &GuardStateSummary) -> Value {
         "repo_root": summary.repo_root,
         "state_version": summary.state_version,
         "active_task_id": summary.active_task_id,
+        "active_change_unit_id": summary.active_change_unit_id,
         "prompt_capture_enabled": summary.prompt_capture_enabled,
         "current_write_check_ids": summary.current_write_check_ids,
         "stale_write_check_ids": summary.stale_write_check_ids,
@@ -2249,6 +2712,7 @@ fn pending_judgment_summary_json(summary: &GuardPendingJudgmentSummary) -> Value
 fn tool_observation_json(observation: &ToolObservation) -> Value {
     json!({
         "tool_name": observation.tool_name,
+        "host_invocation_id": observation.host_invocation_id,
         "command": observation.command,
         "classification": observation.classification.as_str(),
         "paths": path_assessments_json(&observation.paths),
@@ -2385,6 +2849,10 @@ fn redacted_prompt_value(value: &Value) -> Value {
 
 fn current_timestamp() -> String {
     DateTime::<Utc>::from(SystemTime::now()).to_rfc3339_opts(SecondsFormat::Secs, true)
+}
+
+fn format_timestamp(timestamp: DateTime<Utc>) -> String {
+    timestamp.to_rfc3339_opts(SecondsFormat::Secs, true)
 }
 
 fn event_time_or_now(raw: &str) -> DateTime<Utc> {

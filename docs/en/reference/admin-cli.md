@@ -464,11 +464,22 @@ Lifecycle behavior:
   task, no current active `Write Check`, an attempted target is outside the
   selected Product Repository, or policy blocks a clearly mutating shell
   command. Uncertain shell commands default to `warn` unless guard policy asks
-  for `deny`.
+  for `deny`. When pre-tool allows a clearly mutating product-file write with a
+  concrete in-repository path set, active task, current write readiness, and
+  compatible project scope, it records an expected-write correlation row with
+  project, connection, session, optional host invocation identity, tool kind,
+  exact path policy, task/change-unit/write-check basis, and timestamp
+  metadata. Read-only and uncertain commands do not create expected-write rows.
 - `post-tool` records the observed tool outcome. When the event supplies
-  changed Product Repository paths and the tool was not a matching
-  `volicord.record_run`, it records an unresolved unrecorded-change row and
-  returns `warn`. It does not execute untrusted commands to discover changes.
+  changed Product Repository paths, post-tool first tries to match them to a
+  prior expected-write row from the same project, connection, session, bounded
+  time window, and exact path policy, using host invocation identity when the
+  host supplies it. Matched in-scope writes do not create unresolved
+  unrecorded-change rows. Unmatched, out-of-scope, or ambiguous observed
+  Product Repository changes record an unresolved unrecorded-change row and
+  return `warn`. Post-tool observation and matching are guarded-operation
+  records, not proof of product correctness. It does not execute untrusted
+  commands to discover changes.
 - `prompt-capture` records prompt-capture metadata and recognizes strict
   chat judgment commands only when the prompt contains an explicit line such
   as `Volicord: answer J-3 1`, `Volicord: answer J-3 reject`,
