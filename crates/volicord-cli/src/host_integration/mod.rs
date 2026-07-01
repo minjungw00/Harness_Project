@@ -750,8 +750,8 @@ mod tests {
         let codex = host_capabilities(HostKind::Codex);
         assert!(codex.stdio_mcp);
         assert!(codex.project_local_configuration);
-        assert!(!codex.rule_file_support);
-        assert_eq!(codex.missing_required_guard_phases(), REQUIRED_GUARD_PHASES);
+        assert!(codex.rule_file_support);
+        assert!(codex.missing_required_guard_phases().is_empty());
 
         let claude = host_capabilities(HostKind::ClaudeCode);
         assert!(claude.stdio_mcp);

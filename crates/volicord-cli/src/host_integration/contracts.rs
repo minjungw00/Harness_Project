@@ -341,8 +341,7 @@ const CLAUDE_CODE_REQUIREMENTS: [HostRequirement; 3] = [
     },
 ];
 
-const CODEX_LIMITATIONS: [&str; 5] = [
-    "The Volicord Codex adapter does not yet generate or verify Codex hook configuration.",
+const CODEX_LIMITATIONS: [&str; 4] = [
     "PreToolUse and PostToolUse are documented guardrails, not complete enforcement boundaries for every tool path.",
     "Codex project-local hooks require project trust and separate hook trust before running.",
     "Codex rules are documented as experimental and are not a Volicord full-guarded implementation by themselves.",
@@ -404,12 +403,12 @@ pub const CODEX_CONTRACT: HostIntegrationContract = HostIntegrationContract {
     },
     reload_restart_trust_requirements: &CODEX_REQUIREMENTS,
     managed_mode_support: ContractCapability {
-        status: ContractSupportStatus::Disabled,
-        detail: "Volicord has no Codex adapter path that generates and verifies managed hooks.",
+        status: ContractSupportStatus::Verified,
+        detail: "Volicord generates and verifies project-local Codex MCP, hook, policy, and optional rule files for guarded and managed guard modes.",
     },
     full_guarded_adapter_support: ContractCapability {
-        status: ContractSupportStatus::Disabled,
-        detail: "Verified contract data exists, but the Codex adapter still reports guarded hook capabilities as unsupported.",
+        status: ContractSupportStatus::Verified,
+        detail: "The Codex adapter generates and verifies project-local hook commands for every required guarded lifecycle phase.",
     },
     known_limitations: &CODEX_LIMITATIONS,
     official_sources: &CODEX_SOURCES,
@@ -1096,7 +1095,7 @@ mod tests {
         include_str!("../../tests/fixtures/host_contracts/claude_code/rules/volicord.md");
 
     #[test]
-    fn codex_contract_records_verified_shapes_without_enabling_full_guarded() {
+    fn codex_contract_records_verified_full_guarded_shapes() {
         let contract = contract_for(HostKind::Codex).expect("Codex contract should exist");
 
         assert_eq!(contract.host_kind, HostKind::Codex);
@@ -1112,15 +1111,16 @@ mod tests {
         );
         assert_eq!(
             contract.managed_mode_support.status,
-            ContractSupportStatus::Disabled
+            ContractSupportStatus::Verified
         );
-        assert!(!contract_supports_full_guarded(contract));
+        assert_eq!(
+            contract.full_guarded_adapter_support.status,
+            ContractSupportStatus::Verified
+        );
+        assert!(contract_supports_full_guarded(contract));
 
         let capabilities = host_capabilities(HostKind::Codex);
-        assert_eq!(
-            capabilities.missing_required_guard_phases(),
-            REQUIRED_GUARD_PHASES
-        );
+        assert!(capabilities.missing_required_guard_phases().is_empty());
     }
 
     #[test]

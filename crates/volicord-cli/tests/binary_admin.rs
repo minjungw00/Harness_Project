@@ -425,8 +425,8 @@ fn doctor_without_setup_reports_action_required() -> Result<(), Box<dyn Error>> 
 
 #[cfg(unix)]
 #[test]
-fn init_guarded_without_degraded_opt_in_rejects_missing_hooks() -> Result<(), Box<dyn Error>> {
-    let runtime_home = TempRuntimeHome::new("cli-bin-init-guarded-requires-hooks")?;
+fn init_codex_guarded_without_degraded_opt_in_generates_hooks() -> Result<(), Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new("cli-bin-init-guarded-hooks")?;
     let repo_root = create_git_repo(&runtime_home, "product-repo")?;
     let bin_dir = runtime_home.path().join("bin");
     write_fake_codex(&bin_dir)?;
@@ -445,17 +445,31 @@ fn init_guarded_without_degraded_opt_in_rejects_missing_hooks() -> Result<(), Bo
         &[("PATH", path_env(&[bin_dir.as_path()]))],
     )?;
 
-    assert_eq!(output.status.code(), Some(1));
-    let diagnostic = stderr(&output);
-    assert!(diagnostic.contains("GUARDED_HOOKS_UNSUPPORTED"));
-    assert!(
-        diagnostic.contains("AGENTS.md and .volicord/policy.json are not host hook configuration")
+    assert_success(&output);
+    let value = json_stdout(&output)?;
+    assert_eq!(value["host"], "codex");
+    assert_eq!(value["degraded"]["allowed"], false);
+    assert_eq!(
+        value["degraded"]["missing_required_hooks"],
+        serde_json::json!([])
     );
-    assert!(diagnostic.contains("--allow-degraded"));
-    assert!(!runtime_home.registry_db_path().exists());
-    assert!(!repo_root.join(".codex/config.toml").exists());
-    assert!(!repo_root.join("AGENTS.md").exists());
-    assert!(!repo_root.join(".volicord/policy.json").exists());
+    assert_eq!(value["states"]["hook_config"], "created");
+    assert_eq!(value["states"]["required_guard_phases"], "configured");
+    assert_eq!(value["states"]["guard_installation"], "reload_required");
+    assert_eq!(value["states"]["prompt_capture"], "reload_required");
+    let connection_id = value["connection"]["connection_id"]
+        .as_str()
+        .expect("connection_id should be present");
+    let hooks = fs::read_to_string(repo_root.join(".codex/hooks.json"))?;
+    assert!(hooks.contains("volicord guard session-start"));
+    assert!(hooks.contains("volicord guard pre-tool"));
+    assert!(hooks.contains("volicord guard post-tool"));
+    assert!(hooks.contains("volicord guard prompt-capture"));
+    assert!(hooks.contains("volicord guard stop"));
+    assert!(hooks.contains(&format!("--connection {connection_id}")));
+    assert!(hooks.contains("--guard-installation"));
+    assert!(hooks.contains("--host codex"));
+    assert!(repo_root.join(".codex/rules/volicord.rules").exists());
     Ok(())
 }
 
@@ -514,7 +528,6 @@ fn init_dry_run_does_not_write_runtime_or_repo_files() -> Result<(), Box<dyn Err
             "codex",
             "--repo",
             path_text(&repo_root).as_str(),
-            "--allow-degraded",
             "--dry-run",
             "--json",
         ],
@@ -527,12 +540,11 @@ fn init_dry_run_does_not_write_runtime_or_repo_files() -> Result<(), Box<dyn Err
     assert_eq!(value["status"], "dry_run");
     assert_eq!(value["host"], "codex");
     assert_eq!(value["mode"], "guarded");
-    assert_eq!(value["degraded"]["allowed"], true);
-    assert!(value["degraded"]["missing_required_hooks"]
-        .as_array()
-        .expect("missing hooks should be an array")
-        .iter()
-        .any(|hook| hook == "pre_tool_hook"));
+    assert_eq!(value["degraded"]["allowed"], false);
+    assert_eq!(
+        value["degraded"]["missing_required_hooks"],
+        serde_json::json!([])
+    );
     assert_eq!(value["profile"]["status"], "planned");
     assert_eq!(value["mcp"]["command"], "volicord");
     assert_eq!(value["mcp"]["args"][0], "mcp");
@@ -541,6 +553,57 @@ fn init_dry_run_does_not_write_runtime_or_repo_files() -> Result<(), Box<dyn Err
     assert_eq!(value["generated_files"][0]["status"], "planned_create");
     assert_eq!(value["generated_files"][1]["kind"], "volicord_policy");
     assert_eq!(value["generated_files"][1]["status"], "planned_create");
+    assert!(value["generated_files"]
+        .as_array()
+        .expect("generated files should be an array")
+        .iter()
+        .any(|file| file["kind"] == "host_hook_config"));
+    assert!(value["generated_files"]
+        .as_array()
+        .expect("generated files should be an array")
+        .iter()
+        .any(|file| file["kind"] == "host_rule_instruction"));
+    assert!(!runtime_home.registry_db_path().exists());
+    assert!(!repo_root.join(".codex/config.toml").exists());
+    assert!(!repo_root.join(".codex/hooks.json").exists());
+    assert!(!repo_root.join(".codex/rules/volicord.rules").exists());
+    assert!(!repo_root.join("AGENTS.md").exists());
+    assert!(!repo_root.join(".volicord/policy.json").exists());
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn init_codex_guarded_rejects_unmanaged_hook_config() -> Result<(), Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new("cli-bin-init-codex-hook-conflict")?;
+    let repo_root = create_git_repo(&runtime_home, "product-repo")?;
+    let bin_dir = runtime_home.path().join("bin");
+    write_fake_codex(&bin_dir)?;
+    write_fake_mcp(&bin_dir)?;
+    let hooks_path = repo_root.join(".codex/hooks.json");
+    fs::create_dir_all(hooks_path.parent().expect("hook path should have parent"))?;
+    fs::write(
+        &hooks_path,
+        r#"{"hooks":{"SessionStart":[{"hooks":[{"type":"command","command":"echo user"}]}]}}"#,
+    )?;
+
+    let output = run_with_home_env(
+        runtime_home.path(),
+        [
+            "init",
+            "--host",
+            "codex",
+            "--repo",
+            path_text(&repo_root).as_str(),
+            "--json",
+        ],
+        &[("PATH", path_env(&[bin_dir.as_path()]))],
+    )?;
+
+    assert_eq!(output.status.code(), Some(1));
+    let diagnostic = stderr(&output);
+    assert!(diagnostic.contains("host_hook_config already exists with unmanaged content"));
+    assert!(diagnostic.contains(&path_text(&hooks_path)));
     assert!(!runtime_home.registry_db_path().exists());
     assert!(!repo_root.join(".codex/config.toml").exists());
     assert!(!repo_root.join("AGENTS.md").exists());
@@ -573,7 +636,6 @@ fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Resul
             "codex",
             "--repo",
             path_text(&repo_root).as_str(),
-            "--allow-degraded",
             "--json",
         ],
         &[
@@ -592,24 +654,18 @@ fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Resul
     assert_eq!(value["states"]["runtime_home"], "ready");
     assert_eq!(value["states"]["project_registration"], "registered");
     assert_eq!(value["states"]["mcp_config"], "match");
-    assert_eq!(value["states"]["guard_installation"], "degraded");
-    assert_eq!(value["states"]["guard_degraded_allowed"], true);
-    assert_eq!(value["degraded"]["allowed"], true);
+    assert_eq!(value["states"]["guard_installation"], "reload_required");
+    assert_eq!(value["states"]["guard_degraded_allowed"], false);
+    assert_eq!(value["degraded"]["allowed"], false);
     assert_eq!(value["states"]["agents_managed_block"], "updated");
     assert_eq!(value["states"]["volicord_policy_file"], "created");
-    assert_eq!(
-        value["states"]["rule_instruction_config"],
-        "unsupported_by_host"
-    );
-    assert_eq!(value["states"]["hook_config"], "missing_required_hooks");
-    assert_eq!(value["states"]["required_guard_phases"], "missing");
+    assert_eq!(value["states"]["rule_instruction_config"], "created");
+    assert_eq!(value["states"]["hook_config"], "created");
+    assert_eq!(value["states"]["required_guard_phases"], "configured");
     assert_eq!(value["states"]["guard_observed"], false);
-    assert_eq!(value["states"]["prompt_capture"], "unsupported_by_host");
+    assert_eq!(value["states"]["prompt_capture"], "reload_required");
     assert_eq!(value["states"]["host_reload_required"], true);
-    assert_eq!(
-        value["primary_next_action"]["id"],
-        "guard_capability_degraded"
-    );
+    assert_eq!(value["primary_next_action"]["id"], "reload_required");
     assert_eq!(value["profile"]["status"], "created");
     assert_eq!(value["connection"]["host_kind"], "codex");
     assert_eq!(value["connection"]["connection_intent"], "shared");
@@ -638,7 +694,6 @@ fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Resul
             "codex",
             "--repo",
             path_text(&repo_root).as_str(),
-            "--allow-degraded",
         ],
         &[
             ("PATH", path_env(&[bin_dir.as_path()])),
@@ -650,17 +705,17 @@ fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Resul
     assert!(init_text.contains("Volicord init action_required"));
     assert!(init_text.contains("connection_state: action_required"));
     assert!(init_text.contains("mcp_config_state: match"));
-    assert!(init_text.contains("guard_installation_state: degraded"));
-    assert!(init_text.contains("guard_degraded_allowed: yes"));
+    assert!(init_text.contains("guard_installation_state: configured"));
+    assert!(init_text.contains("guard_degraded_allowed: no"));
     assert!(init_text.contains("agents_block_state: unchanged"));
     assert!(init_text.contains("volicord_policy_file_state: unchanged"));
-    assert!(init_text.contains("rule_instruction_config_state: unsupported_by_host"));
-    assert!(init_text.contains("hook_config_state: missing_required_hooks"));
-    assert!(init_text.contains("required_guard_phases_state: missing"));
+    assert!(init_text.contains("rule_instruction_config_state: unchanged"));
+    assert!(init_text.contains("hook_config_state: unchanged"));
+    assert!(init_text.contains("required_guard_phases_state: configured"));
     assert!(init_text.contains("guard_observed: no"));
-    assert!(init_text.contains("prompt_capture_state: unsupported_by_host"));
+    assert!(init_text.contains("prompt_capture_state: configured"));
     assert!(init_text.contains("host_reload_required: yes"));
-    assert!(init_text.contains("next_action: Use a supported guarded host configuration"));
+    assert!(init_text.contains("next_action: Restart or reload codex"));
 
     let record = agent_connection_record(runtime_home.path(), &connection_id)?
         .expect("connection should be stored");
@@ -694,11 +749,11 @@ fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Resul
     );
     assert_eq!(
         status_without_intent_json["primary_next_action"]["id"],
-        "guard_capability_degraded"
+        "reload_required"
     );
     assert_eq!(
         status_without_intent_json["states"]["hook_config"],
-        "missing_required_hooks"
+        "installed"
     );
     assert_eq!(
         status_without_intent_json["states"]["guard_observed"],
@@ -709,6 +764,22 @@ fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Resul
     assert!(config.contains(&format!(
         "args = [\"mcp\", \"--stdio\", \"--connection\", \"{connection_id}\"]"
     )));
+    let hooks = fs::read_to_string(repo_root.join(".codex/hooks.json"))?;
+    assert!(hooks.contains("SessionStart"));
+    assert!(hooks.contains("PreToolUse"));
+    assert!(hooks.contains("PostToolUse"));
+    assert!(hooks.contains("UserPromptSubmit"));
+    assert!(hooks.contains("Stop"));
+    assert!(hooks.contains(&format!("--connection {connection_id}")));
+    assert!(hooks.contains("--guard-installation"));
+    assert!(hooks.contains("--host codex"));
+    assert!(hooks.contains("--guard-mode guarded"));
+    assert!(hooks.contains("volicord guard prompt-capture"));
+    let rules = fs::read_to_string(repo_root.join(".codex/rules/volicord.rules"))?;
+    assert!(rules.contains("# BEGIN VOLICORD MANAGED CODEX RULES v1"));
+    assert!(rules.contains("prefix_rule("));
+    assert!(rules.contains("volicord guard session-start"));
+    assert!(rules.contains("volicord guard stop"));
 
     let agents = fs::read_to_string(repo_root.join("AGENTS.md"))?;
     assert_eq!(count_occurrences(&agents, START_MARKER), 1);
@@ -759,20 +830,21 @@ fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Resul
     assert_eq!(guard_installations.len(), 1);
     assert_eq!(guard_installations[0].host_kind, "codex");
     assert_eq!(guard_installations[0].guard_mode, "guarded");
-    assert_eq!(guard_installations[0].installation_status, "degraded");
+    assert_eq!(guard_installations[0].installation_status, "configured");
     let capability: Value = serde_json::from_str(&guard_installations[0].host_capability_json)?;
     assert_eq!(capability["schema"], "volicord-guard-capability-v1");
     assert_eq!(
         capability["policy_hash"],
         value["guard_installation"]["policy_hash"]
     );
-    assert_eq!(capability["allow_degraded"], true);
-    assert_eq!(capability["prompt_capture"], false);
-    assert!(capability["missing_required_hooks"]
-        .as_array()
-        .expect("missing hooks should be an array")
-        .iter()
-        .any(|hook| hook == "pre_tool_hook"));
+    assert_eq!(capability["allow_degraded"], false);
+    assert_eq!(capability["prompt_capture"], true);
+    assert_eq!(capability["missing_required_hooks"], serde_json::json!([]));
+    assert_eq!(capability["host_capabilities"]["pre_tool_hook"], true);
+    assert_eq!(
+        capability["host_capabilities"]["user_prompt_submit_hook"],
+        true
+    );
     assert!(capability["commands"]["pre_tool"]["args"]
         .as_array()
         .expect("capability guard args should be an array")
@@ -793,20 +865,17 @@ fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Resul
     assert_eq!(doctor_json["states"]["volicord_policy_file"], "installed");
     assert_eq!(
         doctor_json["states"]["rule_instruction_config"],
-        "unsupported_by_host"
+        "installed"
     );
-    assert_eq!(
-        doctor_json["states"]["hook_config"],
-        "missing_required_hooks"
-    );
-    assert_eq!(doctor_json["states"]["required_guard_phases"], "missing");
+    assert_eq!(doctor_json["states"]["hook_config"], "installed");
+    assert_eq!(doctor_json["states"]["required_guard_phases"], "configured");
     assert_eq!(
         doctor_json["states"]["prompt_capture"],
         "action_recommended"
     );
     assert_eq!(
         doctor_json["states"]["prompt_capture_status"],
-        "unsupported_by_host"
+        "configured_unobserved"
     );
 
     let second = run_with_home_env(
@@ -817,7 +886,6 @@ fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Resul
             "codex",
             "--repo",
             path_text(&repo_root).as_str(),
-            "--allow-degraded",
             "--json",
         ],
         &[
@@ -829,12 +897,11 @@ fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Resul
     let second_json = json_stdout(&second)?;
     assert_eq!(second_json["connection"]["connection_id"], connection_id);
     assert_eq!(second_json["profile"]["status"], "reused");
-    assert_eq!(second_json["states"]["guard_installation"], "degraded");
-    assert_eq!(second_json["states"]["guard_degraded_allowed"], true);
-    assert_eq!(
-        second_json["states"]["prompt_capture"],
-        "unsupported_by_host"
-    );
+    assert_eq!(second_json["states"]["guard_installation"], "configured");
+    assert_eq!(second_json["states"]["guard_degraded_allowed"], false);
+    assert_eq!(second_json["states"]["hook_config"], "unchanged");
+    assert_eq!(second_json["states"]["prompt_capture"], "configured");
+    assert_eq!(second_json["degraded"]["allowed"], false);
     assert_eq!(
         count_occurrences(
             &fs::read_to_string(repo_root.join("AGENTS.md"))?,

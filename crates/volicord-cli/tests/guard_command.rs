@@ -1634,6 +1634,7 @@ fn guarded_bypass_reconcile_prompt_acceptance_unblocks_close() -> Result<(), Box
 #[test]
 fn guarded_close_missing_required_hooks_remain_after_session_start() -> Result<(), Box<dyn Error>> {
     let fixture = GuardedLifecycleFixture::init("guarded-lifecycle-health", "guarded")?;
+    fixture.mark_required_hooks_missing()?;
     let (task_id, change_unit_id) = fixture.create_task_with_change_unit("health")?;
     fixture.record_non_write_close_basis(&task_id, &change_unit_id, "health")?;
     let final_judgment_id =
@@ -2069,9 +2070,6 @@ impl GuardedLifecycleFixture {
             "--mode",
             mode,
         ];
-        if mode != "mcp-only" {
-            args.push("--allow-degraded");
-        }
         args.push("--json");
 
         let output = Command::new(volicord_bin())
@@ -2213,7 +2211,15 @@ impl GuardedLifecycleFixture {
         ]);
         capability["missing_required_hooks"] = json!([]);
         capability["host_capabilities"] = json!({
-            "user_prompt_submit_hook": true
+            "stdio_mcp": true,
+            "http_mcp": false,
+            "session_start_hook": true,
+            "pre_tool_hook": true,
+            "post_tool_hook": true,
+            "user_prompt_submit_hook": true,
+            "stop_hook": true,
+            "rule_file_support": true,
+            "project_local_configuration": true
         });
         capability["prompt_capture"] = json!(true);
         upsert_guard_installation(
@@ -2226,6 +2232,54 @@ impl GuardedLifecycleFixture {
                 guard_mode: stored.guard_mode,
                 host_capability_json: capability.to_string(),
                 installation_status: "reload_required".to_owned(),
+                installed_at: stored.installed_at,
+                last_checked_at: "2026-06-30T05:59:00Z".to_owned(),
+                first_seen_at: None,
+                last_seen_at: None,
+                last_seen_phase: None,
+                observed_host_kind: None,
+                observed_policy_hash: None,
+                observed_binary_version: None,
+                metadata_json: stored.metadata_json,
+            },
+        )?;
+        Ok(())
+    }
+
+    fn mark_required_hooks_missing(&self) -> Result<(), Box<dyn Error>> {
+        let stored = guard_installation(self.runtime_home(), self.guard_installation_id())?
+            .expect("guard installation should be stored");
+        let mut capability = serde_json::from_str::<Value>(&stored.host_capability_json)?;
+        capability["required_guard_phases"] = json!([
+            "session_start_hook",
+            "pre_tool_hook",
+            "post_tool_hook",
+            "user_prompt_submit_hook",
+            "stop_hook"
+        ]);
+        capability["missing_required_hooks"] = json!(["pre_tool_hook"]);
+        capability["host_capabilities"] = json!({
+            "stdio_mcp": true,
+            "http_mcp": false,
+            "session_start_hook": true,
+            "pre_tool_hook": false,
+            "post_tool_hook": true,
+            "user_prompt_submit_hook": true,
+            "stop_hook": true,
+            "rule_file_support": true,
+            "project_local_configuration": true
+        });
+        capability["prompt_capture"] = json!(true);
+        upsert_guard_installation(
+            self.runtime_home(),
+            GuardInstallationUpsert {
+                guard_installation_id: stored.guard_installation_id,
+                connection_internal_id: stored.connection_internal_id,
+                project_id: Some(self.project_id.clone()),
+                host_kind: stored.host_kind,
+                guard_mode: stored.guard_mode,
+                host_capability_json: capability.to_string(),
+                installation_status: "degraded".to_owned(),
                 installed_at: stored.installed_at,
                 last_checked_at: "2026-06-30T05:59:00Z".to_owned(),
                 first_seen_at: None,

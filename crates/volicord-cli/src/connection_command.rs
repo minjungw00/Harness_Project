@@ -41,7 +41,10 @@ use volicord_types::{GuardInstallationStatus, GuardMode, PromptCaptureStatus};
 
 use crate::host_integration::{
     claude_code::{self, ClaudeCodeAdapter, ProductionCommandRunner},
-    codex::{CodexAdapter, CodexEnvironment, CodexExistingPlanRequest},
+    codex::{self, CodexAdapter, CodexEnvironment, CodexExistingPlanRequest},
+    contracts::{
+        contract_for, hook_event_for_phase, validate_contract_config, HostContractConfigKind,
+    },
     export_file_name, format_supported_connection_intents,
     generic::{GenericAdapter, GenericExportRequest},
     host_capabilities, supports_connection_intent,
@@ -71,6 +74,8 @@ const VOLICORD_POLICY_FILE: &str = ".volicord/policy.json";
 const AGENTS_FILE: &str = "AGENTS.md";
 const GUIDANCE_START_MARKER: &str = "<!-- BEGIN VOLICORD MANAGED GUIDANCE v1 -->";
 const GUIDANCE_END_MARKER: &str = "<!-- END VOLICORD MANAGED GUIDANCE v1 -->";
+const CODEX_RULE_START_MARKER: &str = "# BEGIN VOLICORD MANAGED CODEX RULES v1";
+const CODEX_RULE_END_MARKER: &str = "# END VOLICORD MANAGED CODEX RULES v1";
 
 const WORKFLOW_TOOL_NAMES: [&str; 10] = [
     "volicord.intake",
@@ -612,7 +617,7 @@ pub fn run_init_command(
         Some(&project.project_id),
         process,
     )?;
-    let user_actions = init_user_actions(&verification.host.user_actions, host_kind);
+    let user_actions = init_user_actions(&verification.host.user_actions, host_kind, parsed.mode);
     connection = update_agent_connection_verification_report(
         &runtime_home,
         &connection.connection_internal_id,
@@ -2693,12 +2698,13 @@ struct GeneratedFilePlan {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum GeneratedFileWriteKind {
-    ManagedBlock {
+    Block {
         start_marker: &'static str,
         end_marker: &'static str,
         require_existing_marker: bool,
     },
-    ManagedJson,
+    Json,
+    ExactJson,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -2793,6 +2799,10 @@ fn plan_guard_integration(
     )?);
     let policy_path = repo_root.join(VOLICORD_POLICY_FILE);
     generated_files.push(plan_policy_file(&policy_path, &policy)?);
+    if host_kind == HostKind::Codex && init_mode != InitMode::McpOnly {
+        generated_files.push(plan_codex_hook_file(repo_root, &guard_commands)?);
+        generated_files.push(plan_codex_rule_file(repo_root, &guard_commands)?);
+    }
     if host_kind == HostKind::ClaudeCode && init_mode != InitMode::McpOnly {
         let command_lines = guard_command_lines(&guard_commands);
         let rule_path = claude_code::project_rule_path(repo_root);
@@ -2839,7 +2849,7 @@ fn apply_guard_integration(
 ) -> Result<GuardIntegrationPlan, ConnectionCommandError> {
     for file in &mut plan.generated_files {
         file.status = match file.write_kind {
-            GeneratedFileWriteKind::ManagedBlock {
+            GeneratedFileWriteKind::Block {
                 start_marker,
                 end_marker,
                 require_existing_marker,
@@ -2850,8 +2860,11 @@ fn apply_guard_integration(
                 end_marker,
                 require_existing_marker,
             )?,
-            GeneratedFileWriteKind::ManagedJson => {
+            GeneratedFileWriteKind::Json => {
                 write_managed_json_file(&file.path, &file.policy_value()?)?
+            }
+            GeneratedFileWriteKind::ExactJson => {
+                write_managed_exact_json_file(&file.path, &file.policy_value()?, file.kind)?
             }
         };
     }
@@ -2909,7 +2922,7 @@ fn plan_managed_block_file(
         path: path.to_path_buf(),
         content,
         status,
-        write_kind: GeneratedFileWriteKind::ManagedBlock {
+        write_kind: GeneratedFileWriteKind::Block {
             start_marker,
             end_marker,
             require_existing_marker,
@@ -2957,7 +2970,185 @@ fn plan_policy_file(
         path: path.to_path_buf(),
         content,
         status,
-        write_kind: GeneratedFileWriteKind::ManagedJson,
+        write_kind: GeneratedFileWriteKind::Json,
+    })
+}
+
+fn plan_codex_hook_file(
+    repo_root: &Path,
+    guard_commands: &BTreeMap<String, GuardCommandSpec>,
+) -> Result<GeneratedFilePlan, ConnectionCommandError> {
+    let contract = contract_for(HostKind::Codex).ok_or_else(|| {
+        ConnectionCommandError::runtime(
+            "GUARDED_HOOKS_UNSUPPORTED: no Codex host integration contract is available",
+        )
+    })?;
+    let hooks = REQUIRED_GUARD_PHASES
+        .iter()
+        .map(|phase| {
+            let event = hook_event_for_phase(contract, *phase).ok_or_else(|| {
+                ConnectionCommandError::runtime(format!(
+                    "GUARDED_HOOKS_UNSUPPORTED: Codex contract is missing {} hook event data",
+                    phase.capability_name()
+                ))
+            })?;
+            let guard_command = guard_commands.get(phase.policy_key()).ok_or_else(|| {
+                ConnectionCommandError::runtime(format!(
+                    "missing generated guard command for {}",
+                    phase.policy_key()
+                ))
+            })?;
+            let mut group = serde_json::Map::new();
+            if !event.write_matcher_tokens.is_empty() {
+                group.insert(
+                    "matcher".to_owned(),
+                    Value::String(event.write_matcher_tokens.join("|")),
+                );
+            } else if *phase == HostLifecyclePhase::SessionStart {
+                group.insert(
+                    "matcher".to_owned(),
+                    Value::String("startup|resume".to_owned()),
+                );
+            }
+            group.insert(
+                "hooks".to_owned(),
+                Value::Array(vec![codex_hook_handler_value(
+                    *phase,
+                    &guard_command_line(guard_command),
+                )]),
+            );
+            Ok::<(String, Value), ConnectionCommandError>((
+                event.event_name.to_owned(),
+                Value::Array(vec![Value::Object(group)]),
+            ))
+        })
+        .collect::<Result<serde_json::Map<_, _>, _>>()?;
+    let value = json!({ "hooks": hooks });
+    let text = serde_json::to_string_pretty(&value)
+        .map_err(|error| ConnectionCommandError::runtime(error.to_string()))?;
+    validate_contract_config(HostKind::Codex, HostContractConfigKind::HookConfig, &text).map_err(
+        |error| {
+            ConnectionCommandError::runtime(format!(
+                "generated Codex hook config does not match the verified contract: {error}"
+            ))
+        },
+    )?;
+    plan_managed_exact_json_file(
+        HostIntegrationFileKind::HostHookConfig,
+        &codex::project_hooks_path(repo_root),
+        &value,
+    )
+}
+
+fn codex_hook_handler_value(phase: HostLifecyclePhase, command: &str) -> Value {
+    let mut handler = serde_json::Map::new();
+    handler.insert("type".to_owned(), Value::String("command".to_owned()));
+    handler.insert("command".to_owned(), Value::String(command.to_owned()));
+    handler.insert("timeout".to_owned(), Value::Number(30.into()));
+    let status_message = match phase {
+        HostLifecyclePhase::SessionStart => Some("Checking Volicord session"),
+        HostLifecyclePhase::PreTool => Some("Checking Volicord write"),
+        HostLifecyclePhase::PostTool => Some("Recording Volicord write"),
+        HostLifecyclePhase::UserPromptSubmit | HostLifecyclePhase::Stop => None,
+    };
+    if let Some(status_message) = status_message {
+        handler.insert(
+            "statusMessage".to_owned(),
+            Value::String(status_message.to_owned()),
+        );
+    }
+    Value::Object(handler)
+}
+
+fn plan_codex_rule_file(
+    repo_root: &Path,
+    guard_commands: &BTreeMap<String, GuardCommandSpec>,
+) -> Result<GeneratedFilePlan, ConnectionCommandError> {
+    let command_lines = guard_command_lines(guard_commands)
+        .into_iter()
+        .map(|(_, command)| command)
+        .collect::<Vec<_>>();
+    let mut body = String::from(
+        "prefix_rule(\n    pattern = [\"volicord\", \"guard\"],\n    decision = \"prompt\",\n    justification = \"Volicord guard commands observe local lifecycle state.\",\n    match = [\n",
+    );
+    for command in command_lines {
+        body.push_str("        ");
+        body.push_str(&starlark_string(&command));
+        body.push_str(",\n");
+    }
+    body.push_str("    ],\n)\n");
+    validate_contract_config(HostKind::Codex, HostContractConfigKind::RuleConfig, &body).map_err(
+        |error| {
+            ConnectionCommandError::runtime(format!(
+                "generated Codex rule config does not match the verified contract: {error}"
+            ))
+        },
+    )?;
+    let block = format!("{CODEX_RULE_START_MARKER}\n{body}{CODEX_RULE_END_MARKER}\n");
+    plan_managed_block_file(
+        HostIntegrationFileKind::HostRuleInstruction,
+        &codex::project_rule_path(repo_root),
+        &block,
+        CODEX_RULE_START_MARKER,
+        CODEX_RULE_END_MARKER,
+        true,
+    )
+}
+
+fn starlark_string(value: &str) -> String {
+    let escaped = value.replace('\\', "\\\\").replace('"', "\\\"");
+    format!("\"{escaped}\"")
+}
+
+fn plan_managed_exact_json_file(
+    kind: HostIntegrationFileKind,
+    path: &Path,
+    value: &Value,
+) -> Result<GeneratedFilePlan, ConnectionCommandError> {
+    let mut content = serde_json::to_string_pretty(value)
+        .map_err(|error| ConnectionCommandError::runtime(error.to_string()))?;
+    content.push('\n');
+    let status = match fs::read_to_string(path) {
+        Ok(existing) => {
+            let existing_value = serde_json::from_str::<Value>(&existing).map_err(|error| {
+                ConnectionCommandError::runtime(format!(
+                    "existing {} is not valid JSON: {} ({error})",
+                    kind.as_str(),
+                    path.display()
+                ))
+            })?;
+            if existing_value == *value {
+                if existing == content {
+                    FilePlanStatus::Unchanged
+                } else {
+                    FilePlanStatus::PlannedUpdate
+                }
+            } else if kind == HostIntegrationFileKind::HostHookConfig
+                && is_volicord_codex_hook_config(&existing_value)
+            {
+                FilePlanStatus::PlannedUpdate
+            } else {
+                return Err(ConnectionCommandError::runtime(format!(
+                    "{} already exists with unmanaged content: {}",
+                    kind.as_str(),
+                    path.display()
+                )));
+            }
+        }
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => FilePlanStatus::PlannedCreate,
+        Err(error) => {
+            return Err(ConnectionCommandError::runtime(format!(
+                "failed to read {}: {error}",
+                path.display()
+            )));
+        }
+    };
+    Ok(GeneratedFilePlan {
+        kind,
+        path: path.to_path_buf(),
+        content,
+        status,
+        write_kind: GeneratedFileWriteKind::ExactJson,
     })
 }
 
@@ -3017,6 +3208,96 @@ fn write_managed_json_file(
         FilePlanStatus::PlannedUpdate => FilePlanStatus::Updated,
         other => other,
     })
+}
+
+fn write_managed_exact_json_file(
+    path: &Path,
+    value: &Value,
+    kind: HostIntegrationFileKind,
+) -> Result<FilePlanStatus, ConnectionCommandError> {
+    let mut content = serde_json::to_string_pretty(value)
+        .map_err(|error| ConnectionCommandError::runtime(error.to_string()))?;
+    content.push('\n');
+    let planned = plan_managed_exact_json_file(kind, path, value)?;
+    if planned.status == FilePlanStatus::Unchanged {
+        return Ok(FilePlanStatus::Unchanged);
+    }
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(|error| {
+            ConnectionCommandError::runtime(format!(
+                "failed to create {}: {error}",
+                parent.display()
+            ))
+        })?;
+    }
+    fs::write(path, content).map_err(|error| {
+        ConnectionCommandError::runtime(format!("failed to write {}: {error}", path.display()))
+    })?;
+    Ok(match planned.status {
+        FilePlanStatus::PlannedCreate => FilePlanStatus::Created,
+        FilePlanStatus::PlannedUpdate => FilePlanStatus::Updated,
+        other => other,
+    })
+}
+
+fn is_volicord_codex_hook_config(value: &Value) -> bool {
+    let Some(root) = value.as_object() else {
+        return false;
+    };
+    if root.keys().any(|key| key != "hooks") {
+        return false;
+    }
+    let Some(hooks) = root.get("hooks").and_then(Value::as_object) else {
+        return false;
+    };
+    let Some(contract) = contract_for(HostKind::Codex) else {
+        return false;
+    };
+    if hooks.len() != REQUIRED_GUARD_PHASES.len() {
+        return false;
+    }
+    REQUIRED_GUARD_PHASES.iter().all(|phase| {
+        let Some(event) = hook_event_for_phase(contract, *phase) else {
+            return false;
+        };
+        let Some(groups) = hooks.get(event.event_name).and_then(Value::as_array) else {
+            return false;
+        };
+        groups.len() == 1
+            && groups
+                .first()
+                .is_some_and(|group| is_volicord_codex_hook_group(*phase, group))
+    })
+}
+
+fn is_volicord_codex_hook_group(phase: HostLifecyclePhase, group: &Value) -> bool {
+    let Some(group) = group.as_object() else {
+        return false;
+    };
+    let Some(handlers) = group.get("hooks").and_then(Value::as_array) else {
+        return false;
+    };
+    handlers.len() == 1
+        && handlers
+            .first()
+            .is_some_and(|handler| is_volicord_codex_hook_handler(phase, handler))
+}
+
+fn is_volicord_codex_hook_handler(phase: HostLifecyclePhase, handler: &Value) -> bool {
+    let Some(object) = handler.as_object() else {
+        return false;
+    };
+    object.get("type").and_then(Value::as_str) == Some("command")
+        && object
+            .get("command")
+            .and_then(Value::as_str)
+            .is_some_and(|command| {
+                command.contains(&format!("volicord guard {}", phase.command_name()))
+                    && command.contains("--connection")
+                    && command.contains("--guard-installation")
+                    && command.contains("--host codex")
+                    && command.contains("--json")
+            })
 }
 
 fn managed_block_conflict(error: ManagedBlockError) -> ConnectionCommandError {
@@ -3084,13 +3365,15 @@ fn guard_command_specs(
 fn guard_command_lines(commands: &BTreeMap<String, GuardCommandSpec>) -> Vec<(String, String)> {
     commands
         .iter()
-        .map(|(phase, spec)| {
-            let mut words = Vec::with_capacity(spec.args.len() + 1);
-            words.push(shell_word(&spec.command));
-            words.extend(spec.args.iter().map(|arg| shell_word(arg)));
-            (phase.clone(), words.join(" "))
-        })
+        .map(|(phase, spec)| (phase.clone(), guard_command_line(spec)))
         .collect()
+}
+
+fn guard_command_line(spec: &GuardCommandSpec) -> String {
+    let mut words = Vec::with_capacity(spec.args.len() + 1);
+    words.push(shell_word(&spec.command));
+    words.extend(spec.args.iter().map(|arg| shell_word(arg)));
+    words.join(" ")
 }
 
 fn shell_word(value: &str) -> String {
@@ -3260,7 +3543,7 @@ fn generated_files_json(files: &[GeneratedFilePlan]) -> Value {
                     .as_object_mut()
                     .expect("generated file JSON should be an object");
                 match file.write_kind {
-                    GeneratedFileWriteKind::ManagedBlock {
+                    GeneratedFileWriteKind::Block {
                         start_marker,
                         end_marker,
                         ..
@@ -3278,7 +3561,7 @@ fn generated_files_json(files: &[GeneratedFilePlan]) -> Value {
                             Value::String(end_marker.to_owned()),
                         );
                     }
-                    GeneratedFileWriteKind::ManagedJson => {
+                    GeneratedFileWriteKind::Json | GeneratedFileWriteKind::ExactJson => {
                         object.insert(
                             "ownership".to_owned(),
                             Value::String("managed_json".to_owned()),
@@ -3291,8 +3574,21 @@ fn generated_files_json(files: &[GeneratedFilePlan]) -> Value {
     )
 }
 
-fn init_user_actions(existing: &[UserAction], host_kind: HostKind) -> Vec<UserAction> {
+fn init_user_actions(
+    existing: &[UserAction],
+    host_kind: HostKind,
+    init_mode: InitMode,
+) -> Vec<UserAction> {
     let mut actions = existing.to_vec();
+    if host_kind == HostKind::Codex && init_mode != InitMode::McpOnly {
+        let hook_trust_action = UserAction::new(
+            UserActionKind::HostTrustRequired,
+            "Review and trust Codex project hook commands before relying on Volicord guard hooks",
+        );
+        if !actions.contains(&hook_trust_action) {
+            actions.push(hook_trust_action);
+        }
+    }
     actions.push(UserAction::new(
         UserActionKind::ReloadRequired,
         format!(
@@ -3939,8 +4235,16 @@ fn render_init_output(data: InitOutput<'_>) -> Result<String, ConnectionCommandE
         data.host_plan.user_actions.clone()
     } else {
         data.verification
-            .map(|verification| init_user_actions(&verification.host.user_actions, data.host_kind))
-            .unwrap_or_else(|| init_user_actions(&data.host_plan.user_actions, data.host_kind))
+            .map(|verification| {
+                init_user_actions(
+                    &verification.host.user_actions,
+                    data.host_kind,
+                    data.init_mode,
+                )
+            })
+            .unwrap_or_else(|| {
+                init_user_actions(&data.host_plan.user_actions, data.host_kind, data.init_mode)
+            })
     };
     let guard_status = data
         .guard_installation
@@ -5497,6 +5801,18 @@ fn verify_managed_json_file(
         findings.stale_files.push(path_text.to_owned());
         state = "stale";
     }
+    if file.get("kind").and_then(Value::as_str) == Some("host_hook_config") {
+        match serde_json::from_str::<Value>(text) {
+            Ok(value) if is_volicord_codex_hook_config(&value) => {}
+            Ok(_) | Err(_) => {
+                findings.broken_files.push(path_text.to_owned());
+                if let Some(kind) = kind {
+                    findings.set_kind_state(kind, "broken");
+                }
+                return;
+            }
+        }
+    }
     if file.get("kind").and_then(Value::as_str) != Some("volicord_policy") {
         if let Some(kind) = kind {
             findings.set_kind_state(kind, state);
@@ -6057,12 +6373,12 @@ mod tests {
     }
 
     #[test]
-    fn guarded_integration_plan_rejects_missing_hooks_without_opt_in(
+    fn guarded_integration_plan_rejects_missing_claude_code_hooks_without_opt_in(
     ) -> Result<(), Box<dyn std::error::Error>> {
         let repo = temp_dir("guard-capabilities-reject")?;
         let entry = ManagedServerEntry::new("conn_alpha", Path::new("volicord"), None);
         let error = plan_guard_integration(
-            HostKind::Codex,
+            HostKind::ClaudeCode,
             InitMode::Guarded,
             false,
             &repo,
@@ -6079,40 +6395,51 @@ mod tests {
     }
 
     #[test]
-    fn guarded_integration_plan_records_missing_host_hook_capabilities(
+    fn codex_guarded_integration_plan_generates_required_hook_files(
     ) -> Result<(), Box<dyn std::error::Error>> {
         let repo = temp_dir("guard-capabilities")?;
         let entry = ManagedServerEntry::new("conn_alpha", Path::new("volicord"), None);
         let plan = plan_guard_integration(
             HostKind::Codex,
             InitMode::Guarded,
-            true,
+            false,
             &repo,
             "conn_alpha",
             "guard_installation_alpha",
             &entry,
         )?;
+        let applied = apply_guard_integration(plan)?;
 
-        assert_eq!(plan.missing_required_hooks, REQUIRED_GUARD_PHASES.to_vec());
+        assert!(applied.missing_required_hooks.is_empty());
         assert_eq!(
-            initial_guard_installation_status(InitMode::Guarded, &host_plan_stub(&entry), &plan),
-            GuardInstallationStatus::Degraded
+            initial_guard_installation_status(InitMode::Guarded, &host_plan_stub(&entry), &applied),
+            GuardInstallationStatus::ReloadRequired
         );
-        let capability: Value = serde_json::from_str(&guard_capability_json(&plan)?)?;
-        assert_eq!(capability["allow_degraded"], true);
-        assert_eq!(capability["prompt_capture"], false);
+        let capability: Value = serde_json::from_str(&guard_capability_json(&applied)?)?;
+        assert_eq!(capability["allow_degraded"], false);
+        assert_eq!(capability["prompt_capture"], true);
         assert_eq!(
             capability["missing_required_hooks"]
                 .as_array()
                 .expect("missing hooks should be an array")
                 .len(),
-            REQUIRED_GUARD_PHASES.len()
+            0
         );
-        assert!(generated_files_json(&plan.generated_files)
+        let generated_files = generated_files_json(&applied.generated_files);
+        let generated_files = generated_files
             .as_array()
-            .expect("generated files should be an array")
+            .expect("generated files should be an array");
+        assert!(generated_files
             .iter()
-            .any(|file| file["kind"] == "volicord_policy"));
+            .any(|file| file["kind"] == "host_hook_config"));
+        assert!(generated_files
+            .iter()
+            .any(|file| file["kind"] == "host_rule_instruction"));
+        let hooks_text = fs::read_to_string(repo.join(".codex/hooks.json"))?;
+        assert!(hooks_text.contains("volicord guard session-start"));
+        assert!(hooks_text.contains("--connection conn_alpha"));
+        assert!(hooks_text.contains("--guard-installation guard_installation_alpha"));
+        assert!(hooks_text.contains("--host codex"));
         Ok(())
     }
 
@@ -6124,7 +6451,7 @@ mod tests {
         let plan = plan_guard_integration(
             HostKind::Codex,
             InitMode::Guarded,
-            true,
+            false,
             &repo,
             "conn_alpha",
             "guard_installation_alpha",
@@ -6137,9 +6464,7 @@ mod tests {
         assert!(findings.missing_files.is_empty());
         assert!(findings.stale_files.is_empty());
         assert!(findings.broken_files.is_empty());
-        assert!(findings
-            .missing_required_hooks
-            .contains(&"pre_tool_hook".to_owned()));
+        assert!(findings.missing_required_hooks.is_empty());
 
         let policy_path = repo.join(VOLICORD_POLICY_FILE);
         let policy_text = fs::read_to_string(&policy_path)?;
@@ -6149,6 +6474,11 @@ mod tests {
         )?;
         let findings = guard_file_findings(&capability_json);
         assert!(findings.stale_files.contains(&path_text(&policy_path)));
+
+        let hooks_path = repo.join(".codex/hooks.json");
+        fs::write(&hooks_path, r#"{"hooks":{"SessionStart":[]}}"#)?;
+        let findings = guard_file_findings(&capability_json);
+        assert!(findings.broken_files.contains(&path_text(&hooks_path)));
 
         fs::write(
             repo.join(AGENTS_FILE),
