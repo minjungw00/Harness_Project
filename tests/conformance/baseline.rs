@@ -3650,20 +3650,42 @@ fn record_guard_installation(
             project_id: Some(fixture.project_id().to_owned()),
             host_kind: HOST_KIND_CODEX.to_owned(),
             guard_mode: guard_mode.to_owned(),
-            host_capability_json: "{}".to_owned(),
+            host_capability_json: complete_guard_capability_json(),
             installation_status: installation_status.to_owned(),
             installed_at: Some("2026-06-30T00:00:00Z".to_owned()),
             last_checked_at: "2026-06-30T00:01:00Z".to_owned(),
-            first_seen_at: None,
-            last_seen_at: None,
-            last_seen_phase: None,
-            observed_host_kind: None,
-            observed_policy_hash: None,
-            observed_binary_version: None,
+            first_seen_at: (installation_status == "active")
+                .then(|| "2026-06-30T00:02:00Z".to_owned()),
+            last_seen_at: (installation_status == "active")
+                .then(|| "2026-06-30T00:02:00Z".to_owned()),
+            last_seen_phase: (installation_status == "active").then(|| "session_start".to_owned()),
+            observed_host_kind: (installation_status == "active")
+                .then(|| HOST_KIND_CODEX.to_owned()),
+            observed_policy_hash: (installation_status == "active")
+                .then(|| "sha256:guardedfixture".to_owned()),
+            observed_binary_version: (installation_status == "active")
+                .then(|| "0.0.0-test".to_owned()),
             metadata_json: "{}".to_owned(),
         },
     )?;
     Ok(())
+}
+
+fn complete_guard_capability_json() -> String {
+    json!({
+        "schema": "volicord-guard-capability-v1",
+        "policy_hash": "sha256:guardedfixture",
+        "required_guard_phases": [
+            "session_start_hook",
+            "pre_tool_hook",
+            "post_tool_hook",
+            "user_prompt_submit_hook",
+            "stop_hook"
+        ],
+        "missing_required_hooks": [],
+        "prompt_capture": true
+    })
+    .to_string()
 }
 
 fn insert_guarded_unrecorded_change(

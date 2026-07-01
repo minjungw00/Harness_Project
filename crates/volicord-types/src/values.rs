@@ -585,6 +585,76 @@ impl GuardInstallationStatus {
     }
 }
 
+/// Derived local guard configuration health.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum GuardConfigurationStatus {
+    Absent,
+    Configured,
+    ReloadRequired,
+    Degraded,
+    Stale,
+    Broken,
+}
+
+impl GuardConfigurationStatus {
+    /// Returns the stable value name for this guard-configuration status.
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Absent => "absent",
+            Self::Configured => "configured",
+            Self::ReloadRequired => "reload_required",
+            Self::Degraded => "degraded",
+            Self::Stale => "stale",
+            Self::Broken => "broken",
+        }
+    }
+}
+
+/// Derived local guard runtime-observation health.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum GuardObservationStatus {
+    NotObserved,
+    Observed,
+    StaleObservation,
+}
+
+impl GuardObservationStatus {
+    /// Returns the stable value name for this guard-observation status.
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::NotObserved => "not_observed",
+            Self::Observed => "observed",
+            Self::StaleObservation => "stale_observation",
+        }
+    }
+}
+
+/// Derived effective guard health used by close-readiness checks.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum GuardEffectiveStatus {
+    Inactive,
+    ActionRequired,
+    Active,
+    Degraded,
+    Broken,
+}
+
+impl GuardEffectiveStatus {
+    /// Returns the stable value name for this effective guard status.
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Inactive => "inactive",
+            Self::ActionRequired => "action_required",
+            Self::Active => "active",
+            Self::Degraded => "degraded",
+            Self::Broken => "broken",
+        }
+    }
+}
+
 /// Resolution status for an unrecorded Product Repository change.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]

@@ -18,7 +18,7 @@ pub(crate) fn is_terminal_lifecycle(value: &str) -> bool {
 pub(crate) fn close_blocker(
     category: CloseReadinessBlockerCategory,
     code: &'static str,
-    message: &'static str,
+    message: impl Into<String>,
     related_refs: Vec<StateRecordRef>,
     next_actions: Vec<NextActionSummary>,
 ) -> CloseReadinessBlocker {
@@ -36,7 +36,7 @@ pub(crate) fn close_blocker(
 pub(crate) fn close_blocker_with_resolution(
     category: CloseReadinessBlockerCategory,
     code: &'static str,
-    message: &'static str,
+    message: impl Into<String>,
     can_resolve_in_chat: bool,
     terminal_action_required: bool,
     related_refs: Vec<StateRecordRef>,
@@ -45,7 +45,7 @@ pub(crate) fn close_blocker_with_resolution(
     CloseReadinessBlocker {
         category,
         code: code.to_owned(),
-        message: message.to_owned(),
+        message: message.into(),
         can_resolve_in_chat,
         terminal_action_required,
         related_refs,

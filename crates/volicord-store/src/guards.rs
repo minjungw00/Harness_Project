@@ -18,6 +18,22 @@ use crate::{
     StoreError, StoreResult,
 };
 
+const REQUIRED_GUARD_HOOK_PHASES: &[&str] = &[
+    "session_start_hook",
+    "pre_tool_hook",
+    "post_tool_hook",
+    "user_prompt_submit_hook",
+    "stop_hook",
+];
+
+const KNOWN_GUARD_OBSERVATION_PHASES: &[&str] = &[
+    "session_start",
+    "pre_tool",
+    "post_tool",
+    "prompt_capture",
+    "stop",
+];
+
 /// Guard installation creation or update input.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct GuardInstallationUpsert {
@@ -497,7 +513,7 @@ pub fn list_guard_installations(
     collect_rows(rows)
 }
 
-/// Records a validated guard hook observation and promotes the installation to active.
+/// Records a validated guard hook observation and promotes healthy configured installations.
 pub fn observe_guard_installation(
     runtime_home: impl AsRef<Path>,
     input: GuardInstallationObservation,
@@ -530,6 +546,7 @@ pub fn observe_guard_installation(
         &input.connection_internal_id,
         &project.project_internal_id,
     )?;
+    let next_installation_status = guard_status_after_observation(&existing)?;
 
     let tx = begin_immediate_transaction(&mut conn)?;
     tx.execute(
@@ -546,7 +563,7 @@ pub fn observe_guard_installation(
           WHERE guard_installation_id = ?1",
         params![
             input.guard_installation_id,
-            GuardInstallationStatus::Active.as_str(),
+            next_installation_status,
             input.observed_at,
             input.observed_phase,
             input.host_kind,
@@ -1467,7 +1484,7 @@ fn validate_guard_installation_upsert(input: &GuardInstallationUpsert) -> StoreR
         validate_timestamp_text("last_seen_at", last_seen_at)?;
     }
     if let Some(last_seen_phase) = &input.last_seen_phase {
-        validate_identifier("last_seen_phase", last_seen_phase)?;
+        validate_guard_hook_phase("last_seen_phase", last_seen_phase)?;
     }
     if let Some(observed_host_kind) = &input.observed_host_kind {
         validate_host_kind(observed_host_kind)?;
@@ -1489,11 +1506,16 @@ fn validate_guard_installation_observation(
     validate_identifier("project_id", &input.project_id)?;
     validate_host_kind(&input.host_kind)?;
     validate_guard_mode(&input.guard_mode)?;
+    if input.guard_mode == GuardMode::McpOnly.as_str() {
+        return Err(StoreError::InvalidInput {
+            detail: "guard observation requires guarded or managed guard_mode".to_owned(),
+        });
+    }
     validate_identifier("observed_policy_hash", &input.observed_policy_hash)?;
     if let Some(version) = &input.observed_binary_version {
         validate_identifier("observed_binary_version", version)?;
     }
-    validate_identifier("observed_phase", &input.observed_phase)?;
+    validate_guard_hook_phase("observed_phase", &input.observed_phase)?;
     validate_timestamp_text("observed_at", &input.observed_at)
 }
 
@@ -1678,6 +1700,19 @@ fn validate_guard_mode(value: &str) -> StoreResult<()> {
     }
 }
 
+fn validate_guard_hook_phase(field: &'static str, value: &str) -> StoreResult<()> {
+    validate_identifier(field, value)?;
+    if KNOWN_GUARD_OBSERVATION_PHASES.contains(&value) {
+        Ok(())
+    } else {
+        Err(StoreError::InvalidInput {
+            detail: format!(
+                "{field} must be session_start, pre_tool, post_tool, prompt_capture, or stop"
+            ),
+        })
+    }
+}
+
 fn validate_guard_decision(value: &str) -> StoreResult<()> {
     if [
         GuardDecision::Allow.as_str(),
@@ -1767,6 +1802,51 @@ fn expected_policy_hash(host_capability_json: &str) -> StoreResult<Option<String
         .and_then(Value::as_str)
         .filter(|value| !value.trim().is_empty())
         .map(str::to_owned))
+}
+
+fn guard_status_after_observation(installation: &GuardInstallationRecord) -> StoreResult<String> {
+    if host_capability_has_missing_required_hooks(&installation.host_capability_json)? {
+        return Ok(installation.installation_status.clone());
+    }
+    let status = match installation.installation_status.as_str() {
+        "configured" | "reload_required" | "active" => GuardInstallationStatus::Active.as_str(),
+        _ => installation.installation_status.as_str(),
+    };
+    Ok(status.to_owned())
+}
+
+fn host_capability_has_missing_required_hooks(host_capability_json: &str) -> StoreResult<bool> {
+    let value = serde_json::from_str::<Value>(host_capability_json).map_err(|error| {
+        StoreError::InvalidInput {
+            detail: format!("guard_installations.host_capability_json must be JSON: {error}"),
+        }
+    })?;
+    if value
+        .get("missing_required_hooks")
+        .and_then(Value::as_array)
+        .is_some_and(|values| {
+            values
+                .iter()
+                .filter_map(Value::as_str)
+                .any(|value| !value.trim().is_empty())
+        })
+    {
+        return Ok(true);
+    }
+    let configured_phases = value
+        .get("required_guard_phases")
+        .and_then(Value::as_array)
+        .map(|values| {
+            values
+                .iter()
+                .filter_map(Value::as_str)
+                .filter(|value| !value.trim().is_empty())
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
+    Ok(REQUIRED_GUARD_HOOK_PHASES
+        .iter()
+        .any(|required_phase| !configured_phases.contains(required_phase)))
 }
 
 fn validate_session_scope(
@@ -2573,8 +2653,7 @@ mod tests {
                 project_id: Some("project_guard_a".to_owned()),
                 host_kind: "codex".to_owned(),
                 guard_mode: "guarded".to_owned(),
-                host_capability_json: r#"{"policy_hash":"sha256:policy-a","prompt_capture":true}"#
-                    .to_owned(),
+                host_capability_json: r#"{"policy_hash":"sha256:policy-a","required_guard_phases":["session_start_hook","pre_tool_hook","post_tool_hook","user_prompt_submit_hook","stop_hook"],"missing_required_hooks":[],"prompt_capture":true}"#.to_owned(),
                 installation_status: "configured".to_owned(),
                 installed_at: Some("2026-06-30T02:06:00Z".to_owned()),
                 last_checked_at: "2026-06-30T02:06:00Z".to_owned(),
@@ -2592,6 +2671,118 @@ mod tests {
             idempotent_upsert.last_seen_at.as_deref(),
             Some("2026-06-30T02:05:00Z")
         );
+        Ok(())
+    }
+
+    #[test]
+    fn guard_installation_observation_records_metadata_without_promoting_degraded(
+    ) -> Result<(), Box<dyn Error>> {
+        let fixture = GuardFixture::new("guard-observe-degraded")?;
+        fixture.add_project_connection("project_guard_a", "conn_guard_a", "repo-a")?;
+        upsert_guard_installation(
+            fixture.runtime_home.path(),
+            GuardInstallationUpsert {
+                guard_installation_id: "guard_installation_degraded".to_owned(),
+                connection_internal_id: "conn_guard_a".to_owned(),
+                project_id: Some("project_guard_a".to_owned()),
+                host_kind: "codex".to_owned(),
+                guard_mode: "guarded".to_owned(),
+                host_capability_json: r#"{"policy_hash":"sha256:policy-a","required_guard_phases":["session_start_hook","pre_tool_hook"],"missing_required_hooks":["pre_tool_hook"],"prompt_capture":true}"#.to_owned(),
+                installation_status: "degraded".to_owned(),
+                installed_at: Some("2026-06-30T01:59:00Z".to_owned()),
+                last_checked_at: "2026-06-30T01:59:00Z".to_owned(),
+                first_seen_at: None,
+                last_seen_at: None,
+                last_seen_phase: None,
+                observed_host_kind: None,
+                observed_policy_hash: None,
+                observed_binary_version: None,
+                metadata_json: "{}".to_owned(),
+            },
+        )?;
+
+        let observed = observe_guard_installation(
+            fixture.runtime_home.path(),
+            GuardInstallationObservation {
+                guard_installation_id: "guard_installation_degraded".to_owned(),
+                connection_internal_id: "conn_guard_a".to_owned(),
+                project_id: "project_guard_a".to_owned(),
+                host_kind: "codex".to_owned(),
+                guard_mode: "guarded".to_owned(),
+                observed_policy_hash: "sha256:policy-a".to_owned(),
+                observed_binary_version: Some("1.2.3".to_owned()),
+                observed_phase: "session_start".to_owned(),
+                observed_at: "2026-06-30T02:00:00Z".to_owned(),
+            },
+        )?
+        .expect("matching degraded observation should be recorded");
+
+        assert_eq!(observed.installation_status, "degraded");
+        assert_eq!(
+            observed.first_seen_at.as_deref(),
+            Some("2026-06-30T02:00:00Z")
+        );
+        assert_eq!(
+            observed.last_seen_at.as_deref(),
+            Some("2026-06-30T02:00:00Z")
+        );
+        assert_eq!(observed.last_seen_phase.as_deref(), Some("session_start"));
+        assert_eq!(
+            observed.observed_policy_hash.as_deref(),
+            Some("sha256:policy-a")
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn guard_installation_observation_does_not_promote_partial_required_phase_configuration(
+    ) -> Result<(), Box<dyn Error>> {
+        let fixture = GuardFixture::new("guard-observe-partial-hooks")?;
+        fixture.add_project_connection("project_guard_a", "conn_guard_a", "repo-a")?;
+        upsert_guard_installation(
+            fixture.runtime_home.path(),
+            GuardInstallationUpsert {
+                guard_installation_id: "guard_installation_partial".to_owned(),
+                connection_internal_id: "conn_guard_a".to_owned(),
+                project_id: Some("project_guard_a".to_owned()),
+                host_kind: "codex".to_owned(),
+                guard_mode: "guarded".to_owned(),
+                host_capability_json: r#"{"policy_hash":"sha256:policy-a","required_guard_phases":["session_start_hook"],"missing_required_hooks":[],"prompt_capture":true}"#.to_owned(),
+                installation_status: "configured".to_owned(),
+                installed_at: Some("2026-06-30T01:59:00Z".to_owned()),
+                last_checked_at: "2026-06-30T01:59:00Z".to_owned(),
+                first_seen_at: None,
+                last_seen_at: None,
+                last_seen_phase: None,
+                observed_host_kind: None,
+                observed_policy_hash: None,
+                observed_binary_version: None,
+                metadata_json: "{}".to_owned(),
+            },
+        )?;
+
+        let observed = observe_guard_installation(
+            fixture.runtime_home.path(),
+            GuardInstallationObservation {
+                guard_installation_id: "guard_installation_partial".to_owned(),
+                connection_internal_id: "conn_guard_a".to_owned(),
+                project_id: "project_guard_a".to_owned(),
+                host_kind: "codex".to_owned(),
+                guard_mode: "guarded".to_owned(),
+                observed_policy_hash: "sha256:policy-a".to_owned(),
+                observed_binary_version: Some("1.2.3".to_owned()),
+                observed_phase: "session_start".to_owned(),
+                observed_at: "2026-06-30T02:00:00Z".to_owned(),
+            },
+        )?
+        .expect("matching partial observation should be recorded");
+
+        assert_eq!(observed.installation_status, "configured");
+        assert_eq!(
+            observed.last_seen_at.as_deref(),
+            Some("2026-06-30T02:00:00Z")
+        );
+        assert_eq!(observed.last_seen_phase.as_deref(), Some("session_start"));
         Ok(())
     }
 
@@ -2663,6 +2854,31 @@ mod tests {
         assert!(stored.last_seen_at.is_none());
         assert!(stored.last_seen_phase.is_none());
         assert!(stored.observed_policy_hash.is_none());
+        Ok(())
+    }
+
+    #[test]
+    fn guard_installation_observation_rejects_unknown_phase() -> Result<(), Box<dyn Error>> {
+        let fixture = GuardFixture::new("guard-observe-unknown-phase")?;
+        fixture.add_project_connection("project_guard_a", "conn_guard_a", "repo-a")?;
+        fixture.upsert_observable_installation("guard_installation_a", "conn_guard_a")?;
+
+        let error = observe_guard_installation(
+            fixture.runtime_home.path(),
+            GuardInstallationObservation {
+                guard_installation_id: "guard_installation_a".to_owned(),
+                connection_internal_id: "conn_guard_a".to_owned(),
+                project_id: "project_guard_a".to_owned(),
+                host_kind: "codex".to_owned(),
+                guard_mode: "guarded".to_owned(),
+                observed_policy_hash: "sha256:policy-a".to_owned(),
+                observed_binary_version: Some("1.2.3".to_owned()),
+                observed_phase: "unknown_phase".to_owned(),
+                observed_at: "2026-06-30T03:30:00Z".to_owned(),
+            },
+        )
+        .expect_err("unknown observation phase must be rejected");
+        assert!(matches!(error, StoreError::InvalidInput { .. }));
         Ok(())
     }
 
@@ -2761,8 +2977,7 @@ mod tests {
                     project_id: Some("project_guard_a".to_owned()),
                     host_kind: "codex".to_owned(),
                     guard_mode: "guarded".to_owned(),
-                    host_capability_json:
-                        r#"{"policy_hash":"sha256:policy-a","prompt_capture":true}"#.to_owned(),
+                    host_capability_json: r#"{"policy_hash":"sha256:policy-a","required_guard_phases":["session_start_hook","pre_tool_hook","post_tool_hook","user_prompt_submit_hook","stop_hook"],"missing_required_hooks":[],"prompt_capture":true}"#.to_owned(),
                     installation_status: "reload_required".to_owned(),
                     installed_at: Some("2026-06-30T01:59:00Z".to_owned()),
                     last_checked_at: "2026-06-30T01:59:00Z".to_owned(),

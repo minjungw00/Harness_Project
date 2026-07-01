@@ -795,6 +795,30 @@ fn projected_guard_health(
     guard_health_summary_from_record(record)
 }
 
+const REQUIRED_GUARD_HOOK_PHASES: &[&str] = &[
+    "session_start_hook",
+    "pre_tool_hook",
+    "post_tool_hook",
+    "user_prompt_submit_hook",
+    "stop_hook",
+];
+
+const KNOWN_GUARD_OBSERVATION_PHASES: &[&str] = &[
+    "session_start",
+    "pre_tool",
+    "post_tool",
+    "prompt_capture",
+    "stop",
+];
+
+#[derive(Debug, Clone)]
+struct GuardCapabilityFacts {
+    expected_policy_hash: Option<String>,
+    required_hook_phases: Vec<String>,
+    missing_required_hook_phases: Vec<String>,
+    prompt_capture_configured: bool,
+}
+
 pub(super) fn guard_health_summary_from_record(
     record: GuardHealthRecord,
 ) -> Result<Option<GuardHealthSummary>, PlanError> {
@@ -808,10 +832,38 @@ pub(super) fn guard_health_summary_from_record(
     } else {
         GuardInstallationStatus::Absent
     };
+    let capability = record
+        .guard_installation
+        .as_ref()
+        .map(guard_capability_facts)
+        .transpose()?
+        .unwrap_or_else(default_guard_capability_facts);
+    let guard_configuration_status =
+        guard_configuration_status(guard_installation_status, &capability);
+    let guard_observation_status =
+        guard_observation_status(record.guard_installation.as_ref(), &capability)?;
+    let effective_guard_status = effective_guard_status(
+        guard_mode,
+        guard_configuration_status,
+        guard_observation_status,
+    );
     let guard_installation_id = record
         .guard_installation
         .as_ref()
         .map(|installation| GuardInstallationId::new(installation.guard_installation_id.clone()))
+        .into();
+    let host_kind = record
+        .guard_installation
+        .as_ref()
+        .map(|installation| {
+            parse_owner_storage_value(
+                "guard_installations",
+                installation.guard_installation_id.clone(),
+                "host_kind",
+                &installation.host_kind,
+            )
+        })
+        .transpose()?
         .into();
     let last_guard_event_at = record
         .latest_event
@@ -841,7 +893,27 @@ pub(super) fn guard_health_summary_from_record(
         })
         .transpose()?
         .into();
-    let guard_hook_observed = last_guard_observed_at.is_some();
+    let observed_hook_phase = record
+        .guard_installation
+        .as_ref()
+        .and_then(|installation| installation.last_seen_phase.clone())
+        .into();
+    let observed_host_kind = record
+        .guard_installation
+        .as_ref()
+        .and_then(|installation| {
+            installation.observed_host_kind.as_ref().map(|host_kind| {
+                parse_owner_storage_value(
+                    "guard_installations",
+                    installation.guard_installation_id.clone(),
+                    "observed_host_kind",
+                    host_kind,
+                )
+            })
+        })
+        .transpose()?
+        .into();
+    let guard_hook_observed = guard_observation_status == GuardObservationStatus::Observed;
     let mcp_connection_status = record
         .connection
         .as_ref()
@@ -851,14 +923,8 @@ pub(super) fn guard_health_summary_from_record(
         connection.enabled && connection.last_verification_status == "complete"
     });
     let prompt_capture_available = guard_mode_supports_prompt_capture(guard_mode)
-        && guard_installation_status == GuardInstallationStatus::Active
-        && guard_hook_observed
-        && record
-            .guard_installation
-            .as_ref()
-            .map(prompt_capture_capability_enabled)
-            .transpose()?
-            .unwrap_or(false);
+        && effective_guard_status == GuardEffectiveStatus::Active
+        && capability.prompt_capture_configured;
     let missing_or_stale_write_readiness = record
         .latest_event
         .as_ref()
@@ -869,15 +935,189 @@ pub(super) fn guard_health_summary_from_record(
         guard_mode,
         guard_installation_id,
         guard_installation_status,
+        guard_configuration_status,
+        guard_observation_status,
+        effective_guard_status,
         guard_hook_observed,
         last_guard_observed_at,
         last_guard_event_at,
+        host_kind,
+        observed_hook_phase,
+        observed_host_kind,
+        expected_policy_hash: capability.expected_policy_hash.into(),
+        observed_policy_hash: record
+            .guard_installation
+            .as_ref()
+            .and_then(|installation| installation.observed_policy_hash.clone())
+            .into(),
+        observed_binary_version: record
+            .guard_installation
+            .as_ref()
+            .and_then(|installation| installation.observed_binary_version.clone())
+            .into(),
+        required_hook_phases: capability.required_hook_phases,
+        missing_required_hook_phases: capability.missing_required_hook_phases,
         prompt_capture_available,
         mcp_connection_healthy,
         mcp_connection_status,
         unresolved_unrecorded_change_count: record.unresolved_unrecorded_changes.len() as u64,
         missing_or_stale_write_readiness,
     }))
+}
+
+fn default_guard_capability_facts() -> GuardCapabilityFacts {
+    GuardCapabilityFacts {
+        expected_policy_hash: None,
+        required_hook_phases: Vec::new(),
+        missing_required_hook_phases: Vec::new(),
+        prompt_capture_configured: false,
+    }
+}
+
+fn guard_capability_facts(
+    installation: &volicord_store::guards::GuardInstallationRecord,
+) -> Result<GuardCapabilityFacts, PlanError> {
+    let capability = decode_required_json_object(
+        "guard_installations",
+        installation.guard_installation_id.clone(),
+        "host_capability_json",
+        Some(&installation.host_capability_json),
+    )?;
+    let expected_policy_hash = capability
+        .get("policy_hash")
+        .and_then(Value::as_str)
+        .filter(|value| !value.trim().is_empty())
+        .map(str::to_owned);
+    let required_hook_phases =
+        string_array_field(&capability, "required_guard_phases").unwrap_or_default();
+    let missing_required_hook_phases = guard_missing_required_hook_phases(
+        &required_hook_phases,
+        string_array_field(&capability, "missing_required_hooks").unwrap_or_default(),
+    );
+    let prompt_capture_configured = capability
+        .get("prompt_capture")
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
+    Ok(GuardCapabilityFacts {
+        expected_policy_hash,
+        required_hook_phases,
+        missing_required_hook_phases,
+        prompt_capture_configured,
+    })
+}
+
+fn string_array_field(object: &JsonObject, field: &str) -> Option<Vec<String>> {
+    Some(
+        object
+            .get(field)?
+            .as_array()?
+            .iter()
+            .filter_map(Value::as_str)
+            .filter(|value| !value.trim().is_empty())
+            .map(str::to_owned)
+            .collect(),
+    )
+}
+
+fn guard_missing_required_hook_phases(
+    configured_required_hook_phases: &[String],
+    mut explicit_missing_hook_phases: Vec<String>,
+) -> Vec<String> {
+    for required_phase in REQUIRED_GUARD_HOOK_PHASES {
+        if !configured_required_hook_phases
+            .iter()
+            .any(|phase| phase == required_phase)
+        {
+            explicit_missing_hook_phases.push((*required_phase).to_owned());
+        }
+    }
+    explicit_missing_hook_phases.sort();
+    explicit_missing_hook_phases.dedup();
+    explicit_missing_hook_phases
+}
+
+fn guard_configuration_status(
+    installation_status: GuardInstallationStatus,
+    capability: &GuardCapabilityFacts,
+) -> GuardConfigurationStatus {
+    if !capability.missing_required_hook_phases.is_empty()
+        && !matches!(
+            installation_status,
+            GuardInstallationStatus::Absent
+                | GuardInstallationStatus::Stale
+                | GuardInstallationStatus::Broken
+        )
+    {
+        return GuardConfigurationStatus::Degraded;
+    }
+    match installation_status {
+        GuardInstallationStatus::Absent => GuardConfigurationStatus::Absent,
+        GuardInstallationStatus::Configured | GuardInstallationStatus::Active => {
+            GuardConfigurationStatus::Configured
+        }
+        GuardInstallationStatus::ReloadRequired => GuardConfigurationStatus::ReloadRequired,
+        GuardInstallationStatus::Degraded => GuardConfigurationStatus::Degraded,
+        GuardInstallationStatus::Stale => GuardConfigurationStatus::Stale,
+        GuardInstallationStatus::Broken => GuardConfigurationStatus::Broken,
+    }
+}
+
+fn guard_observation_status(
+    installation: Option<&volicord_store::guards::GuardInstallationRecord>,
+    capability: &GuardCapabilityFacts,
+) -> Result<GuardObservationStatus, PlanError> {
+    let Some(installation) = installation else {
+        return Ok(GuardObservationStatus::NotObserved);
+    };
+    let Some(last_seen_at) = installation.last_seen_at.as_deref() else {
+        return Ok(GuardObservationStatus::NotObserved);
+    };
+    parse_owner_storage_value::<UtcTimestamp>(
+        "guard_installations",
+        installation.guard_installation_id.clone(),
+        "last_seen_at",
+        last_seen_at,
+    )?;
+    let current_host_kind =
+        installation.observed_host_kind.as_deref() == Some(installation.host_kind.as_str());
+    let current_policy_hash = capability
+        .expected_policy_hash
+        .as_deref()
+        .is_some_and(|expected| installation.observed_policy_hash.as_deref() == Some(expected));
+    let known_phase = installation
+        .last_seen_phase
+        .as_deref()
+        .is_some_and(|phase| KNOWN_GUARD_OBSERVATION_PHASES.contains(&phase));
+    if current_host_kind && current_policy_hash && known_phase {
+        Ok(GuardObservationStatus::Observed)
+    } else {
+        Ok(GuardObservationStatus::StaleObservation)
+    }
+}
+
+fn effective_guard_status(
+    guard_mode: GuardMode,
+    configuration_status: GuardConfigurationStatus,
+    observation_status: GuardObservationStatus,
+) -> GuardEffectiveStatus {
+    if guard_mode == GuardMode::McpOnly {
+        return GuardEffectiveStatus::Inactive;
+    }
+    match configuration_status {
+        GuardConfigurationStatus::Absent => GuardEffectiveStatus::Inactive,
+        GuardConfigurationStatus::Broken => GuardEffectiveStatus::Broken,
+        GuardConfigurationStatus::Stale | GuardConfigurationStatus::Degraded => {
+            GuardEffectiveStatus::Degraded
+        }
+        GuardConfigurationStatus::ReloadRequired => GuardEffectiveStatus::ActionRequired,
+        GuardConfigurationStatus::Configured => {
+            if observation_status == GuardObservationStatus::Observed {
+                GuardEffectiveStatus::Active
+            } else {
+                GuardEffectiveStatus::ActionRequired
+            }
+        }
+    }
 }
 
 fn guard_health_mode(record: &GuardHealthRecord) -> Result<GuardMode, PlanError> {
@@ -928,21 +1168,6 @@ fn parse_guard_installation_status(
 
 fn guard_mode_supports_prompt_capture(guard_mode: GuardMode) -> bool {
     matches!(guard_mode, GuardMode::Guarded | GuardMode::Managed)
-}
-
-fn prompt_capture_capability_enabled(
-    installation: &volicord_store::guards::GuardInstallationRecord,
-) -> Result<bool, PlanError> {
-    let capability = decode_required_json_object(
-        "guard_installations",
-        installation.guard_installation_id.clone(),
-        "host_capability_json",
-        Some(&installation.host_capability_json),
-    )?;
-    Ok(capability
-        .get("prompt_capture")
-        .and_then(Value::as_bool)
-        .unwrap_or(true))
 }
 
 fn latest_guard_event_has_write_readiness_issue(
@@ -1072,44 +1297,69 @@ fn guard_installation_close_blocker(
     summary: &GuardHealthSummary,
     task_ref: &StateRecordRef,
 ) -> Option<CloseReadinessBlocker> {
-    let (code, message, label) = match summary.guard_installation_status {
-        GuardInstallationStatus::Absent => (
+    if summary.effective_guard_status == GuardEffectiveStatus::Active {
+        return None;
+    }
+    let host_kind = summary
+        .host_kind
+        .as_ref()
+        .map(ToString::to_string)
+        .unwrap_or_else(|| "unknown".to_owned());
+    let missing_phases = if summary.missing_required_hook_phases.is_empty() {
+        "none".to_owned()
+    } else {
+        summary.missing_required_hook_phases.join(", ")
+    };
+    let observation_detail = format!(
+        "host_kind={host_kind}; observation_status={}; missing_required_hooks={missing_phases}",
+        summary.guard_observation_status.as_str()
+    );
+    let (code, message, label) = match summary.guard_configuration_status {
+        GuardConfigurationStatus::Absent => (
             "guard_not_installed",
-            "Guarded close requires a recorded guard installation.",
-            "Install the guard integration for this project before completing the Task.",
+            format!("Guarded close requires a recorded guard installation ({observation_detail})."),
+            format!("Install the guard integration for host {host_kind} before completing the Task."),
         ),
-        GuardInstallationStatus::ReloadRequired => (
+        GuardConfigurationStatus::ReloadRequired => (
             "guard_reload_required",
-            "Guard files are installed, but the host has not reloaded them.",
-            "Restart or reload the host so it loads the Volicord guard hooks.",
+            format!("Guard files are installed, but the host has not reloaded them ({observation_detail})."),
+            format!("Restart or reload host {host_kind} so it loads the Volicord guard hooks."),
         ),
-        GuardInstallationStatus::Configured => (
+        GuardConfigurationStatus::Configured
+            if summary.guard_observation_status == GuardObservationStatus::StaleObservation =>
+        {
+            (
+                "guard_not_observed",
+                format!("Guard files are configured, but the latest observation does not match the current installation ({observation_detail})."),
+                format!("Run a current guard hook for host {host_kind} before completing the Task."),
+            )
+        }
+        GuardConfigurationStatus::Configured => (
             "guard_not_observed",
-            "Guard files are configured, but no matching guard hook has been observed.",
-            "Start or reload the host and let the Volicord guard hook run before close.",
+            format!("Guard files are configured, but no matching guard hook has been observed ({observation_detail})."),
+            format!("Start or reload host {host_kind} and let the Volicord guard hook run before close."),
         ),
-        GuardInstallationStatus::Active if !summary.guard_hook_observed => (
-            "guard_not_observed",
-            "Guard status is active, but no matching guard hook observation is recorded.",
-            "Run the host guard hook or restart the host before completing the Task.",
-        ),
-        GuardInstallationStatus::Active => return None,
-        GuardInstallationStatus::Stale => (
+        GuardConfigurationStatus::Stale => (
             "guard_stale",
-            "Guard health is stale for this guarded close path.",
-            "Refresh or reinstall the guard integration before completing the Task.",
+            format!("Guard health is stale for this guarded close path ({observation_detail})."),
+            format!("Refresh or reinstall the guard integration for host {host_kind} before completing the Task."),
         ),
-        GuardInstallationStatus::Broken => (
+        GuardConfigurationStatus::Broken => (
             "guard_broken",
-            "Guard health is broken for this guarded close path.",
-            "Repair the guard integration before completing the Task.",
+            format!("Guard health is broken for this guarded close path ({observation_detail})."),
+            format!("Repair the guard integration for host {host_kind} before completing the Task."),
         ),
-        GuardInstallationStatus::Degraded if guard_degraded_blocks_close(summary.guard_mode) => (
+        GuardConfigurationStatus::Degraded if !summary.missing_required_hook_phases.is_empty() => (
+            "guard_required_hooks_missing",
+            format!("Guard configuration is missing required hook phases for this guarded close path ({observation_detail})."),
+            format!("Install required guard hook phases for host {host_kind}: {missing_phases}."),
+        ),
+        GuardConfigurationStatus::Degraded if guard_degraded_blocks_close(summary.guard_mode) => (
             "guard_degraded",
-            "Guard health is degraded and the current guard policy blocks close.",
-            "Repair degraded guard health before completing the Task.",
+            format!("Guard health is degraded and the current guard policy blocks close ({observation_detail})."),
+            format!("Repair degraded guard health for host {host_kind} before completing the Task."),
         ),
-        GuardInstallationStatus::Degraded => return None,
+        GuardConfigurationStatus::Degraded => return None,
     };
     Some(close_blocker_with_resolution(
         CloseReadinessBlockerCategory::ConnectionCapability,
@@ -1121,7 +1371,7 @@ fn guard_installation_close_blocker(
         vec![NextActionSummary {
             action_kind: NextActionKind::CloseTask,
             owner_method: None,
-            label: label.to_owned(),
+            label,
             blocking_question: None,
             required_refs: vec![task_ref.clone()],
         }],

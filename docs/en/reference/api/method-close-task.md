@@ -226,7 +226,8 @@ The production meanings below apply only after the method reaches close-readines
 | `guard_not_observed` | `connection_capability` | A guarded or managed close path has configured guard files, but no matching host guard hook observation is recorded. |
 | `guard_stale` | `connection_capability` | A guarded or managed close path has a guard installation whose recorded status is `stale`. |
 | `guard_broken` | `connection_capability` | A guarded or managed close path has a guard installation whose recorded status is `broken`. |
-| `guard_degraded` | `connection_capability` | A guarded or managed close path has a guard installation whose recorded status is `degraded` and the current guard policy blocks close on degraded health. |
+| `guard_required_hooks_missing` | `connection_capability` | A guarded or managed close path has a guard installation with missing required hook phases. The blocker reports the missing phases, host kind, `terminal_action_required`, `can_resolve_in_chat`, and `next_actions`. |
+| `guard_degraded` | `connection_capability` | A guarded or managed close path has degraded guard configuration or health not covered by a more specific guard blocker, and the current guard policy blocks close on degraded health. |
 | `guard_connection_unhealthy` | `connection_capability` | A guarded or managed close path has an Agent Connection health fact that is not healthy. |
 | `unresolved_unrecorded_changes` | `connection_capability` | Guard records show unresolved unrecorded Product Repository changes that must be reconciled before close. The blocker includes `next_actions` with `owner_method=volicord.reconcile_changes`, and `can_resolve_in_chat` reports whether the current guarded path can proceed through a chat-mediated user path. |
 | `guard_write_readiness_missing_or_stale` | `write_compatibility` | Guard events detected missing or stale write readiness for the close path. |

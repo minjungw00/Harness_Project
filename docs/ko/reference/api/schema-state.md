@@ -109,9 +109,20 @@ GuardHealthSummary:
   guard_mode: string
   guard_installation_id: string | null
   guard_installation_status: string
+  guard_configuration_status: string
+  guard_observation_status: string
+  effective_guard_status: string
   guard_hook_observed: boolean
   last_guard_observed_at: string | null
   last_guard_event_at: string | null
+  host_kind: string | null
+  observed_hook_phase: string | null
+  observed_host_kind: string | null
+  expected_policy_hash: string | null
+  observed_policy_hash: string | null
+  observed_binary_version: string | null
+  required_hook_phases: string[]
+  missing_required_hook_phases: string[]
   prompt_capture_available: boolean
   mcp_connection_healthy: boolean
   mcp_connection_status: string | null
@@ -122,9 +133,12 @@ GuardHealthSummary:
 의미:
 - `guard_mode`와 `guard_installation_status`는 제어 값 문자열입니다.
 - `guard_installation_id`가 `null`이 아니면 불투명 guard 설치 식별자입니다.
-- `guard_hook_observed`는 선택된 guard 설치에 대해 일치하는 호스트 guard hook 관찰이 기록되어 있는지를 보고합니다.
-- `last_guard_observed_at`은 가장 최근의 일치하는 guard 설치 관찰 시각이며, 일치하는 관찰이 기록되어 있지 않으면 `null`입니다.
+- `guard_configuration_status`, `guard_observation_status`, `effective_guard_status`는 파일/설정 건강 상태, 런타임 hook 관찰, 닫기 준비 상태에서 쓰는 효과적인 guarded 상태를 분리합니다.
+- `guard_hook_observed`는 선택된 guard 설치에 대해 현재 일치하는 호스트 guard hook 관찰이 기록되어 있는지를 보고합니다.
+- `last_guard_observed_at`은 가장 최근 저장된 guard 설치 관찰 시각이며, 관찰이 기록되어 있지 않으면 `null`입니다.
 - `last_guard_event_at`은 상태 보기에 사용할 수 있는 최신 guard 이벤트 타임스탬프입니다. 사용할 수 있는 guard 이벤트가 없으면 `null`입니다.
+- `host_kind`, `observed_hook_phase`, `observed_host_kind`, `expected_policy_hash`, `observed_policy_hash`, `observed_binary_version`은 사용할 수 있을 때 선택된 설치와 최신 저장 관찰 메타데이터를 보고합니다.
+- `required_hook_phases`와 `missing_required_hook_phases`는 필요한 guard hook 설정의 완전성을 보고합니다. 필요한 단계가 `required_hook_phases`에 없거나 `missing_required_hook_phases`에 나열되어 있으면 누락된 것으로 취급합니다. 필요한 단계가 누락되어 있으면 유효한 hook 이벤트가 관찰되었더라도 효과적인 guard 건강 상태는 active가 되지 않습니다.
 - `prompt_capture_available`은 선택된 guarded 또는 managed 연결에서 prompt capture를 사용할 수 있는지 보고합니다. 프롬프트 텍스트는 포함하지 않습니다.
 - `mcp_connection_healthy`와 `mcp_connection_status`는 추적되는 Agent Connection 확인 상태가 있을 때 그 상태를 요약합니다.
 - `unresolved_unrecorded_change_count`는 해결되지 않은 미기록 Product Repository 변경 수입니다. 프롬프트 텍스트, 명령 텍스트, 경로 목록은 노출하지 않습니다.
@@ -136,7 +150,7 @@ GuardHealthSummary:
 - `mcp_only` 모드는 담당 문서가 정의한 설정이 guarded 또는 managed 동작을 선택하지 않는 한 협력형으로 남습니다.
 
 담당 문서 링크:
-- `guard_mode`와 `guard_installation_status` 값: [상태와 차단 사유 값](schema-value-sets.md#state-and-blocker-values)
+- `guard_mode`, `guard_installation_status`, `guard_configuration_status`, `guard_observation_status`, `effective_guard_status` 값: [상태와 차단 사유 값](schema-value-sets.md#state-and-blocker-values)
 - 닫기 준비 상태 guard 차단 사유와 메서드 로컬 코드: [`volicord.close_task`](method-close-task.md)
 - Agent Connection 의미: [Agent Connection](../agent-connection.md)
 

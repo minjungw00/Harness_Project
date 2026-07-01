@@ -3343,6 +3343,9 @@ fn hex_bytes(bytes: &[u8]) -> String {
 struct GuardOperationalState {
     mode_state: String,
     installation_state: String,
+    configuration_state: String,
+    observation_state: String,
+    effective_state: String,
     files_state: String,
     hook_observed_state: String,
     degraded_allowed: bool,
@@ -3361,6 +3364,9 @@ impl GuardOperationalState {
         Self {
             mode_state: "not_configured".to_owned(),
             installation_state: "not_configured".to_owned(),
+            configuration_state: "absent".to_owned(),
+            observation_state: "not_observed".to_owned(),
+            effective_state: "inactive".to_owned(),
             files_state: "not_configured".to_owned(),
             hook_observed_state: "not_observed".to_owned(),
             degraded_allowed: false,
@@ -3376,19 +3382,33 @@ impl GuardOperationalState {
     }
 
     fn planned(init_mode: InitMode, integration: &GuardIntegrationPlan) -> Self {
+        let installation_state = "planned".to_owned();
+        let observation_state = if init_mode == InitMode::McpOnly {
+            "disabled".to_owned()
+        } else {
+            "not_observed".to_owned()
+        };
+        let configuration_state = guard_configuration_state(
+            &installation_state,
+            !integration.missing_required_hooks.is_empty(),
+        );
+        let effective_state = guard_effective_state(
+            init_mode.guard_value(),
+            &configuration_state,
+            &observation_state,
+        );
         Self {
             mode_state: init_mode.guard_value().to_owned(),
-            installation_state: "planned".to_owned(),
+            installation_state,
+            configuration_state,
+            observation_state: observation_state.clone(),
+            effective_state,
             files_state: if init_mode == InitMode::McpOnly {
                 "disabled".to_owned()
             } else {
                 "planned".to_owned()
             },
-            hook_observed_state: if init_mode == InitMode::McpOnly {
-                "disabled".to_owned()
-            } else {
-                "not_observed".to_owned()
-            },
+            hook_observed_state: observation_state,
             degraded_allowed: integration.allow_degraded,
             last_observed_at: None,
             last_guard_event_at: None,
@@ -3413,21 +3433,34 @@ impl GuardOperationalState {
             .into_iter()
             .map(str::to_owned)
             .collect::<Vec<_>>();
+        let hook_observed_state = if init_mode == InitMode::McpOnly {
+            "disabled".to_owned()
+        } else if health == GuardInstallationStatus::Active.as_str() {
+            "observed".to_owned()
+        } else {
+            "not_observed".to_owned()
+        };
+        let configuration_state =
+            guard_configuration_state(health, !missing_required_hooks.is_empty());
+        let observation_state = guard_observation_state(&hook_observed_state);
+        let effective_state = guard_effective_state(
+            init_mode.guard_value(),
+            &configuration_state,
+            &observation_state,
+        );
+        let required_hooks_missing = !missing_required_hooks.is_empty();
         Self {
             mode_state: init_mode.guard_value().to_owned(),
             installation_state: health.to_owned(),
+            configuration_state,
+            observation_state,
+            effective_state,
             files_state: if init_mode == InitMode::McpOnly {
                 "disabled".to_owned()
             } else {
                 "installed".to_owned()
             },
-            hook_observed_state: if init_mode == InitMode::McpOnly {
-                "disabled".to_owned()
-            } else if health == GuardInstallationStatus::Active.as_str() {
-                "observed".to_owned()
-            } else {
-                "not_observed".to_owned()
-            },
+            hook_observed_state,
             degraded_allowed: integration.allow_degraded,
             last_observed_at: None,
             last_guard_event_at: None,
@@ -3450,6 +3483,7 @@ impl GuardOperationalState {
                 init_mode.guard_value(),
                 health,
                 health == GuardInstallationStatus::Active.as_str(),
+                required_hooks_missing,
             ),
         }
     }
@@ -3458,6 +3492,9 @@ impl GuardOperationalState {
         json!({
             "mode": &self.mode_state,
             "installation": &self.installation_state,
+            "configuration_health": &self.configuration_state,
+            "observation_health": &self.observation_state,
+            "effective_health": &self.effective_state,
             "files": &self.files_state,
             "hook_observed": &self.hook_observed_state,
             "degraded_allowed": self.degraded_allowed,
@@ -3563,7 +3600,7 @@ fn render_simplified_connection_output(
     match data.format {
         OutputFormat::Text => {
             let mut output = format!(
-                "Agent Connection {}\nruntime_home_state: ready\nruntime_home: {}\nconnection_state: {}\nhost: {}\nintent: {}\nmode: {}\nenabled: {}\nproject_registration_state: {}\nconnected_repositories: {}\nmcp_config_state: {}\nmcp_config: {}\nguard_mode: {}\nguard_installation_state: {}\nguard_files_state: {}\nguard_hook_observed: {}\nguard_degraded_allowed: {}\nlast_guard_event: {}\nprompt_capture_state: {}\nhost_reload_required: {}\nguard_blockers: {}\n",
+                "Agent Connection {}\nruntime_home_state: ready\nruntime_home: {}\nconnection_state: {}\nhost: {}\nintent: {}\nmode: {}\nenabled: {}\nproject_registration_state: {}\nconnected_repositories: {}\nmcp_config_state: {}\nmcp_config: {}\nguard_mode: {}\nguard_installation_state: {}\nguard_configuration_state: {}\nguard_observation_state: {}\nguard_effective_state: {}\nguard_files_state: {}\nguard_hook_observed: {}\nguard_degraded_allowed: {}\nlast_guard_event: {}\nprompt_capture_state: {}\nhost_reload_required: {}\nguard_blockers: {}\n",
                 data.action,
                 data.runtime_home.display(),
                 data.status.as_str(),
@@ -3578,6 +3615,9 @@ fn render_simplified_connection_output(
                 ,
                 data.guard_state.mode_state,
                 data.guard_state.installation_state,
+                data.guard_state.configuration_state,
+                data.guard_state.observation_state,
+                data.guard_state.effective_state,
                 data.guard_state.files_state,
                 data.guard_state.hook_observed_state,
                 yes_no(data.guard_state.degraded_allowed),
@@ -3640,7 +3680,7 @@ fn render_simplified_plan_output(
     match data.format {
         OutputFormat::Text => {
             let mut output = format!(
-                "Agent Connection {} {}\nruntime_home_state: ready\nruntime_home: {}\nconnection_state: {}\nhost: {}\nintent: {}\nmode: {}\nenabled: {}\nproject_registration_state: {}\nconnected_repositories: {}\nmcp_config_state: planned_{}\nmcp_config: {}\nguard_mode: {}\nguard_installation_state: {}\nguard_files_state: {}\nguard_hook_observed: {}\nguard_degraded_allowed: {}\nlast_guard_event: {}\nprompt_capture_state: {}\nhost_reload_required: {}\nguard_blockers: {}\nplanned_change: {}\n",
+                "Agent Connection {} {}\nruntime_home_state: ready\nruntime_home: {}\nconnection_state: {}\nhost: {}\nintent: {}\nmode: {}\nenabled: {}\nproject_registration_state: {}\nconnected_repositories: {}\nmcp_config_state: planned_{}\nmcp_config: {}\nguard_mode: {}\nguard_installation_state: {}\nguard_configuration_state: {}\nguard_observation_state: {}\nguard_effective_state: {}\nguard_files_state: {}\nguard_hook_observed: {}\nguard_degraded_allowed: {}\nlast_guard_event: {}\nprompt_capture_state: {}\nhost_reload_required: {}\nguard_blockers: {}\nplanned_change: {}\n",
                 data.action,
                 data.status.as_str(),
                 data.runtime_home.display(),
@@ -3657,6 +3697,9 @@ fn render_simplified_plan_output(
                 target,
                 guard_state.mode_state,
                 guard_state.installation_state,
+                guard_state.configuration_state,
+                guard_state.observation_state,
+                guard_state.effective_state,
                 guard_state.files_state,
                 guard_state.hook_observed_state,
                 yes_no(guard_state.degraded_allowed),
@@ -3750,7 +3793,7 @@ fn render_init_output(data: InitOutput<'_>) -> Result<String, ConnectionCommandE
     match data.format {
         OutputFormat::Text => {
             let mut output = format!(
-                "Volicord init {}\nruntime_home_state: ready\nruntime_home: {}\nproject_registration_state: {}\nrepo: {}\nconnection_state: {}\nhost: {}\nmode: {}\nconnection_id: {}\nmcp_config_state: {}\nmcp_config: {}\nplanned_change: {}\nprofile: {}\nguard_mode: {}\nguard_installation_state: {}\nguard_files_state: {}\nguard_hook_observed: {}\nguard_degraded_allowed: {}\nlast_guard_event: {}\nprompt_capture_state: {}\nhost_reload_required: {}\nguard_blockers: {}\n",
+                "Volicord init {}\nruntime_home_state: ready\nruntime_home: {}\nproject_registration_state: {}\nrepo: {}\nconnection_state: {}\nhost: {}\nmode: {}\nconnection_id: {}\nmcp_config_state: {}\nmcp_config: {}\nplanned_change: {}\nprofile: {}\nguard_mode: {}\nguard_installation_state: {}\nguard_configuration_state: {}\nguard_observation_state: {}\nguard_effective_state: {}\nguard_files_state: {}\nguard_hook_observed: {}\nguard_degraded_allowed: {}\nlast_guard_event: {}\nprompt_capture_state: {}\nhost_reload_required: {}\nguard_blockers: {}\n",
                 data.status.as_str(),
                 data.runtime_home.display(),
                 project_state,
@@ -3765,6 +3808,9 @@ fn render_init_output(data: InitOutput<'_>) -> Result<String, ConnectionCommandE
                 data.profile_action,
                 guard_state.mode_state,
                 guard_state.installation_state,
+                guard_state.configuration_state,
+                guard_state.observation_state,
+                guard_state.effective_state,
                 guard_state.files_state,
                 guard_state.hook_observed_state,
                 yes_no(guard_state.degraded_allowed),
@@ -3963,21 +4009,23 @@ fn guard_checks_json_values(guard_state: &GuardOperationalState) -> Vec<Value> {
             "summary": format!("guard hook observation is {other}"),
         }),
     };
-    let status_check = if guard_state.installation_state == "active"
-        && guard_state.hook_observed_state == "observed"
-    {
+    let status_check = if guard_state.effective_state == "active" {
         json!({
             "id": "guard_status_active",
             "status": "passed",
-            "summary": "guard status is active and observed",
+            "summary": "effective guard status is active",
         })
     } else if guard_selected {
         json!({
             "id": "guard_status_active",
             "status": "failed",
-            "summary": format!("guard status is {}", guard_state.installation_state),
+            "summary": format!("effective guard status is {}", guard_state.effective_state),
             "details": {
                 "installation_status": &guard_state.installation_state,
+                "configuration_health": &guard_state.configuration_state,
+                "observation_health": &guard_state.observation_state,
+                "effective_health": &guard_state.effective_state,
+                "missing_required_hooks": &guard_state.missing_required_hooks,
                 "unresolved_blockers": &guard_state.unresolved_blockers,
             },
         })
@@ -4208,6 +4256,9 @@ fn connection_states_json(
         "mcp_config": mcp_config,
         "guard_mode": &guard_state.mode_state,
         "guard_installation": &guard_state.installation_state,
+        "guard_configuration": &guard_state.configuration_state,
+        "guard_observation": &guard_state.observation_state,
+        "guard_effective": &guard_state.effective_state,
         "guard_files": &guard_state.files_state,
         "guard_hook_observed": &guard_state.hook_observed_state,
         "guard_degraded_allowed": guard_state.degraded_allowed,
@@ -4547,17 +4598,30 @@ fn guard_state_for_connection(
 
     if !file_findings.broken_files.is_empty() {
         let mode_state = guard_mode_state(&installations);
+        let installation_state = GuardInstallationStatus::Broken.as_str();
+        let hook_observed_state = if prompt_capture_disabled {
+            "disabled"
+        } else if observed {
+            "observed"
+        } else {
+            "not_observed"
+        };
+        let configuration_state = guard_configuration_state(
+            installation_state,
+            !file_findings.missing_required_hooks.is_empty(),
+        );
+        let observation_state = guard_observation_state(hook_observed_state);
+        let effective_state =
+            guard_effective_state(&mode_state, &configuration_state, &observation_state);
+        let required_hooks_missing = !file_findings.missing_required_hooks.is_empty();
         return Ok(GuardOperationalState {
             mode_state: mode_state.clone(),
-            installation_state: GuardInstallationStatus::Broken.as_str().to_owned(),
+            installation_state: installation_state.to_owned(),
+            configuration_state,
+            observation_state,
+            effective_state,
             files_state: "broken".to_owned(),
-            hook_observed_state: if prompt_capture_disabled {
-                "disabled".to_owned()
-            } else if observed {
-                "observed".to_owned()
-            } else {
-                "not_observed".to_owned()
-            },
+            hook_observed_state: hook_observed_state.to_owned(),
             degraded_allowed: file_findings.allow_degraded,
             last_observed_at,
             last_guard_event_at: last_guard_event_for_projects(
@@ -4574,22 +4638,36 @@ fn guard_state_for_connection(
                 &mode_state,
                 GuardInstallationStatus::Broken.as_str(),
                 observed,
+                required_hooks_missing,
             ),
         });
     }
 
     if !file_findings.missing_files.is_empty() {
+        let mode_state = guard_mode_state(&installations);
+        let installation_state = "files_missing";
+        let hook_observed_state = if prompt_capture_disabled {
+            "disabled"
+        } else if observed {
+            "observed"
+        } else {
+            "not_observed"
+        };
+        let configuration_state = guard_configuration_state(
+            installation_state,
+            !file_findings.missing_required_hooks.is_empty(),
+        );
+        let observation_state = guard_observation_state(hook_observed_state);
+        let effective_state =
+            guard_effective_state(&mode_state, &configuration_state, &observation_state);
         return Ok(GuardOperationalState {
-            mode_state: guard_mode_state(&installations),
-            installation_state: "files_missing".to_owned(),
+            mode_state,
+            installation_state: installation_state.to_owned(),
+            configuration_state,
+            observation_state,
+            effective_state,
             files_state: "missing".to_owned(),
-            hook_observed_state: if prompt_capture_disabled {
-                "disabled".to_owned()
-            } else if observed {
-                "observed".to_owned()
-            } else {
-                "not_observed".to_owned()
-            },
+            hook_observed_state: hook_observed_state.to_owned(),
             degraded_allowed: file_findings.allow_degraded,
             last_observed_at,
             last_guard_event_at: last_guard_event_for_projects(
@@ -4608,17 +4686,30 @@ fn guard_state_for_connection(
 
     if !file_findings.stale_files.is_empty() {
         let mode_state = guard_mode_state(&installations);
+        let installation_state = GuardInstallationStatus::Stale.as_str();
+        let hook_observed_state = if prompt_capture_disabled {
+            "disabled"
+        } else if observed {
+            "observed"
+        } else {
+            "not_observed"
+        };
+        let configuration_state = guard_configuration_state(
+            installation_state,
+            !file_findings.missing_required_hooks.is_empty(),
+        );
+        let observation_state = guard_observation_state(hook_observed_state);
+        let effective_state =
+            guard_effective_state(&mode_state, &configuration_state, &observation_state);
+        let required_hooks_missing = !file_findings.missing_required_hooks.is_empty();
         return Ok(GuardOperationalState {
             mode_state: mode_state.clone(),
-            installation_state: GuardInstallationStatus::Stale.as_str().to_owned(),
+            installation_state: installation_state.to_owned(),
+            configuration_state,
+            observation_state,
+            effective_state,
             files_state: "stale".to_owned(),
-            hook_observed_state: if prompt_capture_disabled {
-                "disabled".to_owned()
-            } else if observed {
-                "observed".to_owned()
-            } else {
-                "not_observed".to_owned()
-            },
+            hook_observed_state: hook_observed_state.to_owned(),
             degraded_allowed: file_findings.allow_degraded,
             last_observed_at,
             last_guard_event_at: last_guard_event_for_projects(
@@ -4635,6 +4726,7 @@ fn guard_state_for_connection(
                 &mode_state,
                 GuardInstallationStatus::Stale.as_str(),
                 observed,
+                required_hooks_missing,
             ),
         });
     }
@@ -4690,9 +4782,20 @@ fn guard_state_for_connection(
     } else {
         "not_observed"
     };
+    let configuration_state = guard_configuration_state(
+        installation_state,
+        !file_findings.missing_required_hooks.is_empty(),
+    );
+    let observation_state = guard_observation_state(hook_observed_state);
+    let effective_state =
+        guard_effective_state(&mode_state, &configuration_state, &observation_state);
+    let required_hooks_missing = !file_findings.missing_required_hooks.is_empty();
     Ok(GuardOperationalState {
         mode_state: mode_state.clone(),
         installation_state: installation_state.to_owned(),
+        configuration_state,
+        observation_state,
+        effective_state,
         files_state: if prompt_capture_disabled {
             "disabled".to_owned()
         } else {
@@ -4707,7 +4810,12 @@ fn guard_state_for_connection(
         stale_files: file_findings.stale_files,
         broken_files: file_findings.broken_files,
         missing_required_hooks: file_findings.missing_required_hooks,
-        unresolved_blockers: guard_blockers_for_state(&mode_state, installation_state, observed),
+        unresolved_blockers: guard_blockers_for_state(
+            &mode_state,
+            installation_state,
+            observed,
+            required_hooks_missing,
+        ),
     })
 }
 
@@ -4725,10 +4833,60 @@ fn guard_mode_state(installations: &[GuardInstallationRecord]) -> String {
     }
 }
 
+fn guard_configuration_state(installation_state: &str, missing_required_hooks: bool) -> String {
+    if missing_required_hooks
+        && !matches!(
+            installation_state,
+            "not_configured" | "files_missing" | "stale" | "broken"
+        )
+    {
+        return GuardInstallationStatus::Degraded.as_str().to_owned();
+    }
+    match installation_state {
+        "not_configured" | "files_missing" => GuardInstallationStatus::Absent.as_str(),
+        "active" | "configured" => GuardInstallationStatus::Configured.as_str(),
+        "reload_required" => GuardInstallationStatus::ReloadRequired.as_str(),
+        "degraded" => GuardInstallationStatus::Degraded.as_str(),
+        "stale" => GuardInstallationStatus::Stale.as_str(),
+        "broken" => GuardInstallationStatus::Broken.as_str(),
+        other => other,
+    }
+    .to_owned()
+}
+
+fn guard_observation_state(hook_observed_state: &str) -> String {
+    match hook_observed_state {
+        "observed" => "observed",
+        "disabled" => "not_observed",
+        _ => "not_observed",
+    }
+    .to_owned()
+}
+
+fn guard_effective_state(
+    guard_mode: &str,
+    configuration_state: &str,
+    observation_state: &str,
+) -> String {
+    if guard_mode == GuardMode::McpOnly.as_str() {
+        return "inactive".to_owned();
+    }
+    match configuration_state {
+        "absent" => "inactive",
+        "broken" => "broken",
+        "stale" | "degraded" => "degraded",
+        "configured" if observation_state == "observed" => "active",
+        "configured" | "reload_required" => "action_required",
+        _ => "action_required",
+    }
+    .to_owned()
+}
+
 fn guard_blockers_for_state(
     guard_mode: &str,
     installation_state: &str,
     guard_hook_observed: bool,
+    required_hooks_missing: bool,
 ) -> Vec<String> {
     if guard_mode == GuardMode::McpOnly.as_str() {
         return Vec::new();
@@ -4740,6 +4898,7 @@ fn guard_blockers_for_state(
         "active" if !guard_hook_observed => vec!["guard_not_observed".to_owned()],
         "stale" => vec!["guard_stale".to_owned()],
         "broken" => vec!["guard_broken".to_owned()],
+        "degraded" if required_hooks_missing => vec!["guard_required_hooks_missing".to_owned()],
         "degraded" => vec!["guard_degraded".to_owned()],
         _ => Vec::new(),
     }
@@ -4819,15 +4978,7 @@ fn guard_file_findings(capability_json: &str) -> GuardFileFindings {
         .get("allow_degraded")
         .and_then(Value::as_bool)
         .unwrap_or(false);
-    findings.missing_required_hooks.extend(
-        value
-            .get("missing_required_hooks")
-            .and_then(Value::as_array)
-            .into_iter()
-            .flatten()
-            .filter_map(Value::as_str)
-            .map(str::to_owned),
-    );
+    findings.missing_required_hooks = missing_required_hooks_from_capability(&value);
 
     let files = value
         .get("files")
@@ -4838,6 +4989,34 @@ fn guard_file_findings(capability_json: &str) -> GuardFileFindings {
         verify_guard_file(file, &value, &mut findings);
     }
     findings
+}
+
+fn missing_required_hooks_from_capability(capability: &Value) -> Vec<String> {
+    let configured_required_hooks = capability
+        .get("required_guard_phases")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(Value::as_str)
+        .filter(|value| !value.trim().is_empty())
+        .collect::<Vec<_>>();
+    let mut missing_required_hooks = capability
+        .get("missing_required_hooks")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(Value::as_str)
+        .filter(|value| !value.trim().is_empty())
+        .map(str::to_owned)
+        .collect::<Vec<_>>();
+    for required_hook in required_guard_phase_names() {
+        if !configured_required_hooks.contains(&required_hook) {
+            missing_required_hooks.push(required_hook.to_owned());
+        }
+    }
+    missing_required_hooks.sort();
+    missing_required_hooks.dedup();
+    missing_required_hooks
 }
 
 fn verify_guard_file(file: &Value, capability: &Value, findings: &mut GuardFileFindings) {

@@ -72,6 +72,21 @@ mod tests {
             json!("reload_required")
         );
         assert_eq!(
+            serde_json::to_value(GuardConfigurationStatus::Configured)
+                .expect("guard configuration status serializes"),
+            json!("configured")
+        );
+        assert_eq!(
+            serde_json::to_value(GuardObservationStatus::StaleObservation)
+                .expect("guard observation status serializes"),
+            json!("stale_observation")
+        );
+        assert_eq!(
+            serde_json::to_value(GuardEffectiveStatus::ActionRequired)
+                .expect("effective guard status serializes"),
+            json!("action_required")
+        );
+        assert_eq!(
             serde_json::to_value(UnrecordedChangeStatus::Unresolved)
                 .expect("change status serializes"),
             json!("unresolved")

@@ -18,9 +18,10 @@ use volicord_store::{
     },
     core_pipeline::{CoreProjectStore, StorageEffectCounts, TaskRevisionRecord},
     guards::{
-        insert_agent_session, insert_guard_event, insert_unrecorded_change, unrecorded_change,
-        upsert_guard_installation, AgentSessionInsert, GuardEventInsert, GuardInstallationUpsert,
-        UnrecordedChangeInsert, UnrecordedChangeRecord,
+        insert_agent_session, insert_guard_event, insert_unrecorded_change,
+        observe_guard_installation, unrecorded_change, upsert_guard_installation,
+        AgentSessionInsert, GuardEventInsert, GuardInstallationObservation,
+        GuardInstallationUpsert, UnrecordedChangeInsert, UnrecordedChangeRecord,
     },
     sqlite::open_project_state_database,
 };
@@ -12521,6 +12522,275 @@ fn guarded_close_blocks_configured_guard_before_observation() -> Result<(), Box<
 }
 
 #[test]
+fn guarded_configured_guard_becomes_effectively_active_after_valid_observation(
+) -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let guard_installation_id = record_guard_installation(
+        &harness,
+        "guarded_configured_observed",
+        "guarded",
+        "configured",
+        "{}",
+    )?;
+    let observed = observe_guard_installation(
+        &harness.runtime_home_path,
+        GuardInstallationObservation {
+            guard_installation_id: guard_installation_id.clone(),
+            connection_internal_id: CONNECTION_ID.to_owned(),
+            project_id: PROJECT_ID.to_owned(),
+            host_kind: HOST_KIND_CODEX.to_owned(),
+            guard_mode: "guarded".to_owned(),
+            observed_policy_hash: "sha256:guardedfixture".to_owned(),
+            observed_binary_version: Some("0.0.0-test".to_owned()),
+            observed_phase: "session_start".to_owned(),
+            observed_at: "2026-06-30T00:03:00Z".to_owned(),
+        },
+    )?
+    .expect("matching observation should record guard activation");
+    assert_eq!(observed.installation_status, "active");
+
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&harness, "guarded_configured_observed")?;
+    let after_evidence = record_close_evidence(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "guarded_configured_observed",
+        true,
+    )?;
+    record_final_acceptance(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_evidence,
+        "guarded_configured_observed",
+    )?;
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_check_guarded_configured_observed",
+            idempotency_key: None,
+            dry_run: false,
+            expected_state_version: None,
+            task_id: &task_id,
+            intent: CloseIntent::Check,
+            close_reason: None,
+            superseding_task_id: None,
+        }),
+        invocation(OperationCategory::Read),
+    )?;
+
+    assert_eq!(response.response_value["close_state"], "ready");
+    assert_no_close_blocker(&response.response_value, "guard_not_observed");
+    assert_eq!(
+        response.response_value["guard_health"]["guard_configuration_status"],
+        "configured"
+    );
+    assert_eq!(
+        response.response_value["guard_health"]["guard_observation_status"],
+        "observed"
+    );
+    assert_eq!(
+        response.response_value["guard_health"]["effective_guard_status"],
+        "active"
+    );
+    Ok(())
+}
+
+#[test]
+fn guarded_degraded_installation_with_valid_event_still_blocks_missing_required_hooks(
+) -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let degraded_capability = json!({
+        "schema": "volicord-guard-capability-v1",
+        "policy_hash": "sha256:guardedfixture",
+        "required_guard_phases": [
+            "session_start_hook",
+            "pre_tool_hook",
+            "post_tool_hook",
+            "user_prompt_submit_hook",
+            "stop_hook"
+        ],
+        "missing_required_hooks": ["pre_tool_hook"],
+        "prompt_capture": true
+    })
+    .to_string();
+    let guard_installation_id = record_guard_installation(
+        &harness,
+        "guarded_degraded_observed",
+        "guarded",
+        "degraded",
+        &degraded_capability,
+    )?;
+    let observed = observe_guard_installation(
+        &harness.runtime_home_path,
+        GuardInstallationObservation {
+            guard_installation_id: guard_installation_id.clone(),
+            connection_internal_id: CONNECTION_ID.to_owned(),
+            project_id: PROJECT_ID.to_owned(),
+            host_kind: HOST_KIND_CODEX.to_owned(),
+            guard_mode: "guarded".to_owned(),
+            observed_policy_hash: "sha256:guardedfixture".to_owned(),
+            observed_binary_version: Some("0.0.0-test".to_owned()),
+            observed_phase: "session_start".to_owned(),
+            observed_at: "2026-06-30T00:03:00Z".to_owned(),
+        },
+    )?
+    .expect("matching degraded observation should record metadata");
+    assert_eq!(observed.installation_status, "degraded");
+    assert_eq!(observed.last_seen_phase.as_deref(), Some("session_start"));
+
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&harness, "guarded_degraded_observed")?;
+    let after_evidence = record_close_evidence(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "guarded_degraded_observed",
+        true,
+    )?;
+    record_final_acceptance(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_evidence,
+        "guarded_degraded_observed",
+    )?;
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_check_guarded_degraded_observed",
+            idempotency_key: None,
+            dry_run: false,
+            expected_state_version: None,
+            task_id: &task_id,
+            intent: CloseIntent::Check,
+            close_reason: None,
+            superseding_task_id: None,
+        }),
+        invocation(OperationCategory::Read),
+    )?;
+
+    assert_eq!(response.response_value["close_state"], "blocked");
+    assert_close_blocker(&response.response_value, "guard_required_hooks_missing");
+    assert_no_close_blocker(&response.response_value, "guard_not_observed");
+    let blocker = close_blocker_by_code(&response.response_value, "guard_required_hooks_missing");
+    assert!(blocker["message"]
+        .as_str()
+        .is_some_and(|message| message.contains("pre_tool_hook") && message.contains("codex")));
+    assert_eq!(
+        response.response_value["guard_health"]["guard_configuration_status"],
+        "degraded"
+    );
+    assert_eq!(
+        response.response_value["guard_health"]["guard_observation_status"],
+        "observed"
+    );
+    assert_eq!(
+        response.response_value["guard_health"]["effective_guard_status"],
+        "degraded"
+    );
+    assert_eq!(
+        response.response_value["guard_health"]["missing_required_hook_phases"],
+        json!(["pre_tool_hook"])
+    );
+    Ok(())
+}
+
+#[test]
+fn guarded_partial_required_phase_configuration_with_event_still_blocks_missing_required_hooks(
+) -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let partial_capability = json!({
+        "schema": "volicord-guard-capability-v1",
+        "policy_hash": "sha256:guardedfixture",
+        "required_guard_phases": ["session_start_hook"],
+        "missing_required_hooks": [],
+        "prompt_capture": true
+    })
+    .to_string();
+    let guard_installation_id = record_guard_installation(
+        &harness,
+        "guarded_partial_observed",
+        "guarded",
+        "configured",
+        &partial_capability,
+    )?;
+    let observed = observe_guard_installation(
+        &harness.runtime_home_path,
+        GuardInstallationObservation {
+            guard_installation_id: guard_installation_id.clone(),
+            connection_internal_id: CONNECTION_ID.to_owned(),
+            project_id: PROJECT_ID.to_owned(),
+            host_kind: HOST_KIND_CODEX.to_owned(),
+            guard_mode: "guarded".to_owned(),
+            observed_policy_hash: "sha256:guardedfixture".to_owned(),
+            observed_binary_version: Some("0.0.0-test".to_owned()),
+            observed_phase: "session_start".to_owned(),
+            observed_at: "2026-06-30T00:03:00Z".to_owned(),
+        },
+    )?
+    .expect("matching partial observation should record metadata");
+    assert_eq!(observed.installation_status, "configured");
+
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&harness, "guarded_partial_observed")?;
+    let after_evidence = record_close_evidence(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "guarded_partial_observed",
+        true,
+    )?;
+    record_final_acceptance(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_evidence,
+        "guarded_partial_observed",
+    )?;
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_check_guarded_partial_observed",
+            idempotency_key: None,
+            dry_run: false,
+            expected_state_version: None,
+            task_id: &task_id,
+            intent: CloseIntent::Check,
+            close_reason: None,
+            superseding_task_id: None,
+        }),
+        invocation(OperationCategory::Read),
+    )?;
+
+    assert_eq!(response.response_value["close_state"], "blocked");
+    assert_close_blocker(&response.response_value, "guard_required_hooks_missing");
+    assert_eq!(
+        response.response_value["guard_health"]["guard_configuration_status"],
+        "degraded"
+    );
+    assert_eq!(
+        response.response_value["guard_health"]["guard_observation_status"],
+        "observed"
+    );
+    assert_eq!(
+        response.response_value["guard_health"]["effective_guard_status"],
+        "degraded"
+    );
+    let missing = response.response_value["guard_health"]["missing_required_hook_phases"]
+        .as_array()
+        .expect("missing required hook phases should be an array");
+    assert_eq!(missing.len(), 4);
+    assert!(missing.iter().any(|phase| phase == "pre_tool_hook"));
+    assert!(missing.iter().all(|phase| phase != "session_start_hook"));
+    Ok(())
+}
+
+#[test]
 fn guarded_close_blocks_missing_guard_installation() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     insert_guarded_agent_session(&harness, "guarded_missing_install", "guarded")?;
@@ -14010,6 +14280,11 @@ fn record_guard_installation(
     host_capability_json: &str,
 ) -> Result<String, Box<dyn Error>> {
     let guard_installation_id = format!("guard_installation_{suffix}");
+    let host_capability_json = if host_capability_json == "{}" {
+        complete_guard_capability_json()
+    } else {
+        host_capability_json.to_owned()
+    };
     upsert_guard_installation(
         &harness.runtime_home_path,
         GuardInstallationUpsert {
@@ -14018,7 +14293,7 @@ fn record_guard_installation(
             project_id: Some(PROJECT_ID.to_owned()),
             host_kind: HOST_KIND_CODEX.to_owned(),
             guard_mode: guard_mode.to_owned(),
-            host_capability_json: host_capability_json.to_owned(),
+            host_capability_json,
             installation_status: installation_status.to_owned(),
             installed_at: Some("2026-06-30T00:00:00Z".to_owned()),
             last_checked_at: "2026-06-30T00:01:00Z".to_owned(),
@@ -14037,6 +14312,23 @@ fn record_guard_installation(
         },
     )?;
     Ok(guard_installation_id)
+}
+
+fn complete_guard_capability_json() -> String {
+    json!({
+        "schema": "volicord-guard-capability-v1",
+        "policy_hash": "sha256:guardedfixture",
+        "required_guard_phases": [
+            "session_start_hook",
+            "pre_tool_hook",
+            "post_tool_hook",
+            "user_prompt_submit_hook",
+            "stop_hook"
+        ],
+        "missing_required_hooks": [],
+        "prompt_capture": true
+    })
+    .to_string()
 }
 
 fn insert_guarded_agent_session(
@@ -14115,7 +14407,7 @@ fn register_additional_project(
 ) -> Result<String, Box<dyn Error>> {
     let repo_root = harness
         ._runtime_home
-        .create_product_repo(&format!("repo-{project_id}"))?;
+        .create_product_repo(format!("repo-{project_id}"))?;
     register_project(
         &harness.runtime_home_path,
         ProjectRegistration {

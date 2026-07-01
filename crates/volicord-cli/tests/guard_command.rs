@@ -1280,6 +1280,7 @@ fn guard_stop_denies_false_completion_when_close_readiness_blocks() -> Result<()
 fn guarded_init_hook_write_prompt_lifecycle_closes() -> Result<(), Box<dyn Error>> {
     let fixture = GuardedLifecycleFixture::init("guarded-lifecycle-close", "guarded")?;
     assert_guard_init_state_is_installed_or_degraded(&fixture.init_output);
+    fixture.mark_required_hooks_supported()?;
     fixture.activate_guard("guard_lifecycle_session_start")?;
 
     let (task_id, change_unit_id) = fixture.create_task_with_change_unit("happy")?;
@@ -1375,6 +1376,7 @@ fn guarded_init_hook_write_prompt_lifecycle_closes() -> Result<(), Box<dyn Error
 #[test]
 fn guarded_bypass_reconcile_prompt_acceptance_unblocks_close() -> Result<(), Box<dyn Error>> {
     let fixture = GuardedLifecycleFixture::init("guarded-lifecycle-bypass", "guarded")?;
+    fixture.mark_required_hooks_supported()?;
     fixture.activate_guard("guard_bypass_session_start")?;
     let (task_id, change_unit_id) = fixture.create_task_with_change_unit("bypass")?;
     fixture.record_non_write_close_basis(&task_id, &change_unit_id, "bypass")?;
@@ -1461,7 +1463,7 @@ fn guarded_bypass_reconcile_prompt_acceptance_unblocks_close() -> Result<(), Box
 
 #[cfg(unix)]
 #[test]
-fn guarded_close_guard_blocker_clears_after_session_start() -> Result<(), Box<dyn Error>> {
+fn guarded_close_missing_required_hooks_remain_after_session_start() -> Result<(), Box<dyn Error>> {
     let fixture = GuardedLifecycleFixture::init("guarded-lifecycle-health", "guarded")?;
     let (task_id, change_unit_id) = fixture.create_task_with_change_unit("health")?;
     fixture.record_non_write_close_basis(&task_id, &change_unit_id, "health")?;
@@ -1476,7 +1478,10 @@ fn guarded_close_guard_blocker_clears_after_session_start() -> Result<(), Box<dy
             .iter()
             .any(|code| matches!(
                 code.as_str(),
-                "guard_degraded" | "guard_reload_required" | "guard_not_observed"
+                "guard_degraded"
+                    | "guard_required_hooks_missing"
+                    | "guard_reload_required"
+                    | "guard_not_observed"
             )),
         "expected a guard health blocker before session-start, got {:?}",
         close_blocker_codes(&before.response_value)
@@ -1484,17 +1489,21 @@ fn guarded_close_guard_blocker_clears_after_session_start() -> Result<(), Box<dy
 
     fixture.activate_guard("guard_health_session_start")?;
     let after = fixture.check_close(&task_id)?;
-    assert_no_close_blocker(&after.response_value, "guard_degraded");
+    assert_close_blocker(&after.response_value, "guard_required_hooks_missing");
     assert_no_close_blocker(&after.response_value, "guard_reload_required");
     assert_no_close_blocker(&after.response_value, "guard_not_observed");
     assert_eq!(
-        after.response_value["close_state"], "ready",
+        after.response_value["close_state"], "blocked",
         "{}",
         after.response_value
     );
     assert_eq!(
         after.response_value["guard_health"]["guard_hook_observed"],
         true
+    );
+    assert_eq!(
+        after.response_value["guard_health"]["effective_guard_status"],
+        "degraded"
     );
     Ok(())
 }
@@ -1784,6 +1793,14 @@ impl GuardCliFixture {
                 host_capability_json: json!({
                     "schema": "volicord-guard-capability-v1",
                     "policy_hash": policy_hash.clone(),
+                    "required_guard_phases": [
+                        "session_start_hook",
+                        "pre_tool_hook",
+                        "post_tool_hook",
+                        "user_prompt_submit_hook",
+                        "stop_hook"
+                    ],
+                    "missing_required_hooks": [],
                     "prompt_capture": true
                 })
                 .to_string(),
@@ -1973,8 +1990,44 @@ impl GuardedLifecycleFixture {
         assert_eq!(value["decision"], "inject_context");
         let stored = guard_installation(self.runtime_home(), self.guard_installation_id())?
             .expect("guard installation should be stored");
-        assert_eq!(stored.installation_status, "active");
         assert_eq!(stored.last_seen_phase.as_deref(), Some("session_start"));
+        Ok(())
+    }
+
+    fn mark_required_hooks_supported(&self) -> Result<(), Box<dyn Error>> {
+        let stored = guard_installation(self.runtime_home(), self.guard_installation_id())?
+            .expect("guard installation should be stored");
+        let mut capability = serde_json::from_str::<Value>(&stored.host_capability_json)?;
+        capability["required_guard_phases"] = json!([
+            "session_start_hook",
+            "pre_tool_hook",
+            "post_tool_hook",
+            "user_prompt_submit_hook",
+            "stop_hook"
+        ]);
+        capability["missing_required_hooks"] = json!([]);
+        capability["prompt_capture"] = json!(true);
+        upsert_guard_installation(
+            self.runtime_home(),
+            GuardInstallationUpsert {
+                guard_installation_id: stored.guard_installation_id,
+                connection_internal_id: stored.connection_internal_id,
+                project_id: Some(self.project_id.clone()),
+                host_kind: stored.host_kind,
+                guard_mode: stored.guard_mode,
+                host_capability_json: capability.to_string(),
+                installation_status: "reload_required".to_owned(),
+                installed_at: stored.installed_at,
+                last_checked_at: "2026-06-30T05:59:00Z".to_owned(),
+                first_seen_at: None,
+                last_seen_at: None,
+                last_seen_phase: None,
+                observed_host_kind: None,
+                observed_policy_hash: None,
+                observed_binary_version: None,
+                metadata_json: stored.metadata_json,
+            },
+        )?;
         Ok(())
     }
 

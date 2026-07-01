@@ -203,10 +203,11 @@ reporting command-availability warnings and `actions_recommended` for future
 shells or agent hosts. PATH or command-link recommendations must say when
 existing agent hosts may need restart or reload. Doctor reports supported host
 detection as a connection-verification concern. When guard installation records
-exist, doctor may also report guard file installation, host reload requirement,
-hook observation, and active/stale/broken guard status as diagnostics. These
-guard diagnostics are local setup and observation checks; they are not proof of
-OS enforcement, sandboxing, write prevention, product correctness, or close
+exist, doctor may also report guard file installation, configuration health,
+runtime hook observation health, effective guard health, and host reload
+requirement as diagnostics. These guard diagnostics are local setup and
+observation checks; they are not proof of OS enforcement, sandboxing, write
+prevention, product correctness, or close
 readiness. Doctor does not create projects, install host configuration, change
 connection mode, or answer user judgments.
 
@@ -408,9 +409,10 @@ Text output must show the overall status, each check that was attempted or
 blocked, and the next user action when one is required. JSON output must include
 top-level `status`, `checks`, and `actions` fields for diagnostic consumers.
 Connection status and verification output must keep guard file installation,
-host reload requirement, hook observation, prompt-capture availability, last
-guard event when known, and guard status as separate diagnostics. Files
-installed or configured must not be reported as an active observed guard hook.
+configuration health, runtime hook observation health, effective guard health,
+host reload requirement, prompt-capture availability, and last guard event when
+known as separate diagnostics. Files installed or configured must not be
+reported as an active observed guard hook.
 
 A successful `volicord mcp --check` startup check alone must not be described as a
 `complete` Agent Connection. It is startup validation for the MCP process only.
@@ -462,12 +464,14 @@ guard mode. Host kinds use storage values such as `codex`, `claude_code`, or
 `generic`. Guard modes are `mcp_only`, `guarded`, or `managed`.
 
 When a non-`mcp_only` guard command receives a valid event for the recorded
-project, Agent Connection, guard installation, host kind, guard mode, and policy
-hash, Volicord records observation metadata and can promote that guard
-installation to `active`. Invalid project, connection, host kind, guard mode, or
-policy hash data does not activate the installation. `active` means Volicord
-observed a matching hook event; it does not claim OS-level enforcement,
-sandboxing, or write prevention.
+project, Agent Connection, guard installation, host kind, guard mode, policy
+hash, and known hook phase, Volicord records observation metadata. The
+observation can promote the guard installation to `active` only when required
+hook configuration is complete and the installation is not degraded, stale, or
+broken. Invalid project, connection, host kind, guard mode, policy hash, or hook
+phase data does not activate the installation. `active` means Volicord observed
+a matching hook event for a currently usable guard configuration; it does not
+claim OS-level enforcement, sandboxing, or write prevention.
 
 The input event contract is host-neutral. Guard parsing is tolerant of common
 field placements for host kind, session, tool name, command, prompt, result,

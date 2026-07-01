@@ -109,9 +109,20 @@ GuardHealthSummary:
   guard_mode: string
   guard_installation_id: string | null
   guard_installation_status: string
+  guard_configuration_status: string
+  guard_observation_status: string
+  effective_guard_status: string
   guard_hook_observed: boolean
   last_guard_observed_at: string | null
   last_guard_event_at: string | null
+  host_kind: string | null
+  observed_hook_phase: string | null
+  observed_host_kind: string | null
+  expected_policy_hash: string | null
+  observed_policy_hash: string | null
+  observed_binary_version: string | null
+  required_hook_phases: string[]
+  missing_required_hook_phases: string[]
   prompt_capture_available: boolean
   mcp_connection_healthy: boolean
   mcp_connection_status: string | null
@@ -122,9 +133,12 @@ GuardHealthSummary:
 Meaning:
 - `guard_mode` and `guard_installation_status` are controlled value strings.
 - `guard_installation_id`, when non-null, is an opaque guard-installation identifier.
-- `guard_hook_observed` reports whether a matching host guard hook observation is recorded for the selected guard installation.
-- `last_guard_observed_at` is the latest matching guard-installation observation timestamp, or `null` when no matching observation is recorded.
+- `guard_configuration_status`, `guard_observation_status`, and `effective_guard_status` separate file/config health, runtime hook observation, and the effective guarded close-readiness status.
+- `guard_hook_observed` reports whether a current matching host guard hook observation is recorded for the selected guard installation.
+- `last_guard_observed_at` is the latest stored guard-installation observation timestamp, or `null` when no observation is recorded.
 - `last_guard_event_at` is the latest guard-event timestamp available to the projection, or `null` when no guard event is available.
+- `host_kind`, `observed_hook_phase`, `observed_host_kind`, `expected_policy_hash`, `observed_policy_hash`, and `observed_binary_version` report the selected installation and latest stored observation metadata when available.
+- `required_hook_phases` and `missing_required_hook_phases` report required guard hook configuration completeness. A required phase is missing when it is absent from `required_hook_phases` or listed in `missing_required_hook_phases`. Missing required phases keep effective guard health non-active even when a valid hook event has been observed.
 - `prompt_capture_available` reports whether prompt capture is available for the selected guarded or managed connection. It does not include prompt text.
 - `mcp_connection_healthy` and `mcp_connection_status` summarize the tracked Agent Connection verification state when that state is available.
 - `unresolved_unrecorded_change_count` is a count of unresolved unrecorded Product Repository changes. It does not expose prompt text, command text, or path lists.
@@ -136,7 +150,7 @@ Does not imply:
 - `mcp_only` mode remains cooperative unless an owner-defined configuration selects guarded or managed behavior.
 
 Owner links:
-- `guard_mode` and `guard_installation_status` values: [state and blocker values](schema-value-sets.md#state-and-blocker-values)
+- `guard_mode`, `guard_installation_status`, `guard_configuration_status`, `guard_observation_status`, and `effective_guard_status` values: [state and blocker values](schema-value-sets.md#state-and-blocker-values)
 - Close-readiness guard blockers and method-local codes: [`volicord.close_task`](method-close-task.md)
 - Agent Connection meaning: [Agent Connection](../agent-connection.md)
 

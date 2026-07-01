@@ -365,7 +365,36 @@ stale
 broken
 ```
 
-These values report guard integration state for close-readiness and status projections. `configured` and `reload_required` are non-active states; `active` requires an observed matching guard hook. These values do not prove product correctness, test sufficiency, OS enforcement, sandboxing, security isolation, final acceptance, or residual-risk acceptance. `mcp_only` remains cooperative unless an owner-defined configuration selects guarded or managed behavior.
+`GuardHealthSummary.guard_configuration_status` uses:
+
+```text
+absent
+configured
+reload_required
+degraded
+stale
+broken
+```
+
+`GuardHealthSummary.guard_observation_status` uses:
+
+```text
+not_observed
+observed
+stale_observation
+```
+
+`GuardHealthSummary.effective_guard_status` uses:
+
+```text
+inactive
+action_required
+active
+degraded
+broken
+```
+
+These values report guard integration state for close-readiness and status projections. `guard_installation_status` is the stored lifecycle value, `guard_configuration_status` derives file and required-hook completeness, `guard_observation_status` derives whether the current installation has a matching hook observation, and `effective_guard_status` is the close-readiness health used for guarded or managed paths. `active` effective health requires guarded or managed mode, complete required hook configuration, a non-stale and non-broken installation, a current matching observation, and matching host and policy identity. These values do not prove product correctness, test sufficiency, OS enforcement, sandboxing, security isolation, final acceptance, or residual-risk acceptance. `mcp_only` remains cooperative unless an owner-defined configuration selects guarded or managed behavior.
 
 `UnrecordedChangeFinding.status` uses:
 
