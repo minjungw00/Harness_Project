@@ -2806,6 +2806,7 @@ fn validate_tools_for_mode(mode: &str, tools: &[String]) -> Result<(), String> {
 #[derive(Debug, Clone)]
 struct GuardIntegrationPlan {
     generated_files: Vec<GeneratedFilePlan>,
+    host_hook_commands: Vec<HostHookCommand>,
     policy: Value,
     policy_hash: String,
     guard_installation_id: String,
@@ -2888,6 +2889,63 @@ struct GuardCommandSpec {
     args: Vec<String>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct HostHookCommand {
+    host_kind: HostKind,
+    phase: HostLifecyclePhase,
+    generated_command_shape: HostHookCommandShape,
+    expected_wrapper_path: PathBuf,
+    root_resolution_basis: HookRootResolutionBasis,
+    cwd_independent: bool,
+    verification: HostHookCommandVerification,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum HostHookCommandShape {
+    ShellCommandString(String),
+    Exec { command: String, args: Vec<String> },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum HookRootResolutionBasis {
+    GitWorkTree,
+    ClaudeProjectDir,
+}
+
+impl HookRootResolutionBasis {
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::GitWorkTree => "git_work_tree",
+            Self::ClaudeProjectDir => "claude_project_dir",
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct HostHookCommandVerification {
+    basis_verified_by: String,
+    host_contract_source: String,
+}
+
+impl HostHookCommand {
+    fn command_line(&self) -> String {
+        match &self.generated_command_shape {
+            HostHookCommandShape::ShellCommandString(command) => command.clone(),
+            HostHookCommandShape::Exec { command, args } => guard_command_line(&GuardCommandSpec {
+                command: command.clone(),
+                args: args.clone(),
+            }),
+        }
+    }
+
+    fn command_shape_name(&self) -> &'static str {
+        match &self.generated_command_shape {
+            HostHookCommandShape::ShellCommandString(_) => "shell_command_string",
+            HostHookCommandShape::Exec { .. } => "exec_form",
+        }
+    }
+}
+
 struct InitOutput<'a> {
     format: OutputFormat,
     status: AgentResultStatus,
@@ -2954,7 +3012,13 @@ fn plan_guard_integration(
         init_mode,
         Some(&policy_hash),
     );
-    let wrapper_commands = hook_wrapper_command_specs(host_kind);
+    let host_hook_commands = if init_mode != InitMode::McpOnly
+        && matches!(host_kind, HostKind::Codex | HostKind::ClaudeCode)
+    {
+        host_hook_command_specs(host_kind, repo_root)?
+    } else {
+        BTreeMap::new()
+    };
     let mut generated_files = Vec::new();
     let agents_path = repo_root.join(AGENTS_FILE);
     generated_files.push(plan_managed_block_file(
@@ -2973,8 +3037,8 @@ fn plan_guard_integration(
             host_kind,
             &guard_commands,
         )?);
-        generated_files.push(plan_codex_hook_file(repo_root, &wrapper_commands)?);
-        generated_files.push(plan_codex_rule_file(repo_root, &wrapper_commands)?);
+        generated_files.push(plan_codex_hook_file(repo_root, &host_hook_commands)?);
+        generated_files.push(plan_codex_rule_file(repo_root, &host_hook_commands)?);
     }
     if host_kind == HostKind::ClaudeCode {
         generated_files.push(plan_claude_mcp_file(
@@ -2989,10 +3053,10 @@ fn plan_guard_integration(
             host_kind,
             &guard_commands,
         )?);
-        let command_lines = guard_command_lines(&wrapper_commands);
+        let command_lines = host_hook_command_lines(&host_hook_commands);
         generated_files.push(plan_claude_project_settings_file(
             repo_root,
-            &wrapper_commands,
+            &host_hook_commands,
         )?);
         let rule_path = claude_code::project_rule_path(repo_root);
         let rule_block = managed_guidance_block(&claude_code::project_rule_block(
@@ -3011,6 +3075,7 @@ fn plan_guard_integration(
     let managed_status = managed_status_for_init_mode(init_mode);
     Ok(GuardIntegrationPlan {
         generated_files,
+        host_hook_commands: host_hook_commands.into_values().collect(),
         policy,
         policy_hash,
         guard_installation_id: guard_installation_id.to_owned(),
@@ -3303,20 +3368,82 @@ fn hook_wrapper_relative_path(
     Ok(base.join(format!("volicord-{}.sh", phase.command_name())))
 }
 
-fn hook_wrapper_command_specs(host_kind: HostKind) -> BTreeMap<String, GuardCommandSpec> {
+fn host_hook_command_specs(
+    host_kind: HostKind,
+    repo_root: &Path,
+) -> Result<BTreeMap<String, HostHookCommand>, ConnectionCommandError> {
+    if host_kind == HostKind::Codex && !repo_has_git_marker(repo_root)? {
+        return Err(ConnectionCommandError::runtime(format!(
+            "GUARDED_HOOK_ROOT_UNSUPPORTED: Codex guarded hook commands require a Git work tree root for cwd-independent wrapper resolution; no .git marker was found at {}. Non-git full guarded Codex repositories are not supported by the verified host contract.",
+            repo_root.display()
+        )));
+    }
     REQUIRED_GUARD_PHASES
         .into_iter()
-        .filter_map(|phase| {
-            let relative_path = hook_wrapper_relative_path(host_kind, phase).ok()?;
-            Some((
-                phase.policy_key().to_owned(),
-                GuardCommandSpec {
-                    command: path_text(&relative_path),
-                    args: Vec::new(),
-                },
-            ))
+        .map(|phase| {
+            let command = host_hook_command_spec(host_kind, repo_root, phase)?;
+            Ok((phase.policy_key().to_owned(), command))
         })
         .collect()
+}
+
+fn host_hook_command_spec(
+    host_kind: HostKind,
+    repo_root: &Path,
+    phase: HostLifecyclePhase,
+) -> Result<HostHookCommand, ConnectionCommandError> {
+    let relative_path = hook_wrapper_relative_path(host_kind, phase)?;
+    let expected_wrapper_path = repo_root.join(&relative_path);
+    let relative = path_text(&relative_path);
+    match host_kind {
+        HostKind::Codex => {
+            let script = format!(
+                "root=$(git rev-parse --show-toplevel) || exit $?; exec \"$root/{relative}\""
+            );
+            Ok(HostHookCommand {
+                host_kind,
+                phase,
+                generated_command_shape: HostHookCommandShape::ShellCommandString(format!(
+                    "sh -c {}",
+                    shell_word(&script)
+                )),
+                expected_wrapper_path,
+                root_resolution_basis: HookRootResolutionBasis::GitWorkTree,
+                cwd_independent: true,
+                verification: HostHookCommandVerification {
+                    basis_verified_by: "repo_root_git_marker".to_owned(),
+                    host_contract_source: "codex_hook_command_string".to_owned(),
+                },
+            })
+        }
+        HostKind::ClaudeCode => Ok(HostHookCommand {
+            host_kind,
+            phase,
+            generated_command_shape: HostHookCommandShape::Exec {
+                command: format!("${{CLAUDE_PROJECT_DIR}}/{relative}"),
+                args: Vec::new(),
+            },
+            expected_wrapper_path,
+            root_resolution_basis: HookRootResolutionBasis::ClaudeProjectDir,
+            cwd_independent: true,
+            verification: HostHookCommandVerification {
+                basis_verified_by: "verified_claude_project_dir_placeholder".to_owned(),
+                host_contract_source: "claude_code_hook_exec_form".to_owned(),
+            },
+        }),
+        HostKind::Generic => Err(ConnectionCommandError::runtime(
+            "generic host integrations do not define hook commands",
+        )),
+    }
+}
+
+fn repo_has_git_marker(repo_root: &Path) -> Result<bool, ConnectionCommandError> {
+    repo_root.join(".git").try_exists().map_err(|error| {
+        ConnectionCommandError::runtime(format!(
+            "failed to inspect Git repository marker {}: {error}",
+            repo_root.join(".git").display()
+        ))
+    })
 }
 
 fn hook_wrapper_script_content(
@@ -3362,7 +3489,7 @@ fn arg_after<'a>(args: &'a [String], name: &str) -> Option<&'a str> {
 
 fn plan_codex_hook_file(
     repo_root: &Path,
-    hook_commands: &BTreeMap<String, GuardCommandSpec>,
+    hook_commands: &BTreeMap<String, HostHookCommand>,
 ) -> Result<GeneratedFilePlan, ConnectionCommandError> {
     let contract = contract_for(HostKind::Codex).ok_or_else(|| {
         ConnectionCommandError::runtime(
@@ -3398,10 +3525,7 @@ fn plan_codex_hook_file(
             }
             group.insert(
                 "hooks".to_owned(),
-                Value::Array(vec![codex_hook_handler_value(
-                    *phase,
-                    &guard_command_line(hook_command),
-                )]),
+                Value::Array(vec![codex_hook_handler_value(*phase, hook_command)?]),
             );
             Ok::<(String, Value), ConnectionCommandError>((
                 event.event_name.to_owned(),
@@ -3426,10 +3550,19 @@ fn plan_codex_hook_file(
     )
 }
 
-fn codex_hook_handler_value(phase: HostLifecyclePhase, command: &str) -> Value {
+fn codex_hook_handler_value(
+    phase: HostLifecyclePhase,
+    command: &HostHookCommand,
+) -> Result<Value, ConnectionCommandError> {
+    let HostHookCommandShape::ShellCommandString(command_text) = &command.generated_command_shape
+    else {
+        return Err(ConnectionCommandError::runtime(
+            "Codex hook command generation requires command-string form",
+        ));
+    };
     let mut handler = serde_json::Map::new();
     handler.insert("type".to_owned(), Value::String("command".to_owned()));
-    handler.insert("command".to_owned(), Value::String(command.to_owned()));
+    handler.insert("command".to_owned(), Value::String(command_text.clone()));
     handler.insert("timeout".to_owned(), Value::Number(30.into()));
     let status_message = match phase {
         HostLifecyclePhase::SessionStart => Some("Checking Volicord session"),
@@ -3443,7 +3576,7 @@ fn codex_hook_handler_value(phase: HostLifecyclePhase, command: &str) -> Value {
             Value::String(status_message.to_owned()),
         );
     }
-    Value::Object(handler)
+    Ok(Value::Object(handler))
 }
 
 fn plan_claude_mcp_file(
@@ -3462,7 +3595,7 @@ fn plan_claude_mcp_file(
 
 fn plan_claude_project_settings_file(
     repo_root: &Path,
-    hook_commands: &BTreeMap<String, GuardCommandSpec>,
+    hook_commands: &BTreeMap<String, HostHookCommand>,
 ) -> Result<GeneratedFilePlan, ConnectionCommandError> {
     let value = claude_settings_hooks_projection(hook_commands)?;
     let text = serde_json::to_string_pretty(&value)
@@ -3494,7 +3627,7 @@ fn claude_mcp_projection(server_name: &str, entry: &ManagedServerEntry) -> Value
 }
 
 fn claude_settings_hooks_projection(
-    hook_commands: &BTreeMap<String, GuardCommandSpec>,
+    hook_commands: &BTreeMap<String, HostHookCommand>,
 ) -> Result<Value, ConnectionCommandError> {
     let contract = contract_for(HostKind::ClaudeCode).ok_or_else(|| {
         ConnectionCommandError::runtime(
@@ -3521,8 +3654,8 @@ fn claude_settings_hooks_projection(
                 Value::Array(vec![claude_hook_group_value(
                     *phase,
                     event.write_matcher_tokens,
-                    &guard_command_line(hook_command),
-                )]),
+                    hook_command,
+                )?]),
             ))
         })
         .collect::<Result<serde_json::Map<_, _>, _>>()?;
@@ -3532,8 +3665,8 @@ fn claude_settings_hooks_projection(
 fn claude_hook_group_value(
     phase: HostLifecyclePhase,
     write_matcher_tokens: &[&str],
-    command: &str,
-) -> Value {
+    command: &HostHookCommand,
+) -> Result<Value, ConnectionCommandError> {
     let mut group = serde_json::Map::new();
     if !write_matcher_tokens.is_empty() {
         group.insert(
@@ -3548,15 +3681,27 @@ fn claude_hook_group_value(
     }
     group.insert(
         "hooks".to_owned(),
-        Value::Array(vec![claude_hook_handler_value(phase, command)]),
+        Value::Array(vec![claude_hook_handler_value(phase, command)?]),
     );
-    Value::Object(group)
+    Ok(Value::Object(group))
 }
 
-fn claude_hook_handler_value(phase: HostLifecyclePhase, command: &str) -> Value {
+fn claude_hook_handler_value(
+    phase: HostLifecyclePhase,
+    command: &HostHookCommand,
+) -> Result<Value, ConnectionCommandError> {
+    let HostHookCommandShape::Exec { command, args } = &command.generated_command_shape else {
+        return Err(ConnectionCommandError::runtime(
+            "Claude Code hook command generation requires exec-form command and args",
+        ));
+    };
     let mut handler = serde_json::Map::new();
     handler.insert("type".to_owned(), Value::String("command".to_owned()));
-    handler.insert("command".to_owned(), Value::String(command.to_owned()));
+    handler.insert("command".to_owned(), Value::String(command.clone()));
+    handler.insert(
+        "args".to_owned(),
+        Value::Array(args.iter().cloned().map(Value::String).collect()),
+    );
     handler.insert("timeout".to_owned(), Value::Number(30.into()));
     let status_message = match phase {
         HostLifecyclePhase::SessionStart => Some("Checking Volicord session"),
@@ -3570,14 +3715,14 @@ fn claude_hook_handler_value(phase: HostLifecyclePhase, command: &str) -> Value 
             Value::String(status_message.to_owned()),
         );
     }
-    Value::Object(handler)
+    Ok(Value::Object(handler))
 }
 
 fn plan_codex_rule_file(
     repo_root: &Path,
-    hook_commands: &BTreeMap<String, GuardCommandSpec>,
+    hook_commands: &BTreeMap<String, HostHookCommand>,
 ) -> Result<GeneratedFilePlan, ConnectionCommandError> {
-    let command_lines = guard_command_lines(hook_commands)
+    let command_lines = host_hook_command_lines(hook_commands)
         .into_iter()
         .map(|(_, command)| command)
         .collect::<Vec<_>>();
@@ -4104,7 +4249,7 @@ fn merge_claude_settings_hooks(
                 "managed Claude Code hook projection has no {event_name} group"
             ))
         })?;
-        let desired_command = claude_managed_group_command(&desired_group, event_name)?;
+        let desired_handler = claude_managed_group_signature(&desired_group, event_name)?;
         let existing_groups = hooks
             .remove(event_name)
             .map(|value| {
@@ -4119,7 +4264,7 @@ fn merge_claude_settings_hooks(
         let mut preserved_groups = Vec::new();
         for group in existing_groups {
             if let Some(group) =
-                remove_claude_managed_handlers(phase, event_name, &desired_command, group)?
+                remove_claude_managed_handlers(phase, event_name, &desired_handler, group)?
             {
                 preserved_groups.push(group);
             }
@@ -4183,7 +4328,7 @@ fn claude_settings_hooks_projection_from_actual(
 fn remove_claude_managed_handlers(
     phase: HostLifecyclePhase,
     event_name: &str,
-    desired_command: &str,
+    desired_handler: &ClaudeHookHandlerSignature,
     group: Value,
 ) -> Result<Option<Value>, ConnectionCommandError> {
     let mut object = group.as_object().cloned().ok_or_else(|| {
@@ -4208,11 +4353,11 @@ fn remove_claude_managed_handlers(
     let mut kept = Vec::new();
     let mut removed = 0usize;
     for handler in handlers {
-        if is_exact_claude_managed_handler(&handler, desired_command)
+        if is_exact_claude_managed_handler(&handler, desired_handler)
             || is_legacy_claude_managed_handler(phase, &handler)
         {
             removed += 1;
-        } else if looks_like_conflicting_claude_managed_handler(phase, &handler, desired_command) {
+        } else if looks_like_conflicting_claude_managed_handler(phase, &handler, desired_handler) {
             return Err(ConnectionCommandError::runtime(format!(
                 "Claude Code settings contain a conflicting Volicord-managed {event_name} hook entry"
             )));
@@ -4231,31 +4376,66 @@ fn remove_claude_managed_handlers(
     Ok(Some(Value::Object(object)))
 }
 
-fn claude_managed_group_command(
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct ClaudeHookHandlerSignature {
+    command: String,
+    args: Option<Vec<String>>,
+}
+
+fn claude_managed_group_signature(
     group: &Value,
     event_name: &str,
-) -> Result<String, ConnectionCommandError> {
-    group
+) -> Result<ClaudeHookHandlerSignature, ConnectionCommandError> {
+    let handler = group
         .get("hooks")
         .and_then(Value::as_array)
         .and_then(|handlers| handlers.first())
-        .and_then(|handler| handler.get("command"))
+        .ok_or_else(|| {
+            ConnectionCommandError::runtime(format!(
+                "managed Claude Code hook projection is missing {event_name} handler"
+            ))
+        })?;
+    let command = handler
+        .get("command")
         .and_then(Value::as_str)
         .map(str::to_owned)
         .ok_or_else(|| {
             ConnectionCommandError::runtime(format!(
                 "managed Claude Code hook projection is missing {event_name} command"
             ))
-        })
+        })?;
+    let args = match handler.get("args") {
+        Some(value) => {
+            let values = value.as_array().ok_or_else(|| {
+                ConnectionCommandError::runtime(format!(
+                    "managed Claude Code hook projection has non-array {event_name} args"
+                ))
+            })?;
+            Some(
+                values
+                    .iter()
+                    .map(|value| value.as_str().map(str::to_owned))
+                    .collect::<Option<Vec<_>>>()
+                    .ok_or_else(|| {
+                        ConnectionCommandError::runtime(format!(
+                            "managed Claude Code hook projection has non-string {event_name} args"
+                        ))
+                    })?,
+            )
+        }
+        None => None,
+    };
+    Ok(ClaudeHookHandlerSignature { command, args })
 }
 
-fn is_exact_claude_managed_handler(handler: &Value, desired_command: &str) -> bool {
+fn is_exact_claude_managed_handler(handler: &Value, desired: &ClaudeHookHandlerSignature) -> bool {
     handler.as_object().is_some_and(|object| {
         object.get("type").and_then(Value::as_str) == Some("command")
             && object
                 .get("command")
                 .and_then(Value::as_str)
-                .is_some_and(|command| command == desired_command)
+                .is_some_and(|command| command == desired.command)
+            && hook_handler_args(object) == desired.args
     })
 }
 
@@ -4266,13 +4446,19 @@ fn is_legacy_claude_managed_handler(phase: HostLifecyclePhase, handler: &Value) 
                 .get("command")
                 .and_then(Value::as_str)
                 .is_some_and(|command| {
-                    command.contains(&format!("volicord guard {}", phase.command_name()))
+                    let legacy_direct = command
+                        .contains(&format!("volicord guard {}", phase.command_name()))
                         && command.contains("--connection")
                         && command.contains("--guard-installation")
                         && (command.contains("--host claude-code")
                             || command.contains("--host claude_code"))
                         && (command.contains("--host-output claude-code")
-                            || command.contains("--host-output claude_code"))
+                            || command.contains("--host-output claude_code"));
+                    let legacy_wrapper = command.contains(&format!(
+                        ".claude/hooks/volicord-{}.sh",
+                        phase.command_name()
+                    ));
+                    legacy_direct || legacy_wrapper
                 })
     })
 }
@@ -4280,14 +4466,14 @@ fn is_legacy_claude_managed_handler(phase: HostLifecyclePhase, handler: &Value) 
 fn looks_like_conflicting_claude_managed_handler(
     phase: HostLifecyclePhase,
     handler: &Value,
-    desired_command: &str,
+    desired: &ClaudeHookHandlerSignature,
 ) -> bool {
     handler.as_object().is_some_and(|object| {
         object
             .get("command")
             .and_then(Value::as_str)
             .is_some_and(|command| {
-                command != desired_command
+                (command != desired.command || hook_handler_args(object) != desired.args)
                     && ((command.contains("volicord guard")
                         && command.contains(phase.command_name())
                         && (command.contains("--host claude-code")
@@ -4299,6 +4485,17 @@ fn looks_like_conflicting_claude_managed_handler(
                         )))
             })
     })
+}
+
+fn hook_handler_args(object: &serde_json::Map<String, Value>) -> Option<Vec<String>> {
+    object
+        .get("args")
+        .and_then(Value::as_array)
+        .and_then(|args| {
+            args.iter()
+                .map(|value| value.as_str().map(str::to_owned))
+                .collect::<Option<Vec<_>>>()
+        })
 }
 
 fn claude_event_name(phase: HostLifecyclePhase) -> Result<&'static str, ConnectionCommandError> {
@@ -4463,10 +4660,10 @@ fn guard_command_specs(
         .collect()
 }
 
-fn guard_command_lines(commands: &BTreeMap<String, GuardCommandSpec>) -> Vec<(String, String)> {
+fn host_hook_command_lines(commands: &BTreeMap<String, HostHookCommand>) -> Vec<(String, String)> {
     commands
         .iter()
-        .map(|(phase, spec)| (phase.clone(), guard_command_line(spec)))
+        .map(|(phase, spec)| (phase.clone(), spec.command_line()))
         .collect()
 }
 
@@ -4600,6 +4797,8 @@ fn guard_capability_json(plan: &GuardIntegrationPlan) -> Result<String, Connecti
         "prompt_capture": plan.capabilities.user_prompt_submit_hook
             && guard_has_prompt_capture_commands(&plan.policy),
         "files": generated_files_json(&plan.generated_files),
+        "host_hook_commands": host_hook_commands_json(&plan.host_hook_commands),
+        "hook_root_resolution": hook_root_resolution_json(&plan.host_hook_commands),
         "commands": plan.policy["guard"]["commands"].clone(),
     }))
     .map_err(|error| ConnectionCommandError::runtime(error.to_string()))
@@ -4737,6 +4936,95 @@ fn generated_files_json(files: &[GeneratedFilePlan]) -> Value {
             })
             .collect(),
     )
+}
+
+fn host_hook_commands_json(commands: &[HostHookCommand]) -> Value {
+    Value::Array(
+        commands
+            .iter()
+            .map(|command| {
+                let (command_text, args) = match &command.generated_command_shape {
+                    HostHookCommandShape::ShellCommandString(command) => {
+                        (command.clone(), Value::Null)
+                    }
+                    HostHookCommandShape::Exec { command, args } => (
+                        command.clone(),
+                        Value::Array(args.iter().cloned().map(Value::String).collect()),
+                    ),
+                };
+                json!({
+                    "host_kind": command.host_kind.as_str(),
+                    "phase": command.phase.capability_name(),
+                    "policy_key": command.phase.policy_key(),
+                    "command_shape": command.command_shape_name(),
+                    "command": command_text,
+                    "args": args,
+                    "expected_wrapper_path": path_text(&command.expected_wrapper_path),
+                    "root_resolution_basis": command.root_resolution_basis.as_str(),
+                    "cwd_independent": command.cwd_independent,
+                    "verification": {
+                        "basis_verified_by": &command.verification.basis_verified_by,
+                        "host_contract_source": &command.verification.host_contract_source,
+                    },
+                })
+            })
+            .collect(),
+    )
+}
+
+fn hook_root_resolution_json(commands: &[HostHookCommand]) -> Value {
+    if commands.is_empty() {
+        return Value::Null;
+    }
+    let mut bases = commands
+        .iter()
+        .map(|command| command.root_resolution_basis.as_str())
+        .collect::<Vec<_>>();
+    bases.sort_unstable();
+    bases.dedup();
+    let cwd_independent = commands.iter().all(|command| command.cwd_independent);
+    let basis = if bases.len() == 1 {
+        bases[0].to_owned()
+    } else {
+        "mixed".to_owned()
+    };
+    json!({
+        "basis": basis,
+        "all_cwd_independent": cwd_independent,
+        "phases": commands
+            .iter()
+            .map(|command| {
+                json!({
+                    "phase": command.phase.capability_name(),
+                    "root_resolution_basis": command.root_resolution_basis.as_str(),
+                    "cwd_independent": command.cwd_independent,
+                })
+            })
+            .collect::<Vec<_>>(),
+    })
+}
+
+fn hook_root_resolution_text(integration: &GuardIntegrationPlan) -> String {
+    if integration.host_hook_commands.is_empty() {
+        return "not_applicable".to_owned();
+    }
+    let mut bases = integration
+        .host_hook_commands
+        .iter()
+        .map(|command| command.root_resolution_basis.as_str())
+        .collect::<Vec<_>>();
+    bases.sort_unstable();
+    bases.dedup();
+    if bases.len() == 1
+        && integration
+            .host_hook_commands
+            .iter()
+            .all(|command| command.cwd_independent)
+    {
+        bases[0].to_owned()
+    } else {
+        "mixed".to_owned()
+    }
 }
 
 #[cfg(unix)]
@@ -5561,12 +5849,13 @@ fn render_init_output(data: InitOutput<'_>) -> Result<String, ConnectionCommandE
     } else {
         "planned"
     };
+    let hook_root_resolution = hook_root_resolution_text(data.integration);
     let primary_next_action =
         primary_connection_action(&actions, data.verification, &guard_state, None, &[]);
     match data.format {
         OutputFormat::Text => {
             let mut output = format!(
-                "Volicord init {}\nruntime_home_state: ready\nruntime_home: {}\nproject_registration_state: {}\nrepo: {}\nconnection_state: {}\nhost: {}\nmode: {}\nconnection_id: {}\nmcp_config_state: {}\nmcp_config: {}\nplanned_change: {}\nprofile: {}\nguard_mode: {}\nguard_strength: {}\nguard_capabilities: {}\nguard_profile: {}\nmanaged_source: {}\nmanaged_bundle_hash: {}\nmanaged_verification_status: {}\nguard_installation_state: {}\nguard_configuration_state: {}\nguard_observation_state: {}\nguard_effective_state: {}\nguard_files_state: {}\nagents_block_state: {}\nvolicord_policy_file_state: {}\nrule_instruction_config_state: {}\nhook_config_state: {}\nrequired_guard_phases_state: {}\nrequired_guard_phases_missing: {}\nguard_hook_observed: {}\nguard_observed: {}\nguard_degraded_allowed: {}\nlast_guard_event: {}\nprompt_capture_state: {}\nhost_reload_required: {}\nguard_blockers: {}\n",
+                "Volicord init {}\nruntime_home_state: ready\nruntime_home: {}\nproject_registration_state: {}\nrepo: {}\nconnection_state: {}\nhost: {}\nmode: {}\nconnection_id: {}\nmcp_config_state: {}\nmcp_config: {}\nplanned_change: {}\nprofile: {}\nguard_mode: {}\nguard_strength: {}\nguard_capabilities: {}\nguard_profile: {}\nmanaged_source: {}\nmanaged_bundle_hash: {}\nmanaged_verification_status: {}\nguard_installation_state: {}\nguard_configuration_state: {}\nguard_observation_state: {}\nguard_effective_state: {}\nguard_files_state: {}\nagents_block_state: {}\nvolicord_policy_file_state: {}\nrule_instruction_config_state: {}\nhook_config_state: {}\nhook_root_resolution: {}\nrequired_guard_phases_state: {}\nrequired_guard_phases_missing: {}\nguard_hook_observed: {}\nguard_observed: {}\nguard_degraded_allowed: {}\nlast_guard_event: {}\nprompt_capture_state: {}\nhost_reload_required: {}\nguard_blockers: {}\n",
                 data.status.as_str(),
                 data.runtime_home.display(),
                 project_state,
@@ -5595,6 +5884,7 @@ fn render_init_output(data: InitOutput<'_>) -> Result<String, ConnectionCommandE
                 guard_state.policy_file_state,
                 guard_state.rule_instruction_state,
                 guard_state.hook_config_state,
+                hook_root_resolution,
                 guard_state.required_guard_phases_state(),
                 comma_or_none(&guard_state.missing_required_hooks),
                 guard_state.hook_observed_state,
@@ -5648,6 +5938,8 @@ fn render_init_output(data: InitOutput<'_>) -> Result<String, ConnectionCommandE
                 },
                 "planned_change": planned_change,
                 "generated_files": generated_files_json(&data.integration.generated_files),
+                "host_hook_commands": host_hook_commands_json(&data.integration.host_hook_commands),
+                "hook_root_resolution": hook_root_resolution_json(&data.integration.host_hook_commands),
                 "guard_installation": {
                     "guard_installation_id": &data.integration.guard_installation_id,
                     "installation_status": guard_status,
@@ -8173,9 +8465,30 @@ mod tests {
     }
 
     #[test]
+    fn codex_guarded_integration_rejects_non_git_root() -> Result<(), Box<dyn std::error::Error>> {
+        let repo = temp_dir("codex non git")?;
+        let entry = ManagedServerEntry::new("conn_alpha", Path::new("volicord"), None);
+        let error = plan_guard_integration(
+            HostKind::Codex,
+            InitMode::Guarded,
+            false,
+            &repo,
+            "conn_alpha",
+            "guard_installation_alpha",
+            &entry,
+        )
+        .expect_err("Codex guarded hooks should require a Git root strategy");
+
+        assert!(error.to_string().contains("GUARDED_HOOK_ROOT_UNSUPPORTED"));
+        assert!(error.to_string().contains("Git work tree root"));
+        Ok(())
+    }
+
+    #[test]
     fn codex_guarded_integration_plan_generates_required_hook_files(
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let repo = temp_dir("guard-capabilities")?;
+        let repo = temp_dir("guard capabilities")?;
+        fs::create_dir_all(repo.join(".git"))?;
         let entry = ManagedServerEntry::new("conn_alpha", Path::new("volicord"), None);
         let plan = plan_guard_integration(
             HostKind::Codex,
@@ -8204,6 +8517,18 @@ mod tests {
         assert_eq!(capability["native_host_output_adapter_verified"], true);
         assert_eq!(capability["bash_shell_mutation_coverage"], true);
         assert_eq!(capability["direct_file_write_matcher_coverage"], true);
+        assert_eq!(capability["hook_root_resolution"]["basis"], "git_work_tree");
+        assert_eq!(
+            capability["hook_root_resolution"]["all_cwd_independent"],
+            true
+        );
+        assert_eq!(
+            capability["host_hook_commands"]
+                .as_array()
+                .expect("host hook commands should be recorded")
+                .len(),
+            REQUIRED_GUARD_PHASES.len()
+        );
         assert_eq!(
             capability["missing_required_hooks"]
                 .as_array()
@@ -8229,6 +8554,9 @@ mod tests {
             .iter()
             .any(|file| file["kind"] == "host_rule_instruction"));
         let hooks_text = fs::read_to_string(repo.join(".codex/hooks.json"))?;
+        assert!(!hooks_text.contains("\"command\": \".codex/hooks/"));
+        assert!(hooks_text.contains("sh -c"));
+        assert!(hooks_text.contains("git rev-parse --show-toplevel"));
         assert!(hooks_text.contains(".codex/hooks/volicord-session-start.sh"));
         assert!(hooks_text.contains(".codex/hooks/volicord-pre-tool.sh"));
         assert!(hooks_text.contains(".codex/hooks/volicord-post-tool.sh"));
@@ -8243,6 +8571,7 @@ mod tests {
         let pre_tool_wrapper = fs::read_to_string(&pre_tool_wrapper_path)?;
         assert!(pre_tool_wrapper.contains(HOOK_WRAPPER_MARKER));
         assert!(pre_tool_wrapper.contains("exec volicord guard pre-tool"));
+        assert!(pre_tool_wrapper.contains(&format!("--repo {}", shell_word(&path_text(&repo)))));
         assert!(pre_tool_wrapper.contains("--connection conn_alpha"));
         assert!(pre_tool_wrapper.contains("--guard-installation guard_installation_alpha"));
         assert!(pre_tool_wrapper.contains("--host codex"));
@@ -8331,6 +8660,14 @@ mod tests {
         let capability: Value = serde_json::from_str(&guard_capability_json(&applied)?)?;
         assert_eq!(capability["prompt_capture"], true);
         assert_eq!(
+            capability["hook_root_resolution"]["basis"],
+            "claude_project_dir"
+        );
+        assert_eq!(
+            capability["hook_root_resolution"]["all_cwd_independent"],
+            true
+        );
+        assert_eq!(
             capability["missing_required_hooks"]
                 .as_array()
                 .expect("missing hooks should be an array")
@@ -8367,14 +8704,16 @@ mod tests {
         assert!(mcp_text.contains("\"--connection\""));
         let settings_text = fs::read_to_string(repo.join(".claude/settings.json"))?;
         for command in [
-            ".claude/hooks/volicord-session-start.sh",
-            ".claude/hooks/volicord-pre-tool.sh",
-            ".claude/hooks/volicord-post-tool.sh",
-            ".claude/hooks/volicord-prompt-capture.sh",
-            ".claude/hooks/volicord-stop.sh",
+            "${CLAUDE_PROJECT_DIR}/.claude/hooks/volicord-session-start.sh",
+            "${CLAUDE_PROJECT_DIR}/.claude/hooks/volicord-pre-tool.sh",
+            "${CLAUDE_PROJECT_DIR}/.claude/hooks/volicord-post-tool.sh",
+            "${CLAUDE_PROJECT_DIR}/.claude/hooks/volicord-prompt-capture.sh",
+            "${CLAUDE_PROJECT_DIR}/.claude/hooks/volicord-stop.sh",
         ] {
             assert!(settings_text.contains(command), "missing {command}");
         }
+        assert!(!settings_text.contains("\"command\": \".claude/hooks/"));
+        assert!(settings_text.contains("\"args\": []"));
         assert!(!settings_text.contains("volicord guard "));
         let pre_tool_wrapper_path = repo.join(".claude/hooks/volicord-pre-tool.sh");
         let pre_tool_wrapper = fs::read_to_string(&pre_tool_wrapper_path)?;
@@ -8409,7 +8748,9 @@ mod tests {
         let settings_again = fs::read_to_string(repo.join(".claude/settings.json"))?;
         assert_eq!(settings_text, settings_again);
         assert_eq!(
-            settings_again.matches(".claude/hooks/volicord-").count(),
+            settings_again
+                .matches("${CLAUDE_PROJECT_DIR}/.claude/hooks/volicord-")
+                .count(),
             REQUIRED_GUARD_PHASES.len()
         );
         assert!(applied_again
@@ -8484,7 +8825,10 @@ mod tests {
                 && group["hooks"][0]["command"]
                     .as_str()
                     .is_some_and(|command| command
-                        .contains(".claude/hooks/volicord-pre-tool.sh"))
+                        == "${CLAUDE_PROJECT_DIR}/.claude/hooks/volicord-pre-tool.sh")
+                && group["hooks"][0]["args"]
+                    .as_array()
+                    .is_some_and(|args| args.is_empty())
         }));
 
         let capability_json = guard_capability_json(&applied)?;
@@ -8539,6 +8883,7 @@ mod tests {
     fn guarded_integration_rejects_unmanaged_hook_wrapper() -> Result<(), Box<dyn std::error::Error>>
     {
         let repo = temp_dir("hook-wrapper-conflict")?;
+        fs::create_dir_all(repo.join(".git"))?;
         let wrapper_path = repo.join(".codex/hooks/volicord-pre-tool.sh");
         fs::create_dir_all(wrapper_path.parent().expect("wrapper should have parent"))?;
         fs::write(&wrapper_path, "#!/bin/sh\nexec echo user-owned\n")?;
@@ -8569,6 +8914,7 @@ mod tests {
         use std::os::unix::fs::PermissionsExt;
 
         let repo = temp_dir("hook-wrapper-executable-repair")?;
+        fs::create_dir_all(repo.join(".git"))?;
         let entry = ManagedServerEntry::new("conn_alpha", Path::new("volicord"), None);
         let applied = apply_guard_integration(plan_guard_integration(
             HostKind::Codex,
@@ -8671,6 +9017,7 @@ mod tests {
     fn guard_file_verification_detects_stale_policy_and_duplicate_markers(
     ) -> Result<(), Box<dyn std::error::Error>> {
         let repo = temp_dir("guard-file-verify")?;
+        fs::create_dir_all(repo.join(".git"))?;
         let entry = ManagedServerEntry::new("conn_alpha", Path::new("volicord"), None);
         let plan = plan_guard_integration(
             HostKind::Codex,

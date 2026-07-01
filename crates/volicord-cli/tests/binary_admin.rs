@@ -460,10 +460,14 @@ fn init_codex_guarded_without_degraded_opt_in_generates_hooks() -> Result<(), Bo
     assert_eq!(value["states"]["required_guard_phases"], "configured");
     assert_eq!(value["states"]["guard_installation"], "reload_required");
     assert_eq!(value["states"]["prompt_capture"], "reload_required");
+    assert_eq!(value["hook_root_resolution"]["basis"], "git_work_tree");
+    assert_eq!(value["hook_root_resolution"]["all_cwd_independent"], true);
     let connection_id = value["connection"]["connection_id"]
         .as_str()
         .expect("connection_id should be present");
     let hooks = fs::read_to_string(repo_root.join(".codex/hooks.json"))?;
+    assert!(!hooks.contains("\"command\": \".codex/hooks/"));
+    assert!(hooks.contains("git rev-parse --show-toplevel"));
     assert!(hooks.contains(".codex/hooks/volicord-session-start.sh"));
     assert!(hooks.contains(".codex/hooks/volicord-pre-tool.sh"));
     assert!(hooks.contains(".codex/hooks/volicord-post-tool.sh"));
@@ -520,15 +524,19 @@ fn init_claude_code_guarded_without_degraded_opt_in_generates_hooks() -> Result<
     assert_eq!(value["states"]["hook_config"], "created");
     assert_eq!(value["states"]["guard_installation"], "reload_required");
     assert_eq!(value["states"]["prompt_capture"], "reload_required");
+    assert_eq!(value["hook_root_resolution"]["basis"], "claude_project_dir");
+    assert_eq!(value["hook_root_resolution"]["all_cwd_independent"], true);
     assert!(repo_root.join(".mcp.json").exists());
     assert!(repo_root.join("AGENTS.md").exists());
     assert!(repo_root.join(".volicord/policy.json").exists());
     let settings = fs::read_to_string(repo_root.join(".claude/settings.json"))?;
-    assert!(settings.contains(".claude/hooks/volicord-session-start.sh"));
-    assert!(settings.contains(".claude/hooks/volicord-pre-tool.sh"));
-    assert!(settings.contains(".claude/hooks/volicord-post-tool.sh"));
-    assert!(settings.contains(".claude/hooks/volicord-prompt-capture.sh"));
-    assert!(settings.contains(".claude/hooks/volicord-stop.sh"));
+    assert!(settings.contains("${CLAUDE_PROJECT_DIR}/.claude/hooks/volicord-session-start.sh"));
+    assert!(settings.contains("${CLAUDE_PROJECT_DIR}/.claude/hooks/volicord-pre-tool.sh"));
+    assert!(settings.contains("${CLAUDE_PROJECT_DIR}/.claude/hooks/volicord-post-tool.sh"));
+    assert!(settings.contains("${CLAUDE_PROJECT_DIR}/.claude/hooks/volicord-prompt-capture.sh"));
+    assert!(settings.contains("${CLAUDE_PROJECT_DIR}/.claude/hooks/volicord-stop.sh"));
+    assert!(!settings.contains("\"command\": \".claude/hooks/"));
+    assert!(settings.contains("\"args\": []"));
     assert!(!settings.contains("volicord guard "));
     assert!(settings.contains(
         "Bash|Edit|Write|MultiEdit|mcp__.*__(write|edit|create|update|delete|remove|move|patch).*"
@@ -958,6 +966,8 @@ fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Resul
     assert!(hooks.contains("PostToolUse"));
     assert!(hooks.contains("UserPromptSubmit"));
     assert!(hooks.contains("Stop"));
+    assert!(!hooks.contains("\"command\": \".codex/hooks/"));
+    assert!(hooks.contains("git rev-parse --show-toplevel"));
     assert!(hooks.contains(".codex/hooks/volicord-session-start.sh"));
     assert!(hooks.contains(".codex/hooks/volicord-pre-tool.sh"));
     assert!(hooks.contains(".codex/hooks/volicord-post-tool.sh"));
@@ -970,6 +980,7 @@ fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Resul
     let rules = fs::read_to_string(repo_root.join(".codex/rules/volicord.rules"))?;
     assert!(rules.contains("# BEGIN VOLICORD MANAGED CODEX RULES v1"));
     assert!(rules.contains("prefix_rule("));
+    assert!(rules.contains("git rev-parse --show-toplevel"));
     assert!(rules.contains(".codex/hooks/volicord-session-start.sh"));
     assert!(rules.contains(".codex/hooks/volicord-stop.sh"));
 
@@ -1244,11 +1255,13 @@ fn init_claude_code_guarded_writes_project_mcp_policy_and_rule() -> Result<(), B
         "volicord"
     );
     let settings = fs::read_to_string(repo_root.join(".claude/settings.json"))?;
-    assert!(settings.contains(".claude/hooks/volicord-session-start.sh"));
-    assert!(settings.contains(".claude/hooks/volicord-pre-tool.sh"));
-    assert!(settings.contains(".claude/hooks/volicord-post-tool.sh"));
-    assert!(settings.contains(".claude/hooks/volicord-prompt-capture.sh"));
-    assert!(settings.contains(".claude/hooks/volicord-stop.sh"));
+    assert!(settings.contains("${CLAUDE_PROJECT_DIR}/.claude/hooks/volicord-session-start.sh"));
+    assert!(settings.contains("${CLAUDE_PROJECT_DIR}/.claude/hooks/volicord-pre-tool.sh"));
+    assert!(settings.contains("${CLAUDE_PROJECT_DIR}/.claude/hooks/volicord-post-tool.sh"));
+    assert!(settings.contains("${CLAUDE_PROJECT_DIR}/.claude/hooks/volicord-prompt-capture.sh"));
+    assert!(settings.contains("${CLAUDE_PROJECT_DIR}/.claude/hooks/volicord-stop.sh"));
+    assert!(!settings.contains("\"command\": \".claude/hooks/"));
+    assert!(settings.contains("\"args\": []"));
     assert!(!settings.contains("volicord guard "));
     assert!(settings.contains(
         "\"matcher\": \"Bash|Edit|Write|MultiEdit|mcp__.*__(write|edit|create|update|delete|remove|move|patch).*\""

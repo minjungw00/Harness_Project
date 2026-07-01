@@ -96,6 +96,8 @@ pub struct HostHookConfigShape {
     pub format: HostConfigFormat,
     pub root_key: &'static str,
     pub command_handler_type: &'static str,
+    pub command_args_field: Option<&'static str>,
+    pub project_root_placeholder: Option<&'static str>,
     pub events: &'static [HostHookEventContract],
     pub unknown_fields_policy: UnknownFieldsPolicy,
 }
@@ -386,6 +388,8 @@ pub const CODEX_CONTRACT: HostIntegrationContract = HostIntegrationContract {
         format: HostConfigFormat::Json,
         root_key: "hooks",
         command_handler_type: "command",
+        command_args_field: None,
+        project_root_placeholder: None,
         events: &CODEX_HOOK_EVENTS,
         unknown_fields_policy: UnknownFieldsPolicy::PreserveOrIgnoreUnlessManagedFieldConflicts,
     },
@@ -433,6 +437,8 @@ pub const CLAUDE_CODE_CONTRACT: HostIntegrationContract = HostIntegrationContrac
         format: HostConfigFormat::Json,
         root_key: "hooks",
         command_handler_type: "command",
+        command_args_field: Some("args"),
+        project_root_placeholder: Some("${CLAUDE_PROJECT_DIR}"),
         events: &CLAUDE_CODE_HOOK_EVENTS,
         unknown_fields_policy: UnknownFieldsPolicy::PreserveOrIgnoreUnlessManagedFieldConflicts,
     },
@@ -908,7 +914,7 @@ fn validate_json_hook_value(
                 )));
             }
             for handler in handlers {
-                validate_hook_handler(event.event_name, handler)?;
+                validate_hook_handler(contract.host_kind, event.phase, event.event_name, handler)?;
             }
         }
         if !missing_write_matcher_tokens.is_empty() {
@@ -923,6 +929,8 @@ fn validate_json_hook_value(
 }
 
 fn validate_hook_handler(
+    host_kind: HostKind,
+    phase: HostLifecyclePhase,
     event_name: &str,
     handler: &Value,
 ) -> Result<(), HostContractValidationError> {
@@ -935,7 +943,7 @@ fn validate_hook_handler(
             "{event_name} hook handler type must be command"
         )));
     }
-    require_string(object.get("command"), "command")?;
+    let command = require_string(object.get("command"), "command")?;
     if let Some(args) = object.get("args") {
         let array = require_array(args, "args")?;
         for arg in array {
@@ -946,6 +954,7 @@ fn validate_hook_handler(
             }
         }
     }
+    validate_volicord_hook_command(host_kind, phase, command, object)?;
     if let Some(timeout) = object.get("timeout") {
         if !timeout.is_number() {
             return Err(HostContractValidationError::new(format!(
@@ -957,6 +966,77 @@ fn validate_hook_handler(
         require_string(Some(status_message), "statusMessage")?;
     }
     Ok(())
+}
+
+fn validate_volicord_hook_command(
+    host_kind: HostKind,
+    phase: HostLifecyclePhase,
+    command: &str,
+    object: &serde_json::Map<String, Value>,
+) -> Result<(), HostContractValidationError> {
+    match host_kind {
+        HostKind::Codex => validate_codex_volicord_hook_command(phase, command),
+        HostKind::ClaudeCode => validate_claude_volicord_hook_command(phase, command, object),
+        HostKind::Generic => Ok(()),
+    }
+}
+
+fn validate_codex_volicord_hook_command(
+    phase: HostLifecyclePhase,
+    command: &str,
+) -> Result<(), HostContractValidationError> {
+    let wrapper = format!(".codex/hooks/volicord-{}.sh", phase.command_name());
+    if command == wrapper {
+        return Err(HostContractValidationError::new(format!(
+            "{} hook command must not use a bare relative Volicord wrapper path",
+            phase.capability_name()
+        )));
+    }
+    if !command.contains(&wrapper) && !command.contains("volicord guard") {
+        return Ok(());
+    }
+    if command.starts_with("sh -c ")
+        && command.contains("git rev-parse --show-toplevel")
+        && command.contains(&wrapper)
+    {
+        Ok(())
+    } else {
+        Err(HostContractValidationError::new(format!(
+            "{} Volicord hook command must resolve the Git work-tree root before invoking its wrapper",
+            phase.capability_name()
+        )))
+    }
+}
+
+fn validate_claude_volicord_hook_command(
+    phase: HostLifecyclePhase,
+    command: &str,
+    object: &serde_json::Map<String, Value>,
+) -> Result<(), HostContractValidationError> {
+    let relative_wrapper = format!(".claude/hooks/volicord-{}.sh", phase.command_name());
+    let placeholder_wrapper = format!("${{CLAUDE_PROJECT_DIR}}/{relative_wrapper}");
+    if command == relative_wrapper {
+        return Err(HostContractValidationError::new(format!(
+            "{} hook command must not use a bare relative Volicord wrapper path",
+            phase.capability_name()
+        )));
+    }
+    if !command.contains(&relative_wrapper) && !command.contains("volicord guard") {
+        return Ok(());
+    }
+    if command == placeholder_wrapper
+        && object
+            .get("args")
+            .and_then(Value::as_array)
+            .is_some_and(|args| args.is_empty())
+    {
+        Ok(())
+    } else {
+        Err(HostContractValidationError::new(format!(
+            "{} Volicord hook command must use exec-form ${{CLAUDE_PROJECT_DIR}} wrapper resolution",
+            phase.capability_name()
+        )))
+    }
 }
 
 fn validate_codex_rule_config(text: &str) -> Result<(), HostContractValidationError> {
@@ -1112,6 +1192,8 @@ mod tests {
         assert_eq!(contract.mcp_config_shape.format, HostConfigFormat::Toml);
         assert_eq!(contract.mcp_config_shape.root_key, "mcp_servers");
         assert_eq!(contract.hook_config_shape.root_key, "hooks");
+        assert_eq!(contract.hook_config_shape.command_args_field, None);
+        assert_eq!(contract.hook_config_shape.project_root_placeholder, None);
         assert_eq!(contract.supported_lifecycle_phases, REQUIRED_GUARD_PHASES);
         assert_eq!(contract.required_lifecycle_phases, REQUIRED_GUARD_PHASES);
         assert_eq!(
@@ -1156,6 +1238,11 @@ mod tests {
         assert_eq!(contract.mcp_config_shape.format, HostConfigFormat::Json);
         assert_eq!(contract.mcp_config_shape.root_key, "mcpServers");
         assert_eq!(contract.hook_config_shape.root_key, "hooks");
+        assert_eq!(contract.hook_config_shape.command_args_field, Some("args"));
+        assert_eq!(
+            contract.hook_config_shape.project_root_placeholder,
+            Some("${CLAUDE_PROJECT_DIR}")
+        );
         assert_eq!(contract.supported_lifecycle_phases, REQUIRED_GUARD_PHASES);
         assert_eq!(contract.required_lifecycle_phases, REQUIRED_GUARD_PHASES);
         assert_eq!(
@@ -1259,6 +1346,37 @@ mod tests {
         )
         .expect_err("Claude Code hook config without MCP write matcher should be degraded");
         assert!(error.message().contains(MCP_WRITE_MATCHER));
+    }
+
+    #[test]
+    fn hook_config_validation_rejects_bare_volicord_wrapper_commands() {
+        let mut bare_codex: Value =
+            serde_json::from_str(CODEX_HOOKS).expect("fixture should be JSON");
+        bare_codex["hooks"]["PreToolUse"][0]["hooks"][0]["command"] =
+            Value::String(".codex/hooks/volicord-pre-tool.sh".to_owned());
+        let error = validate_contract_config(
+            HostKind::Codex,
+            HostContractConfigKind::HookConfig,
+            &bare_codex.to_string(),
+        )
+        .expect_err("Codex bare wrapper command should not validate");
+        assert!(error.message().contains("bare relative"));
+
+        let mut bare_claude: Value =
+            serde_json::from_str(CLAUDE_HOOKS).expect("fixture should be JSON");
+        bare_claude["hooks"]["PreToolUse"][0]["hooks"][0]["command"] =
+            Value::String(".claude/hooks/volicord-pre-tool.sh".to_owned());
+        bare_claude["hooks"]["PreToolUse"][0]["hooks"][0]
+            .as_object_mut()
+            .expect("handler should be object")
+            .remove("args");
+        let error = validate_contract_config(
+            HostKind::ClaudeCode,
+            HostContractConfigKind::HookConfig,
+            &bare_claude.to_string(),
+        )
+        .expect_err("Claude Code bare wrapper command should not validate");
+        assert!(error.message().contains("bare relative"));
     }
 
     #[test]
