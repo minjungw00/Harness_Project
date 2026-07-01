@@ -16,15 +16,15 @@ use crate::values::{
     ChangeUnitEffectKind, CloseReadinessBlockerCategory, CloseReason, CloseState, EffectKind,
     EnabledEnforcementMechanism, ErrorCode, EvidenceAssuranceLevel, EvidenceCoverageState,
     EvidenceSourceKind, EvidenceStatus, GuaranteeLevel, GuardConfigurationStatus, GuardDecision,
-    GuardEffectiveStatus, GuardInstallationStatus, GuardMode, GuardObservationStatus, HostKind,
-    JudgmentBasisCompatibilityStatus, JudgmentKind, JudgmentPresentation, JudgmentRequiredFor,
-    JudgmentResolutionOutcome, MethodName, NextActionKind, PlannedBlockerSourceKind,
-    ProjectContinuityKind, ProjectContinuityStatus, ProjectEnforcementProfileSource,
-    ProjectEnforcementProfileStatus, PromptCaptureStatus, RedactionState, ResponseKind, RunKind,
-    SessionWatchStatus, StateRecordKind, TaskLifecyclePhase, TaskMode, TaskResult,
-    UnrecordedChangeResolutionBasis, UnrecordedChangeStatus, UserJudgmentOptionAction,
-    UserJudgmentStatus, UtcTimestamp, ValidatorSeverity, ValidatorStatus, WriteCheckStatus,
-    WriteDecisionCategory,
+    GuardEffectiveStatus, GuardInstallationStatus, GuardMode, GuardObservationStatus,
+    GuardStrength, HostKind, JudgmentBasisCompatibilityStatus, JudgmentKind, JudgmentPresentation,
+    JudgmentRequiredFor, JudgmentResolutionOutcome, MethodName, NextActionKind,
+    PlannedBlockerSourceKind, ProjectContinuityKind, ProjectContinuityStatus,
+    ProjectEnforcementProfileSource, ProjectEnforcementProfileStatus, PromptCaptureStatus,
+    RedactionState, ResponseKind, RunKind, SessionWatchStatus, StateRecordKind, TaskLifecyclePhase,
+    TaskMode, TaskResult, UnrecordedChangeResolutionBasis, UnrecordedChangeStatus,
+    UserJudgmentOptionAction, UserJudgmentStatus, UtcTimestamp, ValidatorSeverity, ValidatorStatus,
+    WriteCheckStatus, WriteDecisionCategory,
 };
 
 /// JSON object used where an owner document defines a field as `object`.
@@ -399,11 +399,15 @@ pub struct UnrecordedChangeResolutionSummary {
 #[serde(deny_unknown_fields)]
 pub struct GuardHealthSummary {
     pub guard_mode: GuardMode,
+    pub guard_strength: GuardStrength,
     pub guard_installation_id: RequiredNullable<GuardInstallationId>,
     pub guard_installation_status: GuardInstallationStatus,
     pub guard_configuration_status: GuardConfigurationStatus,
     pub guard_observation_status: GuardObservationStatus,
     pub effective_guard_status: GuardEffectiveStatus,
+    pub pre_tool_blocking_available: bool,
+    pub post_tool_correlation_available: bool,
+    pub bypass_detection_active: bool,
     pub guard_hook_observed: bool,
     pub last_guard_observed_at: RequiredNullable<UtcTimestamp>,
     pub last_guard_event_at: RequiredNullable<UtcTimestamp>,
@@ -417,6 +421,8 @@ pub struct GuardHealthSummary {
     pub missing_required_hook_phases: Vec<String>,
     pub prompt_capture_status: PromptCaptureStatus,
     pub prompt_capture_available: bool,
+    pub local_web_consent_available: bool,
+    pub managed_distribution_verified: bool,
     pub mcp_connection_healthy: bool,
     pub mcp_connection_status: RequiredNullable<String>,
     pub session_watch_status: SessionWatchStatus,
@@ -824,6 +830,8 @@ pub struct CloseReadinessBlocker {
     pub category: CloseReadinessBlockerCategory,
     pub code: String,
     pub message: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub guard_strength: Option<GuardStrength>,
     #[serde(default)]
     pub can_resolve_in_chat: bool,
     #[serde(default)]

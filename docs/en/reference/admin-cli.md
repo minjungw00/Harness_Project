@@ -208,7 +208,11 @@ runtime hook observation health, effective guard health, and host reload
 requirement as diagnostics. These guard diagnostics are local setup and
 observation checks; they are not proof of OS enforcement, sandboxing, write
 prevention, product correctness, or close
-readiness. Doctor does not create projects, install host configuration, change
+readiness. Doctor also reports `guard_strength` and the capability booleans
+behind that label. Runtime-only capabilities such as session watcher bypass
+detection and local web consent are reported as unavailable unless the
+reporting process actually owns that runtime state. Doctor does not create
+projects, install host configuration, change
 connection mode, or answer user judgments.
 
 <a id="project-commands"></a>
@@ -422,8 +426,12 @@ top-level `status`, `checks`, and `actions` fields for diagnostic consumers.
 Connection status and verification output must keep guard file installation,
 configuration health, runtime hook observation health, effective guard health,
 host reload requirement, prompt-capture availability, and last guard event when
-known as separate diagnostics. Files installed or configured must not be
-reported as an active observed guard hook.
+known as separate diagnostics. They must also report `guard_strength`,
+pre-tool blocking availability, post-tool correlation availability, bypass
+detection availability, prompt-capture availability, local web consent
+availability, and managed-distribution verification as separate fields. Files
+installed or configured must not be reported as an active observed guard hook or
+as host-hook guarded strength before a matching observation exists.
 
 A successful `volicord mcp --check` startup check alone must not be described as a
 `complete` Agent Connection. It is startup validation for the MCP process only.
@@ -638,6 +646,11 @@ Required diagnostic JSON values:
   and optional details
 - `actions[]`: required or suggested user actions, each with a stable action id
   and human-readable command or instruction when one is available
+- Guard-aware setup, doctor, connection status, and connection verification
+  JSON must expose `guard_strength` plus `pre_tool_blocking_available`,
+  `post_tool_correlation_available`, `bypass_detection_active`,
+  `prompt_capture_available`, `local_web_consent_available`, and
+  `managed_distribution_verified` where guard diagnostics are reported.
 
 Setup and doctor JSON must include `status_meaning` so diagnostic consumers can
 distinguish setup action status from installation-profile health.

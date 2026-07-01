@@ -87,6 +87,24 @@ mod tests {
             json!("action_required")
         );
         assert_eq!(
+            serde_json::to_value(GuardStrength::AuthorityRecordOnly)
+                .expect("guard strength serializes"),
+            json!("authority_record_only")
+        );
+        assert_eq!(
+            serde_json::to_value(GuardStrength::DetectiveWatch).expect("guard strength serializes"),
+            json!("detective_watch")
+        );
+        assert_eq!(
+            serde_json::to_value(GuardStrength::HostHookGuarded)
+                .expect("guard strength serializes"),
+            json!("host_hook_guarded")
+        );
+        assert_eq!(
+            serde_json::to_value(GuardStrength::ManagedGuarded).expect("guard strength serializes"),
+            json!("managed_guarded")
+        );
+        assert_eq!(
             serde_json::to_value(UnrecordedChangeStatus::Unresolved)
                 .expect("change status serializes"),
             json!("unresolved")

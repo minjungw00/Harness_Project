@@ -860,8 +860,10 @@ fn render_status_response(
     }
     if let Some(guard_health) = response.response_value.get("guard_health") {
         output.push_str(&format!(
-            "guard_mode: {}\nguard_effective_state: {}\nguard_observed: {}\nprompt_capture_state: {}\nprompt_capture_available: {}\nunresolved_unrecorded_changes: {}\n",
+            "guard_mode: {}\nguard_strength: {}\nguard_capabilities: {}\nguard_effective_state: {}\nguard_observed: {}\nprompt_capture_state: {}\nprompt_capture_available: {}\nunresolved_unrecorded_changes: {}\n",
             text_field(guard_health, "guard_mode", "not_configured"),
+            text_field(guard_health, "guard_strength", "not_checked"),
+            guard_capabilities_text(guard_health),
             text_field(guard_health, "effective_guard_status", "not_checked"),
             yes_no(
                 guard_health
@@ -905,6 +907,22 @@ fn action_label(action: &Value) -> Option<&str> {
 
 fn text_field<'a>(value: &'a Value, field: &str, fallback: &'a str) -> &'a str {
     value.get(field).and_then(Value::as_str).unwrap_or(fallback)
+}
+
+fn bool_field(value: &Value, field: &str) -> bool {
+    value.get(field).and_then(Value::as_bool).unwrap_or(false)
+}
+
+fn guard_capabilities_text(guard_health: &Value) -> String {
+    format!(
+        "pre_tool_blocking={}, post_tool_correlation={}, bypass_detection={}, prompt_capture={}, local_web_consent={}, managed_distribution_verified={}",
+        yes_no(bool_field(guard_health, "pre_tool_blocking_available")),
+        yes_no(bool_field(guard_health, "post_tool_correlation_available")),
+        yes_no(bool_field(guard_health, "bypass_detection_active")),
+        yes_no(bool_field(guard_health, "prompt_capture_available")),
+        yes_no(bool_field(guard_health, "local_web_consent_available")),
+        yes_no(bool_field(guard_health, "managed_distribution_verified")),
+    )
 }
 
 fn judgment_path_text(guard_health: Option<&Value>) -> &'static str {

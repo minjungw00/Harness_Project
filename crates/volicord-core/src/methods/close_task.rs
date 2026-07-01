@@ -810,7 +810,9 @@ fn projected_guard_health(
     })?;
     let mut summary = guard_health_summary_from_record(record)?;
     if let Some(summary) = summary.as_mut() {
+        summary.local_web_consent_available = invocation.local_web_consent_available;
         session_watch::apply_session_watch_status(store, invocation, summary)?;
+        refresh_guard_strength(summary);
     }
     Ok(summary)
 }
@@ -836,6 +838,9 @@ struct GuardCapabilityFacts {
     expected_policy_hash: Option<String>,
     required_hook_phases: Vec<String>,
     missing_required_hook_phases: Vec<String>,
+    guard_profile: Option<String>,
+    managed_bundle_hash: Option<String>,
+    managed_verification_status: Option<String>,
 }
 
 pub(super) fn guard_health_summary_from_record(
@@ -946,19 +951,24 @@ pub(super) fn guard_health_summary_from_record(
         .map_err(PlanError::Core)?;
     let prompt_capture_status = prompt_capture_availability.status;
     let prompt_capture_available = prompt_capture_availability.can_use_chat_commands();
+    let managed_distribution_verified = managed_distribution_verified(guard_mode, &capability);
     let missing_or_stale_write_readiness = record
         .latest_event
         .as_ref()
         .map(latest_guard_event_has_write_readiness_issue)
         .transpose()?
         .unwrap_or(false);
-    Ok(Some(GuardHealthSummary {
+    let mut summary = GuardHealthSummary {
         guard_mode,
+        guard_strength: GuardStrength::AuthorityRecordOnly,
         guard_installation_id,
         guard_installation_status,
         guard_configuration_status,
         guard_observation_status,
         effective_guard_status,
+        pre_tool_blocking_available: false,
+        post_tool_correlation_available: false,
+        bypass_detection_active: false,
         guard_hook_observed,
         last_guard_observed_at,
         last_guard_event_at,
@@ -980,6 +990,8 @@ pub(super) fn guard_health_summary_from_record(
         missing_required_hook_phases: capability.missing_required_hook_phases,
         prompt_capture_status,
         prompt_capture_available,
+        local_web_consent_available: false,
+        managed_distribution_verified,
         mcp_connection_healthy,
         mcp_connection_status,
         session_watch_status: SessionWatchStatus::Disabled,
@@ -987,7 +999,9 @@ pub(super) fn guard_health_summary_from_record(
         session_watch_detail: RequiredNullable::null(),
         unresolved_unrecorded_change_count: record.unresolved_unrecorded_changes.len() as u64,
         missing_or_stale_write_readiness,
-    }))
+    };
+    refresh_guard_strength(&mut summary);
+    Ok(Some(summary))
 }
 
 fn default_guard_capability_facts() -> GuardCapabilityFacts {
@@ -995,6 +1009,9 @@ fn default_guard_capability_facts() -> GuardCapabilityFacts {
         expected_policy_hash: None,
         required_hook_phases: Vec::new(),
         missing_required_hook_phases: Vec::new(),
+        guard_profile: None,
+        managed_bundle_hash: None,
+        managed_verification_status: None,
     }
 }
 
@@ -1022,7 +1039,21 @@ fn guard_capability_facts(
         expected_policy_hash,
         required_hook_phases,
         missing_required_hook_phases,
+        guard_profile: nonempty_string_field(&capability, "guard_profile"),
+        managed_bundle_hash: nonempty_string_field(&capability, "managed_bundle_hash"),
+        managed_verification_status: nonempty_string_field(
+            &capability,
+            "managed_verification_status",
+        ),
     })
+}
+
+fn nonempty_string_field(object: &JsonObject, field: &str) -> Option<String> {
+    object
+        .get(field)
+        .and_then(Value::as_str)
+        .filter(|value| !value.trim().is_empty())
+        .map(str::to_owned)
 }
 
 fn string_array_field(object: &JsonObject, field: &str) -> Option<Vec<String>> {
@@ -1036,6 +1067,49 @@ fn string_array_field(object: &JsonObject, field: &str) -> Option<Vec<String>> {
             .map(str::to_owned)
             .collect(),
     )
+}
+
+fn managed_distribution_verified(guard_mode: GuardMode, capability: &GuardCapabilityFacts) -> bool {
+    guard_mode == GuardMode::Managed
+        && capability.guard_profile.as_deref() == Some("managed_guarded")
+        && capability.managed_verification_status.as_deref() == Some("verified")
+        && capability.managed_bundle_hash.is_some()
+}
+
+pub(super) fn refresh_guard_strength(summary: &mut GuardHealthSummary) {
+    summary.pre_tool_blocking_available = required_hook_available(summary, "pre_tool_hook");
+    summary.post_tool_correlation_available = required_hook_available(summary, "post_tool_hook");
+    summary.bypass_detection_active = summary.session_watch_status == SessionWatchStatus::Active;
+    summary.guard_strength =
+        if summary.managed_distribution_verified && host_hook_strength_available(summary) {
+            GuardStrength::ManagedGuarded
+        } else if host_hook_strength_available(summary) {
+            GuardStrength::HostHookGuarded
+        } else if summary.bypass_detection_active {
+            GuardStrength::DetectiveWatch
+        } else {
+            GuardStrength::AuthorityRecordOnly
+        };
+}
+
+fn host_hook_strength_available(summary: &GuardHealthSummary) -> bool {
+    matches!(summary.guard_mode, GuardMode::Guarded | GuardMode::Managed)
+        && summary.effective_guard_status == GuardEffectiveStatus::Active
+        && REQUIRED_GUARD_HOOK_PHASES
+            .iter()
+            .all(|phase| required_hook_available(summary, phase))
+}
+
+fn required_hook_available(summary: &GuardHealthSummary, phase: &str) -> bool {
+    summary.effective_guard_status == GuardEffectiveStatus::Active
+        && summary
+            .required_hook_phases
+            .iter()
+            .any(|configured| configured == phase)
+        && !summary
+            .missing_required_hook_phases
+            .iter()
+            .any(|missing| missing == phase)
 }
 
 fn guard_missing_required_hook_phases(
@@ -1276,7 +1350,7 @@ fn guard_close_blockers(
                 }],
             ));
         }
-        return blockers;
+        return guard_blockers_with_strength(blockers, summary.guard_strength);
     }
     if let Some(blocker) = guard_installation_close_blocker(summary, &task_ref) {
         blockers.push(blocker);
@@ -1352,6 +1426,16 @@ fn guard_close_blockers(
             }],
         ));
     }
+    guard_blockers_with_strength(blockers, summary.guard_strength)
+}
+
+fn guard_blockers_with_strength(
+    mut blockers: Vec<CloseReadinessBlocker>,
+    guard_strength: GuardStrength,
+) -> Vec<CloseReadinessBlocker> {
+    for blocker in &mut blockers {
+        blocker.guard_strength = Some(guard_strength);
+    }
     blockers
 }
 
@@ -1362,6 +1446,9 @@ pub(super) fn user_channel_pending_judgment_instruction(
         "Use MCP elicitation for the pending user-owned judgment.".to_owned()
     } else if guard_health.is_some_and(|summary| summary.prompt_capture_available) {
         "Use the displayed prompt-capture chat command with the current verification code."
+            .to_owned()
+    } else if guard_health.is_some_and(|summary| summary.local_web_consent_available) {
+        "Use the local web consent fallback if the adapter offers a loopback consent link."
             .to_owned()
     } else {
         "Use the local volicord user command as the recovery path.".to_owned()

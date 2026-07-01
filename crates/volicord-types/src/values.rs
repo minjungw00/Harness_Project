@@ -660,6 +660,28 @@ impl GuardEffectiveStatus {
     }
 }
 
+/// Derived guard strength label for the selected connection or session.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum GuardStrength {
+    AuthorityRecordOnly,
+    DetectiveWatch,
+    HostHookGuarded,
+    ManagedGuarded,
+}
+
+impl GuardStrength {
+    /// Returns the stable value name for this guard strength.
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::AuthorityRecordOnly => "authority_record_only",
+            Self::DetectiveWatch => "detective_watch",
+            Self::HostHookGuarded => "host_hook_guarded",
+            Self::ManagedGuarded => "managed_guarded",
+        }
+    }
+}
+
 /// Session-level Product Repository watch availability.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]

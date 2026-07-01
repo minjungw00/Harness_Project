@@ -107,11 +107,15 @@ StateSummary:
 ```yaml
 GuardHealthSummary:
   guard_mode: string
+  guard_strength: string
   guard_installation_id: string | null
   guard_installation_status: string
   guard_configuration_status: string
   guard_observation_status: string
   effective_guard_status: string
+  pre_tool_blocking_available: boolean
+  post_tool_correlation_available: boolean
+  bypass_detection_active: boolean
   guard_hook_observed: boolean
   last_guard_observed_at: string | null
   last_guard_event_at: string | null
@@ -125,6 +129,8 @@ GuardHealthSummary:
   missing_required_hook_phases: string[]
   prompt_capture_status: string
   prompt_capture_available: boolean
+  local_web_consent_available: boolean
+  managed_distribution_verified: boolean
   mcp_connection_healthy: boolean
   mcp_connection_status: string | null
   session_watch_status: string
@@ -136,8 +142,10 @@ GuardHealthSummary:
 
 의미:
 - `guard_mode`와 `guard_installation_status`는 제어 값 문자열입니다.
+- `guard_strength`는 선택된 연결 또는 session에 대해 도출된 guard 강도 라벨입니다. 기록된 모드, hook 건강 상태, 런타임 관찰 건강 상태, session watcher 상태, prompt-capture 가용성, local web consent 가용성, managed 배포 검증을 바탕으로 현재 지원되는 가장 강한 guard 경로를 보고합니다.
 - `guard_installation_id`가 `null`이 아니면 불투명 guard 설치 식별자입니다.
 - `guard_configuration_status`, `guard_observation_status`, `effective_guard_status`는 파일/설정 건강 상태, 런타임 hook 관찰, 닫기 준비 상태에서 쓰는 효과적인 guarded 상태를 분리합니다.
+- `pre_tool_blocking_available`, `post_tool_correlation_available`, `bypass_detection_active`, `prompt_capture_available`, `local_web_consent_available`, `managed_distribution_verified`는 라벨의 근거가 되는 기능 사실을 노출합니다. 런타임 전용 기능을 관찰할 수 없는 setup 진단은 그 기능을 false로 보고합니다.
 - `guard_hook_observed`는 선택된 guard 설치에 대해 현재 일치하는 호스트 guard hook 관찰이 기록되어 있는지를 보고합니다.
 - `last_guard_observed_at`은 가장 최근 저장된 guard 설치 관찰 시각이며, 관찰이 기록되어 있지 않으면 `null`입니다.
 - `last_guard_event_at`은 상태 보기에 사용할 수 있는 최신 guard 이벤트 타임스탬프입니다. 사용할 수 있는 guard 이벤트가 없으면 `null`입니다.
@@ -145,6 +153,8 @@ GuardHealthSummary:
 - `required_hook_phases`와 `missing_required_hook_phases`는 필요한 guard hook 설정의 완전성을 보고합니다. 필요한 단계가 `required_hook_phases`에 없거나 `missing_required_hook_phases`에 나열되어 있으면 누락된 것으로 취급합니다. 필요한 단계가 누락되어 있으면 유효한 hook 이벤트가 관찰되었더라도 효과적인 guard 건강 상태는 active가 되지 않습니다.
 - `prompt_capture_status`는 선택된 연결의 기계 판독 prompt capture 사용 가능 상태를 보고합니다. `prompt_capture_available=true`는 그 상태가 검증 코드 채팅 명령을 허용할 때만 사용하며, 원문 프롬프트 텍스트가 포함된다는 뜻이 아닙니다.
 - `prompt_capture_available`은 선택된 연결에서 prompt capture 검증 코드 채팅 명령을 표시하거나 기록할 수 있는지 보고합니다. 프롬프트 텍스트는 포함하지 않습니다.
+- `local_web_consent_available`은 현재 adapter 호출이 User Channel 복구를 위한 loopback local web consent fallback을 제공할 수 있는지 보고합니다.
+- `managed_distribution_verified`는 managed 모드가 검증된 managed 배포 메타데이터로 뒷받침되는지 보고합니다. 일반 프로젝트 로컬 guarded hook 파일에서는 false입니다.
 - `mcp_connection_healthy`와 `mcp_connection_status`는 추적되는 Agent Connection 확인 상태가 있을 때 그 상태를 요약합니다.
 - `session_watch_status`는 선택된 연결 또는 session에 대해 session 수준 Product Repository watcher가 `disabled`, `active`, `degraded`, `unavailable` 중 어떤 상태인지 보고합니다.
 - `last_session_watch_checked_at`은 가장 최근 watcher baseline 상태 갱신 시각이며, 사용할 수 있는 session-watch baseline이 없으면 `null`입니다.
@@ -153,13 +163,14 @@ GuardHealthSummary:
 - `missing_or_stale_write_readiness`는 guard 이벤트가 누락되었거나 오래된 쓰기 준비 상태를 감지했는지 보고합니다.
 
 의미하지 않는 것:
+- `guard_strength`는 정확성, review 완료, 테스트 충분성, OS 수준 강제, 쓰기 차단을 증명하지 않습니다.
 - `GuardHealthSummary`는 제품 정확성, 테스트 충분성, OS 강제, 샌드박싱, 보안 격리, 최종 수락의 증거가 아닙니다.
 - `active` guard 요약은 증거, 아티팩트 무결성, 사용자 소유 판단, `Write Check`, 최종 수락, 잔여 위험 수락 요구사항을 대체하지 않습니다.
 - Session watch 상태는 Volicord가 쓰기를 막았거나, 파일을 바꾼 행위자를 식별했거나, 파일 내용을 저장했거나, OS 수준 강제를 제공했다는 뜻이 아닙니다.
 - `mcp_only` 모드는 활성 session watch가 선택되어 있을 때 watcher가 만든 해결되지 않은 미기록 변경 찾기가 닫기를 막는 경우를 제외하고 협력형으로 남습니다.
 
 담당 문서 링크:
-- `guard_mode`, `guard_installation_status`, `guard_configuration_status`, `guard_observation_status`, `effective_guard_status`, `prompt_capture_status`, `session_watch_status` 값: [상태와 차단 사유 값](schema-value-sets.md#state-and-blocker-values)
+- `guard_mode`, `guard_strength`, `guard_installation_status`, `guard_configuration_status`, `guard_observation_status`, `effective_guard_status`, `prompt_capture_status`, `session_watch_status` 값: [상태와 차단 사유 값](schema-value-sets.md#state-and-blocker-values)
 - 닫기 준비 상태 guard 차단 사유와 메서드 로컬 코드: [`volicord.close_task`](method-close-task.md)
 - Agent Connection 의미: [Agent Connection](../agent-connection.md)
 
@@ -588,6 +599,7 @@ CloseReadinessBlocker:
   category: string
   code: string
   message: string
+  guard_strength: string | null
   can_resolve_in_chat: boolean
   terminal_action_required: boolean
   related_refs: StateRecordRef[]
@@ -618,6 +630,7 @@ GuaranteeDisplay:
 - `CloseReadinessBlocker`는 닫기 차단 사유를 표현하는 데이터 형태입니다.
 - `CloseReadinessBlocker.category`는 제어 값 문자열입니다.
 - `CloseReadinessBlocker.code`는 담당 문서가 정의하는 차단 사유 코드입니다. 차단 사유 또는 메서드 담당 문서가 더 좁은 로컬 목록을 공개하지 않는 한 빠짐없는 전역 공개 enum이 아닙니다.
+- `CloseReadinessBlocker.guard_strength`는 guard 건강 상태에서 도출한 연결 기능 차단 사유에 있을 수 있으며, 차단 사유를 계산한 시점의 선택된 guard-health 라벨을 보고합니다. guard 건강 상태에서 도출하지 않은 차단 사유에서는 생략됩니다.
 - `can_resolve_in_chat`은 메서드 담당 문서가 그 경로를 알고 있을 때 차단 사유를 채팅으로 매개되는 사용자 경로에서 해소할 수 있는지를 보고합니다.
 - `terminal_action_required`는 다음 행동이 채팅 밖의 터미널, 호스트, 파일시스템, setup 동작을 필요로 하는지를 보고합니다.
 - `CloseReadinessBlocker.message`, `ValidatorResult.message`, `GuaranteeDisplay.basis`는 자유 형식 표시 문자열입니다.
@@ -647,7 +660,7 @@ GuaranteeDisplay:
 - 판단 호환성과 수락된 위험 입력: [API 판단 스키마](schema-judgment.md)
 - 응답 분기 동작, 닫기 준비 상태 평가 순서, 커밋된 차단 결과: [`volicord.close_task`](method-close-task.md)
 - 닫기 차단 사유와 API 응답 분기 사이의 차단 사유 처리 경로: [API 차단 사유 처리 경로](blocker-routing.md)
-- 차단 사유 범주 값(`CloseReadinessBlocker.category`)과 지원되는 `ValidatorResult.status`, `ValidatorResult.severity`, `GuaranteeDisplay.level` 값: [API 값 집합](schema-value-sets.md#state-and-blocker-values)
+- 차단 사유 범주 값(`CloseReadinessBlocker.category`), `CloseReadinessBlocker.guard_strength`, 지원되는 `ValidatorResult.status`, `ValidatorResult.severity`, `GuaranteeDisplay.level` 값: [API 값 집합](schema-value-sets.md#state-and-blocker-values)
 - 보안 보장 의미: [보안](../security.md)
 
 ## 관련 담당 문서

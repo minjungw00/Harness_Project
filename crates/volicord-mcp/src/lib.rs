@@ -298,6 +298,7 @@ pub struct McpDerivedInvocationContext {
     pub operation_category: OperationCategory,
     pub invocation_binding_basis: String,
     pub session_id: Option<String>,
+    pub local_web_consent_available: bool,
 }
 
 impl McpDerivedInvocationContext {
@@ -309,9 +310,11 @@ impl McpDerivedInvocationContext {
             self.invocation_binding_basis.clone(),
         );
         if let Some(session_id) = self.session_id.as_ref() {
-            invocation.with_session_id(session_id.clone())
-        } else {
             invocation
+                .with_session_id(session_id.clone())
+                .with_local_web_consent_available(self.local_web_consent_available)
+        } else {
+            invocation.with_local_web_consent_available(self.local_web_consent_available)
         }
     }
 }
@@ -380,6 +383,7 @@ impl McpAdapter {
             operation_category,
             invocation_binding_basis: self.context.invocation_binding_basis.clone(),
             session_id: session_id.map(str::to_owned),
+            local_web_consent_available: self.local_web_consent.is_some(),
         }
     }
 

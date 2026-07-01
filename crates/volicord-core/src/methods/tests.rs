@@ -12346,6 +12346,30 @@ fn guarded_close_complete_success_reports_guard_health() -> Result<(), Box<dyn E
         "active"
     );
     assert_eq!(
+        status.response_value["guard_health"]["guard_strength"],
+        "host_hook_guarded"
+    );
+    assert_eq!(
+        status.response_value["guard_health"]["pre_tool_blocking_available"],
+        true
+    );
+    assert_eq!(
+        status.response_value["guard_health"]["post_tool_correlation_available"],
+        true
+    );
+    assert_eq!(
+        status.response_value["guard_health"]["bypass_detection_active"],
+        false
+    );
+    assert_eq!(
+        status.response_value["guard_health"]["local_web_consent_available"],
+        false
+    );
+    assert_eq!(
+        status.response_value["guard_health"]["managed_distribution_verified"],
+        false
+    );
+    assert_eq!(
         status.response_value["guard_health"]["guard_hook_observed"],
         true
     );
@@ -12373,6 +12397,31 @@ fn guarded_close_complete_success_reports_guard_health() -> Result<(), Box<dyn E
         status.response_value["active_task"]["guard_health"]["guard_mode"],
         "guarded"
     );
+    let local_web_status = harness.service.status(
+        StatusRequest {
+            envelope: envelope(
+                "req_status_guarded_success_local_web",
+                None,
+                false,
+                None,
+                Some(&task_id),
+            ),
+            include: StatusInclude {
+                task: true,
+                pending_user_judgments: true,
+                write_check: false,
+                evidence: true,
+                close: true,
+                guarantees: false,
+                continuity: false,
+            },
+        },
+        invocation(OperationCategory::Read).with_local_web_consent_available(true),
+    )?;
+    assert_eq!(
+        local_web_status.response_value["guard_health"]["local_web_consent_available"],
+        true
+    );
 
     let response = harness.service.close_task(
         close_task_request(CloseTaskFixture {
@@ -12395,8 +12444,147 @@ fn guarded_close_complete_success_reports_guard_health() -> Result<(), Box<dyn E
         "guarded"
     );
     assert_eq!(
+        response.response_value["guard_health"]["guard_strength"],
+        "host_hook_guarded"
+    );
+    assert_eq!(
         response.response_value["guard_health"]["unresolved_unrecorded_change_count"],
         0
+    );
+    Ok(())
+}
+
+#[test]
+fn managed_guarded_strength_requires_verified_distribution() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let managed_capability = json!({
+        "schema": "volicord-guard-capability-v1",
+        "policy_hash": "sha256:guardedfixture",
+        "guard_profile": "managed_guarded",
+        "managed_source": "org_policy_bundle",
+        "managed_bundle_hash": "sha256:managedfixture",
+        "managed_verification_status": "verified",
+        "host_capabilities": {
+            "user_prompt_submit_hook": true
+        },
+        "required_guard_phases": [
+            "session_start_hook",
+            "pre_tool_hook",
+            "post_tool_hook",
+            "user_prompt_submit_hook",
+            "stop_hook"
+        ],
+        "missing_required_hooks": [],
+        "prompt_capture": true
+    })
+    .to_string();
+    record_guard_installation(
+        &harness,
+        "managed_verified",
+        "managed",
+        "active",
+        &managed_capability,
+    )?;
+    let (task_id, _, _) = create_close_ready_task(&harness, "managed_verified")?;
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_check_managed_verified",
+            idempotency_key: None,
+            dry_run: false,
+            expected_state_version: None,
+            task_id: &task_id,
+            intent: CloseIntent::Check,
+            close_reason: None,
+            superseding_task_id: None,
+        }),
+        invocation(OperationCategory::Read),
+    )?;
+
+    assert_eq!(response.response_value["close_state"], "blocked");
+    assert_close_blocker(&response.response_value, "session_watch_unavailable");
+    let blocker = close_blocker_by_code(&response.response_value, "session_watch_unavailable");
+    assert_eq!(blocker["guard_strength"], "managed_guarded");
+    assert_eq!(
+        response.response_value["guard_health"]["guard_strength"],
+        "managed_guarded"
+    );
+    assert_eq!(
+        response.response_value["guard_health"]["pre_tool_blocking_available"],
+        true
+    );
+    assert_eq!(
+        response.response_value["guard_health"]["post_tool_correlation_available"],
+        true
+    );
+    assert_eq!(
+        response.response_value["guard_health"]["managed_distribution_verified"],
+        true
+    );
+    assert_eq!(
+        response.response_value["guard_health"]["bypass_detection_active"],
+        false
+    );
+    Ok(())
+}
+
+#[test]
+fn managed_mode_without_verified_bundle_reports_host_hook_strength() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let unverified_capability = json!({
+        "schema": "volicord-guard-capability-v1",
+        "policy_hash": "sha256:guardedfixture",
+        "guard_profile": "managed_guarded",
+        "managed_source": "org_policy_bundle",
+        "managed_verification_status": "unverified",
+        "host_capabilities": {
+            "user_prompt_submit_hook": true
+        },
+        "required_guard_phases": [
+            "session_start_hook",
+            "pre_tool_hook",
+            "post_tool_hook",
+            "user_prompt_submit_hook",
+            "stop_hook"
+        ],
+        "missing_required_hooks": [],
+        "prompt_capture": true
+    })
+    .to_string();
+    record_guard_installation(
+        &harness,
+        "managed_unverified",
+        "managed",
+        "active",
+        &unverified_capability,
+    )?;
+    let (task_id, _, _) = create_close_ready_task(&harness, "managed_unverified")?;
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_check_managed_unverified",
+            idempotency_key: None,
+            dry_run: false,
+            expected_state_version: None,
+            task_id: &task_id,
+            intent: CloseIntent::Check,
+            close_reason: None,
+            superseding_task_id: None,
+        }),
+        invocation(OperationCategory::Read),
+    )?;
+
+    assert_eq!(response.response_value["close_state"], "blocked");
+    assert_close_blocker(&response.response_value, "session_watch_unavailable");
+    let blocker = close_blocker_by_code(&response.response_value, "session_watch_unavailable");
+    assert_eq!(blocker["guard_strength"], "host_hook_guarded");
+    assert_eq!(
+        response.response_value["guard_health"]["guard_strength"],
+        "host_hook_guarded"
+    );
+    assert_eq!(
+        response.response_value["guard_health"]["managed_distribution_verified"],
+        false
     );
     Ok(())
 }
@@ -12521,6 +12709,22 @@ fn guarded_close_blocks_configured_guard_before_observation() -> Result<(), Box<
         "configured"
     );
     assert_eq!(
+        status.response_value["guard_health"]["guard_strength"],
+        "authority_record_only"
+    );
+    assert_eq!(
+        status.response_value["guard_health"]["pre_tool_blocking_available"],
+        false
+    );
+    assert_eq!(
+        status.response_value["guard_health"]["post_tool_correlation_available"],
+        false
+    );
+    assert_eq!(
+        status.response_value["guard_health"]["bypass_detection_active"],
+        false
+    );
+    assert_eq!(
         status.response_value["guard_health"]["guard_hook_observed"],
         false
     );
@@ -12554,6 +12758,8 @@ fn guarded_close_blocks_configured_guard_before_observation() -> Result<(), Box<
 
     assert_eq!(response.response_value["close_state"], "blocked");
     assert_close_blocker(&response.response_value, "guard_not_observed");
+    let blocker = close_blocker_by_code(&response.response_value, "guard_not_observed");
+    assert_eq!(blocker["guard_strength"], "authority_record_only");
     assert_close_blocker_resolution(&response.response_value, "guard_not_observed", false, true);
     assert_eq!(response.response_value["base"]["effect_kind"], "no_effect");
     assert_eq!(harness.counts()?, before);
@@ -12738,6 +12944,16 @@ fn guarded_degraded_installation_with_valid_event_still_blocks_missing_required_
         response.response_value["guard_health"]["missing_required_hook_phases"],
         json!(["pre_tool_hook"])
     );
+    assert_eq!(
+        response.response_value["guard_health"]["guard_strength"],
+        "authority_record_only"
+    );
+    assert_eq!(
+        response.response_value["guard_health"]["pre_tool_blocking_available"],
+        false
+    );
+    let blocker = close_blocker_by_code(&response.response_value, "guard_required_hooks_missing");
+    assert_eq!(blocker["guard_strength"], "authority_record_only");
     Ok(())
 }
 
@@ -12832,6 +13048,10 @@ fn guarded_partial_required_phase_configuration_with_event_still_blocks_missing_
     assert_eq!(missing.len(), 4);
     assert!(missing.iter().any(|phase| phase == "pre_tool_hook"));
     assert!(missing.iter().all(|phase| phase != "session_start_hook"));
+    assert_eq!(
+        response.response_value["guard_health"]["guard_strength"],
+        "authority_record_only"
+    );
     Ok(())
 }
 
@@ -13982,6 +14202,22 @@ fn mcp_only_close_does_not_receive_guarded_unrecorded_change_blocker() -> Result
         "mcp_only"
     );
     assert_eq!(
+        response.response_value["guard_health"]["guard_strength"],
+        "authority_record_only"
+    );
+    assert_eq!(
+        response.response_value["guard_health"]["pre_tool_blocking_available"],
+        false
+    );
+    assert_eq!(
+        response.response_value["guard_health"]["post_tool_correlation_available"],
+        false
+    );
+    assert_eq!(
+        response.response_value["guard_health"]["bypass_detection_active"],
+        false
+    );
+    assert_eq!(
         response.response_value["guard_health"]["guard_installation_status"],
         "configured"
     );
@@ -14034,9 +14270,27 @@ fn mcp_only_watcher_detects_bypass_file_changes() -> Result<(), Box<dyn Error>> 
         "active"
     );
     assert_eq!(
+        response.response_value["guard_health"]["guard_strength"],
+        "detective_watch"
+    );
+    assert_eq!(
+        response.response_value["guard_health"]["pre_tool_blocking_available"],
+        false
+    );
+    assert_eq!(
+        response.response_value["guard_health"]["post_tool_correlation_available"],
+        false
+    );
+    assert_eq!(
+        response.response_value["guard_health"]["bypass_detection_active"],
+        true
+    );
+    assert_eq!(
         response.response_value["guard_health"]["unresolved_unrecorded_change_count"],
         1
     );
+    let blocker = close_blocker_by_code(&response.response_value, "unresolved_unrecorded_changes");
+    assert_eq!(blocker["guard_strength"], "detective_watch");
     let changes = unresolved_changes_for_connection(&harness)?;
     assert_eq!(changes.len(), 1);
     let detection: Value = serde_json::from_str(&changes[0].detection_json)?;

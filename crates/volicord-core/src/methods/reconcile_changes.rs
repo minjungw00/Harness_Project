@@ -931,6 +931,7 @@ fn adjusted_guard_health(
     .map_err(PlanError::Core)?;
     let mut guard_health = close_task::guard_health_summary_from_record(record)?;
     if let Some(summary) = guard_health.as_mut() {
+        summary.local_web_consent_available = verified_invocation.local_web_consent_available;
         session_watch::apply_session_watch_status(store, verified_invocation, summary)?;
         let resolved_for_connection = planned_resolutions
             .iter()
@@ -939,6 +940,7 @@ fn adjusted_guard_health(
         summary.unresolved_unrecorded_change_count = summary
             .unresolved_unrecorded_change_count
             .saturating_sub(resolved_for_connection);
+        close_task::refresh_guard_strength(summary);
     }
     Ok(guard_health)
 }

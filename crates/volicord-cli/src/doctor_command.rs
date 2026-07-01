@@ -16,7 +16,7 @@ use volicord_store::{
     },
     runtime_home::{resolve_runtime_home, RuntimeHomeResolutionError},
 };
-use volicord_types::{GuardInstallationStatus, GuardMode};
+use volicord_types::{GuardInstallationStatus, GuardMode, GuardStrength};
 
 use crate::{
     setup_command::{path_text, CommandOutcome, CommandStatus},
@@ -1526,7 +1526,7 @@ fn render_doctor_output(
         }
         OutputFormat::Text => {
             let mut text = format!(
-                "Volicord doctor {}\nstatus_meaning: {}\nruntime_home_state: {}\nruntime_home: {}\ninstallation_profile_state: {}\ncommand_state: {}\nproject_registration_state: {}\nconnection_state: {}\nmcp_config_state: {}\nguard_installation_state: {}\nguard_configuration_state: {}\nguard_observation_state: {}\nguard_effective_state: {}\nguard_profile_state: {}\nmanaged_source_state: {}\nmanaged_bundle_hash: {}\nmanaged_verification_state: {}\nguard_files_state: {}\nagents_block_state: {}\nvolicord_policy_file_state: {}\nrule_instruction_config_state: {}\nhook_config_state: {}\nrequired_guard_phases_state: {}\nrequired_guard_phases_missing: {}\nguard_hook_observed: {}\nguard_status_state: {}\nprompt_capture_state: {}\nprompt_capture_health: {}\nhost_reload_required: {}\n",
+                "Volicord doctor {}\nstatus_meaning: {}\nruntime_home_state: {}\nruntime_home: {}\ninstallation_profile_state: {}\ncommand_state: {}\nproject_registration_state: {}\nconnection_state: {}\nmcp_config_state: {}\nguard_installation_state: {}\nguard_strength: {}\nguard_capabilities: {}\nguard_configuration_state: {}\nguard_observation_state: {}\nguard_effective_state: {}\nguard_profile_state: {}\nmanaged_source_state: {}\nmanaged_bundle_hash: {}\nmanaged_verification_state: {}\nguard_files_state: {}\nagents_block_state: {}\nvolicord_policy_file_state: {}\nrule_instruction_config_state: {}\nhook_config_state: {}\nrequired_guard_phases_state: {}\nrequired_guard_phases_missing: {}\nguard_hook_observed: {}\nguard_status_state: {}\nprompt_capture_state: {}\nprompt_capture_health: {}\nhost_reload_required: {}\n",
                 status.as_str(),
                 doctor_status_meaning(status, checks),
                 doctor_runtime_home_state(runtime_home, checks),
@@ -1537,6 +1537,8 @@ fn render_doctor_output(
                 doctor_count_state(checks, "connections", "stored"),
                 doctor_mcp_config_state(checks),
                 doctor_count_state(checks, "guard_installations", "stored"),
+                doctor_guard_strength(checks),
+                doctor_guard_capabilities_text(checks),
                 doctor_check_state(checks, "guard_required_hooks_supported"),
                 doctor_check_state(checks, "guard_hook_observed"),
                 doctor_check_state(checks, "guard_status_active"),
@@ -1576,6 +1578,13 @@ fn doctor_states_json(
         "connection": doctor_count_state(checks, "connections", "stored"),
         "mcp_config": doctor_mcp_config_state(checks),
         "guard_installation": doctor_count_state(checks, "guard_installations", "stored"),
+        "guard_strength": doctor_guard_strength(checks),
+        "pre_tool_blocking_available": doctor_host_hook_guard_available(checks),
+        "post_tool_correlation_available": doctor_host_hook_guard_available(checks),
+        "bypass_detection_active": false,
+        "prompt_capture_available": doctor_prompt_capture_available(checks),
+        "local_web_consent_available": false,
+        "managed_distribution_verified": doctor_managed_distribution_verified(checks),
         "guard_configuration": doctor_check_state(checks, "guard_required_hooks_supported"),
         "guard_observation": doctor_check_state(checks, "guard_hook_observed"),
         "guard_effective": doctor_check_state(checks, "guard_status_active"),
@@ -1751,6 +1760,52 @@ fn doctor_prompt_capture_status(checks: &[DiagnosticCheck]) -> String {
         .and_then(Value::as_str)
         .map(str::to_owned)
         .unwrap_or_else(|| "not_checked".to_owned())
+}
+
+fn doctor_guard_strength(checks: &[DiagnosticCheck]) -> &'static str {
+    if doctor_managed_distribution_verified(checks) && doctor_host_hook_guard_available(checks) {
+        GuardStrength::ManagedGuarded.as_str()
+    } else if doctor_host_hook_guard_available(checks) {
+        GuardStrength::HostHookGuarded.as_str()
+    } else {
+        GuardStrength::AuthorityRecordOnly.as_str()
+    }
+}
+
+fn doctor_host_hook_guard_available(checks: &[DiagnosticCheck]) -> bool {
+    matches!(
+        doctor_guard_metadata_state(checks, "guard_profile").as_str(),
+        "host_hook_guarded" | "managed_guarded"
+    ) && doctor_check_state(checks, "guard_status_active") == "ready"
+        && doctor_required_guard_phases_state(checks) == "configured"
+}
+
+fn doctor_managed_distribution_verified(checks: &[DiagnosticCheck]) -> bool {
+    doctor_guard_metadata_state(checks, "guard_profile") == GuardStrength::ManagedGuarded.as_str()
+        && doctor_guard_metadata_state(checks, "managed_verification_status") == "verified"
+        && doctor_guard_bundle_hash_value(checks)
+            .as_str()
+            .is_some_and(|value| !value.trim().is_empty())
+}
+
+fn doctor_prompt_capture_available(checks: &[DiagnosticCheck]) -> bool {
+    matches!(
+        doctor_prompt_capture_status(checks).as_str(),
+        "available" | "configured_unobserved"
+    )
+}
+
+fn doctor_guard_capabilities_text(checks: &[DiagnosticCheck]) -> String {
+    let host_hook_available = doctor_host_hook_guard_available(checks);
+    format!(
+        "pre_tool_blocking={}, post_tool_correlation={}, bypass_detection={}, prompt_capture={}, local_web_consent={}, managed_distribution_verified={}",
+        yes_no(host_hook_available),
+        yes_no(host_hook_available),
+        yes_no(false),
+        yes_no(doctor_prompt_capture_available(checks)),
+        yes_no(false),
+        yes_no(doctor_managed_distribution_verified(checks)),
+    )
 }
 
 fn doctor_count_state(checks: &[DiagnosticCheck], key: &str, suffix: &str) -> String {

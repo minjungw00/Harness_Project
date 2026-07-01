@@ -360,6 +360,26 @@ configuration bundle, or managed policy layer. A host that lacks such a verified
 contract must report managed initialization as unsupported instead of recording
 ordinary project-local guarded files as managed mode.
 
+`GuardHealthSummary.guard_strength` uses:
+
+```text
+authority_record_only
+detective_watch
+host_hook_guarded
+managed_guarded
+```
+
+`authority_record_only` means Volicord can record authority state but no active
+session watcher or active full host hook guard is available for the selected
+view. `detective_watch` means a session watcher is active and can detect
+bypass Product Repository changes, but it cannot pre-block writes.
+`host_hook_guarded` means the selected project-local guarded host hooks are
+configured and observed for the required lifecycle phases. `managed_guarded`
+means the host-hook guarded condition is met and the selected managed
+distribution metadata is verified. These labels do not prove product
+correctness, review completion, test sufficiency, OS enforcement, sandboxing,
+security isolation, final acceptance, or residual-risk acceptance.
+
 `GuardHealthSummary.guard_installation_status` uses:
 
 ```text

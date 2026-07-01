@@ -107,11 +107,15 @@ Owner links:
 ```yaml
 GuardHealthSummary:
   guard_mode: string
+  guard_strength: string
   guard_installation_id: string | null
   guard_installation_status: string
   guard_configuration_status: string
   guard_observation_status: string
   effective_guard_status: string
+  pre_tool_blocking_available: boolean
+  post_tool_correlation_available: boolean
+  bypass_detection_active: boolean
   guard_hook_observed: boolean
   last_guard_observed_at: string | null
   last_guard_event_at: string | null
@@ -125,6 +129,8 @@ GuardHealthSummary:
   missing_required_hook_phases: string[]
   prompt_capture_status: string
   prompt_capture_available: boolean
+  local_web_consent_available: boolean
+  managed_distribution_verified: boolean
   mcp_connection_healthy: boolean
   mcp_connection_status: string | null
   session_watch_status: string
@@ -136,8 +142,10 @@ GuardHealthSummary:
 
 Meaning:
 - `guard_mode` and `guard_installation_status` are controlled value strings.
+- `guard_strength` is the derived guard-strength label for the selected connection or session. It reports the strongest currently supported guard path from recorded mode, hook health, runtime observation health, session watcher status, prompt-capture availability, local web consent availability, and managed-distribution verification.
 - `guard_installation_id`, when non-null, is an opaque guard-installation identifier.
 - `guard_configuration_status`, `guard_observation_status`, and `effective_guard_status` separate file/config health, runtime hook observation, and the effective guarded close-readiness status.
+- `pre_tool_blocking_available`, `post_tool_correlation_available`, `bypass_detection_active`, `prompt_capture_available`, `local_web_consent_available`, and `managed_distribution_verified` expose the capability facts behind the label. A setup diagnostic that cannot observe a runtime-only capability reports that capability as false.
 - `guard_hook_observed` reports whether a current matching host guard hook observation is recorded for the selected guard installation.
 - `last_guard_observed_at` is the latest stored guard-installation observation timestamp, or `null` when no observation is recorded.
 - `last_guard_event_at` is the latest guard-event timestamp available to the projection, or `null` when no guard event is available.
@@ -145,6 +153,8 @@ Meaning:
 - `required_hook_phases` and `missing_required_hook_phases` report required guard hook configuration completeness. A required phase is missing when it is absent from `required_hook_phases` or listed in `missing_required_hook_phases`. Missing required phases keep effective guard health non-active even when a valid hook event has been observed.
 - `prompt_capture_status` reports the machine-readable prompt-capture availability state for the selected connection. `prompt_capture_available=true` only when that state allows verification-code chat commands; it does not mean raw prompt text is included.
 - `prompt_capture_available` reports whether prompt-capture verification-code chat commands may be shown or recorded for the selected connection. It does not include prompt text.
+- `local_web_consent_available` reports whether the current adapter invocation can offer the loopback local web consent fallback for User Channel recovery.
+- `managed_distribution_verified` reports whether managed mode is backed by verified managed-distribution metadata. It is false for ordinary project-local guarded hook files.
 - `mcp_connection_healthy` and `mcp_connection_status` summarize the tracked Agent Connection verification state when that state is available.
 - `session_watch_status` reports whether the session-level Product Repository watcher is `disabled`, `active`, `degraded`, or `unavailable` for the selected connection or session.
 - `last_session_watch_checked_at` is the latest watcher baseline status update timestamp, or `null` when no session-watch baseline is available.
@@ -153,13 +163,14 @@ Meaning:
 - `missing_or_stale_write_readiness` reports whether guard events detected missing or stale write readiness.
 
 Does not imply:
+- `guard_strength` is not proof of correctness, review completion, test sufficiency, OS-level enforcement, or write prevention.
 - `GuardHealthSummary` is not evidence of product correctness, test sufficiency, OS enforcement, sandboxing, security isolation, or final acceptance.
 - An active guard summary does not replace evidence, artifact integrity, user-owned judgment, `Write Check`, final acceptance, or residual-risk acceptance requirements.
 - Session watch status does not mean Volicord prevented a write, identified the actor who changed a file, stored file contents, or provided OS-level enforcement.
 - `mcp_only` mode remains cooperative except that unresolved watcher-created unrecorded-change findings block close while an active session watch is selected.
 
 Owner links:
-- `guard_mode`, `guard_installation_status`, `guard_configuration_status`, `guard_observation_status`, `effective_guard_status`, `prompt_capture_status`, and `session_watch_status` values: [state and blocker values](schema-value-sets.md#state-and-blocker-values)
+- `guard_mode`, `guard_strength`, `guard_installation_status`, `guard_configuration_status`, `guard_observation_status`, `effective_guard_status`, `prompt_capture_status`, and `session_watch_status` values: [state and blocker values](schema-value-sets.md#state-and-blocker-values)
 - Close-readiness guard blockers and method-local codes: [`volicord.close_task`](method-close-task.md)
 - Agent Connection meaning: [Agent Connection](../agent-connection.md)
 
@@ -587,6 +598,7 @@ CloseReadinessBlocker:
   category: string
   code: string
   message: string
+  guard_strength: string | null
   can_resolve_in_chat: boolean
   terminal_action_required: boolean
   related_refs: StateRecordRef[]
@@ -617,6 +629,7 @@ Meaning:
 - `CloseReadinessBlocker` is a data shape for close-readiness findings.
 - `CloseReadinessBlocker.category` is a controlled value string.
 - `CloseReadinessBlocker.code` is an owner-defined blocker code. It is not an exhaustive global public enum unless the blocker or method owner publishes a narrower local list.
+- `CloseReadinessBlocker.guard_strength` may be present on guard-derived connection-capability blockers to report the selected guard-health label at the time the blocker was computed. It is absent for blockers that do not derive from guard health.
 - `can_resolve_in_chat` reports whether the blocker can be resolved through a chat-mediated user path when the method owner knows that path.
 - `terminal_action_required` reports whether the next action requires a terminal, host, filesystem, or setup action outside chat.
 - `CloseReadinessBlocker.message`, `ValidatorResult.message`, and `GuaranteeDisplay.basis` are free-form display strings.
@@ -646,7 +659,7 @@ Owner links:
 - Judgment compatibility and accepted-risk input: [API Judgment Schemas](schema-judgment.md)
 - Response branch behavior, close-readiness evaluation order, and committed blocked outcomes: [`volicord.close_task`](method-close-task.md)
 - Close-readiness blocker/API response routing semantics: [API blocker routing](blocker-routing.md)
-- Supported `CloseReadinessBlocker.category`, `ValidatorResult.status`, `ValidatorResult.severity`, and `GuaranteeDisplay.level` values: [API Value Sets](schema-value-sets.md#state-and-blocker-values)
+- Supported `CloseReadinessBlocker.category`, `CloseReadinessBlocker.guard_strength`, `ValidatorResult.status`, `ValidatorResult.severity`, and `GuaranteeDisplay.level` values: [API Value Sets](schema-value-sets.md#state-and-blocker-values)
 - Security guarantee meaning: [Security](../security.md)
 
 ## Related owners

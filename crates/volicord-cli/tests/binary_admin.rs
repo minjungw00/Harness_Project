@@ -705,6 +705,12 @@ fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Resul
     assert_eq!(value["states"]["project_registration"], "registered");
     assert_eq!(value["states"]["mcp_config"], "match");
     assert_eq!(value["states"]["guard_installation"], "reload_required");
+    assert_eq!(value["states"]["guard_strength"], "authority_record_only");
+    assert_eq!(value["states"]["pre_tool_blocking_available"], false);
+    assert_eq!(value["states"]["post_tool_correlation_available"], false);
+    assert_eq!(value["states"]["bypass_detection_active"], false);
+    assert_eq!(value["states"]["local_web_consent_available"], false);
+    assert_eq!(value["states"]["managed_distribution_verified"], false);
     assert_eq!(value["states"]["guard_degraded_allowed"], false);
     assert_eq!(value["degraded"]["allowed"], false);
     assert_eq!(value["states"]["agents_managed_block"], "updated");
@@ -756,6 +762,10 @@ fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Resul
     assert!(init_text.contains("connection_state: action_required"));
     assert!(init_text.contains("mcp_config_state: match"));
     assert!(init_text.contains("guard_installation_state: configured"));
+    assert!(init_text.contains("guard_strength: authority_record_only"));
+    assert!(init_text.contains("pre_tool_blocking=no"));
+    assert!(init_text.contains("post_tool_correlation=no"));
+    assert!(init_text.contains("managed_distribution_verified=no"));
     assert!(init_text.contains("guard_degraded_allowed: no"));
     assert!(init_text.contains("agents_block_state: unchanged"));
     assert!(init_text.contains("volicord_policy_file_state: unchanged"));
@@ -807,6 +817,18 @@ fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Resul
     );
     assert_eq!(
         status_without_intent_json["states"]["guard_observed"],
+        false
+    );
+    assert_eq!(
+        status_without_intent_json["states"]["guard_strength"],
+        "authority_record_only"
+    );
+    assert_eq!(
+        status_without_intent_json["states"]["pre_tool_blocking_available"],
+        false
+    );
+    assert_eq!(
+        status_without_intent_json["states"]["local_web_consent_available"],
         false
     );
 
@@ -916,6 +938,20 @@ fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Resul
         .expect("doctor should report registry counts");
     assert_eq!(registry_counts["details"]["guard_installations"], 1);
     assert_eq!(doctor_json["states"]["guard_profile"], "host_hook_guarded");
+    assert_eq!(
+        doctor_json["states"]["guard_strength"],
+        "authority_record_only"
+    );
+    assert_eq!(doctor_json["states"]["pre_tool_blocking_available"], false);
+    assert_eq!(
+        doctor_json["states"]["post_tool_correlation_available"],
+        false
+    );
+    assert_eq!(doctor_json["states"]["bypass_detection_active"], false);
+    assert_eq!(
+        doctor_json["states"]["managed_distribution_verified"],
+        false
+    );
     assert_eq!(
         doctor_json["states"]["managed_source"],
         "project_local_host_hooks"

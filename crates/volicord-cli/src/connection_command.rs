@@ -37,7 +37,7 @@ use volicord_store::{
     runtime_home::{resolve_runtime_home, RuntimeHomeResolutionError},
     StoreError,
 };
-use volicord_types::{GuardInstallationStatus, GuardMode, PromptCaptureStatus};
+use volicord_types::{GuardInstallationStatus, GuardMode, GuardStrength, PromptCaptureStatus};
 
 use crate::host_integration::{
     claude_code::{self, ClaudeCodeAdapter, ProductionCommandRunner},
@@ -4581,15 +4581,20 @@ impl GuardOperationalState {
     fn to_json(&self) -> Value {
         json!({
             "mode": &self.mode_state,
+            "guard_strength": self.guard_strength(),
             "profile": &self.guard_profile_state,
             "installation": &self.installation_state,
             "configuration_health": &self.configuration_state,
             "observation_health": &self.observation_state,
             "effective_health": &self.effective_state,
+            "pre_tool_blocking_available": self.pre_tool_blocking_available(),
+            "post_tool_correlation_available": self.post_tool_correlation_available(),
+            "bypass_detection_active": self.bypass_detection_active(),
             "files": &self.files_state,
             "managed_source": &self.managed_source_state,
             "managed_bundle_hash": &self.managed_bundle_hash,
             "managed_verification_status": &self.managed_verification_state,
+            "managed_distribution_verified": self.managed_distribution_verified(),
             "agents_managed_block": &self.agents_block_state,
             "volicord_policy_file": &self.policy_file_state,
             "rule_instruction_config": &self.rule_instruction_state,
@@ -4601,6 +4606,8 @@ impl GuardOperationalState {
             "last_observed_at": &self.last_observed_at,
             "last_guard_event_at": &self.last_guard_event_at,
             "prompt_capture": &self.prompt_capture_state,
+            "prompt_capture_available": self.prompt_capture_available(),
+            "local_web_consent_available": false,
             "missing_files": &self.missing_files,
             "stale_files": &self.stale_files,
             "broken_files": &self.broken_files,
@@ -4611,6 +4618,51 @@ impl GuardOperationalState {
 
     fn guard_observed(&self) -> bool {
         self.hook_observed_state == "observed"
+    }
+
+    fn guard_strength(&self) -> &'static str {
+        if self.managed_distribution_verified() && self.host_hook_guard_available() {
+            GuardStrength::ManagedGuarded.as_str()
+        } else if self.host_hook_guard_available() {
+            GuardStrength::HostHookGuarded.as_str()
+        } else {
+            GuardStrength::AuthorityRecordOnly.as_str()
+        }
+    }
+
+    fn host_hook_guard_available(&self) -> bool {
+        matches!(self.mode_state.as_str(), "guarded" | "managed")
+            && self.effective_state == "active"
+            && self.missing_required_hooks.is_empty()
+    }
+
+    fn pre_tool_blocking_available(&self) -> bool {
+        self.host_hook_guard_available()
+    }
+
+    fn post_tool_correlation_available(&self) -> bool {
+        self.host_hook_guard_available()
+    }
+
+    fn bypass_detection_active(&self) -> bool {
+        false
+    }
+
+    fn prompt_capture_available(&self) -> bool {
+        matches!(
+            self.prompt_capture_state.as_str(),
+            "configured" | "observed" | "active"
+        )
+    }
+
+    fn managed_distribution_verified(&self) -> bool {
+        self.mode_state == GuardMode::Managed.as_str()
+            && self.guard_profile_state == GuardStrength::ManagedGuarded.as_str()
+            && self.managed_verification_state == "verified"
+            && self
+                .managed_bundle_hash
+                .as_deref()
+                .is_some_and(|value| !value.trim().is_empty())
     }
 
     fn required_guard_phases_state(&self) -> &'static str {
@@ -4829,7 +4881,7 @@ fn render_simplified_connection_output(
     match data.format {
         OutputFormat::Text => {
             let mut output = format!(
-                "Agent Connection {}\nruntime_home_state: ready\nruntime_home: {}\nconnection_state: {}\nhost: {}\nintent: {}\nmode: {}\nenabled: {}\nproject_registration_state: {}\nconnected_repositories: {}\nmcp_config_state: {}\nmcp_config: {}\nguard_mode: {}\nguard_profile: {}\nmanaged_source: {}\nmanaged_bundle_hash: {}\nmanaged_verification_status: {}\nguard_installation_state: {}\nguard_configuration_state: {}\nguard_observation_state: {}\nguard_effective_state: {}\nguard_files_state: {}\nagents_block_state: {}\nvolicord_policy_file_state: {}\nrule_instruction_config_state: {}\nhook_config_state: {}\nrequired_guard_phases_state: {}\nrequired_guard_phases_missing: {}\nguard_hook_observed: {}\nguard_observed: {}\nguard_degraded_allowed: {}\nlast_guard_event: {}\nprompt_capture_state: {}\nhost_reload_required: {}\nguard_blockers: {}\n",
+                "Agent Connection {}\nruntime_home_state: ready\nruntime_home: {}\nconnection_state: {}\nhost: {}\nintent: {}\nmode: {}\nenabled: {}\nproject_registration_state: {}\nconnected_repositories: {}\nmcp_config_state: {}\nmcp_config: {}\nguard_mode: {}\nguard_strength: {}\nguard_capabilities: {}\nguard_profile: {}\nmanaged_source: {}\nmanaged_bundle_hash: {}\nmanaged_verification_status: {}\nguard_installation_state: {}\nguard_configuration_state: {}\nguard_observation_state: {}\nguard_effective_state: {}\nguard_files_state: {}\nagents_block_state: {}\nvolicord_policy_file_state: {}\nrule_instruction_config_state: {}\nhook_config_state: {}\nrequired_guard_phases_state: {}\nrequired_guard_phases_missing: {}\nguard_hook_observed: {}\nguard_observed: {}\nguard_degraded_allowed: {}\nlast_guard_event: {}\nprompt_capture_state: {}\nhost_reload_required: {}\nguard_blockers: {}\n",
                 data.action,
                 data.runtime_home.display(),
                 data.status.as_str(),
@@ -4843,6 +4895,8 @@ fn render_simplified_connection_output(
                 target
                 ,
                 data.guard_state.mode_state,
+                data.guard_state.guard_strength(),
+                guard_capabilities_text(&data.guard_state),
                 data.guard_state.guard_profile_state,
                 data.guard_state.managed_source_state,
                 optional_text(data.guard_state.managed_bundle_hash.as_deref()),
@@ -4920,7 +4974,7 @@ fn render_simplified_plan_output(
     match data.format {
         OutputFormat::Text => {
             let mut output = format!(
-                "Agent Connection {} {}\nruntime_home_state: ready\nruntime_home: {}\nconnection_state: {}\nhost: {}\nintent: {}\nmode: {}\nenabled: {}\nproject_registration_state: {}\nconnected_repositories: {}\nmcp_config_state: planned_{}\nmcp_config: {}\nguard_mode: {}\nguard_profile: {}\nmanaged_source: {}\nmanaged_bundle_hash: {}\nmanaged_verification_status: {}\nguard_installation_state: {}\nguard_configuration_state: {}\nguard_observation_state: {}\nguard_effective_state: {}\nguard_files_state: {}\nagents_block_state: {}\nvolicord_policy_file_state: {}\nrule_instruction_config_state: {}\nhook_config_state: {}\nrequired_guard_phases_state: {}\nrequired_guard_phases_missing: {}\nguard_hook_observed: {}\nguard_observed: {}\nguard_degraded_allowed: {}\nlast_guard_event: {}\nprompt_capture_state: {}\nhost_reload_required: {}\nguard_blockers: {}\nplanned_change: {}\n",
+                "Agent Connection {} {}\nruntime_home_state: ready\nruntime_home: {}\nconnection_state: {}\nhost: {}\nintent: {}\nmode: {}\nenabled: {}\nproject_registration_state: {}\nconnected_repositories: {}\nmcp_config_state: planned_{}\nmcp_config: {}\nguard_mode: {}\nguard_strength: {}\nguard_capabilities: {}\nguard_profile: {}\nmanaged_source: {}\nmanaged_bundle_hash: {}\nmanaged_verification_status: {}\nguard_installation_state: {}\nguard_configuration_state: {}\nguard_observation_state: {}\nguard_effective_state: {}\nguard_files_state: {}\nagents_block_state: {}\nvolicord_policy_file_state: {}\nrule_instruction_config_state: {}\nhook_config_state: {}\nrequired_guard_phases_state: {}\nrequired_guard_phases_missing: {}\nguard_hook_observed: {}\nguard_observed: {}\nguard_degraded_allowed: {}\nlast_guard_event: {}\nprompt_capture_state: {}\nhost_reload_required: {}\nguard_blockers: {}\nplanned_change: {}\n",
                 data.action,
                 data.status.as_str(),
                 data.runtime_home.display(),
@@ -4936,6 +4990,8 @@ fn render_simplified_plan_output(
                 planned_change,
                 target,
                 guard_state.mode_state,
+                guard_state.guard_strength(),
+                guard_capabilities_text(&guard_state),
                 guard_state.guard_profile_state,
                 guard_state.managed_source_state,
                 optional_text(guard_state.managed_bundle_hash.as_deref()),
@@ -5052,7 +5108,7 @@ fn render_init_output(data: InitOutput<'_>) -> Result<String, ConnectionCommandE
     match data.format {
         OutputFormat::Text => {
             let mut output = format!(
-                "Volicord init {}\nruntime_home_state: ready\nruntime_home: {}\nproject_registration_state: {}\nrepo: {}\nconnection_state: {}\nhost: {}\nmode: {}\nconnection_id: {}\nmcp_config_state: {}\nmcp_config: {}\nplanned_change: {}\nprofile: {}\nguard_mode: {}\nguard_profile: {}\nmanaged_source: {}\nmanaged_bundle_hash: {}\nmanaged_verification_status: {}\nguard_installation_state: {}\nguard_configuration_state: {}\nguard_observation_state: {}\nguard_effective_state: {}\nguard_files_state: {}\nagents_block_state: {}\nvolicord_policy_file_state: {}\nrule_instruction_config_state: {}\nhook_config_state: {}\nrequired_guard_phases_state: {}\nrequired_guard_phases_missing: {}\nguard_hook_observed: {}\nguard_observed: {}\nguard_degraded_allowed: {}\nlast_guard_event: {}\nprompt_capture_state: {}\nhost_reload_required: {}\nguard_blockers: {}\n",
+                "Volicord init {}\nruntime_home_state: ready\nruntime_home: {}\nproject_registration_state: {}\nrepo: {}\nconnection_state: {}\nhost: {}\nmode: {}\nconnection_id: {}\nmcp_config_state: {}\nmcp_config: {}\nplanned_change: {}\nprofile: {}\nguard_mode: {}\nguard_strength: {}\nguard_capabilities: {}\nguard_profile: {}\nmanaged_source: {}\nmanaged_bundle_hash: {}\nmanaged_verification_status: {}\nguard_installation_state: {}\nguard_configuration_state: {}\nguard_observation_state: {}\nguard_effective_state: {}\nguard_files_state: {}\nagents_block_state: {}\nvolicord_policy_file_state: {}\nrule_instruction_config_state: {}\nhook_config_state: {}\nrequired_guard_phases_state: {}\nrequired_guard_phases_missing: {}\nguard_hook_observed: {}\nguard_observed: {}\nguard_degraded_allowed: {}\nlast_guard_event: {}\nprompt_capture_state: {}\nhost_reload_required: {}\nguard_blockers: {}\n",
                 data.status.as_str(),
                 data.runtime_home.display(),
                 project_state,
@@ -5066,6 +5122,8 @@ fn render_init_output(data: InitOutput<'_>) -> Result<String, ConnectionCommandE
                 planned_change,
                 data.profile_action,
                 guard_state.mode_state,
+                guard_state.guard_strength(),
+                guard_capabilities_text(&guard_state),
                 guard_state.guard_profile_state,
                 guard_state.managed_source_state,
                 optional_text(guard_state.managed_bundle_hash.as_deref()),
@@ -5558,10 +5616,17 @@ fn connection_states_json(
         "project_registration": project_registration,
         "mcp_config": mcp_config,
         "guard_mode": &guard_state.mode_state,
+        "guard_strength": guard_state.guard_strength(),
         "guard_profile": &guard_state.guard_profile_state,
         "managed_source": &guard_state.managed_source_state,
         "managed_bundle_hash": &guard_state.managed_bundle_hash,
         "managed_verification_status": &guard_state.managed_verification_state,
+        "pre_tool_blocking_available": guard_state.pre_tool_blocking_available(),
+        "post_tool_correlation_available": guard_state.post_tool_correlation_available(),
+        "bypass_detection_active": guard_state.bypass_detection_active(),
+        "prompt_capture_available": guard_state.prompt_capture_available(),
+        "local_web_consent_available": false,
+        "managed_distribution_verified": guard_state.managed_distribution_verified(),
         "guard_installation": &guard_state.installation_state,
         "guard_configuration": &guard_state.configuration_state,
         "guard_observation": &guard_state.observation_state,
@@ -5883,6 +5948,18 @@ fn yes_no(value: bool) -> &'static str {
 
 fn optional_text(value: Option<&str>) -> &str {
     value.unwrap_or("none")
+}
+
+fn guard_capabilities_text(guard_state: &GuardOperationalState) -> String {
+    format!(
+        "pre_tool_blocking={}, post_tool_correlation={}, bypass_detection={}, prompt_capture={}, local_web_consent={}, managed_distribution_verified={}",
+        yes_no(guard_state.pre_tool_blocking_available()),
+        yes_no(guard_state.post_tool_correlation_available()),
+        yes_no(guard_state.bypass_detection_active()),
+        yes_no(guard_state.prompt_capture_available()),
+        yes_no(false),
+        yes_no(guard_state.managed_distribution_verified()),
+    )
 }
 
 fn comma_or_none(values: &[String]) -> String {
@@ -7901,6 +7978,14 @@ mod tests {
         assert_eq!(guard_state.hook_observed_state, "observed");
         assert_eq!(guard_state.effective_state, "active");
         assert_eq!(guard_state.guard_profile_state, "host_hook_guarded");
+        assert_eq!(
+            guard_state.guard_strength(),
+            GuardStrength::HostHookGuarded.as_str()
+        );
+        assert!(guard_state.pre_tool_blocking_available());
+        assert!(guard_state.post_tool_correlation_available());
+        assert!(!guard_state.bypass_detection_active());
+        assert!(!guard_state.managed_distribution_verified());
         assert_eq!(guard_state.managed_source_state, "project_local_host_hooks");
         assert_eq!(guard_state.managed_bundle_hash, None);
         assert_eq!(guard_state.managed_verification_state, "not_applicable");
@@ -7961,6 +8046,7 @@ mod tests {
                 guard_mode: GuardMode::Managed.as_str().to_owned(),
                 host_capability_json: serde_json::to_string(&json!({
                     "schema": "volicord-guard-capability-v1",
+                    "policy_hash": "sha256:managedpolicy",
                     "guard_profile": "managed_guarded",
                     "managed_source": "org_policy_bundle",
                     "managed_bundle_hash": "sha256:managedtest",
@@ -7993,13 +8079,44 @@ mod tests {
 
         assert_eq!(guard_state.mode_state, "managed");
         assert_eq!(guard_state.guard_profile_state, "managed_guarded");
+        assert_eq!(
+            guard_state.guard_strength(),
+            GuardStrength::AuthorityRecordOnly.as_str()
+        );
         assert_eq!(guard_state.managed_source_state, "org_policy_bundle");
         assert_eq!(
             guard_state.managed_bundle_hash,
             Some("sha256:managedtest".to_owned())
         );
         assert_eq!(guard_state.managed_verification_state, "verified");
+        assert!(guard_state.managed_distribution_verified());
+        assert!(!guard_state.pre_tool_blocking_available());
         assert_ne!(guard_state.guard_profile_state, "host_hook_guarded");
+
+        volicord_store::guards::observe_guard_installation(
+            &runtime_home,
+            volicord_store::guards::GuardInstallationObservation {
+                guard_installation_id: "guard_installation_managed".to_owned(),
+                connection_internal_id: "conn_managed".to_owned(),
+                project_id: project.project_id,
+                host_kind: HostKind::Codex.as_str().to_owned(),
+                guard_mode: GuardMode::Managed.as_str().to_owned(),
+                observed_policy_hash: "sha256:managedpolicy".to_owned(),
+                observed_binary_version: Some("test".to_owned()),
+                observed_phase: "session_start".to_owned(),
+                observed_at: "2026-07-01T00:01:00Z".to_owned(),
+            },
+        )?;
+        let projects = list_connection_projects(&runtime_home, "conn_managed")?;
+        let active_guard_state =
+            guard_state_for_connection(&runtime_home, "conn_managed", &projects)?;
+        assert_eq!(
+            active_guard_state.guard_strength(),
+            GuardStrength::ManagedGuarded.as_str()
+        );
+        assert!(active_guard_state.pre_tool_blocking_available());
+        assert!(active_guard_state.post_tool_correlation_available());
+        assert!(active_guard_state.managed_distribution_verified());
         Ok(())
     }
 

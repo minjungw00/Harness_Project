@@ -100,6 +100,7 @@ pub struct InvocationContext {
     pub operation_category: OperationCategory,
     pub invocation_binding_basis: String,
     pub session_id: Option<String>,
+    pub local_web_consent_available: bool,
 }
 
 impl InvocationContext {
@@ -116,6 +117,7 @@ impl InvocationContext {
             operation_category,
             invocation_binding_basis: invocation_binding_basis.into(),
             session_id: None,
+            local_web_consent_available: false,
         }
     }
 
@@ -123,6 +125,12 @@ impl InvocationContext {
     pub fn with_session_id(mut self, session_id: impl Into<String>) -> Self {
         let session_id = session_id.into();
         self.session_id = (!session_id.trim().is_empty()).then_some(session_id);
+        self
+    }
+
+    /// Marks whether this adapter process has a loopback local web consent endpoint.
+    pub fn with_local_web_consent_available(mut self, available: bool) -> Self {
+        self.local_web_consent_available = available;
         self
     }
 }
@@ -136,6 +144,7 @@ pub struct VerifiedInvocationContext {
     pub verification_basis: String,
     pub assurance_level: String,
     pub session_id: Option<String>,
+    pub local_web_consent_available: bool,
 }
 
 /// Internal verified actor-provenance context derived for authority-bearing resolution.
