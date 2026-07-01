@@ -272,7 +272,7 @@ Internal actor shape, not a public API schema:
 ```yaml
 InvocationContext:
   actor_source: local_user | system | agent_connection:<connection_id>
-  operation_category: read | agent_workflow | user_only | admin_local
+  operation_category: read | agent_workflow | user_only | admin_local | local_recovery
   verification_basis: string
   assurance_level: string
 ```

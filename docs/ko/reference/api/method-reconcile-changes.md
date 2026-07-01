@@ -69,11 +69,11 @@ UnrecordedChangeResolutionRequest:
 
 이 메서드는 아래를 요구합니다.
 
-- `operation_category=agent_workflow`인 검증된 호출 맥락
+- Agent Connection 워크플로 호출에는 `operation_category=agent_workflow`, 로컬 사용자 복구 호출에는 `operation_category=local_recovery`인 검증된 호출 맥락
 - `task_id`가 선택한 같은 프로젝트의 호환 `Task`
 - MCP를 통해 호출할 때 workflow를 허용하는 Agent Connection
 
-로컬 관리 복구 명령은 `operation_category=agent_workflow`를 유지하면서 로컬 사용자 행위자 출처로 같은 Core 메서드를 호출할 수 있습니다. 이 CLI 경로는 공개 API 메서드가 아니며 CLI가 사용자 판단을 가장하게 하지 않습니다.
+로컬 관리 복구 명령은 `actor_source=local_user`, `operation_category=local_recovery`로 같은 Core 메서드를 호출할 수 있습니다. 이 CLI 경로는 MCP Agent Connection 경로가 아니며 CLI가 사용자 판단을 가장하게 하지 않습니다. 사용자 소유 수락은 `accepted_by_user`가 찾기를 해결하기 전에 여전히 호환되는 해결된 User Channel 판단을 요구합니다.
 
 ## 상태 버전 동작
 

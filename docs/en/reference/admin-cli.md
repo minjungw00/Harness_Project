@@ -529,7 +529,7 @@ Lifecycle behavior:
 
 `volicord changes reconcile [--repo PATH] [--task active|ID] [--json]` is the local recovery command for unresolved guarded unrecorded Product Repository change findings.
 
-The command resolves the selected project from `--repo PATH` or the current working directory and selects the active Task by default. It calls the public `volicord.reconcile_changes` Core method with local recovery provenance, prints the number of resolved findings, pending user judgments, and remaining unresolved findings, and exits under the normal CLI exit-code model.
+The command resolves the selected project from `--repo PATH` or the current working directory and selects the active Task by default. It calls the public `volicord.reconcile_changes` Core method with `actor_source=local_user` and `operation_category=local_recovery`, prints the number of resolved findings, pending user judgments, and remaining unresolved findings, and exits under the normal CLI exit-code model. Rejected Core responses remain rejected CLI results rather than successful reconciliation summaries.
 
 The command may resolve deterministic findings or create pending user-owned judgments. It does not record a user answer, accept a change on the user's behalf, prove correctness, prove review or test sufficiency, or complete close readiness. When it creates pending judgments, the user records them through the existing `User Channel` paths, then reruns `volicord changes reconcile`.
 

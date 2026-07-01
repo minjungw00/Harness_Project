@@ -299,6 +299,7 @@ pub enum OperationCategory {
     AgentWorkflow,
     UserOnly,
     AdminLocal,
+    LocalRecovery,
 }
 
 impl OperationCategory {
@@ -309,6 +310,7 @@ impl OperationCategory {
             Self::AgentWorkflow => "agent_workflow",
             Self::UserOnly => "user_only",
             Self::AdminLocal => "admin_local",
+            Self::LocalRecovery => "local_recovery",
         }
     }
 }

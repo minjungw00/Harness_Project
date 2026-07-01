@@ -13098,6 +13098,110 @@ fn reconcile_changes_resolves_not_product_change_and_updates_close_blocker(
 }
 
 #[test]
+fn reconcile_changes_accepts_local_recovery_and_persists_replay_category(
+) -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    record_guard_installation(&harness, "reconcile_local", "guarded", "active", "{}")?;
+    let (task_id, _) = create_task_with_change_unit(&harness, "reconcile_local")?;
+    let unrecorded_change_id =
+        insert_guarded_unrecorded_change_with_paths(&harness, &task_id, "reconcile_local", "[]")?;
+
+    let response = harness.service.reconcile_changes(
+        reconcile_changes_request(
+            "req_reconcile_local",
+            "idem_reconcile_local",
+            Some(2),
+            &task_id,
+            Vec::new(),
+        ),
+        invocation(OperationCategory::LocalRecovery),
+    )?;
+
+    assert_eq!(response.response_value["base"]["response_kind"], "result");
+    assert_eq!(
+        response.response_value["resolved_changes"][0]["resolution_basis"],
+        "not_product_change"
+    );
+    assert_eq!(
+        response
+            .verified_invocation
+            .as_ref()
+            .expect("local recovery should verify invocation")
+            .operation_category,
+        OperationCategory::LocalRecovery
+    );
+    assert_eq!(
+        response
+            .verified_invocation
+            .as_ref()
+            .expect("local recovery should verify invocation")
+            .actor_source,
+        ActorSource::LocalUser
+    );
+    assert_eq!(
+        unrecorded_change_row(&harness, PROJECT_ID, &unrecorded_change_id)?.status,
+        "resolved"
+    );
+
+    let store = CoreProjectStore::open(&harness.runtime_home_path, &ProjectId::new(PROJECT_ID))?;
+    let replay = store
+        .tool_invocation(
+            MethodName::ReconcileChanges,
+            &IdempotencyKey::new("idem_reconcile_local"),
+        )?
+        .expect("local recovery commit should persist replay row");
+    assert_eq!(replay.actor_source, LOCAL_USER_ACTOR_SOURCE);
+    assert_eq!(replay.operation_category, "local_recovery");
+    assert_eq!(
+        replay.verification_basis.as_deref(),
+        Some(VERIFICATION_BASIS_TEST_FIXTURE_BINDING)
+    );
+    Ok(())
+}
+
+#[test]
+fn reconcile_changes_local_recovery_reports_no_unresolved_findings_read_only(
+) -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, _) = create_task_with_change_unit(&harness, "reconcile_none")?;
+
+    let response = harness.service.reconcile_changes(
+        reconcile_changes_request(
+            "req_reconcile_none",
+            "idem_reconcile_none",
+            Some(2),
+            &task_id,
+            Vec::new(),
+        ),
+        invocation(OperationCategory::LocalRecovery),
+    )?;
+
+    assert_eq!(response.response_value["base"]["response_kind"], "result");
+    assert_eq!(response.response_value["base"]["effect_kind"], "read_only");
+    assert!(response.response_value["unresolved_changes"]
+        .as_array()
+        .expect("unresolved_changes should be an array")
+        .is_empty());
+    assert!(response.response_value["resolved_changes"]
+        .as_array()
+        .expect("resolved_changes should be an array")
+        .is_empty());
+    assert!(response.response_value["pending_user_judgment_refs"]
+        .as_array()
+        .expect("pending refs should be an array")
+        .is_empty());
+    assert_eq!(
+        response
+            .verified_invocation
+            .as_ref()
+            .expect("local recovery should verify invocation")
+            .actor_source,
+        ActorSource::LocalUser
+    );
+    Ok(())
+}
+
+#[test]
 fn reconcile_changes_creates_and_consumes_user_acceptance_judgment() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     record_guard_installation(&harness, "reconcile_accept", "guarded", "active", "{}")?;
@@ -13186,6 +13290,10 @@ fn reconcile_changes_creates_and_consumes_user_acceptance_judgment() -> Result<(
     let resolution = row_resolution(&row);
     assert_eq!(resolution["resolution_basis"], "accepted_by_user");
     assert_eq!(
+        resolution["capture_basis"],
+        VERIFICATION_BASIS_TEST_FIXTURE_BINDING
+    );
+    assert_eq!(
         resolution["user_judgment_ref"]["record_id"],
         judgment_id.as_str()
     );
@@ -13193,6 +13301,134 @@ fn reconcile_changes_creates_and_consumes_user_acceptance_judgment() -> Result<(
         row.resolved_by_actor_source.as_deref(),
         Some(LOCAL_USER_ACTOR_SOURCE)
     );
+    Ok(())
+}
+
+#[test]
+fn reconcile_changes_local_recovery_consumes_user_acceptance_and_removes_close_blocker(
+) -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    record_guard_installation(
+        &harness,
+        "reconcile_local_accept",
+        "guarded",
+        "active",
+        "{}",
+    )?;
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&harness, "reconcile_local_accept")?;
+    let after_evidence = record_close_evidence(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "reconcile_local_accept",
+        true,
+    )?;
+    let after_final = record_final_acceptance(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_evidence,
+        "reconcile_local_accept",
+    )?;
+    let unrecorded_change_id =
+        insert_guarded_unrecorded_change(&harness, &task_id, "reconcile_local_accept")?;
+
+    let before = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_reconcile_local_accept_before",
+            idempotency_key: None,
+            dry_run: false,
+            expected_state_version: None,
+            task_id: &task_id,
+            intent: CloseIntent::Check,
+            close_reason: None,
+            superseding_task_id: None,
+        }),
+        invocation(OperationCategory::Read),
+    )?;
+    assert_close_blocker(&before.response_value, "unresolved_unrecorded_changes");
+
+    let first = harness.service.reconcile_changes(
+        reconcile_changes_request(
+            "req_reconcile_local_accept_first",
+            "idem_reconcile_local_accept_first",
+            Some(after_final),
+            &task_id,
+            Vec::new(),
+        ),
+        invocation(OperationCategory::LocalRecovery),
+    )?;
+    let judgment_id = first.response_value["pending_user_judgment_refs"][0]["record_id"]
+        .as_str()
+        .expect("pending judgment ref should be present")
+        .to_owned();
+    let after_first = first.response_value["base"]["state_version"]
+        .as_u64()
+        .expect("state_version should be present");
+
+    let recorded = harness.service.record_user_judgment(
+        record_judgment_request(
+            "req_reconcile_local_accept_record",
+            "idem_reconcile_local_accept_record",
+            Some(after_first),
+            &task_id,
+            &judgment_id,
+            JudgmentKind::ProductDecision,
+            answer_payload(JudgmentKind::ProductDecision),
+        ),
+        invocation(OperationCategory::UserOnly),
+    )?;
+    let after_record = recorded.response_value["base"]["state_version"]
+        .as_u64()
+        .expect("state_version should be present");
+
+    let second = harness.service.reconcile_changes(
+        reconcile_changes_request(
+            "req_reconcile_local_accept_second",
+            "idem_reconcile_local_accept_second",
+            Some(after_record),
+            &task_id,
+            Vec::new(),
+        ),
+        invocation(OperationCategory::LocalRecovery),
+    )?;
+
+    assert_eq!(
+        second.response_value["resolved_changes"][0]["resolution_basis"],
+        "accepted_by_user"
+    );
+    assert_eq!(
+        second.response_value["resolved_changes"][0]["resolved_by_actor_source"],
+        LOCAL_USER_ACTOR_SOURCE
+    );
+    let row = unrecorded_change_row(&harness, PROJECT_ID, &unrecorded_change_id)?;
+    assert_eq!(row.status, "resolved");
+    assert_eq!(
+        row.resolved_by_actor_source.as_deref(),
+        Some(LOCAL_USER_ACTOR_SOURCE)
+    );
+    let resolution = row_resolution(&row);
+    assert_eq!(
+        resolution["capture_basis"],
+        VERIFICATION_BASIS_TEST_FIXTURE_BINDING
+    );
+
+    let after = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_reconcile_local_accept_after",
+            idempotency_key: None,
+            dry_run: false,
+            expected_state_version: None,
+            task_id: &task_id,
+            intent: CloseIntent::Check,
+            close_reason: None,
+            superseding_task_id: None,
+        }),
+        invocation(OperationCategory::Read),
+    )?;
+    assert_no_close_blocker(&after.response_value, "unresolved_unrecorded_changes");
     Ok(())
 }
 
@@ -13241,6 +13477,86 @@ fn reconcile_changes_rejects_agent_supplied_system_resolution_basis() -> Result<
     assert_eq!(
         unrecorded_change_row(&harness, PROJECT_ID, &unrecorded_change_id)?.status,
         "unresolved"
+    );
+    Ok(())
+}
+
+#[test]
+fn reconcile_changes_rejects_agent_direct_accepted_by_user_without_judgment(
+) -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    record_guard_installation(
+        &harness,
+        "reconcile_agent_accept",
+        "guarded",
+        "active",
+        "{}",
+    )?;
+    let (task_id, _) = create_task_with_change_unit(&harness, "reconcile_agent_accept")?;
+    let unrecorded_change_id =
+        insert_guarded_unrecorded_change(&harness, &task_id, "reconcile_agent_accept")?;
+
+    let response = harness.service.reconcile_changes(
+        reconcile_changes_request(
+            "req_reconcile_agent_accept",
+            "idem_reconcile_agent_accept",
+            Some(2),
+            &task_id,
+            vec![UnrecordedChangeResolutionRequest {
+                unrecorded_change_id: UnrecordedChangeId::new(unrecorded_change_id.clone()),
+                basis: UnrecordedChangeResolutionBasis::AcceptedByUser,
+                user_judgment_id: Some(UserJudgmentId::new("judgment_missing_accept")).into(),
+            }],
+        ),
+        invocation(OperationCategory::AgentWorkflow),
+    )?;
+
+    assert_eq!(response.response_value["base"]["response_kind"], "result");
+    assert_eq!(
+        response.response_value["rejected_resolution_requests"][0]["code"],
+        "user_judgment_not_accepted"
+    );
+    assert_eq!(
+        response.response_value["unresolved_changes"][0]["unrecorded_change_ref"]["record_id"],
+        unrecorded_change_id
+    );
+    assert_eq!(
+        unrecorded_change_row(&harness, PROJECT_ID, &unrecorded_change_id)?.status,
+        "unresolved"
+    );
+    Ok(())
+}
+
+#[test]
+fn reconcile_changes_rejects_mismatched_invocation_project() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, _) = create_task_with_change_unit(&harness, "reconcile_project_mismatch")?;
+    let other_project_id = register_additional_project(&harness, "project_methods_mismatch")?;
+
+    let response = harness.service.reconcile_changes(
+        reconcile_changes_request(
+            "req_reconcile_project_mismatch",
+            "idem_reconcile_project_mismatch",
+            Some(2),
+            &task_id,
+            Vec::new(),
+        ),
+        InvocationContext::new(
+            ProjectId::new(other_project_id),
+            ActorSource::LocalUser,
+            OperationCategory::LocalRecovery,
+            VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
+        ),
+    )?;
+
+    assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+    assert_eq!(
+        response.response_value["errors"][0]["code"],
+        "INVOCATION_CONTEXT_MISMATCH"
+    );
+    assert_eq!(
+        response.response_value["errors"][0]["details"]["field"],
+        "envelope.project_id"
     );
     Ok(())
 }
@@ -13862,7 +14178,9 @@ fn actor_source_for_operation_category(operation_category: OperationCategory) ->
         OperationCategory::Read | OperationCategory::AgentWorkflow => {
             ActorSource::agent_connection(CONNECTION_ID)
         }
-        OperationCategory::UserOnly | OperationCategory::AdminLocal => ActorSource::LocalUser,
+        OperationCategory::UserOnly
+        | OperationCategory::AdminLocal
+        | OperationCategory::LocalRecovery => ActorSource::LocalUser,
     }
 }
 

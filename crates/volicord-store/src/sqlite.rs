@@ -1252,9 +1252,11 @@ fn validate_tool_invocations_columns(conn: &Connection) -> StoreResult<()> {
 fn validate_tool_invocations_operation_category_constraint(conn: &Connection) -> StoreResult<()> {
     let table_sql = normalized_table_sql(conn, "tool_invocations")?;
     let has_constraint = table_sql
-        .contains("operation_category in ('read', 'agent_workflow', 'user_only', 'admin_local')")
+        .contains(
+            "operation_category in ('read', 'agent_workflow', 'user_only', 'admin_local', 'local_recovery')",
+        )
         || table_sql.contains(
-            "operation_category in('read', 'agent_workflow', 'user_only', 'admin_local')",
+            "operation_category in('read', 'agent_workflow', 'user_only', 'admin_local', 'local_recovery')",
         );
     if has_constraint {
         Ok(())
@@ -1633,7 +1635,7 @@ mod tests {
             &conn,
             PROJECT_STATE_DATABASE_KIND,
             PROJECT_STATE_SCHEMA_VERSION,
-            "project_state_expected_writes_v3"
+            "project_state_local_recovery_v4"
         )?);
         drop(conn);
 

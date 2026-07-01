@@ -1,4 +1,5 @@
 use super::*;
+use volicord_types::OperationCategory;
 
 #[derive(Debug, Clone)]
 struct ReconciliationPlan {
@@ -60,6 +61,8 @@ impl CoreService {
             );
         }
 
+        let policy_operation_category =
+            reconcile_policy_operation_category(invocation.operation_category);
         let prepared = match prepare_or_response(
             self,
             MethodName::ReconcileChanges,
@@ -67,7 +70,7 @@ impl CoreService {
             request_json,
             invocation,
             MethodPolicy::exact(
-                request.operation_category(),
+                policy_operation_category,
                 TaskRequirement::Exact(request.task_id.clone()),
                 ReplayPolicy::Committed,
                 FreshnessPolicy::IfPresent,
@@ -129,6 +132,17 @@ impl CoreService {
                 storage_mutations: plan.storage_mutations,
             },
         )
+    }
+}
+
+fn reconcile_policy_operation_category(
+    invocation_operation_category: OperationCategory,
+) -> OperationCategory {
+    match invocation_operation_category {
+        OperationCategory::AgentWorkflow | OperationCategory::LocalRecovery => {
+            invocation_operation_category
+        }
+        _ => OperationCategory::AgentWorkflow,
     }
 }
 
@@ -677,6 +691,7 @@ fn observed_paths(record: &UnrecordedChangeRecord) -> Result<Vec<String>, ()> {
     Ok(paths)
 }
 
+#[allow(clippy::too_many_arguments)]
 fn plan_reconciliation_judgment(
     service: &CoreService,
     store: &CoreProjectStore,

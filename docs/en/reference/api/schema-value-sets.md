@@ -137,6 +137,7 @@ Method-owned API compatibility checks use exactly one request-level operation ca
 | `agent_workflow` | Agent workflow operation category. A `workflow` Agent Connection can dispatch this category and `read`. |
 | `user_only` | User Channel operation category for authority-bearing user actions. Agent Connections do not dispatch this category. |
 | `admin_local` | Local administrative operation category. Agent Connections do not dispatch this category. |
+| `local_recovery` | Local user recovery operation category for method-owned recovery paths such as `volicord.reconcile_changes`. Agent Connections do not dispatch this category. |
 
 Operation categories are Volicord API compatibility categories, not OS permission classes, filesystem ACLs, sandbox rules, network policy, or secret isolation. Method operation requirements stay with method owner documents routed from [API Methods](methods.md); Agent Connection invocation verification behavior stays with [Agent Connection](../agent-connection.md) and [Security](../security.md).
 

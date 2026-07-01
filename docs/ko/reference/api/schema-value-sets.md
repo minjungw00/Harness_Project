@@ -137,6 +137,7 @@ no_effect
 | `agent_workflow` | 에이전트 워크플로 API operation category입니다. `workflow` Agent Connection은 이 category와 `read`를 실행할 수 있습니다. |
 | `user_only` | 권한을 지니는 사용자 동작을 위한 User Channel operation category입니다. Agent Connection은 이 category를 실행하지 않습니다. |
 | `admin_local` | 로컬 관리 operation category입니다. Agent Connection은 이 category를 실행하지 않습니다. |
+| `local_recovery` | `volicord.reconcile_changes` 같은 메서드 담당 복구 경로를 위한 로컬 사용자 복구 operation category입니다. Agent Connection은 이 category를 실행하지 않습니다. |
 
 Operation category는 Volicord API 호환성 분류이지 OS 권한, 파일시스템 ACL, 샌드박스 규칙, 네트워크 정책, 비밀 격리가 아닙니다. 메서드별 동작 요구사항은 [API 메서드](methods.md)가 안내하는 메서드 담당 문서가 담당하고, Agent Connection 호출 검증 동작은 [Agent Connection](../agent-connection.md)과 [보안](../security.md)이 담당합니다.
 

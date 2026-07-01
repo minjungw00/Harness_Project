@@ -254,7 +254,7 @@ Registry constraints:
 
 Each registered project has one project-local `state.sqlite`. It stores Core state for that project and repeats `project_id` in project-scoped rows so foreign keys and indexes can enforce same-project relationships.
 
-Applying the current migrations produces project-state schema version `3` for storage profile `baseline_sqlite_v3`. The first DDL block is the initial physical project-state schema version `1`; guarded-operation records are schema version `2`, and expected-write correlation records are schema version `3`. Storage profile and migration boundary behavior are owned by [Storage Versioning](storage-versioning.md).
+Applying the current migrations produces project-state schema version `4` for storage profile `baseline_sqlite_v3`. The main DDL block below shows the current table layout after applied migrations; guarded-operation records were introduced in schema version `2`, expected-write correlation records in schema version `3`, and local-recovery replay-category support in schema version `4`. Storage profile and migration boundary behavior are owned by [Storage Versioning](storage-versioning.md).
 
 ```sql
 CREATE TABLE schema_migrations (
@@ -722,7 +722,7 @@ CREATE TABLE tool_invocations (
   committed_state_version INTEGER NOT NULL CHECK (committed_state_version > basis_state_version),
   status TEXT NOT NULL DEFAULT 'committed' CHECK (status = 'committed'),
   actor_source TEXT NOT NULL,
-  operation_category TEXT NOT NULL CHECK (operation_category IN ('read', 'agent_workflow', 'user_only', 'admin_local')),
+  operation_category TEXT NOT NULL CHECK (operation_category IN ('read', 'agent_workflow', 'user_only', 'admin_local', 'local_recovery')),
   verification_basis TEXT,
   response_json TEXT NOT NULL,
   created_at TEXT NOT NULL,
@@ -953,11 +953,13 @@ CREATE INDEX idx_expected_writes_task
 
 The version `3` project-state migration updates existing `project_state.schema_version` rows from `2` to `3`.
 
+Project-state schema version `4` rebuilds `tool_invocations` with `local_recovery` added to the `operation_category` constraint, preserves existing replay rows, and updates existing `project_state.schema_version` rows from `3` to `4`.
+
 Project-state constraints:
 
 - `project_state.state_version` is the only public baseline state clock and must be monotonic according to [Storage Versioning](storage-versioning.md).
 - `tasks.created_by_actor_source`, `user_judgments.requested_by_actor_source`, `user_judgments.resolved_by_actor_source`, `write_checks.created_by_actor_source`, `runs.created_by_actor_source`, `artifact_staging.created_by_actor_source`, `evidence_observations.observed_by_actor_source`, and `tool_invocations.actor_source` store actor provenance.
-- `tool_invocations.operation_category` is constrained to `read`, `agent_workflow`, `user_only`, or `admin_local`.
+- `tool_invocations.operation_category` is constrained to `read`, `agent_workflow`, `user_only`, `admin_local`, or `local_recovery`.
 - User judgment rows store User Channel provenance for authority-bearing resolution. `status='resolved'` records that an answer exists; approval meaning comes from the stored machine action, outcome, basis, provenance, and method owner.
 - `write_checks` records single-use Core-state write compatibility. The unique indexes on `write_checks.consumed_by_run_id` and `runs.write_check_id` prevent one Write Check consumption from forking across multiple runs.
 - `artifact_staging.created_by_actor_source` records staging provenance. Staged bytes and notices remain artifact-owned and are not evidence authority by themselves.

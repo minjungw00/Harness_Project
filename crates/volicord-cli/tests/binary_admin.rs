@@ -11,11 +11,15 @@ use std::{
 use serde_json::Value;
 use volicord_core::{CoreService, InvocationContext};
 use volicord_store::agent_connections::{
-    agent_connection_record, list_connection_projects, CONNECTION_MODE_READ_ONLY,
-    CONNECTION_MODE_WORKFLOW, HOST_KIND_GENERIC, HOST_SCOPE_EXPORT,
-    VERIFIED_STATUS_ACTION_REQUIRED,
+    add_connection_project, agent_connection_record, ensure_agent_connection,
+    list_connection_projects, AgentConnectionRegistration, ConnectionProjectRegistration,
+    CONNECTION_MODE_READ_ONLY, CONNECTION_MODE_WORKFLOW, HOST_KIND_CODEX, HOST_KIND_GENERIC,
+    HOST_SCOPE_EXPORT, HOST_SCOPE_PROJECT, VERIFIED_STATUS_ACTION_REQUIRED,
+    VERIFIED_STATUS_COMPLETE,
 };
-use volicord_store::guards::list_guard_installations;
+use volicord_store::guards::{
+    insert_unrecorded_change, list_guard_installations, UnrecordedChangeInsert,
+};
 use volicord_store::{
     bootstrap::{
         initialize_runtime_home, list_projects, register_project, write_installation_profile,
@@ -2018,6 +2022,111 @@ fn user_channel_records_pending_judgment_with_local_user_provenance() -> Result<
     Ok(())
 }
 
+#[test]
+fn changes_reconcile_runs_as_local_recovery() -> Result<(), Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new("cli-bin-changes-reconcile")?;
+    let repo_root = runtime_home.create_product_repo("product-repo")?;
+    fs::create_dir_all(repo_root.join(".git"))?;
+    initialize_runtime_home(runtime_home.path(), "runtime_home_changes_reconcile", "{}")?;
+    write_test_installation_profile(runtime_home.path())?;
+    register_project(
+        runtime_home.path(),
+        ProjectRegistration {
+            project_id: "project_user_channel".to_owned(),
+            repo_root: repo_root.clone(),
+            project_home: None,
+            status: ACTIVE_PROJECT_STATUS.to_owned(),
+            metadata_json: "{}".to_owned(),
+        },
+    )?;
+    ensure_agent_connection(
+        runtime_home.path(),
+        AgentConnectionRegistration {
+            connection_internal_id: "connection_cli_user_channel".to_owned(),
+            host_kind: HOST_KIND_CODEX.to_owned(),
+            intent: volicord_store::agent_connections::CONNECTION_INTENT_SHARED.to_owned(),
+            host_scope: HOST_SCOPE_PROJECT.to_owned(),
+            server_name: "volicord-cli-changes-test".to_owned(),
+            config_target: runtime_home
+                .path()
+                .join("agent-connections")
+                .join("connection_cli_user_channel")
+                .to_string_lossy()
+                .into_owned(),
+            mode: CONNECTION_MODE_WORKFLOW.to_owned(),
+            enabled: true,
+            managed_fingerprint: "fixture:cli-changes".to_owned(),
+            last_verification_status: VERIFIED_STATUS_COMPLETE.to_owned(),
+            last_verification_report_json: "{}".to_owned(),
+            last_user_actions_json: "[]".to_owned(),
+            metadata_json: "{}".to_owned(),
+        },
+    )?;
+    add_connection_project(
+        runtime_home.path(),
+        ConnectionProjectRegistration {
+            connection_internal_id: "connection_cli_user_channel".to_owned(),
+            project_id: "project_user_channel".to_owned(),
+        },
+    )?;
+    let service = CoreService::new(runtime_home.path());
+    let intake = service.intake(
+        intake_request(
+            "req_cli_changes_reconcile_intake",
+            "idem_cli_changes_reconcile_intake",
+            Some(0),
+        ),
+        core_invocation(OperationCategory::AgentWorkflow),
+    )?;
+    let task_id = record_id(&intake.response_value["task_ref"])?;
+    insert_unrecorded_change(
+        runtime_home.path(),
+        "project_user_channel",
+        UnrecordedChangeInsert {
+            unrecorded_change_id: "unrecorded_cli_changes_reconcile".to_owned(),
+            session_id: None,
+            connection_internal_id: "connection_cli_user_channel".to_owned(),
+            task_id: Some(task_id.clone()),
+            summary: "Product Repository change observed outside a recorded run.".to_owned(),
+            observed_paths_json: "[]".to_owned(),
+            detection_json: "{}".to_owned(),
+            detected_at: "2026-06-30T00:05:00Z".to_owned(),
+            metadata_json: "{}".to_owned(),
+        },
+    )?;
+
+    let output = run_with_home_env_in_dir(
+        runtime_home.path(),
+        ["changes", "reconcile", "--json"],
+        &[],
+        &repo_root,
+    )?;
+    assert_success(&output);
+    let value = json_stdout(&output)?;
+    assert_eq!(value["base"]["response_kind"], "result");
+    assert_eq!(
+        value["resolved_changes"][0]["resolution_basis"],
+        "not_product_change"
+    );
+    assert_eq!(
+        value["resolved_changes"][0]["resolved_by_actor_source"],
+        "system"
+    );
+
+    let conn =
+        rusqlite::Connection::open(runtime_home.project_state_db_path("project_user_channel"))?;
+    let (actor_source, operation_category): (String, String) = conn.query_row(
+        "SELECT actor_source, operation_category
+           FROM tool_invocations
+          WHERE tool_name = 'volicord.reconcile_changes'",
+        [],
+        |row| Ok((row.get(0)?, row.get(1)?)),
+    )?;
+    assert_eq!(actor_source, "local_user");
+    assert_eq!(operation_category, "local_recovery");
+    Ok(())
+}
+
 fn run_without_home<const N: usize>(args: [&str; N]) -> Result<Output, Box<dyn Error>> {
     Ok(Command::new(volicord_bin()).args(args).output()?)
 }
@@ -2429,7 +2538,9 @@ fn core_invocation(operation_category: OperationCategory) -> InvocationContext {
         OperationCategory::Read | OperationCategory::AgentWorkflow => {
             ActorSource::agent_connection("connection_cli_user_channel")
         }
-        OperationCategory::UserOnly | OperationCategory::AdminLocal => ActorSource::LocalUser,
+        OperationCategory::UserOnly
+        | OperationCategory::AdminLocal
+        | OperationCategory::LocalRecovery => ActorSource::LocalUser,
     };
     InvocationContext::new(
         ProjectId::new("project_user_channel"),

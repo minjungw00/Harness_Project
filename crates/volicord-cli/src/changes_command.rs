@@ -27,12 +27,15 @@ type RawOptions = BTreeMap<String, Vec<String>>;
 pub enum ChangesCommandError {
     Usage(String),
     Runtime(String),
+    FailureOutput(String),
 }
 
 impl fmt::Display for ChangesCommandError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Usage(message) | Self::Runtime(message) => formatter.write_str(message),
+            Self::Usage(message) | Self::Runtime(message) | Self::FailureOutput(message) => {
+                formatter.write_str(message)
+            }
         }
     }
 }
@@ -150,7 +153,7 @@ where
         InvocationContext::new(
             project_id,
             ActorSource::LocalUser,
-            OperationCategory::AgentWorkflow,
+            OperationCategory::LocalRecovery,
             VERIFICATION_BASIS_CLI_DIRECT_USER_CHANNEL,
         ),
     )?;
@@ -258,9 +261,13 @@ fn render_reconcile_response(
     response: &PipelineResponse,
     output: OutputFormat,
 ) -> Result<String, ChangesCommandError> {
-    if output == OutputFormat::Json
-        || response.response_value["base"]["response_kind"].as_str() == Some("rejected")
-    {
+    if response.response_value["base"]["response_kind"].as_str() == Some("rejected") {
+        let rendered = serde_json::to_string_pretty(&response.response_value)
+            .map(|value| format!("{value}\n"))
+            .map_err(|error| ChangesCommandError::Runtime(error.to_string()))?;
+        return Err(ChangesCommandError::FailureOutput(rendered));
+    }
+    if output == OutputFormat::Json {
         return serde_json::to_string_pretty(&response.response_value)
             .map(|value| format!("{value}\n"))
             .map_err(|error| ChangesCommandError::Runtime(error.to_string()));
@@ -292,4 +299,47 @@ fn generated_id(prefix: &str) -> String {
         .unwrap_or_default()
         .as_nanos();
     format!("{prefix}_{nanos}")
+}
+
+#[cfg(test)]
+mod tests {
+    use serde_json::json;
+
+    use super::*;
+
+    #[test]
+    fn rejected_reconcile_response_is_failure_output() {
+        let response_value = json!({
+            "base": {
+                "response_kind": "rejected",
+                "effect_kind": "no_effect",
+                "dry_run": false,
+                "state_version": 3,
+                "events": []
+            },
+            "errors": [{
+                "code": "INVOCATION_CONTEXT_MISMATCH",
+                "message": "invocation context does not match Core preflight requirements",
+                "retryable": false,
+                "details": {}
+            }]
+        });
+        let response = PipelineResponse {
+            response_json: response_value.to_string(),
+            response_value,
+            verified_invocation: None,
+            resolved_task_id: None,
+            replayed: false,
+        };
+
+        let error = render_reconcile_response(&response, OutputFormat::Text)
+            .expect_err("rejected Core response should fail the command");
+        match error {
+            ChangesCommandError::FailureOutput(output) => {
+                assert!(output.contains("\"response_kind\": \"rejected\""));
+                assert!(output.contains("INVOCATION_CONTEXT_MISMATCH"));
+            }
+            other => panic!("expected failure output, got {other:?}"),
+        }
+    }
 }

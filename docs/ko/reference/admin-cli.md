@@ -480,7 +480,7 @@ Lifecycle 동작:
 
 `volicord changes reconcile [--repo PATH] [--task active|ID] [--json]`는 unresolved guarded 미기록 Product Repository 변경 찾기를 위한 로컬 복구 명령입니다.
 
-이 명령은 `--repo PATH` 또는 현재 작업 디렉터리에서 선택 프로젝트를 해석하고 기본적으로 active `Task`를 선택합니다. 로컬 복구 출처로 공개 `volicord.reconcile_changes` Core 메서드를 호출하고, 해결된 찾기 수, 대기 사용자 판단 수, 남은 미해결 찾기 수를 출력하며 일반 CLI 종료 코드 모델을 따릅니다.
+이 명령은 `--repo PATH` 또는 현재 작업 디렉터리에서 선택 프로젝트를 해석하고 기본적으로 active `Task`를 선택합니다. `actor_source=local_user`, `operation_category=local_recovery`로 공개 `volicord.reconcile_changes` Core 메서드를 호출하고, 해결된 찾기 수, 대기 사용자 판단 수, 남은 미해결 찾기 수를 출력하며 일반 CLI 종료 코드 모델을 따릅니다. 거절된 Core 응답은 성공한 조정 요약으로 바꾸지 않고 거절된 CLI 결과로 유지합니다.
 
 이 명령은 결정적 찾기를 해결하거나 대기 사용자 소유 판단을 만들 수 있습니다. 사용자 답변을 기록하지 않고, 사용자를 대신해 변경을 수락하지 않으며, 정확성, 리뷰나 테스트 충분성, 닫기 준비 완료를 증명하지 않습니다. 대기 판단이 만들어졌다면 사용자는 기존 `User Channel` 경로로 판단을 기록한 뒤 `volicord changes reconcile`을 다시 실행합니다.
 

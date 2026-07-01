@@ -59,7 +59,7 @@
 | `Connection Projects` | 연결 프로젝트 | Agent Connection에 명시적으로 허용된 `project_internal_id` 목록입니다. | [Agent Connection 참조](agent-connection.md) |
 | `User Channel` | 사용자 채널 | 권한을 지니는 사용자 판단을 기록하는 로컬 사용자 경로입니다. | [Core 모델](core-model.md) |
 | `actor_source` | 행위자 출처 | `agent_connection:<connection_id>`, `local_user`, `system` 같은 지속 출처입니다. 등록된 연결이나 사용자 신원 증명이 아닙니다. | [Core 모델](core-model.md) |
-| `operation_category` | 작업 범주 | `read`, `agent_workflow`, `user_only`, `admin_local` 중 하나인 내부 API 작업 분류입니다. | [보안](security.md) |
+| `operation_category` | 작업 범주 | `read`, `agent_workflow`, `user_only`, `admin_local`, `local_recovery` 중 하나인 내부 API 작업 분류입니다. | [보안](security.md) |
 | `managed host configuration state` | 관리 호스트 설정 상태 | Agent Connection을 위해 관리되는 호스트 설정 인벤토리입니다. 외부 호스트가 서버를 신뢰하거나 로드했다는 증명은 아닙니다. | [Agent Connection 참조](agent-connection.md) |
 | baseline guarantee | 기준 범위 보장 | 기준 범위에서 지원되는 보장을 말할 때 쓰는 보안 표현입니다. | [보안](security.md) |
 | `ErrorCode` | 공개 오류 코드 | 공개 API 오류 코드 식별자입니다. | [API 오류 코드](api/error-codes.md) |

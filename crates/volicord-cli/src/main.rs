@@ -548,6 +548,7 @@ impl From<ChangesCommandError> for CliError {
         match error {
             ChangesCommandError::Usage(message) => Self::Usage(message),
             ChangesCommandError::Runtime(message) => Self::Runtime(message),
+            ChangesCommandError::FailureOutput(output) => Self::FailureOutput(output),
         }
     }
 }

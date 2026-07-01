@@ -59,7 +59,7 @@ Contract detail stays in the focused owner documents. Translation and style rule
 | `Connection Projects` | 연결 프로젝트 | The explicit `project_internal_id` allowlist for an Agent Connection. | [Agent Connection Reference](agent-connection.md) |
 | `User Channel` | 사용자 채널 | The local user path for recording authority-bearing user judgments. | [Core Model](core-model.md) |
 | `actor_source` | 행위자 출처 | Durable provenance such as `agent_connection:<connection_id>`, `local_user`, or `system`; not a registered connection or user identity proof. | [Core Model](core-model.md) |
-| `operation_category` | 작업 범주 | Internal API operation classification: `read`, `agent_workflow`, `user_only`, or `admin_local`. | [Security](security.md) |
+| `operation_category` | 작업 범주 | Internal API operation classification: `read`, `agent_workflow`, `user_only`, `admin_local`, or `local_recovery`. | [Security](security.md) |
 | `managed host configuration state` | 관리 호스트 설정 상태 | Managed host setup inventory for an Agent Connection. Not proof that the external host trusted or loaded the server. | [Agent Connection Reference](agent-connection.md) |
 | baseline guarantee | 기준 범위 보장 | Security wording for a guarantee supported in the baseline scope. | [Security](security.md) |
 | `ErrorCode` | 공개 오류 코드 | The public API error-code identifier. | [API error codes](api/error-codes.md) |

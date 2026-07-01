@@ -69,11 +69,11 @@ Nested owner links:
 
 The method requires:
 
-- verified invocation context with `operation_category=agent_workflow`
+- verified invocation context with `operation_category=agent_workflow` for Agent Connection workflow calls or `operation_category=local_recovery` for local-user recovery calls
 - a compatible same-project Task selected by `task_id`
 - a workflow-capable Agent Connection when called through MCP
 
-Local administrative recovery commands may call the same Core method with local-user actor provenance while preserving `operation_category=agent_workflow`. That CLI path is not a public API method and does not let the CLI impersonate a user judgment.
+Local administrative recovery commands may call the same Core method with `actor_source=local_user` and `operation_category=local_recovery`. That CLI path is not an MCP Agent Connection path and does not let the CLI impersonate a user judgment. User-owned acceptance still requires a compatible resolved User Channel judgment before `accepted_by_user` can resolve the finding.
 
 ## State version behavior
 

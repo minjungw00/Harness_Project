@@ -254,7 +254,7 @@ Registry 제약:
 
 등록된 프로젝트마다 프로젝트별 `state.sqlite`가 하나 있습니다. 이 데이터베이스는 그 프로젝트의 Core 상태를 저장하며, 외래 키와 인덱스가 같은 프로젝트 관계를 강제할 수 있도록 프로젝트 범위 행에 `project_id`를 반복해 저장합니다.
 
-현재 마이그레이션을 모두 적용하면 저장소 프로필 `baseline_sqlite_v3`의 프로젝트 상태 스키마 버전은 `3`입니다. 첫 번째 DDL 블록은 초기 물리 프로젝트 상태 스키마 버전 `1`이고, guarded-operation 기록은 스키마 버전 `2`, expected-write 상관 기록은 스키마 버전 `3`입니다. 저장소 프로필과 마이그레이션 경계 동작은 [저장소 버전 관리](storage-versioning.md)가 담당합니다.
+현재 마이그레이션을 모두 적용하면 저장소 프로필 `baseline_sqlite_v3`의 프로젝트 상태 스키마 버전은 `4`입니다. 아래의 기본 DDL 블록은 적용된 마이그레이션 뒤의 현재 테이블 배치를 보여 줍니다. guarded-operation 기록은 스키마 버전 `2`, expected-write 상관 기록은 스키마 버전 `3`, 로컬 복구 재실행 category 지원은 스키마 버전 `4`에서 도입되었습니다. 저장소 프로필과 마이그레이션 경계 동작은 [저장소 버전 관리](storage-versioning.md)가 담당합니다.
 
 ```sql
 CREATE TABLE schema_migrations (
@@ -722,7 +722,7 @@ CREATE TABLE tool_invocations (
   committed_state_version INTEGER NOT NULL CHECK (committed_state_version > basis_state_version),
   status TEXT NOT NULL DEFAULT 'committed' CHECK (status = 'committed'),
   actor_source TEXT NOT NULL,
-  operation_category TEXT NOT NULL CHECK (operation_category IN ('read', 'agent_workflow', 'user_only', 'admin_local')),
+  operation_category TEXT NOT NULL CHECK (operation_category IN ('read', 'agent_workflow', 'user_only', 'admin_local', 'local_recovery')),
   verification_basis TEXT,
   response_json TEXT NOT NULL,
   created_at TEXT NOT NULL,
@@ -953,11 +953,13 @@ CREATE INDEX idx_expected_writes_task
 
 버전 `3` 프로젝트 상태 마이그레이션은 기존 `project_state.schema_version` 행을 `2`에서 `3`으로 갱신합니다.
 
+프로젝트 상태 스키마 버전 `4`는 `tool_invocations`를 다시 만들어 `operation_category` 제약에 `local_recovery`를 추가하고, 기존 재실행 행을 보존하며, 기존 `project_state.schema_version` 행을 `3`에서 `4`로 갱신합니다.
+
 프로젝트 상태 제약:
 
 - `project_state.state_version`은 기준 범위의 유일한 공개 상태 시계이며 [저장소 버전 관리](storage-versioning.md)에 따라 단조롭게 진행해야 합니다.
 - `tasks.created_by_actor_source`, `user_judgments.requested_by_actor_source`, `user_judgments.resolved_by_actor_source`, `write_checks.created_by_actor_source`, `runs.created_by_actor_source`, `artifact_staging.created_by_actor_source`, `evidence_observations.observed_by_actor_source`, `tool_invocations.actor_source`는 행위자 출처를 저장합니다.
-- `tool_invocations.operation_category`는 `read`, `agent_workflow`, `user_only`, `admin_local`로 제한됩니다.
+- `tool_invocations.operation_category`는 `read`, `agent_workflow`, `user_only`, `admin_local`, `local_recovery`로 제한됩니다.
 - 사용자 판단 행은 권한을 지니는 해결에 대한 User Channel 출처를 저장합니다. `status='resolved'`는 답변이 존재한다는 사실을 기록할 뿐이며, 승인 의미는 저장된 기계 동작, 결과, 근거, 출처, 메서드 담당 문서에서 나옵니다.
 - `write_checks`는 단일 사용 Core 상태 쓰기 호환성을 기록합니다. `write_checks.consumed_by_run_id`와 `runs.write_check_id`의 고유 인덱스는 Write Check 소비 하나가 여러 실행으로 갈라지는 것을 막습니다.
 - `artifact_staging.created_by_actor_source`는 스테이징 출처를 기록합니다. 스테이징된 바이트와 알림은 아티팩트 담당 상태이며 그 자체로 증거 권한이 아닙니다.

@@ -64,6 +64,7 @@ fn validate_actor_source(
         }
         (OperationCategory::UserOnly, ActorSource::LocalUser) => Ok(()),
         (OperationCategory::AdminLocal, ActorSource::LocalUser) => Ok(()),
+        (OperationCategory::LocalRecovery, ActorSource::LocalUser) => Ok(()),
         _ => Err(actor_source_mismatch_error(
             "invocation.actor_source",
             operation_category,

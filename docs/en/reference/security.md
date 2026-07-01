@@ -110,7 +110,7 @@ May claim:
 - Agent Connections can provide `actor_source=agent_connection:<connection_id>` provenance when [Agent Connection Reference](agent-connection.md), method owners, and this security owner allow the claim. The `connection_id` segment is the process-binding/provenance spelling in that string, not a user-facing authority token or storage-field name.
 - The `User Channel` can provide `actor_source=local_user` provenance for authority-bearing user judgments when Core and method owners require it.
 - Connection Projects define the explicit `project_internal_id` allowlist for an Agent Connection. User-facing commands select projects by repository root, project name, alias, or a `project_selector` returned by Volicord.
-- `operation_category` classifies an operation as `read`, `agent_workflow`, `user_only`, or `admin_local`.
+- `operation_category` classifies an operation as `read`, `agent_workflow`, `user_only`, `admin_local`, or `local_recovery`.
 - Baseline actor provenance is cooperative local provenance, not cryptographic human identity.
 
 Must not claim:

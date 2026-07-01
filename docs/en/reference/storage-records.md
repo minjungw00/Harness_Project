@@ -210,7 +210,7 @@ Closed storage-owned value sets are persistence constraints. Unknown values must
 | `evidence_observations.assurance_level` | `cooperative_report`, `registered_connection_observed`, `external_tool_result`, `user_observed`, `unverified` |
 | `blockers.status` | `active`, `resolved`, `superseded` |
 | `tool_invocations.status` | `committed` |
-| `tool_invocations.operation_category` | `read`, `agent_workflow`, `user_only`, `admin_local` |
+| `tool_invocations.operation_category` | `read`, `agent_workflow`, `user_only`, `admin_local`, `local_recovery` |
 
 Rows that mirror public API values must match [API Value Sets](api/schema-value-sets.md), the relevant schema owner, and the method owner exactly. This document does not redefine public API values for fields such as `tasks.mode`, `tasks.lifecycle_phase`, `tasks.result`, `runs.kind`, `runs.status`, or `evidence_summaries.status`; see [API Value Sets](api/schema-value-sets.md), [API State Schemas](api/schema-state.md), and method owners.
 

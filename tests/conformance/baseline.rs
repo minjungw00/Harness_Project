@@ -3619,7 +3619,9 @@ fn actor_source_for_operation_category(
         OperationCategory::Read | OperationCategory::AgentWorkflow => {
             ActorSource::agent_connection(fixture.connection_id())
         }
-        OperationCategory::UserOnly | OperationCategory::AdminLocal => ActorSource::LocalUser,
+        OperationCategory::UserOnly
+        | OperationCategory::AdminLocal
+        | OperationCategory::LocalRecovery => ActorSource::LocalUser,
     }
 }
 

@@ -110,7 +110,7 @@ Volicord 보안 주장은 로컬 행위자가 Volicord 상태, 기록, 아티팩
 - Agent Connection은 [Agent Connection 참조](agent-connection.md), 메서드 담당 문서, 이 보안 담당 문서가 허용할 때 `actor_source=agent_connection:<connection_id>` 출처를 제공할 수 있습니다. 그 출처 문자열의 `connection_id` 부분은 프로세스 바인딩/출처 표기이지 사용자 대상 권한 토큰이나 저장 필드 이름이 아닙니다.
 - `User Channel`은 Core와 메서드 담당 문서가 요구할 때 권한을 지니는 사용자 판단에 대해 `actor_source=local_user` 출처를 제공할 수 있습니다.
 - Connection Projects는 Agent Connection에 명시적으로 허용된 `project_internal_id` 목록을 정의합니다. 사용자 대상 명령은 저장소 루트, 프로젝트 이름, alias, 또는 Volicord가 반환한 `project_selector`로 프로젝트를 선택합니다.
-- `operation_category`는 작업을 `read`, `agent_workflow`, `user_only`, `admin_local`로 분류합니다.
+- `operation_category`는 작업을 `read`, `agent_workflow`, `user_only`, `admin_local`, `local_recovery`로 분류합니다.
 - 기준 행위자 출처는 협력적 로컬 출처이지 암호학적 인간 신원 증명이 아닙니다.
 
 주장하면 안 되는 것:
