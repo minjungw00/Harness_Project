@@ -1,0 +1,8 @@
+[mcp_servers.volicord]
+command = "volicord"
+args = ["mcp", "--stdio", "--connection", "conn_codex_project"]
+enabled = true
+startup_timeout_sec = 10
+
+[mcp_servers.volicord.env]
+VOLICORD_HOME = "/tmp/volicord-fixture-home"

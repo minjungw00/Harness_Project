@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "ask": ["Edit", "Write", "MultiEdit"]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "volicord guard session-start --json",
+            "timeout": 30,
+            "statusMessage": "Checking Volicord session"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "volicord guard pre-tool --json",
+            "timeout": 30,
+            "statusMessage": "Checking Volicord write"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "volicord guard post-tool --json",
+            "timeout": 30,
+            "statusMessage": "Recording Volicord write"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "volicord guard prompt-capture --json",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "volicord guard stop --json",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+prefix_rule(
+    pattern = ["volicord", "guard"],
+    decision = "prompt",
+    justification = "Volicord guard commands may observe local lifecycle state.",
+    match = [
+        "volicord guard session-start --json",
+        "volicord guard pre-tool --json",
+    ],
+    not_match = [
+        "volicord status",
+    ],
+)

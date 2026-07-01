@@ -11,6 +11,7 @@ use sha2::{Digest, Sha256};
 pub mod claude_code;
 pub mod codex;
 pub mod config_edit;
+pub mod contracts;
 pub mod generic;
 pub mod verification;
 
