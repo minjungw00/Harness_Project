@@ -163,7 +163,7 @@ pub fn validate_registry_schema(conn: &Connection) -> StoreResult<()> {
             "idx_agent_connections_target_global",
             "idx_guard_installations_connection",
             "idx_guard_installations_project",
-            "idx_guard_installations_health",
+            "idx_guard_installations_status",
             "idx_guard_installations_scope_project",
             "idx_guard_installations_scope_global",
         ],
@@ -344,9 +344,15 @@ pub fn validate_registry_schema(conn: &Connection) -> StoreResult<()> {
         "host_kind",
         "guard_mode",
         "host_capability_json",
-        "installation_health",
+        "installation_status",
         "installed_at",
         "last_checked_at",
+        "first_seen_at",
+        "last_seen_at",
+        "last_seen_phase",
+        "observed_host_kind",
+        "observed_policy_hash",
+        "observed_binary_version",
         "metadata_json",
         "created_at",
         "updated_at",
@@ -1260,7 +1266,6 @@ fn validate_guard_installations_constraints(conn: &Connection) -> StoreResult<()
     let required_fragments = [
         "length(trim(host_kind)) > 0",
         "guard_mode in ('mcp_only', 'guarded', 'managed')",
-        "installation_health in ('unknown', 'healthy', 'action_required', 'failed')",
     ];
     for fragment in required_fragments {
         if !table_sql.contains(fragment) {
@@ -1269,6 +1274,18 @@ fn validate_guard_installations_constraints(conn: &Connection) -> StoreResult<()
                 "guard_installations constraints are missing or malformed",
             ));
         }
+    }
+    let has_status_constraint = [
+        "installation_status in ('absent', 'configured', 'reload_required', 'active', 'degraded', 'stale', 'broken')",
+        "installation_status in ( 'absent', 'configured', 'reload_required', 'active', 'degraded', 'stale', 'broken' )",
+    ]
+    .iter()
+    .any(|fragment| table_sql.contains(fragment));
+    if !has_status_constraint {
+        return Err(StoreError::schema_invariant(
+            REGISTRY_DATABASE_KIND,
+            "guard_installations constraints are missing or malformed",
+        ));
     }
     Ok(())
 }

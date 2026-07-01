@@ -67,9 +67,9 @@ mod tests {
             json!("inject_context")
         );
         assert_eq!(
-            serde_json::to_value(GuardInstallationHealth::ActionRequired)
-                .expect("guard health serializes"),
-            json!("action_required")
+            serde_json::to_value(GuardInstallationStatus::ReloadRequired)
+                .expect("guard status serializes"),
+            json!("reload_required")
         );
         assert_eq!(
             serde_json::to_value(UnrecordedChangeStatus::Unresolved)

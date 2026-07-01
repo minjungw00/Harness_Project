@@ -128,7 +128,7 @@ Meaning:
 
 Does not imply:
 - `GuardHealthSummary` is not evidence of product correctness, test sufficiency, OS enforcement, sandboxing, security isolation, or final acceptance.
-- A healthy guard summary does not replace evidence, artifact integrity, user-owned judgment, `Write Check`, final acceptance, or residual-risk acceptance requirements.
+- An active guard summary does not replace evidence, artifact integrity, user-owned judgment, `Write Check`, final acceptance, or residual-risk acceptance requirements.
 - `mcp_only` mode remains cooperative unless an owner-defined configuration selects guarded or managed behavior.
 
 Owner links:

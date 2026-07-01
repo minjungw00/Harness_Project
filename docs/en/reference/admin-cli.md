@@ -290,13 +290,18 @@ path.
 `--mode` selects the guard integration level:
 
 - `mcp-only` writes MCP configuration, the managed `AGENTS.md` guidance block,
-  and policy metadata with guard commands disabled, but records guard
-  installation health as unknown.
+  and policy metadata with guard commands disabled. It records guard
+  installation status without requiring guard activation.
 - `guarded` is the default. It writes MCP configuration, the managed
   `AGENTS.md` guidance block, `.volicord/policy.json` guard command policy, and
   host rule files where the host has a supported project-local rule convention.
 - `managed` uses the same setup surface as `guarded` and records managed guard
   mode for hosts or future integrations that distinguish it.
+
+For `guarded` and `managed`, init records `reload_required` when the host still
+needs restart or reload to load generated guard hooks, and `configured` when
+files are installed but no matching guard hook has been observed. Init does not
+mark a guard installation `active` merely because files were written.
 
 `--home PATH` selects the Runtime Home for this initialization. `--mcp-command
 PATH` stores the exact command path in the installation profile when init must
@@ -423,6 +428,14 @@ Agent Connection identity when the hook event does not contain `connection_id`.
 `--guard-mode MODE` can pin the recorded session, installation, host kind, and
 guard mode. Host kinds use storage values such as `codex`, `claude_code`, or
 `generic`. Guard modes are `mcp_only`, `guarded`, or `managed`.
+
+When a non-`mcp_only` guard command receives a valid event for the recorded
+project, Agent Connection, guard installation, host kind, guard mode, and policy
+hash, Volicord records observation metadata and can promote that guard
+installation to `active`. Invalid project, connection, host kind, guard mode, or
+policy hash data does not activate the installation. `active` means Volicord
+observed a matching hook event; it does not claim OS-level enforcement,
+sandboxing, or write prevention.
 
 The input event contract is host-neutral. Guard parsing is tolerant of common
 field placements for host kind, session, tool name, command, prompt, result,

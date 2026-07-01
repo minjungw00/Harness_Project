@@ -3,7 +3,7 @@ use std::{path::Path, str::FromStr};
 use rusqlite::{params, Connection, OptionalExtension, Row};
 use serde_json::Value;
 use volicord_types::{
-    GuardDecision, GuardInstallationHealth, GuardMode, HostKind, UnrecordedChangeStatus,
+    GuardDecision, GuardInstallationStatus, GuardMode, HostKind, UnrecordedChangeStatus,
 };
 
 use crate::{
@@ -27,9 +27,15 @@ pub struct GuardInstallationUpsert {
     pub host_kind: String,
     pub guard_mode: String,
     pub host_capability_json: String,
-    pub installation_health: String,
+    pub installation_status: String,
     pub installed_at: Option<String>,
     pub last_checked_at: String,
+    pub first_seen_at: Option<String>,
+    pub last_seen_at: Option<String>,
+    pub last_seen_phase: Option<String>,
+    pub observed_host_kind: Option<String>,
+    pub observed_policy_hash: Option<String>,
+    pub observed_binary_version: Option<String>,
     pub metadata_json: String,
 }
 
@@ -44,12 +50,32 @@ pub struct GuardInstallationRecord {
     pub host_kind: String,
     pub guard_mode: String,
     pub host_capability_json: String,
-    pub installation_health: String,
+    pub installation_status: String,
     pub installed_at: Option<String>,
     pub last_checked_at: String,
+    pub first_seen_at: Option<String>,
+    pub last_seen_at: Option<String>,
+    pub last_seen_phase: Option<String>,
+    pub observed_host_kind: Option<String>,
+    pub observed_policy_hash: Option<String>,
+    pub observed_binary_version: Option<String>,
     pub metadata_json: String,
     pub created_at: String,
     pub updated_at: String,
+}
+
+/// Validated guard hook observation for one registered installation.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct GuardInstallationObservation {
+    pub guard_installation_id: String,
+    pub connection_internal_id: String,
+    pub project_id: String,
+    pub host_kind: String,
+    pub guard_mode: String,
+    pub observed_policy_hash: String,
+    pub observed_binary_version: Option<String>,
+    pub observed_phase: String,
+    pub observed_at: String,
 }
 
 /// Agent Session insert input.
@@ -243,9 +269,15 @@ pub fn upsert_guard_installation(
             host_kind,
             guard_mode,
             host_capability_json,
-            installation_health,
+            installation_status,
             installed_at,
             last_checked_at,
+            first_seen_at,
+            last_seen_at,
+            last_seen_phase,
+            observed_host_kind,
+            observed_policy_hash,
+            observed_binary_version,
             metadata_json,
             created_at,
             updated_at
@@ -262,6 +294,12 @@ pub fn upsert_guard_installation(
             ?9,
             ?10,
             ?11,
+            ?12,
+            ?13,
+            ?14,
+            ?15,
+            ?16,
+            ?17,
             strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
             strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
         )
@@ -272,9 +310,23 @@ pub fn upsert_guard_installation(
             host_kind = excluded.host_kind,
             guard_mode = excluded.guard_mode,
             host_capability_json = excluded.host_capability_json,
-            installation_health = excluded.installation_health,
+            installation_status = CASE
+                WHEN guard_installations.installation_status = 'active'
+                 AND excluded.installation_status = 'configured'
+                 AND guard_installations.host_capability_json = excluded.host_capability_json
+                 AND guard_installations.host_kind = excluded.host_kind
+                 AND guard_installations.guard_mode = excluded.guard_mode
+                THEN guard_installations.installation_status
+                ELSE excluded.installation_status
+            END,
             installed_at = excluded.installed_at,
             last_checked_at = excluded.last_checked_at,
+            first_seen_at = COALESCE(excluded.first_seen_at, first_seen_at),
+            last_seen_at = COALESCE(excluded.last_seen_at, last_seen_at),
+            last_seen_phase = COALESCE(excluded.last_seen_phase, last_seen_phase),
+            observed_host_kind = COALESCE(excluded.observed_host_kind, observed_host_kind),
+            observed_policy_hash = COALESCE(excluded.observed_policy_hash, observed_policy_hash),
+            observed_binary_version = COALESCE(excluded.observed_binary_version, observed_binary_version),
             metadata_json = excluded.metadata_json,
             updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')",
         params![
@@ -285,9 +337,15 @@ pub fn upsert_guard_installation(
             input.host_kind,
             input.guard_mode,
             input.host_capability_json,
-            input.installation_health,
+            input.installation_status,
             input.installed_at,
             input.last_checked_at,
+            input.first_seen_at,
+            input.last_seen_at,
+            input.last_seen_phase,
+            input.observed_host_kind,
+            input.observed_policy_hash,
+            input.observed_binary_version,
             input.metadata_json,
         ],
     )?;
@@ -353,9 +411,15 @@ pub fn list_guard_installations(
             gi.host_kind,
             gi.guard_mode,
             gi.host_capability_json,
-            gi.installation_health,
+            gi.installation_status,
             gi.installed_at,
             gi.last_checked_at,
+            gi.first_seen_at,
+            gi.last_seen_at,
+            gi.last_seen_phase,
+            gi.observed_host_kind,
+            gi.observed_policy_hash,
+            gi.observed_binary_version,
             gi.metadata_json,
             gi.created_at,
             gi.updated_at
@@ -374,6 +438,67 @@ pub fn list_guard_installations(
         guard_installation_from_row,
     )?;
     collect_rows(rows)
+}
+
+/// Records a validated guard hook observation and promotes the installation to active.
+pub fn observe_guard_installation(
+    runtime_home: impl AsRef<Path>,
+    input: GuardInstallationObservation,
+) -> StoreResult<Option<GuardInstallationRecord>> {
+    validate_guard_installation_observation(&input)?;
+
+    let runtime_home = runtime_home.as_ref().to_path_buf();
+    let registry_path = registry_db_path(&runtime_home);
+    if !registry_path.exists() {
+        return Ok(None);
+    }
+    let mut conn = open_registry_database(&registry_path)?;
+    let Some(project) = raw_project_record_from_conn(&conn, &input.project_id)? else {
+        return Ok(None);
+    };
+    let Some(existing) = guard_installation_from_conn(&conn, &input.guard_installation_id)? else {
+        return Ok(None);
+    };
+    if existing.connection_internal_id != input.connection_internal_id
+        || existing.project_internal_id.as_deref() != Some(project.project_internal_id.as_str())
+        || existing.host_kind != input.host_kind
+        || existing.guard_mode != input.guard_mode
+        || expected_policy_hash(&existing.host_capability_json)?.as_deref()
+            != Some(input.observed_policy_hash.as_str())
+    {
+        return Ok(None);
+    }
+    require_connection_project_membership(
+        &conn,
+        &input.connection_internal_id,
+        &project.project_internal_id,
+    )?;
+
+    let tx = begin_immediate_transaction(&mut conn)?;
+    tx.execute(
+        "UPDATE guard_installations
+            SET installation_status = ?2,
+                first_seen_at = COALESCE(first_seen_at, ?3),
+                last_seen_at = ?3,
+                last_seen_phase = ?4,
+                observed_host_kind = ?5,
+                observed_policy_hash = ?6,
+                observed_binary_version = ?7,
+                last_checked_at = ?3,
+                updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+          WHERE guard_installation_id = ?1",
+        params![
+            input.guard_installation_id,
+            GuardInstallationStatus::Active.as_str(),
+            input.observed_at,
+            input.observed_phase,
+            input.host_kind,
+            input.observed_policy_hash,
+            input.observed_binary_version,
+        ],
+    )?;
+    tx.commit()?;
+    guard_installation(&runtime_home, &input.guard_installation_id)
 }
 
 /// Inserts one project-scoped Agent Session row.
@@ -1021,7 +1146,7 @@ fn validate_guard_installation_upsert(input: &GuardInstallationUpsert) -> StoreR
     }
     validate_host_kind(&input.host_kind)?;
     validate_guard_mode(&input.guard_mode)?;
-    validate_guard_installation_health(&input.installation_health)?;
+    validate_guard_installation_status(&input.installation_status)?;
     validate_json_object(
         "guard_installations.host_capability_json",
         &input.host_capability_json,
@@ -1030,7 +1155,41 @@ fn validate_guard_installation_upsert(input: &GuardInstallationUpsert) -> StoreR
         validate_timestamp_text("installed_at", installed_at)?;
     }
     validate_timestamp_text("last_checked_at", &input.last_checked_at)?;
+    if let Some(first_seen_at) = &input.first_seen_at {
+        validate_timestamp_text("first_seen_at", first_seen_at)?;
+    }
+    if let Some(last_seen_at) = &input.last_seen_at {
+        validate_timestamp_text("last_seen_at", last_seen_at)?;
+    }
+    if let Some(last_seen_phase) = &input.last_seen_phase {
+        validate_identifier("last_seen_phase", last_seen_phase)?;
+    }
+    if let Some(observed_host_kind) = &input.observed_host_kind {
+        validate_host_kind(observed_host_kind)?;
+    }
+    if let Some(observed_policy_hash) = &input.observed_policy_hash {
+        validate_identifier("observed_policy_hash", observed_policy_hash)?;
+    }
+    if let Some(observed_binary_version) = &input.observed_binary_version {
+        validate_identifier("observed_binary_version", observed_binary_version)?;
+    }
     validate_json_object("guard_installations.metadata_json", &input.metadata_json)
+}
+
+fn validate_guard_installation_observation(
+    input: &GuardInstallationObservation,
+) -> StoreResult<()> {
+    validate_identifier("guard_installation_id", &input.guard_installation_id)?;
+    validate_identifier("connection_internal_id", &input.connection_internal_id)?;
+    validate_identifier("project_id", &input.project_id)?;
+    validate_host_kind(&input.host_kind)?;
+    validate_guard_mode(&input.guard_mode)?;
+    validate_identifier("observed_policy_hash", &input.observed_policy_hash)?;
+    if let Some(version) = &input.observed_binary_version {
+        validate_identifier("observed_binary_version", version)?;
+    }
+    validate_identifier("observed_phase", &input.observed_phase)?;
+    validate_timestamp_text("observed_at", &input.observed_at)
 }
 
 fn validate_agent_session_insert(input: &AgentSessionInsert) -> StoreResult<()> {
@@ -1174,20 +1333,22 @@ fn validate_guard_decision(value: &str) -> StoreResult<()> {
     }
 }
 
-fn validate_guard_installation_health(value: &str) -> StoreResult<()> {
+fn validate_guard_installation_status(value: &str) -> StoreResult<()> {
     if [
-        GuardInstallationHealth::Unknown.as_str(),
-        GuardInstallationHealth::Healthy.as_str(),
-        GuardInstallationHealth::ActionRequired.as_str(),
-        GuardInstallationHealth::Failed.as_str(),
+        GuardInstallationStatus::Absent.as_str(),
+        GuardInstallationStatus::Configured.as_str(),
+        GuardInstallationStatus::ReloadRequired.as_str(),
+        GuardInstallationStatus::Active.as_str(),
+        GuardInstallationStatus::Degraded.as_str(),
+        GuardInstallationStatus::Stale.as_str(),
+        GuardInstallationStatus::Broken.as_str(),
     ]
     .contains(&value)
     {
         Ok(())
     } else {
         Err(StoreError::InvalidInput {
-            detail: "installation_health must be unknown, healthy, action_required, or failed"
-                .to_owned(),
+            detail: "installation_status must be absent, configured, reload_required, active, degraded, stale, or broken".to_owned(),
         })
     }
 }
@@ -1231,6 +1392,19 @@ fn validate_json_array(field: &'static str, text: &str) -> StoreResult<()> {
             detail: format!("{field} must be a JSON array"),
         })
     }
+}
+
+fn expected_policy_hash(host_capability_json: &str) -> StoreResult<Option<String>> {
+    let value = serde_json::from_str::<Value>(host_capability_json).map_err(|error| {
+        StoreError::InvalidInput {
+            detail: format!("guard_installations.host_capability_json must be JSON: {error}"),
+        }
+    })?;
+    Ok(value
+        .get("policy_hash")
+        .and_then(Value::as_str)
+        .filter(|value| !value.trim().is_empty())
+        .map(str::to_owned))
 }
 
 fn validate_session_scope(
@@ -1284,9 +1458,15 @@ fn guard_installation_from_conn(
             gi.host_kind,
             gi.guard_mode,
             gi.host_capability_json,
-            gi.installation_health,
+            gi.installation_status,
             gi.installed_at,
             gi.last_checked_at,
+            gi.first_seen_at,
+            gi.last_seen_at,
+            gi.last_seen_phase,
+            gi.observed_host_kind,
+            gi.observed_policy_hash,
+            gi.observed_binary_version,
             gi.metadata_json,
             gi.created_at,
             gi.updated_at
@@ -1312,12 +1492,18 @@ fn guard_installation_from_row(row: &Row<'_>) -> rusqlite::Result<GuardInstallat
         host_kind: row.get(5)?,
         guard_mode: row.get(6)?,
         host_capability_json: row.get(7)?,
-        installation_health: row.get(8)?,
+        installation_status: row.get(8)?,
         installed_at: row.get(9)?,
         last_checked_at: row.get(10)?,
-        metadata_json: row.get(11)?,
-        created_at: row.get(12)?,
-        updated_at: row.get(13)?,
+        first_seen_at: row.get(11)?,
+        last_seen_at: row.get(12)?,
+        last_seen_phase: row.get(13)?,
+        observed_host_kind: row.get(14)?,
+        observed_policy_hash: row.get(15)?,
+        observed_binary_version: row.get(16)?,
+        metadata_json: row.get(17)?,
+        created_at: row.get(18)?,
+        updated_at: row.get(19)?,
     })
 }
 
@@ -1589,9 +1775,15 @@ mod tests {
                 host_kind: "codex".to_owned(),
                 guard_mode: "guarded".to_owned(),
                 host_capability_json: r#"{"prompt_capture":true}"#.to_owned(),
-                installation_health: "healthy".to_owned(),
+                installation_status: "active".to_owned(),
                 installed_at: Some("2026-06-30T00:00:00Z".to_owned()),
                 last_checked_at: "2026-06-30T00:01:00Z".to_owned(),
+                first_seen_at: Some("2026-06-30T00:01:00Z".to_owned()),
+                last_seen_at: Some("2026-06-30T00:01:00Z".to_owned()),
+                last_seen_phase: Some("session_start".to_owned()),
+                observed_host_kind: Some("codex".to_owned()),
+                observed_policy_hash: Some("sha256:test".to_owned()),
+                observed_binary_version: Some("test".to_owned()),
                 metadata_json: "{}".to_owned(),
             },
         )?;
@@ -1788,9 +1980,15 @@ mod tests {
                 host_kind: "codex".to_owned(),
                 guard_mode: "guarded".to_owned(),
                 host_capability_json: "{}".to_owned(),
-                installation_health: "healthy".to_owned(),
+                installation_status: "active".to_owned(),
                 installed_at: None,
                 last_checked_at: "2026-06-30T01:03:00Z".to_owned(),
+                first_seen_at: None,
+                last_seen_at: None,
+                last_seen_phase: None,
+                observed_host_kind: None,
+                observed_policy_hash: None,
+                observed_binary_version: None,
                 metadata_json: "{}".to_owned(),
             },
         )
@@ -1803,6 +2001,175 @@ mod tests {
             }
         ));
 
+        Ok(())
+    }
+
+    #[test]
+    fn guard_installation_observation_promotes_active() -> Result<(), Box<dyn Error>> {
+        let fixture = GuardFixture::new("guard-observe-active")?;
+        fixture.add_project_connection("project_guard_a", "conn_guard_a", "repo-a")?;
+        fixture.upsert_observable_installation("guard_installation_a", "conn_guard_a")?;
+
+        let observed = observe_guard_installation(
+            fixture.runtime_home.path(),
+            GuardInstallationObservation {
+                guard_installation_id: "guard_installation_a".to_owned(),
+                connection_internal_id: "conn_guard_a".to_owned(),
+                project_id: "project_guard_a".to_owned(),
+                host_kind: "codex".to_owned(),
+                guard_mode: "guarded".to_owned(),
+                observed_policy_hash: "sha256:policy-a".to_owned(),
+                observed_binary_version: Some("1.2.3".to_owned()),
+                observed_phase: "session_start".to_owned(),
+                observed_at: "2026-06-30T02:00:00Z".to_owned(),
+            },
+        )?
+        .expect("matching observation should promote installation");
+
+        assert_eq!(observed.installation_status, "active");
+        assert_eq!(
+            observed.first_seen_at.as_deref(),
+            Some("2026-06-30T02:00:00Z")
+        );
+        assert_eq!(
+            observed.last_seen_at.as_deref(),
+            Some("2026-06-30T02:00:00Z")
+        );
+        assert_eq!(observed.last_seen_phase.as_deref(), Some("session_start"));
+        assert_eq!(observed.observed_host_kind.as_deref(), Some("codex"));
+        assert_eq!(
+            observed.observed_policy_hash.as_deref(),
+            Some("sha256:policy-a")
+        );
+        assert_eq!(observed.observed_binary_version.as_deref(), Some("1.2.3"));
+
+        let observed_again = observe_guard_installation(
+            fixture.runtime_home.path(),
+            GuardInstallationObservation {
+                guard_installation_id: "guard_installation_a".to_owned(),
+                connection_internal_id: "conn_guard_a".to_owned(),
+                project_id: "project_guard_a".to_owned(),
+                host_kind: "codex".to_owned(),
+                guard_mode: "guarded".to_owned(),
+                observed_policy_hash: "sha256:policy-a".to_owned(),
+                observed_binary_version: Some("1.2.4".to_owned()),
+                observed_phase: "pre_tool".to_owned(),
+                observed_at: "2026-06-30T02:05:00Z".to_owned(),
+            },
+        )?
+        .expect("later matching observation should update last-seen metadata");
+        assert_eq!(
+            observed_again.first_seen_at.as_deref(),
+            Some("2026-06-30T02:00:00Z")
+        );
+        assert_eq!(
+            observed_again.last_seen_at.as_deref(),
+            Some("2026-06-30T02:05:00Z")
+        );
+        assert_eq!(observed_again.last_seen_phase.as_deref(), Some("pre_tool"));
+        assert_eq!(
+            observed_again.observed_binary_version.as_deref(),
+            Some("1.2.4")
+        );
+
+        let idempotent_upsert = upsert_guard_installation(
+            fixture.runtime_home.path(),
+            GuardInstallationUpsert {
+                guard_installation_id: "guard_installation_a".to_owned(),
+                connection_internal_id: "conn_guard_a".to_owned(),
+                project_id: Some("project_guard_a".to_owned()),
+                host_kind: "codex".to_owned(),
+                guard_mode: "guarded".to_owned(),
+                host_capability_json: r#"{"policy_hash":"sha256:policy-a","prompt_capture":true}"#
+                    .to_owned(),
+                installation_status: "configured".to_owned(),
+                installed_at: Some("2026-06-30T02:06:00Z".to_owned()),
+                last_checked_at: "2026-06-30T02:06:00Z".to_owned(),
+                first_seen_at: None,
+                last_seen_at: None,
+                last_seen_phase: None,
+                observed_host_kind: None,
+                observed_policy_hash: None,
+                observed_binary_version: None,
+                metadata_json: "{}".to_owned(),
+            },
+        )?;
+        assert_eq!(idempotent_upsert.installation_status, "active");
+        assert_eq!(
+            idempotent_upsert.last_seen_at.as_deref(),
+            Some("2026-06-30T02:05:00Z")
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn guard_installation_observation_rejects_mismatched_identity_or_policy(
+    ) -> Result<(), Box<dyn Error>> {
+        let fixture = GuardFixture::new("guard-observe-invalid")?;
+        fixture.add_project_connection("project_guard_a", "conn_guard_a", "repo-a")?;
+        fixture.add_project_connection("project_guard_b", "conn_guard_b", "repo-b")?;
+        fixture.add_connection_to_existing_project("project_guard_a", "conn_guard_other")?;
+        fixture.upsert_observable_installation("guard_installation_a", "conn_guard_a")?;
+
+        for observation in [
+            GuardInstallationObservation {
+                guard_installation_id: "guard_installation_a".to_owned(),
+                connection_internal_id: "conn_guard_other".to_owned(),
+                project_id: "project_guard_a".to_owned(),
+                host_kind: "codex".to_owned(),
+                guard_mode: "guarded".to_owned(),
+                observed_policy_hash: "sha256:policy-a".to_owned(),
+                observed_binary_version: Some("1.2.3".to_owned()),
+                observed_phase: "session_start".to_owned(),
+                observed_at: "2026-06-30T03:00:00Z".to_owned(),
+            },
+            GuardInstallationObservation {
+                guard_installation_id: "guard_installation_a".to_owned(),
+                connection_internal_id: "conn_guard_a".to_owned(),
+                project_id: "project_guard_b".to_owned(),
+                host_kind: "codex".to_owned(),
+                guard_mode: "guarded".to_owned(),
+                observed_policy_hash: "sha256:policy-a".to_owned(),
+                observed_binary_version: Some("1.2.3".to_owned()),
+                observed_phase: "pre_tool".to_owned(),
+                observed_at: "2026-06-30T03:01:00Z".to_owned(),
+            },
+            GuardInstallationObservation {
+                guard_installation_id: "guard_installation_a".to_owned(),
+                connection_internal_id: "conn_guard_a".to_owned(),
+                project_id: "project_guard_a".to_owned(),
+                host_kind: "claude_code".to_owned(),
+                guard_mode: "guarded".to_owned(),
+                observed_policy_hash: "sha256:policy-a".to_owned(),
+                observed_binary_version: Some("1.2.3".to_owned()),
+                observed_phase: "post_tool".to_owned(),
+                observed_at: "2026-06-30T03:02:00Z".to_owned(),
+            },
+            GuardInstallationObservation {
+                guard_installation_id: "guard_installation_a".to_owned(),
+                connection_internal_id: "conn_guard_a".to_owned(),
+                project_id: "project_guard_a".to_owned(),
+                host_kind: "codex".to_owned(),
+                guard_mode: "guarded".to_owned(),
+                observed_policy_hash: "sha256:other-policy".to_owned(),
+                observed_binary_version: Some("1.2.3".to_owned()),
+                observed_phase: "stop".to_owned(),
+                observed_at: "2026-06-30T03:03:00Z".to_owned(),
+            },
+        ] {
+            assert!(
+                observe_guard_installation(fixture.runtime_home.path(), observation)?.is_none(),
+                "mismatched observation must not promote installation"
+            );
+        }
+
+        let stored = guard_installation(fixture.runtime_home.path(), "guard_installation_a")?
+            .expect("installation should remain stored");
+        assert_eq!(stored.installation_status, "reload_required");
+        assert!(stored.first_seen_at.is_none());
+        assert!(stored.last_seen_at.is_none());
+        assert!(stored.last_seen_phase.is_none());
+        assert!(stored.observed_policy_hash.is_none());
         Ok(())
     }
 
@@ -1834,6 +2201,75 @@ mod tests {
                     metadata_json: "{}".to_owned(),
                 },
             )?;
+            ensure_agent_connection(
+                self.runtime_home.path(),
+                AgentConnectionRegistration {
+                    connection_internal_id: connection_id.to_owned(),
+                    host_kind: HOST_KIND_CODEX.to_owned(),
+                    intent: CONNECTION_INTENT_SHARED.to_owned(),
+                    host_scope: HOST_SCOPE_PROJECT.to_owned(),
+                    server_name: format!("volicord-{connection_id}"),
+                    config_target: self
+                        .runtime_home
+                        .path()
+                        .join("agent-connections")
+                        .join(connection_id)
+                        .to_string_lossy()
+                        .into_owned(),
+                    mode: CONNECTION_MODE_WORKFLOW.to_owned(),
+                    enabled: true,
+                    managed_fingerprint: format!("fingerprint:{connection_id}"),
+                    last_verification_status: VERIFIED_STATUS_COMPLETE.to_owned(),
+                    last_verification_report_json: "{}".to_owned(),
+                    last_user_actions_json: "[]".to_owned(),
+                    metadata_json: "{}".to_owned(),
+                },
+            )?;
+            add_connection_project(
+                self.runtime_home.path(),
+                ConnectionProjectRegistration {
+                    connection_internal_id: connection_id.to_owned(),
+                    project_id: project_id.to_owned(),
+                },
+            )?;
+            Ok(())
+        }
+
+        fn upsert_observable_installation(
+            &self,
+            guard_installation_id: &str,
+            connection_id: &str,
+        ) -> Result<(), Box<dyn Error>> {
+            upsert_guard_installation(
+                self.runtime_home.path(),
+                GuardInstallationUpsert {
+                    guard_installation_id: guard_installation_id.to_owned(),
+                    connection_internal_id: connection_id.to_owned(),
+                    project_id: Some("project_guard_a".to_owned()),
+                    host_kind: "codex".to_owned(),
+                    guard_mode: "guarded".to_owned(),
+                    host_capability_json:
+                        r#"{"policy_hash":"sha256:policy-a","prompt_capture":true}"#.to_owned(),
+                    installation_status: "reload_required".to_owned(),
+                    installed_at: Some("2026-06-30T01:59:00Z".to_owned()),
+                    last_checked_at: "2026-06-30T01:59:00Z".to_owned(),
+                    first_seen_at: None,
+                    last_seen_at: None,
+                    last_seen_phase: None,
+                    observed_host_kind: None,
+                    observed_policy_hash: None,
+                    observed_binary_version: None,
+                    metadata_json: "{}".to_owned(),
+                },
+            )?;
+            Ok(())
+        }
+
+        fn add_connection_to_existing_project(
+            &self,
+            project_id: &str,
+            connection_id: &str,
+        ) -> Result<(), Box<dyn Error>> {
             ensure_agent_connection(
                 self.runtime_home.path(),
                 AgentConnectionRegistration {

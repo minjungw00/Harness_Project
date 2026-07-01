@@ -800,13 +800,13 @@ fn guard_health_summary_from_record(
 ) -> Result<Option<GuardHealthSummary>, PlanError> {
     let guard_mode = guard_health_mode(&record)?;
     let guard_installation_status = if let Some(installation) = record.guard_installation.as_ref() {
-        parse_guard_installation_health(
+        parse_guard_installation_status(
             "guard_installations",
             &installation.guard_installation_id,
-            &installation.installation_health,
+            &installation.installation_status,
         )?
     } else {
-        GuardInstallationHealth::Unknown
+        GuardInstallationStatus::Absent
     };
     let guard_installation_id = record
         .guard_installation
@@ -835,7 +835,7 @@ fn guard_health_summary_from_record(
         connection.enabled && connection.last_verification_status == "complete"
     });
     let prompt_capture_available = guard_mode_supports_prompt_capture(guard_mode)
-        && guard_installation_status == GuardInstallationHealth::Healthy
+        && guard_installation_status == GuardInstallationStatus::Active
         && record
             .guard_installation
             .as_ref()
@@ -891,17 +891,17 @@ fn parse_guard_mode(
         .map_err(PlanError::Core)
 }
 
-fn parse_guard_installation_health(
+fn parse_guard_installation_status(
     table: &'static str,
     record_ref: &str,
     value: &str,
-) -> Result<GuardInstallationHealth, PlanError> {
+) -> Result<GuardInstallationStatus, PlanError> {
     serde_json::from_value(Value::String(value.to_owned()))
         .map_err(|_| {
             CorePipelineError::Store(StoreError::corrupt_owner_state_value(
                 table,
                 record_ref.to_owned(),
-                "installation_health",
+                "installation_status",
             ))
         })
         .map_err(PlanError::Core)
@@ -988,7 +988,7 @@ fn guard_close_blockers(
 
     let task_ref = task_ref_for_close(request, project_state.state_version);
     let mut blockers = Vec::new();
-    if summary.guard_installation_status != GuardInstallationHealth::Healthy {
+    if summary.guard_installation_status != GuardInstallationStatus::Active {
         let code = if summary.guard_installation_id.is_some() {
             "guard_installation_unhealthy"
         } else {
@@ -997,7 +997,7 @@ fn guard_close_blockers(
         blockers.push(close_blocker(
             CloseReadinessBlockerCategory::ConnectionCapability,
             code,
-            "Guarded close requires a healthy guard installation.",
+            "Guarded close requires an active observed guard installation.",
             vec![task_ref.clone()],
             vec![NextActionSummary {
                 action_kind: NextActionKind::CloseTask,

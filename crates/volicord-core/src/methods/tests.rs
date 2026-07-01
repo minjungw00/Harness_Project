@@ -12259,7 +12259,7 @@ fn close_task_complete_success() -> Result<(), Box<dyn Error>> {
 fn guarded_close_complete_success_reports_guard_health() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     let guard_installation_id =
-        record_guard_installation(&harness, "guarded_success", "guarded", "healthy", "{}")?;
+        record_guard_installation(&harness, "guarded_success", "guarded", "active", "{}")?;
     let (task_id, change_unit_id) =
         create_task_with_change_unit(&harness, "guarded_close_success")?;
     let after_evidence = record_close_evidence(
@@ -12311,7 +12311,7 @@ fn guarded_close_complete_success_reports_guard_health() -> Result<(), Box<dyn E
     );
     assert_eq!(
         status.response_value["guard_health"]["guard_installation_status"],
-        "healthy"
+        "active"
     );
     assert_eq!(
         status.response_value["guard_health"]["prompt_capture_available"],
@@ -12364,7 +12364,7 @@ fn guarded_close_blocks_unhealthy_guard_installation() -> Result<(), Box<dyn Err
         &harness,
         "guarded_unhealthy",
         "guarded",
-        "action_required",
+        "reload_required",
         "{}",
     )?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "guarded_unhealthy")?;
@@ -12408,7 +12408,7 @@ fn guarded_close_blocks_unhealthy_guard_installation() -> Result<(), Box<dyn Err
     );
     assert_eq!(
         response.response_value["guard_health"]["guard_installation_status"],
-        "action_required"
+        "reload_required"
     );
     assert_eq!(response.response_value["base"]["effect_kind"], "no_effect");
     assert_eq!(harness.counts()?, before);
@@ -12461,7 +12461,7 @@ fn guarded_close_blocks_missing_guard_installation() -> Result<(), Box<dyn Error
     );
     assert_eq!(
         response.response_value["guard_health"]["guard_installation_status"],
-        "unknown"
+        "absent"
     );
     assert_eq!(
         response.response_value["guard_health"]["guard_installation_id"],
@@ -12476,7 +12476,7 @@ fn guarded_close_blocks_missing_guard_installation() -> Result<(), Box<dyn Error
 fn guarded_close_blocks_unresolved_unrecorded_changes_and_check_is_read_only(
 ) -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
-    record_guard_installation(&harness, "guarded_unrecorded", "guarded", "healthy", "{}")?;
+    record_guard_installation(&harness, "guarded_unrecorded", "guarded", "active", "{}")?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "guarded_unrecorded")?;
     let after_evidence = record_close_evidence(
         &harness,
@@ -12545,7 +12545,7 @@ fn guarded_close_blocks_unresolved_unrecorded_changes_and_check_is_read_only(
 fn guarded_close_blocks_write_readiness_issue_from_guard_event() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     let guard_installation_id =
-        record_guard_installation(&harness, "guarded_write_ready", "guarded", "healthy", "{}")?;
+        record_guard_installation(&harness, "guarded_write_ready", "guarded", "active", "{}")?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "guarded_write_ready")?;
     let after_evidence = record_close_evidence(
         &harness,
@@ -12616,7 +12616,7 @@ fn guarded_close_blocks_write_readiness_issue_from_guard_event() -> Result<(), B
 #[test]
 fn guarded_pending_judgment_displays_user_answer_paths() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
-    record_guard_installation(&harness, "guarded_pending", "guarded", "healthy", "{}")?;
+    record_guard_installation(&harness, "guarded_pending", "guarded", "active", "{}")?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "guarded_pending")?;
     let after_evidence = record_close_evidence(
         &harness,
@@ -12689,7 +12689,7 @@ fn guarded_pending_judgment_displays_user_answer_paths() -> Result<(), Box<dyn E
 fn mcp_only_close_does_not_receive_guarded_unrecorded_change_blocker() -> Result<(), Box<dyn Error>>
 {
     let harness = MethodHarness::new()?;
-    record_guard_installation(&harness, "mcp_only_unrecorded", "mcp_only", "healthy", "{}")?;
+    record_guard_installation(&harness, "mcp_only_unrecorded", "mcp_only", "active", "{}")?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "mcp_only_unrecorded")?;
     let after_evidence = record_close_evidence(
         &harness,
@@ -13454,7 +13454,7 @@ fn record_guard_installation(
     harness: &MethodHarness,
     suffix: &str,
     guard_mode: &str,
-    installation_health: &str,
+    installation_status: &str,
     host_capability_json: &str,
 ) -> Result<String, Box<dyn Error>> {
     let guard_installation_id = format!("guard_installation_{suffix}");
@@ -13467,9 +13467,15 @@ fn record_guard_installation(
             host_kind: HOST_KIND_CODEX.to_owned(),
             guard_mode: guard_mode.to_owned(),
             host_capability_json: host_capability_json.to_owned(),
-            installation_health: installation_health.to_owned(),
+            installation_status: installation_status.to_owned(),
             installed_at: Some("2026-06-30T00:00:00Z".to_owned()),
             last_checked_at: "2026-06-30T00:01:00Z".to_owned(),
+            first_seen_at: None,
+            last_seen_at: None,
+            last_seen_phase: None,
+            observed_host_kind: None,
+            observed_policy_hash: None,
+            observed_binary_version: None,
             metadata_json: "{}".to_owned(),
         },
     )?;

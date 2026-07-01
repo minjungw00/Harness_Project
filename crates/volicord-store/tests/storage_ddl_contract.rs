@@ -143,7 +143,13 @@ fn initial_schemas_satisfy_connection_storage_contract() -> Result<(), Box<dyn E
             "connection_internal_id",
             "project_internal_id",
             "guard_mode",
-            "installation_health",
+            "installation_status",
+            "first_seen_at",
+            "last_seen_at",
+            "last_seen_phase",
+            "observed_host_kind",
+            "observed_policy_hash",
+            "observed_binary_version",
         ],
     );
     assert_primary_key_columns(

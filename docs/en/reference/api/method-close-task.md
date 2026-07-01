@@ -222,7 +222,7 @@ The production meanings below apply only after the method reaches close-readines
 | `write_check_stale` | `write_compatibility` | A close-relevant `Write Check` is unusable for a freshness reason that is not routed as `STATE_VERSION_CONFLICT`. |
 | `baseline_stale` | `baseline` | The close-relevant baseline basis is stale on a blocker-producing path. |
 | `guard_installation_missing` | `connection_capability` | A guarded or managed close path has no usable guard installation recorded for the verified connection. |
-| `guard_installation_unhealthy` | `connection_capability` | A guarded or managed close path has a guard installation, but its recorded health is not `healthy`. |
+| `guard_installation_unhealthy` | `connection_capability` | A guarded or managed close path has a guard installation, but its recorded status is not `active`. |
 | `guard_connection_unhealthy` | `connection_capability` | A guarded or managed close path has an Agent Connection health fact that is not healthy. |
 | `unresolved_unrecorded_changes` | `connection_capability` | Guard records show unresolved unrecorded Product Repository changes that must be recorded or reconciled before close. |
 | `guard_write_readiness_missing_or_stale` | `write_compatibility` | Guard events detected missing or stale write readiness for the close path. |

@@ -176,7 +176,9 @@ CREATE UNIQUE INDEX idx_agent_connections_target_global
   WHERE project_internal_id IS NULL;
 ```
 
-Registry schema version `2` adds guarded-operation setup records:
+Registry schema version `2` adds guarded-operation setup records. Registry
+schema version `3` replaces the earlier guard installation state column with
+the explicit lifecycle and observation fields shown here:
 
 ```sql
 CREATE TABLE guard_installations (
@@ -187,10 +189,24 @@ CREATE TABLE guard_installations (
   host_kind TEXT NOT NULL CHECK (length(trim(host_kind)) > 0),
   guard_mode TEXT NOT NULL CHECK (guard_mode IN ('mcp_only', 'guarded', 'managed')),
   host_capability_json TEXT NOT NULL DEFAULT '{}',
-  installation_health TEXT NOT NULL
-    CHECK (installation_health IN ('unknown', 'healthy', 'action_required', 'failed')),
+  installation_status TEXT NOT NULL
+    CHECK (installation_status IN (
+      'absent',
+      'configured',
+      'reload_required',
+      'active',
+      'degraded',
+      'stale',
+      'broken'
+    )),
   installed_at TEXT,
   last_checked_at TEXT NOT NULL,
+  first_seen_at TEXT,
+  last_seen_at TEXT,
+  last_seen_phase TEXT,
+  observed_host_kind TEXT,
+  observed_policy_hash TEXT,
+  observed_binary_version TEXT,
   metadata_json TEXT NOT NULL DEFAULT '{}',
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
@@ -205,8 +221,8 @@ CREATE INDEX idx_guard_installations_connection
   ON guard_installations (connection_internal_id);
 CREATE INDEX idx_guard_installations_project
   ON guard_installations (project_internal_id);
-CREATE INDEX idx_guard_installations_health
-  ON guard_installations (installation_health);
+CREATE INDEX idx_guard_installations_status
+  ON guard_installations (installation_status);
 CREATE UNIQUE INDEX idx_guard_installations_scope_project
   ON guard_installations (connection_internal_id, project_internal_id, guard_mode)
   WHERE project_internal_id IS NOT NULL;
@@ -215,7 +231,7 @@ CREATE UNIQUE INDEX idx_guard_installations_scope_global
   WHERE project_internal_id IS NULL;
 ```
 
-The version `2` registry migration updates existing `runtime_home.schema_version` rows from `1` to `2`.
+The version `3` registry migration updates existing `runtime_home.schema_version` rows from `2` to `3`.
 
 Registry constraints:
 
@@ -231,7 +247,7 @@ Registry constraints:
 - `agent_connections.mode` is constrained to `read_only` or `workflow`.
 - `agent_connections.last_verification_report_json` stores the latest verification report JSON object. `agent_connections.last_user_actions_json` stores the latest user-action JSON array.
 - `connection_projects` is the explicit project allowlist for one Agent Connection. It stores membership with `connection_internal_id` and `project_internal_id`. Deleting a project or connection that still has membership is restricted.
-- `guard_installations` stores local guard setup health and host capability for one Runtime Home, Agent Connection, and optional project scope. Its `guard_mode` values are `mcp_only`, `guarded`, and `managed`. Its `installation_health` values are `unknown`, `healthy`, `action_required`, and `failed`. These rows are local authority records for guarded operation; they are not OS-level enforcement proof or write-prevention proof.
+- `guard_installations` stores local guard setup lifecycle state and host capability for one Runtime Home, Agent Connection, and optional project scope. Its `guard_mode` values are `mcp_only`, `guarded`, and `managed`. Its `installation_status` values are `absent`, `configured`, `reload_required`, `active`, `degraded`, `stale`, and `broken`. A valid observed guard hook for the recorded project, Agent Connection, host kind, guard mode, and policy hash can move a row to `active` and records first-seen and last-seen metadata. These rows are local authority records for guarded operation; they are not OS-level enforcement proof or write-prevention proof.
 - `schema_migrations` records applied registry schema versions. Migration execution semantics stay with [Storage Versioning](storage-versioning.md).
 
 ## Project `state.sqlite`

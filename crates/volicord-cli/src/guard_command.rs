@@ -18,8 +18,9 @@ use volicord_store::{
     guards::{
         agent_session, guard_event, insert_agent_session, insert_guard_event,
         insert_prompt_capture, insert_unrecorded_change, list_unresolved_unrecorded_changes,
-        prompt_capture, unrecorded_change, AgentSessionInsert, GuardEventInsert,
-        PromptCaptureInsert, UnrecordedChangeInsert,
+        observe_guard_installation, prompt_capture, unrecorded_change, AgentSessionInsert,
+        GuardEventInsert, GuardInstallationObservation, PromptCaptureInsert,
+        UnrecordedChangeInsert,
     },
     runtime_home::{resolve_runtime_home, RuntimeHomeResolutionError},
     StoreError,
@@ -41,6 +42,7 @@ use crate::user_command::{
 
 const GUARD_SCHEMA_VERSION: u64 = 1;
 const DEFAULT_GUARD_MODE: &str = "guarded";
+const VOLICORD_POLICY_FILE: &str = ".volicord/policy.json";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct GuardCommandOutcome {
@@ -315,6 +317,8 @@ where
     let project = resolve_guard_project(&runtime_home, current_dir, &options, &input.raw_value)?;
     let envelope = guard_envelope(phase, &options, &input, &project)?;
     ensure_required_session(&runtime_home, &project, &envelope, phase)?;
+    let _activation =
+        observe_guard_installation_activation(&runtime_home, &project, &envelope, phase)?;
 
     let (decision, result, exits_failure) = match phase {
         GuardPhase::SessionStart => {
@@ -783,6 +787,61 @@ fn ensure_required_session(
         )?;
     }
     Ok(())
+}
+
+fn observe_guard_installation_activation(
+    runtime_home: &Path,
+    project: &ProjectRecord,
+    envelope: &GuardEnvelope,
+    phase: GuardPhase,
+) -> Result<Option<volicord_store::guards::GuardInstallationRecord>, GuardCommandError> {
+    if envelope.guard_mode == "mcp_only" {
+        return Ok(None);
+    }
+    let Some(guard_installation_id) = envelope.guard_installation_id.clone() else {
+        return Ok(None);
+    };
+    let Some(observed_policy_hash) = current_policy_hash(project)? else {
+        return Ok(None);
+    };
+    observe_guard_installation(
+        runtime_home,
+        GuardInstallationObservation {
+            guard_installation_id,
+            connection_internal_id: envelope.connection_id.clone(),
+            project_id: project.project_id.clone(),
+            host_kind: envelope.host_kind.clone(),
+            guard_mode: envelope.guard_mode.clone(),
+            observed_policy_hash,
+            observed_binary_version: Some(env!("CARGO_PKG_VERSION").to_owned()),
+            observed_phase: phase.event_kind().to_owned(),
+            observed_at: envelope.occurred_at.clone(),
+        },
+    )
+    .map_err(Into::into)
+}
+
+fn current_policy_hash(project: &ProjectRecord) -> Result<Option<String>, GuardCommandError> {
+    let policy_path = project.repo_root.join(VOLICORD_POLICY_FILE);
+    let text = match fs::read_to_string(&policy_path) {
+        Ok(text) => text,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+        Err(error) => {
+            return Err(GuardCommandError::Runtime(format!(
+                "failed to read guard policy {}: {error}",
+                policy_path.display()
+            )));
+        }
+    };
+    let value = serde_json::from_str::<Value>(&text).map_err(|error| {
+        GuardCommandError::Runtime(format!(
+            "guard policy is not valid JSON: {} ({error})",
+            policy_path.display()
+        ))
+    })?;
+    serde_json::to_string(&value)
+        .map(|canonical| Some(sha256_text(&canonical)))
+        .map_err(json_error)
 }
 
 fn guard_state_summary(

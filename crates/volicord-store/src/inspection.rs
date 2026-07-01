@@ -5,7 +5,7 @@ use std::{
 
 use rusqlite::{params, Connection, OptionalExtension};
 use serde_json::Value;
-use volicord_types::{GuardInstallationHealth, GuardMode};
+use volicord_types::{GuardInstallationStatus, GuardMode};
 
 use crate::{
     agent_connections::{
@@ -166,9 +166,15 @@ pub struct GuardInstallationInspectionRecord {
     pub host_kind: String,
     pub guard_mode: String,
     pub host_capability_json: String,
-    pub installation_health: String,
+    pub installation_status: String,
     pub installed_at: Option<String>,
     pub last_checked_at: String,
+    pub first_seen_at: Option<String>,
+    pub last_seen_at: Option<String>,
+    pub last_seen_phase: Option<String>,
+    pub observed_host_kind: Option<String>,
+    pub observed_policy_hash: Option<String>,
+    pub observed_binary_version: Option<String>,
     pub metadata_json: String,
     pub created_at: String,
     pub updated_at: String,
@@ -726,9 +732,15 @@ fn validate_registry_required_schema(
             "host_kind",
             "guard_mode",
             "host_capability_json",
-            "installation_health",
+            "installation_status",
             "installed_at",
             "last_checked_at",
+            "first_seen_at",
+            "last_seen_at",
+            "last_seen_phase",
+            "observed_host_kind",
+            "observed_policy_hash",
+            "observed_binary_version",
             "metadata_json",
             "created_at",
             "updated_at",
@@ -1239,9 +1251,15 @@ fn read_guard_installation_rows(
                 gi.host_kind,
                 gi.guard_mode,
                 gi.host_capability_json,
-                gi.installation_health,
+                gi.installation_status,
                 gi.installed_at,
                 gi.last_checked_at,
+                gi.first_seen_at,
+                gi.last_seen_at,
+                gi.last_seen_phase,
+                gi.observed_host_kind,
+                gi.observed_policy_hash,
+                gi.observed_binary_version,
                 gi.metadata_json,
                 gi.created_at,
                 gi.updated_at
@@ -1260,12 +1278,18 @@ fn read_guard_installation_rows(
                 host_kind: row.get(3)?,
                 guard_mode: row.get(4)?,
                 host_capability_json: row.get(5)?,
-                installation_health: row.get(6)?,
+                installation_status: row.get(6)?,
                 installed_at: row.get(7)?,
                 last_checked_at: row.get(8)?,
-                metadata_json: row.get(9)?,
-                created_at: row.get(10)?,
-                updated_at: row.get(11)?,
+                first_seen_at: row.get(9)?,
+                last_seen_at: row.get(10)?,
+                last_seen_phase: row.get(11)?,
+                observed_host_kind: row.get(12)?,
+                observed_policy_hash: row.get(13)?,
+                observed_binary_version: row.get(14)?,
+                metadata_json: row.get(15)?,
+                created_at: row.get(16)?,
+                updated_at: row.get(17)?,
             })
         })
         .map_err(sqlite_unreadable)?;
@@ -1438,7 +1462,7 @@ fn validate_guard_installation_row(
     }
     validate_host_kind_value(&installation.host_kind)?;
     validate_guard_mode_value(&installation.guard_mode)?;
-    validate_guard_installation_health_value(&installation.installation_health)?;
+    validate_guard_installation_status_value(&installation.installation_status)?;
     validate_json_object(
         "guard_installations.host_capability_json",
         &installation.host_capability_json,
@@ -1451,6 +1475,30 @@ fn validate_guard_installation_row(
         "guard_installations.last_checked_at",
         &installation.last_checked_at,
     )?;
+    if let Some(first_seen_at) = &installation.first_seen_at {
+        require_nonempty("guard_installations.first_seen_at", first_seen_at)?;
+    }
+    if let Some(last_seen_at) = &installation.last_seen_at {
+        require_nonempty("guard_installations.last_seen_at", last_seen_at)?;
+    }
+    if let Some(last_seen_phase) = &installation.last_seen_phase {
+        require_nonempty("guard_installations.last_seen_phase", last_seen_phase)?;
+    }
+    if let Some(observed_host_kind) = &installation.observed_host_kind {
+        validate_host_kind_value(observed_host_kind)?;
+    }
+    if let Some(observed_policy_hash) = &installation.observed_policy_hash {
+        require_nonempty(
+            "guard_installations.observed_policy_hash",
+            observed_policy_hash,
+        )?;
+    }
+    if let Some(observed_binary_version) = &installation.observed_binary_version {
+        require_nonempty(
+            "guard_installations.observed_binary_version",
+            observed_binary_version,
+        )?;
+    }
     require_nonempty("guard_installations.created_at", &installation.created_at)?;
     require_nonempty("guard_installations.updated_at", &installation.updated_at)?;
     Ok(())
@@ -1516,18 +1564,21 @@ fn validate_guard_mode_value(mode: &str) -> Result<(), InspectionIssue> {
     }
 }
 
-fn validate_guard_installation_health_value(status: &str) -> Result<(), InspectionIssue> {
+fn validate_guard_installation_status_value(status: &str) -> Result<(), InspectionIssue> {
     if matches!(
         status,
-        value if value == GuardInstallationHealth::Unknown.as_str()
-            || value == GuardInstallationHealth::Healthy.as_str()
-            || value == GuardInstallationHealth::ActionRequired.as_str()
-            || value == GuardInstallationHealth::Failed.as_str()
+        value if value == GuardInstallationStatus::Absent.as_str()
+            || value == GuardInstallationStatus::Configured.as_str()
+            || value == GuardInstallationStatus::ReloadRequired.as_str()
+            || value == GuardInstallationStatus::Active.as_str()
+            || value == GuardInstallationStatus::Degraded.as_str()
+            || value == GuardInstallationStatus::Stale.as_str()
+            || value == GuardInstallationStatus::Broken.as_str()
     ) {
         Ok(())
     } else {
         Err(InspectionIssue::Malformed(format!(
-            "guard_installations.installation_health is not supported: {status}"
+            "guard_installations.installation_status is not supported: {status}"
         )))
     }
 }

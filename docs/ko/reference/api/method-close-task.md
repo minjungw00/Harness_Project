@@ -222,7 +222,7 @@ CloseTaskRequest:
 | `write_check_stale` | `write_compatibility` | 닫기 관련 `Write Check`이 `STATE_VERSION_CONFLICT`로 처리되지 않는 최신성 사유로 사용할 수 없습니다. |
 | `baseline_stale` | `baseline` | 닫기 관련 기준선 근거가 차단 사유 생성 경로에서 오래되었습니다. |
 | `guard_installation_missing` | `connection_capability` | guarded 또는 managed 닫기 경로에 확인된 연결에 대해 사용할 수 있는 guard 설치가 기록되어 있지 않습니다. |
-| `guard_installation_unhealthy` | `connection_capability` | guarded 또는 managed 닫기 경로에 guard 설치는 있지만 기록된 상태가 `healthy`가 아닙니다. |
+| `guard_installation_unhealthy` | `connection_capability` | guarded 또는 managed 닫기 경로에 guard 설치는 있지만 기록된 상태가 `active`가 아닙니다. |
 | `guard_connection_unhealthy` | `connection_capability` | guarded 또는 managed 닫기 경로에 건강하지 않은 Agent Connection 상태 사실이 있습니다. |
 | `unresolved_unrecorded_changes` | `connection_capability` | guard 기록에 닫기 전에 기록하거나 조정해야 하는 해결되지 않은 미기록 Product Repository 변경이 있습니다. |
 | `guard_write_readiness_missing_or_stale` | `write_compatibility` | guard 이벤트가 닫기 경로에 누락되었거나 오래된 쓰기 준비 상태를 감지했습니다. |

@@ -177,6 +177,8 @@ CREATE UNIQUE INDEX idx_agent_connections_target_global
 ```
 
 Registry 스키마 버전 `2`는 guarded-operation 설정 기록을 추가합니다.
+Registry 스키마 버전 `3`은 이전 guard 설치 상태 열을 아래의 명시적
+생명주기와 관찰 필드로 대체합니다.
 
 ```sql
 CREATE TABLE guard_installations (
@@ -187,10 +189,24 @@ CREATE TABLE guard_installations (
   host_kind TEXT NOT NULL CHECK (length(trim(host_kind)) > 0),
   guard_mode TEXT NOT NULL CHECK (guard_mode IN ('mcp_only', 'guarded', 'managed')),
   host_capability_json TEXT NOT NULL DEFAULT '{}',
-  installation_health TEXT NOT NULL
-    CHECK (installation_health IN ('unknown', 'healthy', 'action_required', 'failed')),
+  installation_status TEXT NOT NULL
+    CHECK (installation_status IN (
+      'absent',
+      'configured',
+      'reload_required',
+      'active',
+      'degraded',
+      'stale',
+      'broken'
+    )),
   installed_at TEXT,
   last_checked_at TEXT NOT NULL,
+  first_seen_at TEXT,
+  last_seen_at TEXT,
+  last_seen_phase TEXT,
+  observed_host_kind TEXT,
+  observed_policy_hash TEXT,
+  observed_binary_version TEXT,
   metadata_json TEXT NOT NULL DEFAULT '{}',
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
@@ -205,8 +221,8 @@ CREATE INDEX idx_guard_installations_connection
   ON guard_installations (connection_internal_id);
 CREATE INDEX idx_guard_installations_project
   ON guard_installations (project_internal_id);
-CREATE INDEX idx_guard_installations_health
-  ON guard_installations (installation_health);
+CREATE INDEX idx_guard_installations_status
+  ON guard_installations (installation_status);
 CREATE UNIQUE INDEX idx_guard_installations_scope_project
   ON guard_installations (connection_internal_id, project_internal_id, guard_mode)
   WHERE project_internal_id IS NOT NULL;
@@ -215,7 +231,7 @@ CREATE UNIQUE INDEX idx_guard_installations_scope_global
   WHERE project_internal_id IS NULL;
 ```
 
-버전 `2` registry 마이그레이션은 기존 `runtime_home.schema_version` 행을 `1`에서 `2`로 갱신합니다.
+버전 `3` registry 마이그레이션은 기존 `runtime_home.schema_version` 행을 `2`에서 `3`으로 갱신합니다.
 
 Registry 제약:
 
@@ -231,7 +247,7 @@ Registry 제약:
 - `agent_connections.mode`는 `read_only` 또는 `workflow`로 제한됩니다.
 - `agent_connections.last_verification_report_json`은 최신 검증 보고서 JSON 객체를 저장합니다. `agent_connections.last_user_actions_json`은 최신 사용자 동작 JSON 배열을 저장합니다.
 - `connection_projects`는 Agent Connection 하나에 대한 명시적 프로젝트 허용 목록입니다. `connection_internal_id`와 `project_internal_id`로 멤버십을 저장합니다. 아직 멤버십이 남은 프로젝트나 연결 삭제는 제한됩니다.
-- `guard_installations`는 Runtime Home 하나, Agent Connection 하나, 선택적 프로젝트 범위에 대한 로컬 guard 설정 health와 호스트 capability를 저장합니다. `guard_mode` 값은 `mcp_only`, `guarded`, `managed`입니다. `installation_health` 값은 `unknown`, `healthy`, `action_required`, `failed`입니다. 이 행은 guarded operation을 위한 로컬 권한 기록이며 OS 수준 집행 증명이나 쓰기 방지 증명이 아닙니다.
+- `guard_installations`는 Runtime Home 하나, Agent Connection 하나, 선택적 프로젝트 범위에 대한 로컬 guard 설정 생명주기 상태와 호스트 capability를 저장합니다. `guard_mode` 값은 `mcp_only`, `guarded`, `managed`입니다. `installation_status` 값은 `absent`, `configured`, `reload_required`, `active`, `degraded`, `stale`, `broken`입니다. 기록된 프로젝트, Agent Connection, 호스트 종류, guard 모드, policy hash와 일치하는 유효한 guard hook 관찰은 행을 `active`로 옮길 수 있고 first-seen 및 last-seen 메타데이터를 기록합니다. 이 행은 guarded operation을 위한 로컬 권한 기록이며 OS 수준 집행 증명이나 쓰기 방지 증명이 아닙니다.
 - `schema_migrations`는 적용된 registry 스키마 버전을 기록합니다. 마이그레이션 실행 의미는 [저장소 버전 관리](storage-versioning.md)가 담당합니다.
 
 ## 프로젝트 `state.sqlite`

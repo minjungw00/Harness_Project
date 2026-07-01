@@ -151,7 +151,7 @@ This preservation applies to `tasks`, `change_units`, `user_judgments`, `project
 
 Guarded-operation records preserve local authority facts about host integration state. They can help Core and Store code determine whether work can honestly proceed or close, but they are not OS-level sandboxing, filesystem ACLs, external policy enforcement, anti-forgery proof, or proof that a write was prevented.
 
-`guard_installations` records setup health and host capability by Runtime Home, Agent Connection, and optional project scope. `agent_sessions`, `guard_events`, `prompt_captures`, and `unrecorded_changes` are project-local rows and must not leak across project `state.sqlite` databases. An unresolved `unrecorded_changes` row means an observed Product Repository change still needs owner-defined reconciliation; resolving the row records the local resolution facts and preserves the row.
+`guard_installations` records setup lifecycle state, observed hook metadata, and host capability by Runtime Home, Agent Connection, and optional project scope. `configured` and `reload_required` mean files or metadata are installed but no matching guard hook has yet been observed. `active` means Volicord observed a valid guard hook for the recorded project, Agent Connection, host kind, guard mode, and policy hash; it does not prove OS-level enforcement or sandboxing. `agent_sessions`, `guard_events`, `prompt_captures`, and `unrecorded_changes` are project-local rows and must not leak across project `state.sqlite` databases. An unresolved `unrecorded_changes` row means an observed Product Repository change still needs owner-defined reconciliation; resolving the row records the local resolution facts and preserves the row.
 
 ### Current Close Basis
 
@@ -187,7 +187,7 @@ Closed storage-owned value sets are persistence constraints. Unknown values must
 | Agent Connection `enabled` | `0`, `1` |
 | Agent Connection `last_verification_status` | `not_verified`, `complete`, `action_required`, `failed` |
 | Guard installation `guard_mode` | `mcp_only`, `guarded`, `managed` |
-| Guard installation `installation_health` | `unknown`, `healthy`, `action_required`, `failed` |
+| Guard installation `installation_status` | `absent`, `configured`, `reload_required`, `active`, `degraded`, `stale`, `broken` |
 | `agent_sessions.guard_mode` | `mcp_only`, `guarded`, `managed` |
 | `guard_events.decision` | `allow`, `deny`, `warn`, `inject_context` |
 | `unrecorded_changes.status` | `unresolved`, `resolved` |

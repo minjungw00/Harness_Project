@@ -37,7 +37,7 @@ use volicord_store::{
     runtime_home::{resolve_runtime_home, RuntimeHomeResolutionError},
     StoreError,
 };
-use volicord_types::{GuardInstallationHealth, GuardMode};
+use volicord_types::{GuardInstallationStatus, GuardMode};
 
 use crate::host_integration::{
     claude_code::{ClaudeCodeAdapter, ProductionCommandRunner},
@@ -591,10 +591,12 @@ pub fn run_init_command(
     )?;
     apply_host_plan(host_kind, &host_plan, process)?;
     let integration_plan = apply_guard_integration(integration_plan)?;
+    let installation_status = initial_guard_installation_status(&host_plan, &integration_plan);
     let guard_installation = record_guard_installation(
         &runtime_home,
         host_kind,
         parsed.mode,
+        installation_status,
         &connection.connection_internal_id,
         &project.project_id,
         &integration_plan,
@@ -2627,6 +2629,7 @@ fn validate_tools_for_mode(mode: &str, tools: &[String]) -> Result<(), String> {
 struct GuardIntegrationPlan {
     generated_files: Vec<GeneratedFilePlan>,
     policy: Value,
+    policy_hash: String,
     guard_installation_id: String,
 }
 
@@ -2739,9 +2742,11 @@ fn plan_guard_integration(
             true,
         )?);
     }
+    let policy_hash = policy_hash(&policy)?;
     Ok(GuardIntegrationPlan {
         generated_files,
         policy,
+        policy_hash,
         guard_installation_id: guard_installation_id.to_owned(),
     })
 }
@@ -3047,15 +3052,12 @@ fn record_guard_installation(
     runtime_home: &Path,
     host_kind: HostKind,
     init_mode: InitMode,
+    installation_status: GuardInstallationStatus,
     connection_id: &str,
     project_id: &str,
     integration: &GuardIntegrationPlan,
 ) -> Result<GuardInstallationRecord, ConnectionCommandError> {
     let now = current_timestamp();
-    let health = match init_mode {
-        InitMode::McpOnly => GuardInstallationHealth::Unknown,
-        InitMode::Guarded | InitMode::Managed => GuardInstallationHealth::ActionRequired,
-    };
     upsert_guard_installation(
         runtime_home,
         GuardInstallationUpsert {
@@ -3065,9 +3067,15 @@ fn record_guard_installation(
             host_kind: host_kind.as_str().to_owned(),
             guard_mode: init_mode.guard_value().to_owned(),
             host_capability_json: guard_capability_json(integration)?,
-            installation_health: health.as_str().to_owned(),
+            installation_status: installation_status.as_str().to_owned(),
             installed_at: (init_mode != InitMode::McpOnly).then_some(now.clone()),
             last_checked_at: now,
+            first_seen_at: None,
+            last_seen_at: None,
+            last_seen_phase: None,
+            observed_host_kind: None,
+            observed_policy_hash: None,
+            observed_binary_version: None,
             metadata_json: serde_json::to_string(&json!({
                 "created_by": INIT_METADATA_CREATED_BY,
                 "policy_file": VOLICORD_POLICY_FILE,
@@ -3081,10 +3089,38 @@ fn record_guard_installation(
 fn guard_capability_json(plan: &GuardIntegrationPlan) -> Result<String, ConnectionCommandError> {
     serde_json::to_string(&json!({
         "schema": "volicord-guard-capability-v1",
+        "policy_hash": plan.policy_hash,
+        "prompt_capture": guard_has_prompt_capture_commands(&plan.policy),
         "files": generated_files_json(&plan.generated_files),
         "commands": plan.policy["guard"]["commands"].clone(),
     }))
     .map_err(|error| ConnectionCommandError::runtime(error.to_string()))
+}
+
+fn initial_guard_installation_status(
+    host_plan: &HostPlan,
+    integration: &GuardIntegrationPlan,
+) -> GuardInstallationStatus {
+    if host_plan.change != PlannedChange::Noop
+        || integration.generated_files.iter().any(|file| {
+            matches!(
+                file.status,
+                FilePlanStatus::Created | FilePlanStatus::Updated
+            )
+        })
+    {
+        GuardInstallationStatus::ReloadRequired
+    } else {
+        GuardInstallationStatus::Configured
+    }
+}
+
+fn guard_has_prompt_capture_commands(policy: &Value) -> bool {
+    policy
+        .get("guard")
+        .and_then(|guard| guard.get("commands"))
+        .and_then(|commands| commands.get("prompt_capture"))
+        .is_some()
 }
 
 fn generated_files_json(files: &[GeneratedFilePlan]) -> Value {
@@ -3116,6 +3152,18 @@ fn init_user_actions(existing: &[UserAction], host_kind: HostKind) -> Vec<UserAc
 
 fn current_timestamp() -> String {
     DateTime::<Utc>::from(SystemTime::now()).to_rfc3339_opts(SecondsFormat::Secs, true)
+}
+
+fn policy_hash(policy: &Value) -> Result<String, ConnectionCommandError> {
+    serde_json::to_string(policy)
+        .map(|text| sha256_text(&text))
+        .map_err(|error| ConnectionCommandError::runtime(error.to_string()))
+}
+
+fn sha256_text(text: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(text.as_bytes());
+    format!("sha256:{}", hex_bytes(&hasher.finalize()))
 }
 
 fn stable_id(prefix: &str, parts: &[&str]) -> String {
@@ -3171,8 +3219,14 @@ impl GuardOperationalState {
             installation_state: health.to_owned(),
             prompt_capture_state: if init_mode == InitMode::McpOnly {
                 "disabled".to_owned()
-            } else {
+            } else if health == GuardInstallationStatus::Active.as_str() {
                 "available".to_owned()
+            } else if health == GuardInstallationStatus::ReloadRequired.as_str() {
+                "reload_required".to_owned()
+            } else if health == GuardInstallationStatus::Configured.as_str() {
+                "configured".to_owned()
+            } else {
+                "unavailable".to_owned()
             },
             missing_files: Vec::new(),
         }
@@ -3432,18 +3486,12 @@ fn render_init_output(data: InitOutput<'_>) -> Result<String, ConnectionCommandE
             .map(|verification| init_user_actions(&verification.host.user_actions, data.host_kind))
             .unwrap_or_else(|| init_user_actions(&data.host_plan.user_actions, data.host_kind))
     };
-    let guard_health = data
+    let guard_status = data
         .guard_installation
-        .map(|guard| guard.installation_health.as_str())
-        .unwrap_or_else(|| {
-            if data.init_mode == InitMode::McpOnly {
-                GuardInstallationHealth::Unknown.as_str()
-            } else {
-                GuardInstallationHealth::ActionRequired.as_str()
-            }
-        });
+        .map(|guard| guard.installation_status.as_str())
+        .unwrap_or(GuardInstallationStatus::Configured.as_str());
     let guard_state = if data.guard_installation.is_some() {
-        GuardOperationalState::init(guard_health, data.init_mode)
+        GuardOperationalState::init(guard_status, data.init_mode)
     } else {
         GuardOperationalState::planned(data.init_mode)
     };
@@ -3520,11 +3568,12 @@ fn render_init_output(data: InitOutput<'_>) -> Result<String, ConnectionCommandE
                 "generated_files": generated_files_json(&data.integration.generated_files),
                 "guard_installation": {
                     "guard_installation_id": &data.integration.guard_installation_id,
-                    "installation_health": guard_health,
+                    "installation_status": guard_status,
+                    "policy_hash": &data.integration.policy_hash,
                     "recorded": data.guard_installation.is_some(),
                 },
                 "guard": guard_state.to_json(),
-                "checks": init_checks_json(data.verification),
+                "checks": init_checks_json(data.verification, guard_status),
                 "actions": actions_json_values(&actions),
                 "primary_next_action": primary_next_action.map(|action| action.to_json()),
             });
@@ -3535,7 +3584,7 @@ fn render_init_output(data: InitOutput<'_>) -> Result<String, ConnectionCommandE
     }
 }
 
-fn init_checks_json(verification: Option<&VerificationReport>) -> Value {
+fn init_checks_json(verification: Option<&VerificationReport>, guard_status: &str) -> Value {
     if let Some(report) = verification {
         Value::Array(vec![
             json!({
@@ -3555,8 +3604,8 @@ fn init_checks_json(verification: Option<&VerificationReport>) -> Value {
             }),
             json!({
                 "id": "guard_installation",
-                "status": "action_required",
-                "summary": "guard installation status was recorded; host reload or approval may still be required",
+                "status": guard_status,
+                "summary": "guard installation status was recorded",
             }),
         ])
     } else {
@@ -4000,20 +4049,30 @@ fn guard_state_for_connection(
     }
 
     let installation_state = if installations.iter().any(|installation| {
-        installation.installation_health == GuardInstallationHealth::ActionRequired.as_str()
+        installation.installation_status == GuardInstallationStatus::ReloadRequired.as_str()
     }) {
-        GuardInstallationHealth::ActionRequired.as_str()
+        GuardInstallationStatus::ReloadRequired.as_str()
+    } else if installations.iter().any(|installation| {
+        installation.installation_status == GuardInstallationStatus::Active.as_str()
+    }) {
+        GuardInstallationStatus::Active.as_str()
     } else if installations.iter().all(|installation| {
-        installation.installation_health == GuardInstallationHealth::Unknown.as_str()
+        installation.installation_status == GuardInstallationStatus::Configured.as_str()
     }) {
-        GuardInstallationHealth::Unknown.as_str()
+        GuardInstallationStatus::Configured.as_str()
     } else {
-        installations[0].installation_health.as_str()
+        installations[0].installation_status.as_str()
     };
-    let prompt_capture_state = if prompt_capture_available {
+    let prompt_capture_state = if prompt_capture_available
+        && installation_state == GuardInstallationStatus::Active.as_str()
+    {
         "available"
     } else if prompt_capture_disabled {
         "disabled"
+    } else if installation_state == GuardInstallationStatus::ReloadRequired.as_str() {
+        "reload_required"
+    } else if installation_state == GuardInstallationStatus::Configured.as_str() {
+        "configured"
     } else {
         "unavailable"
     };

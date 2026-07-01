@@ -943,7 +943,7 @@ fn guarded_unresolved_unrecorded_changes_block_close_without_mutation() -> Resul
 {
     let fixture = CoreFixture::new("guarded_unrecorded_close")?;
     let service = core(&fixture);
-    record_guard_installation(&fixture, "guarded_unrecorded_close", "guarded", "healthy")?;
+    record_guard_installation(&fixture, "guarded_unrecorded_close", "guarded", "active")?;
     let (task_id, change_unit_id) =
         create_task_with_change_unit(&fixture, &service, "guarded_unrecorded_close")?;
     let after_evidence =
@@ -3640,7 +3640,7 @@ fn record_guard_installation(
     fixture: &CoreFixture,
     suffix: &str,
     guard_mode: &str,
-    installation_health: &str,
+    installation_status: &str,
 ) -> Result<(), Box<dyn Error>> {
     upsert_guard_installation(
         fixture.runtime_home_path(),
@@ -3651,9 +3651,15 @@ fn record_guard_installation(
             host_kind: HOST_KIND_CODEX.to_owned(),
             guard_mode: guard_mode.to_owned(),
             host_capability_json: "{}".to_owned(),
-            installation_health: installation_health.to_owned(),
+            installation_status: installation_status.to_owned(),
             installed_at: Some("2026-06-30T00:00:00Z".to_owned()),
             last_checked_at: "2026-06-30T00:01:00Z".to_owned(),
+            first_seen_at: None,
+            last_seen_at: None,
+            last_seen_phase: None,
+            observed_host_kind: None,
+            observed_policy_hash: None,
+            observed_binary_version: None,
             metadata_json: "{}".to_owned(),
         },
     )?;

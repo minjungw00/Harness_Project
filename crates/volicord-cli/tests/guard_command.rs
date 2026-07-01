@@ -9,13 +9,17 @@ use std::{
 };
 
 use serde_json::{json, Value};
+use sha2::{Digest, Sha256};
 use volicord_core::{CoreService, InvocationContext};
 use volicord_store::agent_connections::{
     add_connection_project, ensure_agent_connection, AgentConnectionRegistration,
     ConnectionProjectRegistration, CONNECTION_INTENT_SHARED, CONNECTION_MODE_WORKFLOW,
     HOST_KIND_CODEX, HOST_SCOPE_PROJECT, VERIFIED_STATUS_COMPLETE,
 };
-use volicord_store::guards::{guard_event, list_unresolved_unrecorded_changes, prompt_capture};
+use volicord_store::guards::{
+    guard_event, guard_installation, list_unresolved_unrecorded_changes, prompt_capture,
+    upsert_guard_installation, GuardInstallationUpsert,
+};
 use volicord_test_support::core_fixtures::{CoreFixture, UpdateScopeFixture, UserJudgmentFixture};
 use volicord_types::{
     ActorSource, ChangeUnitOperation, JudgmentKind, OperationCategory, ProjectId,
@@ -56,6 +60,48 @@ fn guard_session_start_injects_context_and_records_event() -> Result<(), Box<dyn
     .expect("guard event should be stored");
     assert_eq!(stored.decision, "inject_context");
     assert_eq!(stored.event_kind, "session_start");
+    Ok(())
+}
+
+#[test]
+fn guard_session_start_promotes_matching_installation_active() -> Result<(), Box<dyn Error>> {
+    let fixture = GuardCliFixture::new("guard-session-activates")?;
+    let (guard_installation_id, policy_hash) = fixture.install_guard_policy()?;
+    let event = json!({
+        "event_id": "guard_session_activate_event",
+        "session_id": "guard_session_activate",
+        "connection_id": fixture.connection_id(),
+        "guard_installation_id": guard_installation_id,
+        "host_kind": "codex",
+        "timestamp": "2026-06-30T04:00:00Z"
+    });
+
+    let output = run_guard(
+        fixture.runtime_home(),
+        fixture.repo_root(),
+        ["guard", "session-start", "--repo", fixture.repo_arg()],
+        &event,
+    )?;
+    assert_success(&output);
+
+    let stored = guard_installation(fixture.runtime_home(), &guard_installation_id)?
+        .expect("guard installation should be stored");
+    assert_eq!(stored.installation_status, "active");
+    assert_eq!(
+        stored.first_seen_at.as_deref(),
+        Some("2026-06-30T04:00:00Z")
+    );
+    assert_eq!(stored.last_seen_at.as_deref(), Some("2026-06-30T04:00:00Z"));
+    assert_eq!(stored.last_seen_phase.as_deref(), Some("session_start"));
+    assert_eq!(stored.observed_host_kind.as_deref(), Some("codex"));
+    assert_eq!(
+        stored.observed_policy_hash.as_deref(),
+        Some(policy_hash.as_str())
+    );
+    assert_eq!(
+        stored.observed_binary_version.as_deref(),
+        Some(env!("CARGO_PKG_VERSION"))
+    );
     Ok(())
 }
 
@@ -864,6 +910,53 @@ impl GuardCliFixture {
         Ok(())
     }
 
+    fn install_guard_policy(&self) -> Result<(String, String), Box<dyn Error>> {
+        let guard_installation_id = "guard_installation_cli_activation".to_owned();
+        let policy = json!({
+            "schema": "volicord-policy-v1",
+            "managed_by": "volicord",
+            "host": "codex",
+            "mode": "guarded",
+            "guard_mode": "guarded",
+            "connection_id": self.connection_id(),
+            "guard_installation_id": guard_installation_id
+        });
+        let policy_hash = sha256_text(&serde_json::to_string(&policy)?);
+        let policy_dir = self.repo_root.join(".volicord");
+        fs::create_dir_all(&policy_dir)?;
+        fs::write(
+            policy_dir.join("policy.json"),
+            serde_json::to_string_pretty(&policy)?,
+        )?;
+        upsert_guard_installation(
+            self.runtime_home(),
+            GuardInstallationUpsert {
+                guard_installation_id: guard_installation_id.clone(),
+                connection_internal_id: self.connection_id().to_owned(),
+                project_id: Some(self.project_id().to_owned()),
+                host_kind: "codex".to_owned(),
+                guard_mode: "guarded".to_owned(),
+                host_capability_json: json!({
+                    "schema": "volicord-guard-capability-v1",
+                    "policy_hash": policy_hash.clone(),
+                    "prompt_capture": true
+                })
+                .to_string(),
+                installation_status: "reload_required".to_owned(),
+                installed_at: Some("2026-06-30T03:59:00Z".to_owned()),
+                last_checked_at: "2026-06-30T03:59:00Z".to_owned(),
+                first_seen_at: None,
+                last_seen_at: None,
+                last_seen_phase: None,
+                observed_host_kind: None,
+                observed_policy_hash: None,
+                observed_binary_version: None,
+                metadata_json: "{}".to_owned(),
+            },
+        )?;
+        Ok((guard_installation_id, policy_hash))
+    }
+
     fn invocation(&self, operation_category: OperationCategory) -> InvocationContext {
         InvocationContext::new(
             ProjectId::new(self.project_id()),
@@ -947,6 +1040,11 @@ fn stdout(output: &Output) -> String {
 
 fn stderr(output: &Output) -> String {
     String::from_utf8_lossy(&output.stderr).into_owned()
+}
+
+fn sha256_text(text: &str) -> String {
+    let digest = Sha256::digest(text.as_bytes());
+    format!("sha256:{digest:x}")
 }
 
 fn assert_reason(value: &Value, code: &str) {

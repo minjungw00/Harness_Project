@@ -502,8 +502,8 @@ fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Resul
     assert_eq!(value["states"]["runtime_home"], "ready");
     assert_eq!(value["states"]["project_registration"], "registered");
     assert_eq!(value["states"]["mcp_config"], "match");
-    assert_eq!(value["states"]["guard_installation"], "action_required");
-    assert_eq!(value["states"]["prompt_capture"], "available");
+    assert_eq!(value["states"]["guard_installation"], "reload_required");
+    assert_eq!(value["states"]["prompt_capture"], "reload_required");
     assert_eq!(value["states"]["host_reload_required"], true);
     assert_eq!(value["primary_next_action"]["id"], "reload_required");
     assert_eq!(value["profile"]["status"], "created");
@@ -545,7 +545,7 @@ fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Resul
     assert!(init_text.contains("Volicord init action_required"));
     assert!(init_text.contains("connection_state: action_required"));
     assert!(init_text.contains("mcp_config_state: match"));
-    assert!(init_text.contains("prompt_capture_state: available"));
+    assert!(init_text.contains("prompt_capture_state: configured"));
     assert!(init_text.contains("host_reload_required: yes"));
     assert!(init_text.contains("next_action: Restart or reload codex"));
 
@@ -610,12 +610,13 @@ fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Resul
     assert_eq!(guard_installations.len(), 1);
     assert_eq!(guard_installations[0].host_kind, "codex");
     assert_eq!(guard_installations[0].guard_mode, "guarded");
-    assert_eq!(
-        guard_installations[0].installation_health,
-        "action_required"
-    );
+    assert_eq!(guard_installations[0].installation_status, "configured");
     let capability: Value = serde_json::from_str(&guard_installations[0].host_capability_json)?;
     assert_eq!(capability["schema"], "volicord-guard-capability-v1");
+    assert_eq!(
+        capability["policy_hash"],
+        value["guard_installation"]["policy_hash"]
+    );
     assert!(capability["commands"]["pre_tool"]["args"]
         .as_array()
         .expect("capability guard args should be an array")
@@ -652,6 +653,8 @@ fn init_codex_guarded_writes_policy_mcp_and_guard_status_idempotently() -> Resul
     let second_json = json_stdout(&second)?;
     assert_eq!(second_json["connection"]["connection_id"], connection_id);
     assert_eq!(second_json["profile"]["status"], "reused");
+    assert_eq!(second_json["states"]["guard_installation"], "configured");
+    assert_eq!(second_json["states"]["prompt_capture"], "configured");
     assert_eq!(
         count_occurrences(
             &fs::read_to_string(repo_root.join("AGENTS.md"))?,

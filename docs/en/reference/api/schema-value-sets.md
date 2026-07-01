@@ -353,13 +353,16 @@ managed
 `GuardHealthSummary.guard_installation_status` uses:
 
 ```text
-unknown
-healthy
-action_required
-failed
+absent
+configured
+reload_required
+active
+degraded
+stale
+broken
 ```
 
-These values report guard integration state for close-readiness and status projections. They do not prove product correctness, test sufficiency, OS enforcement, sandboxing, security isolation, final acceptance, or residual-risk acceptance. `mcp_only` remains cooperative unless an owner-defined configuration selects guarded or managed behavior.
+These values report guard integration state for close-readiness and status projections. `configured` and `reload_required` are non-active states; `active` requires an observed matching guard hook. These values do not prove product correctness, test sufficiency, OS enforcement, sandboxing, security isolation, final acceptance, or residual-risk acceptance. `mcp_only` remains cooperative unless an owner-defined configuration selects guarded or managed behavior.
 
 `WriteDecisionReason.category` is a controlled category value. It uses only these supported values:
 

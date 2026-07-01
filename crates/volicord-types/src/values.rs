@@ -515,24 +515,30 @@ impl GuardDecision {
     }
 }
 
-/// Local guard-installation health status.
+/// Local guard-installation lifecycle status.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
-pub enum GuardInstallationHealth {
-    Unknown,
-    Healthy,
-    ActionRequired,
-    Failed,
+pub enum GuardInstallationStatus {
+    Absent,
+    Configured,
+    ReloadRequired,
+    Active,
+    Degraded,
+    Stale,
+    Broken,
 }
 
-impl GuardInstallationHealth {
-    /// Returns the stable value name for this guard-installation health.
+impl GuardInstallationStatus {
+    /// Returns the stable value name for this guard-installation status.
     pub const fn as_str(self) -> &'static str {
         match self {
-            Self::Unknown => "unknown",
-            Self::Healthy => "healthy",
-            Self::ActionRequired => "action_required",
-            Self::Failed => "failed",
+            Self::Absent => "absent",
+            Self::Configured => "configured",
+            Self::ReloadRequired => "reload_required",
+            Self::Active => "active",
+            Self::Degraded => "degraded",
+            Self::Stale => "stale",
+            Self::Broken => "broken",
         }
     }
 }

@@ -8,7 +8,7 @@ pub const STORAGE_PROFILE: &str = "baseline_sqlite_v3";
 pub(crate) const OLD_STORAGE_PROFILE: &str = "baseline_sqlite";
 
 /// Latest schema version for `registry.sqlite`.
-pub const REGISTRY_SCHEMA_VERSION: i64 = 2;
+pub const REGISTRY_SCHEMA_VERSION: i64 = 3;
 
 /// Latest schema version for project `state.sqlite`.
 pub const PROJECT_STATE_SCHEMA_VERSION: i64 = 2;
@@ -28,9 +28,15 @@ const REGISTRY_MIGRATIONS: &[Migration] = &[
     },
     Migration {
         database_kind: REGISTRY_DATABASE_KIND,
-        version: REGISTRY_SCHEMA_VERSION,
+        version: 2,
         name: "registry_guard_records_v2",
         sql: REGISTRY_GUARD_RECORDS_SQL,
+    },
+    Migration {
+        database_kind: REGISTRY_DATABASE_KIND,
+        version: REGISTRY_SCHEMA_VERSION,
+        name: "registry_guard_installation_lifecycle_v3",
+        sql: REGISTRY_GUARD_INSTALLATION_LIFECYCLE_SQL,
     },
 ];
 
@@ -453,6 +459,102 @@ UPDATE runtime_home
    SET schema_version = 2,
        updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
  WHERE schema_version = 1;
+"#;
+
+const REGISTRY_GUARD_INSTALLATION_LIFECYCLE_SQL: &str = r#"
+ALTER TABLE guard_installations RENAME TO guard_installations_v2;
+
+CREATE TABLE guard_installations (
+  guard_installation_id TEXT PRIMARY KEY,
+  runtime_home_id TEXT NOT NULL,
+  connection_internal_id TEXT NOT NULL,
+  project_internal_id TEXT,
+  host_kind TEXT NOT NULL CHECK (length(trim(host_kind)) > 0),
+  guard_mode TEXT NOT NULL CHECK (guard_mode IN ('mcp_only', 'guarded', 'managed')),
+  host_capability_json TEXT NOT NULL DEFAULT '{}',
+  installation_status TEXT NOT NULL
+    CHECK (installation_status IN (
+      'absent',
+      'configured',
+      'reload_required',
+      'active',
+      'degraded',
+      'stale',
+      'broken'
+    )),
+  installed_at TEXT,
+  last_checked_at TEXT NOT NULL,
+  first_seen_at TEXT,
+  last_seen_at TEXT,
+  last_seen_phase TEXT,
+  observed_host_kind TEXT,
+  observed_policy_hash TEXT,
+  observed_binary_version TEXT,
+  metadata_json TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY (runtime_home_id) REFERENCES runtime_home (runtime_home_id) ON DELETE RESTRICT,
+  FOREIGN KEY (connection_internal_id)
+    REFERENCES agent_connections (connection_internal_id)
+    ON DELETE RESTRICT,
+  FOREIGN KEY (project_internal_id) REFERENCES projects (project_internal_id) ON DELETE RESTRICT
+);
+
+INSERT INTO guard_installations (
+  guard_installation_id,
+  runtime_home_id,
+  connection_internal_id,
+  project_internal_id,
+  host_kind,
+  guard_mode,
+  host_capability_json,
+  installation_status,
+  installed_at,
+  last_checked_at,
+  metadata_json,
+  created_at,
+  updated_at
+)
+SELECT
+  guard_installation_id,
+  runtime_home_id,
+  connection_internal_id,
+  project_internal_id,
+  host_kind,
+  guard_mode,
+  host_capability_json,
+  CASE installation_health
+    WHEN 'unknown' THEN 'configured'
+    WHEN 'healthy' THEN 'active'
+    WHEN 'action_required' THEN 'reload_required'
+    WHEN 'failed' THEN 'broken'
+  END,
+  installed_at,
+  last_checked_at,
+  metadata_json,
+  created_at,
+  updated_at
+FROM guard_installations_v2;
+
+DROP TABLE guard_installations_v2;
+
+CREATE INDEX idx_guard_installations_connection
+  ON guard_installations (connection_internal_id);
+CREATE INDEX idx_guard_installations_project
+  ON guard_installations (project_internal_id);
+CREATE INDEX idx_guard_installations_status
+  ON guard_installations (installation_status);
+CREATE UNIQUE INDEX idx_guard_installations_scope_project
+  ON guard_installations (connection_internal_id, project_internal_id, guard_mode)
+  WHERE project_internal_id IS NOT NULL;
+CREATE UNIQUE INDEX idx_guard_installations_scope_global
+  ON guard_installations (connection_internal_id, guard_mode)
+  WHERE project_internal_id IS NULL;
+
+UPDATE runtime_home
+   SET schema_version = 3,
+       updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+ WHERE schema_version = 2;
 "#;
 
 const PROJECT_STATE_INITIAL_SQL: &str = r#"
@@ -1112,7 +1214,7 @@ mod tests {
     #[test]
     fn expected_migration_catalogs_contain_ordered_rows() {
         assert_eq!(STORAGE_PROFILE, "baseline_sqlite_v3");
-        assert_eq!(REGISTRY_SCHEMA_VERSION, 2);
+        assert_eq!(REGISTRY_SCHEMA_VERSION, 3);
         assert_eq!(PROJECT_STATE_SCHEMA_VERSION, 2);
         assert_eq!(
             expected_registry_migrations(),
@@ -1126,6 +1228,11 @@ mod tests {
                     database_kind: REGISTRY_DATABASE_KIND,
                     version: 2,
                     name: "registry_guard_records_v2",
+                },
+                ExpectedMigration {
+                    database_kind: REGISTRY_DATABASE_KIND,
+                    version: 3,
+                    name: "registry_guard_installation_lifecycle_v3",
                 }
             ]
         );
@@ -1156,7 +1263,11 @@ mod tests {
         assert_migrations(
             &conn,
             REGISTRY_DATABASE_KIND,
-            &["registry_initial_v1", "registry_guard_records_v2"],
+            &[
+                "registry_initial_v1",
+                "registry_guard_records_v2",
+                "registry_guard_installation_lifecycle_v3",
+            ],
         )?;
         drop(conn);
 
@@ -1165,7 +1276,11 @@ mod tests {
         assert_migrations(
             &conn,
             REGISTRY_DATABASE_KIND,
-            &["registry_initial_v1", "registry_guard_records_v2"],
+            &[
+                "registry_initial_v1",
+                "registry_guard_records_v2",
+                "registry_guard_installation_lifecycle_v3",
+            ],
         )?;
         assert!(table_exists(&conn, "agent_connections")?);
         assert!(table_exists(&conn, "connection_projects")?);
@@ -1267,7 +1382,7 @@ mod tests {
         ));
         assert!(error.to_string().contains("explicitly reinitialize"));
         assert_eq!(file_hash(&path)?, hash_before);
-        assert_eq!(migration_count(&path, REGISTRY_DATABASE_KIND)?, 2);
+        assert_eq!(migration_count(&path, REGISTRY_DATABASE_KIND)?, 3);
         assert_eq!(stored_profile(&path, "runtime_home")?, OLD_STORAGE_PROFILE);
         Ok(())
     }
